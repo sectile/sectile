@@ -10,7 +10,8 @@ colors:
   ink: "#3c3c43"
   ink-muted: "#67676c"
   rule: "#e2e2e3"
-  control-border: "#c2c2c4"
+  control-border: "#8b8b90"
+  checkbox-border: "#67676c"
   code-background: "#101827"
   code-text: "#edf2ff"
   code-muted: "#a9b5cc"
@@ -51,9 +52,10 @@ typography:
     lineHeight: 1.75
 rounded:
   inline: "4px"
-  navigation: "6px"
-  control: "9px"
-  surface: "12px"
+  navigation: "4px"
+  control: "7px"
+  inner: "7px"
+  surface: "16px"
   dialog: "16px"
 spacing:
   space-1: "4px"
@@ -70,7 +72,7 @@ components:
     textColor: "{colors.paper}"
     typography: "{typography.label}"
     rounded: "{rounded.control}"
-    padding: "9px 18px"
+    padding: "8px 16px"
   button-primary-hover:
     backgroundColor: "{colors.accent-hover}"
   button-secondary:
@@ -81,7 +83,7 @@ components:
   navigation-link:
     textColor: "{colors.ink-muted}"
     rounded: "{rounded.navigation}"
-    padding: "6px 12px"
+    padding: "8px 12px"
   navigation-link-current:
     backgroundColor: "{colors.accent-soft}"
     textColor: "{colors.accent}"
@@ -91,7 +93,7 @@ components:
   preview:
     backgroundColor: "{colors.paper-muted}"
     rounded: "{rounded.surface}"
-    padding: "40px"
+    padding: "32px"
   field:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
@@ -102,7 +104,7 @@ components:
     textColor: "{colors.code-text}"
     typography: "{typography.code}"
     rounded: "{rounded.surface}"
-    padding: "20px"
+    padding: "24px"
 ---
 
 # Design System: Sectile Documentation
@@ -112,7 +114,7 @@ components:
 **Creative North Star: "The Inspectable Workbench"**
 
 This is the documentation's reading expression of Sectile's established white,
-ink, and violet world. Open paper carries explanations; ruled links, static
+ink, and violet world. Open paper carries explanations; reading links, static
 example galleries, runnable previews, and source blocks make behavior inspectable.
 The mood is a clean Read surface.
 
@@ -176,41 +178,49 @@ copy in the sans-serif reading voice.
 
 The sticky header is 56px high. Desktop uses a 256px sidebar and a flexible main
 area; the centered reading column is at most 760px wide with 48px page gutters.
-The page begins 56px below the header. Prose sections use the larger spacing
-steps; navigation and controls use the smaller steps.
+Page padding is equal on all four sides at each breakpoint. Prose sections use
+the larger spacing steps; navigation and controls use the smaller steps. Margin,
+padding, and gap decisions consume the shared spacing scale.
 
-At 1000px and below the rail contracts to 232px, gutters to 32px, and page top
-padding to 40px. At 760px and below, a menu button opens the fixed navigation
-below the header; gutters become 24px, page top padding 32px, and sidebar links
+At 1000px and below the rail contracts to 232px and page padding to 32px. At 760px
+and below, a menu button opens the fixed navigation below the header; page
+padding becomes 24px, and sidebar links
 have a 44px minimum height. Overview display type becomes
 `clamp(2.3rem, 8vw, 3rem)` and ledes become 16px.
 
-Example galleries use two columns with 24px gaps, then 20px gaps below 760px and
-one column below 520px. Small screens also stack overview actions and preview
+Example galleries use two columns with 24px gaps, and one column below 520px.
+Card bodies stretch to align their trailing metadata when descriptions have
+different lengths. Small screens also stack overview actions and preview
 headings. Code scrolls within its container; source text is not squeezed to fit.
 
 ## Elevation & Depth
 
-The reading shell uses no shadows. One-pixel borders, horizontal rules, muted
-preview backgrounds, and the dark source surface distinguish regions. The dialog
+The reading shell uses no shadows. Quiet shell borders, muted preview
+backgrounds, and the dark source surface
+distinguish regions. Prose transitions and reading links use spacing rather than
+repeated separator lines. The dialog
 example overlays a translucent scrim and a centered paper surface; this belongs
 to the demonstrated interaction.
 
-**The Paper Before Panels Rule.** Use open paper and ruled rows for guidance;
+**The Paper Before Panels Rule.** Use open paper and reading rows for guidance;
 bounded containers hold examples and source.
 
 ## Shapes
 
-Controls use restrained rounded corners, sidebar links a smaller curve, and
-preview/card/source surfaces a larger curve. The modal example has the broadest
-corner treatment. Inline code has a compact radius. The frontmatter owns these
-values; perimeter borders and ruled rows carry the recurring geometry.
+Gallery cards use an outer radius of 16px, a 1px border, and an equal 8px inset.
+Their thumbnail radius is computed as max(0, outer radius − border − inset),
+yielding 7px. This equation describes concentric surfaces, not every control
+placed somewhere inside a larger preview. Independent controls use the control
+radius; checkbox squares and inline code use the small radius.
+
+**The Concentric Corners Rule.** Derive a flush inset surface from its actual outer
+radius, border, and inset. Keep independent control geometry a separate role.
 
 ## Components
 
 ### Buttons and fields
 
-The overview reading action is violet with paper text and a 46px minimum height.
+The overview reading action is violet with paper text and a 44px minimum height.
 Secondary preview controls and form fields use paper, ink, and a control border,
 with a 44px minimum height. Form submission uses the violet treatment; field
 messages use error red. Visible keyboard focus uses a two-pixel violet outline
@@ -226,9 +236,10 @@ or Escape, and returns focus to its trigger on Escape.
 
 ### Reading links and galleries
 
-Reading links use ruled rows with a short title and explanation, stacking on
+Reading links use open rows with a short title and explanation, stacking on
 small screens. Example cards combine an inert representative thumbnail and a
-title/description; hover strengthens the perimeter. A gallery does not mount live
+title/description, an equal inset, and a calculated thumbnail corner; hover
+strengthens the perimeter. A gallery does not mount live
 interaction controls.
 
 ### Preview and source
@@ -236,8 +247,9 @@ interaction controls.
 Detail pages show a muted-paper live preview followed by a native disclosure,
 initially closed, containing the executed source. Preview notes distinguish
 documentation-owned presentation from source that includes its own styling.
-The preview starts at a 280px minimum height and uses 40px padding; below 760px
-these become 240px and 24px.
+The preview uses a 240px minimum height and equal 32px padding; below 760px
+padding becomes 24px. A checkbox label row has no outer perimeter; its persistent
+20px square carries the control boundary.
 
 Source blocks have a dark header, visible copy control, and focusable scrolling
 code region capped at 560px high. Copy feedback reports success or a selection
@@ -250,7 +262,7 @@ uses a 160ms reveal only when reduced motion is not requested.
 
 - **Do** keep this contract scoped to the documentation reading shell and examples.
 - **Do** preserve paper, ink, restrained violet, and explicit keyboard focus.
-- **Do** use ruled links for guidance and bounded previews for runnable behavior.
+- **Do** use reading links for guidance and bounded previews for runnable behavior.
 - **Do** identify whether preview styling is supplied by the docs or shown source.
 
 ### Don't:

@@ -55,6 +55,27 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.doesNotMatch(shell, /--vp-/u);
 });
 
+test('documentation palette maintains readable text and identifiable control edges', async () => {
+  const tokens = await read('src/styles/tokens.css');
+  const palette = Object.fromEntries([...tokens.matchAll(/--docs-([\w-]+):\s*(#[\da-f]{6});/gu)].map(([, name, value]) => [name, value]));
+  const luminance = (hex) => {
+    const channels = [1, 3, 5].map((index) => Number.parseInt(hex.slice(index, index + 2), 16) / 255)
+      .map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+    return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+  };
+  for (const [foreground, background, minimum] of [
+    ['text', 'bg', 4.5], ['text-muted', 'bg-muted', 4.5],
+    ['bg', 'accent', 4.5], ['bg', 'accent-hover', 4.5],
+    ['code-text', 'code-bg', 4.5], ['code-muted', 'code-bg', 4.5],
+    ['control-border', 'bg', 3], ['control-border', 'bg-muted', 3],
+    ['checkbox-border', 'bg', 3], ['error', 'bg', 4.5],
+  ]) {
+    const levels = [luminance(palette[foreground]), luminance(palette[background])].sort((a, b) => b - a);
+    const ratio = (levels[0] + 0.05) / (levels[1] + 0.05);
+    assert.ok(ratio >= minimum, `${foreground} on ${background}: ${ratio.toFixed(2)} < ${minimum}`);
+  }
+});
+
 test('the example catalog rejects host mixing and duplicate focused routes', () => {
   const vueExample = examples.find((example) => example.host === 'vue');
   assert.ok(vueExample);
