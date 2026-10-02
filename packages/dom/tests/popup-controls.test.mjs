@@ -7,6 +7,22 @@ import { createSelect } from '../.verification-dist/select.js';
 import { createTooltip } from '../.verification-dist/tooltip.js';
 import { getDOMLayerManager } from '../.verification-dist/overlay/layer/manager.js';
 
+test('popup initial and restored focus preserve the scroll position', () => {
+  const root = new Fake();
+  const trigger = new Fake();
+  const calls = [];
+  root.focus = (options) => calls.push(['content', options]);
+  trigger.focus = (options) => calls.push(['trigger', options]);
+  const popup = createPopover({ root, trigger, autoFocus: true, restoreFocus: true });
+  popup.handleEvent('open');
+  popup.handleEvent('close');
+  assert.deepEqual(calls, [
+    ['content', { preventScroll: true }],
+    ['trigger', { preventScroll: true }],
+  ]);
+  popup.disconnect();
+});
+
 test('DOM popup facades preserve focus, announce, and visibility obligations', () => {
   const trigger = new Fake();
   const root = new Fake();
@@ -52,6 +68,10 @@ test('DOM tooltip owns focus, hover, description linkage, and Escape', () => {
   trigger.emit('focus');
   trigger.emit('keydown', { key: 'Escape', preventDefault() {} });
   assert.equal(tip.getSnapshot().state.open, false);
+  tip.disconnect();
+  for (const type of ['focus', 'blur', 'mouseenter', 'mouseleave']) {
+    assert.equal(trigger.listeners.get(type)?.size ?? 0, 0);
+  }
 });
 
 test('DOM layer manager routes Escape only to the topmost popup', () => {
@@ -296,7 +316,7 @@ class Fake {
     this.listeners.set(type, listeners);
   }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
-  emit(type, event = {}) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
+  emit(type, event = {}) { for (const listener of this.listeners.get(type) ?? []) listener({ ...event, type }); }
   contains(target) { return target === this || this.children.has(target); }
   querySelectorAll() { return []; }
   focus() { this.focused = true; }

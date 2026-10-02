@@ -285,7 +285,7 @@ function focusable(root: HTMLElement): HTMLElement[] {
 }
 function firstFocusable(root: HTMLElement): HTMLElement | null { return focusable(root)[0] ?? null; }
 function lastFocusable(root: HTMLElement): HTMLElement | null { return focusable(root).at(-1) ?? null; }
-function focusElement(element: HTMLElement | undefined): void { element?.focus?.(); }
+function focusElement(element: HTMLElement | undefined): void { element?.focus?.({ preventScroll: true }); }
 function createFocusGuard(root: HTMLElement, edge: 'start' | 'end'): HTMLElement | undefined {
   const createElement = root.ownerDocument?.createElement;
   if (typeof createElement !== 'function') return undefined;
