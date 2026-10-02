@@ -11,28 +11,28 @@
   ],
   "packedFootprint": {
     "@sectile/core": {
-      "bytes": 183280
+      "bytes": 181210
     },
     "@sectile/tabular": {
-      "bytes": 70728
+      "bytes": 70059
     },
     "@sectile/temporal": {
-      "bytes": 37631
+      "bytes": 37043
     },
     "@sectile/virtual": {
-      "bytes": 70384
+      "bytes": 69624
     },
     "@sectile/dom": {
-      "bytes": 308239
+      "bytes": 303485
     },
     "@sectile/vue": {
-      "bytes": 297874
+      "bytes": 293243
     }
   },
   "declarationClosure": {
     "status": "passed",
-    "files": 410,
-    "imports": 632
+    "files": 412,
+    "imports": 635
   },
   "scenarios": [
     {
