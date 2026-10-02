@@ -2251,6 +2251,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/virtual/fixed-list/Preview.vue' }], related: [],
   },
   {
+    id: 'vue-virtual-core-composition', host: 'vue', area: 'virtual', subject: 'Virtualizer',
+    slug: 'core-composition', title: 'Composing a virtualizer',
+    description: 'Supply a public linear strategy and exact extents, compose Header, Surface and Item, and reveal a delivery by stable ID.', focus: 'Low-level layout ownership and scrollTo',
+    kind: 'behavior', fixture: 'viewport', tags: ['strategy', 'VirtualizerHeader', 'scrollTo'], sourceOwner: 'vue',
+    previewPath: './vue/virtual/core-composition/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/virtual/core-composition/Preview.vue' }], related: [],
+  },
+  {
     id: 'vue-tabular-local-source', host: 'vue', area: 'tabular', subject: 'DataTable',
     slug: 'local-source', title: 'A native table from a source',
     description: 'Render project members from a local resolver with native table semantics. The source runs after mounting; loading and retry presentation belong to the application.', focus: 'Typed source response and native table composition',
