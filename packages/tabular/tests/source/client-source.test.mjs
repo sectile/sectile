@@ -64,6 +64,31 @@ function source(sourceRecords = records) {
   });
 }
 
+test('ISSUE-121: request getter failures stay typed and accepted fields are read once', () => {
+  const stable = request();
+  const accepted = resolveClientTabularRequest(source(), stable).value;
+  for (const key of Object.keys(stable)) {
+    const unreadable = { ...stable };
+    Object.defineProperty(unreadable, key, { get() { throw new Error('unreadable ' + key); } });
+    assert.equal(resolveClientTabularRequest(source(), unreadable).ok, false, key);
+    assert.equal(synchronizeTabularView(unreadable, accepted).ok, false, key);
+  }
+  for (const mode of ['resolve', 'synchronize']) {
+    const reads = {};
+    const captured = {};
+    for (const [key, value] of Object.entries(stable)) Object.defineProperty(captured, key, { get() {
+      reads[key] = (reads[key] ?? 0) + 1;
+      if (reads[key] > 1) throw new Error('reread ' + key);
+      return value;
+    } });
+    const result = mode === 'resolve'
+      ? resolveClientTabularRequest(source(), captured)
+      : synchronizeTabularView(captured, accepted);
+    assert.equal(result.ok, true, mode);
+    assert.equal(Object.values(reads).every((count) => count === 1), true);
+  }
+});
+
 test('TAB-SRC-01: client pipeline filters, ordered stable-sorts, then slices access', () => {
   const result = resolveClientTabularRequest(source(), request({
     queryRevision: 1,

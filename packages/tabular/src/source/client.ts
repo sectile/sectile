@@ -75,6 +75,9 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
     if (this.#b) return fail('transition-rejection', 'source-policy-failed', 'Client source reentrancy.');
     this.#b = true;
     try {
+      const normalized = normalizeRequest(request, this.limits);
+      if (!normalized.ok) return normalized;
+      request = normalized.value;
       if (this.#g >= 0 && request.sourceGeneration < this.#g) {
         return fail('transition-rejection', 'stale-source-generation', 'Client source generation cannot move backward.');
       }
@@ -106,16 +109,14 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
       || query.source !== source
       || query.queryRevision !== request.queryRevision
       || query.prepared.schema.revision < request.columnSchemaRevision) {
-      const normalized = tryCreateTabularQuery(request.query, this.limits);
-      if (!normalized.ok) return transitionFailure(normalized);
-      const filtered = filterAndSortClientRecords(this, source.records, normalized.value);
+      const filtered = filterAndSortClientRecords(this, source.records, request.query);
       if (!filtered.ok) return filtered;
-      const prepared = prepareClientProjection(this, filtered.value, normalized.value, request);
+      const prepared = prepareClientProjection(this, filtered.value, request.query, request);
       if (!prepared.ok) return prepared;
       query = Object.freeze({
         source,
         queryRevision: request.queryRevision,
-        query: normalized.value,
+        query: request.query,
         filtered: filtered.value,
         prepared: prepared.value,
       });
@@ -129,11 +130,6 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
       && retained.projection.schema.revision >= request.columnSchemaRevision) {
       return ok(retained);
     }
-    if (!Array.isArray(request.expansion) || request.expansion.length > this.limits.maxRows) {
-      return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
-    }
-    const expansion = normalizeIDs(request.expansion, 'groupID', this.limits);
-    if (!expansion.ok) return expansion;
     const projection = projectClientExpansion(query.prepared, request.expansion, this.limits);
     if (!projection.ok) return projection;
     const stage = Object.freeze({
@@ -266,8 +262,9 @@ export function synchronizeTabularView(
   const schema = validateColumnSchema(columnSchemaInput as TabularColumnSchema, limitsInput);
   if (!schema.ok) return transitionFailure(schema);
   const limits = schema.value.limits;
-  const requestError = validateRequest(request, limits);
-  if (requestError !== null) return transitionFailure(requestError);
+  const requestInput = normalizeRequest(request, limits);
+  if (!requestInput.ok) return transitionFailure(requestInput);
+  request = requestInput.value;
   const access = normalizeAccess(accessInput);
   if (!access.ok) return access;
   if (protocolVersion !== 1
@@ -335,8 +332,6 @@ function resolveClient<RecordValue>(
   request: TabularRequest,
   viewRevision: number,
 ): TabularResult<TabularViewResponse> {
-  const invalid = validateRequestEnvelope(request);
-  if (invalid !== null) return invalid;
   if (request.columnSchemaRevision !== 0
     && request.columnSchemaRevision < source.options.columnSchema.revision) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Request column schema revision predates the client source.');
@@ -344,10 +339,13 @@ function resolveClient<RecordValue>(
   const projected = source.resolveProjection(request);
   if (!projected.ok) return projected;
   const projection = projected.value.projection;
-  const matchingLeafCount = projected.value.query.filtered.length;
-  const range = sliceRange(request.access, projection.rows.length);
-  if (!range.ok) return range;
-  const rows = sliceVisibleRows(projection, range.value.start, range.value.end);
+  const access = request.access;
+  const total = projection.rows.length;
+  const start = access.kind === 'page' ? deriveSafeTabularPageStart(access.page, access.itemsPerPage) : access.start;
+  const count = access.kind === 'page' ? access.itemsPerPage : access.count;
+  if (start === null || start > total || (access.kind === 'page' && access.page !== 1 && start >= total)) {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Requested access range starts outside the resolved projection.', { start, total });
+  }
   return ok(Object.freeze({
     protocolVersion: 1,
     requestID: request.requestID,
@@ -355,10 +353,10 @@ function resolveClient<RecordValue>(
     queryRevision: request.queryRevision,
     expansionRevision: request.expansionRevision,
     viewRevision,
-    access: Object.freeze({ ...request.access }),
-    matchingLeafCount: Object.freeze({ kind: 'known', value: matchingLeafCount }),
-    visibleRowCount: Object.freeze({ kind: 'known', value: projection.rows.length }),
-    rows,
+    access: request.access,
+    matchingLeafCount: Object.freeze({ kind: 'known', value: projected.value.query.filtered.length }),
+    visibleRowCount: Object.freeze({ kind: 'known', value: total }),
+    rows: sliceVisibleRows(projection, start, Math.min(total, start + count)),
     columnSchema: projection.schema,
     removedRowIDs: Object.freeze([]),
   }));
@@ -809,30 +807,43 @@ function createClientLeafRow<RecordValue>(
   return ok(Object.freeze({ kind: 'leaf', id: item.rowID, cells: Object.freeze(cells) }));
 }
 
-function validateRequest(request: TabularRequest, limits: TabularLimits): TabularResult<never> | null {
-  const envelope = validateRequestEnvelope(request);
-  if (envelope !== null) return envelope;
-  const query = tryCreateTabularQuery(request.query, limits);
-  if (!query.ok) return transitionFailure(query);
-  if (!Array.isArray(request.expansion) || request.expansion.length > limits.maxRows) {
-    return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
+function normalizeRequest(request: TabularRequest, limits: TabularLimits): TabularResult<TabularRequest> {
+  if (request === null || typeof request !== 'object') return fail(
+    'transition-rejection', 'response-envelope-mismatch', 'Tabular request must be an object.',
+  );
+  try {
+    const captured = {
+      protocolVersion: request.protocolVersion,
+      requestID: request.requestID,
+      sourceGeneration: request.sourceGeneration,
+      queryRevision: request.queryRevision,
+      expansionRevision: request.expansionRevision,
+      columnSchemaRevision: request.columnSchemaRevision,
+      query: request.query,
+      expansion: request.expansion,
+      access: request.access,
+    };
+    const access = normalizeAccess(captured.access);
+    if (!access.ok) return access;
+    if (captured.protocolVersion !== 1) {
+      return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular request protocolVersion must be 1.');
+    }
+    for (const key of ['requestID', 'sourceGeneration', 'queryRevision', 'expansionRevision', 'columnSchemaRevision'] as const) {
+      if (!isNonNegativeSafeInteger(captured[key])) {
+        return fail('transition-rejection', 'response-envelope-mismatch', `${key} must be a non-negative safe integer.`);
+      }
+    }
+    const query = tryCreateTabularQuery(captured.query, limits);
+    if (!query.ok) return transitionFailure(query);
+    if (!Array.isArray(captured.expansion) || captured.expansion.length > limits.maxRows) {
+      return fail('resource-rejection', 'row-ceiling-exceeded', 'Request expansion exceeds the row ceiling.');
+    }
+    const expansion = normalizeIDs(captured.expansion, 'groupID', limits);
+    if (!expansion.ok) return expansion;
+    return ok(Object.freeze({ ...captured, access: access.value, query: query.value, expansion: expansion.value }));
+  } catch {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular request properties must be readable.');
   }
-  const expansion = normalizeIDs(request.expansion, 'groupID', limits);
-  return expansion.ok ? validateAccess(request.access) : expansion;
-}
-
-function validateRequestEnvelope(request: TabularRequest): TabularResult<never> | null {
-  if (request === null || typeof request !== 'object' || request.protocolVersion !== 1) {
-    return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular request protocolVersion must be 1.');
-  }
-  for (const [label, value] of [
-    ['requestID', request.requestID], ['sourceGeneration', request.sourceGeneration],
-    ['queryRevision', request.queryRevision], ['expansionRevision', request.expansionRevision],
-    ['columnSchemaRevision', request.columnSchemaRevision],
-  ] as const) {
-    if (!isNonNegativeSafeInteger(value)) return fail('transition-rejection', 'response-envelope-mismatch', `${label} must be a non-negative safe integer.`);
-  }
-  return validateAccess(request.access);
 }
 
 function validateColumnSchema(
@@ -1085,22 +1096,6 @@ function normalizeAccess(access: unknown): TabularResult<TabularAccessRange> {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access properties must be readable.');
   }
   return fail('transition-rejection', 'response-envelope-mismatch', 'Tabular access kind is invalid.');
-}
-
-function validateAccess(access: TabularAccessRange): TabularResult<never> | null {
-  const normalized = normalizeAccess(access);
-  return normalized.ok ? null : normalized;
-}
-
-function sliceRange(access: TabularAccessRange, total: number): TabularResult<{ readonly start: number; readonly end: number }> {
-  const invalid = validateAccess(access);
-  if (invalid !== null) return invalid;
-  const start = access.kind === 'page' ? deriveSafeTabularPageStart(access.page, access.itemsPerPage) : access.start;
-  const count = access.kind === 'page' ? access.itemsPerPage : access.count;
-  if (start === null || start > total || (access.kind === 'page' && access.page !== 1 && start >= total)) {
-    return fail('transition-rejection', 'response-envelope-mismatch', 'Requested access range starts outside the resolved projection.', { start, total });
-  }
-  return ok(Object.freeze({ start, end: Math.min(total, start + count) }));
 }
 
 function validateCount(count: unknown, label: string): TabularResult<TabularCount> {

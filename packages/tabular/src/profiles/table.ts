@@ -216,6 +216,10 @@ class DataTableRuntime implements DataTableController {
     const currentView = this.#snapshot.state.acceptedViewState.kind === 'none' ? null : this.#snapshot.state.acceptedViewState.view;
     const view = synchronizeTabularView(pending, response, currentView, this.#model.limits);
     if (!view.ok) return view;
+    if (this.#disposed) return dataTableDisposed('synchronize view responses');
+    if (this.#snapshot.state.requestState.pendingRequest !== pending) return fail(
+      'transition-rejection', 'stale-request', 'The response request was superseded during normalization.',
+    );
     const previousColumns = currentView?.columnSchema.columns ?? this.#model.columns;
     const columnState = reconcileTabularColumns(
       previousColumns,
@@ -498,7 +502,12 @@ function sameProjection(
   const currentView = state.acceptedViewState.kind === 'none' ? null : state.acceptedViewState.view;
   const previousRows = currentView?.rows ?? [];
   return previousRows.length === view.rows.length
-    && previousRows.every((row, index) => row.id === view.rows[index]?.id)
+    && previousRows.every((row, index) => {
+      const next = view.rows[index];
+      return row.id === next?.id
+        && (row.kind === 'group' && row.contextOnly === true)
+          === (next?.kind === 'group' && next.contextOnly === true);
+    })
     && sameColumnProjection(state.columnState, columns);
 }
 

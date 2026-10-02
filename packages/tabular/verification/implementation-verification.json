@@ -12,7 +12,7 @@
     {
       "group": "source",
       "tests": 18,
-      "sha256": "d3b2e5b60c4ef3c920a9c183fd2e879ea8126afa7637aa5021ae4ef92f7821af"
+      "sha256": "7f9ded99289da6aa1d60a210225e10fda2dc4c6ca9207bce232054c16b762e93"
     },
     {
       "group": "columns",
@@ -32,7 +32,7 @@
     {
       "group": "profiles",
       "tests": 24,
-      "sha256": "3377443af5829ccc54673df49d6f3a0d86253e3cb4e91d3ced57c47259621406"
+      "sha256": "1861092623038f703433e84be77f50d4233cfbfc74b0ca7404d7fd6c5a9fb8be"
     },
     {
       "group": "virtual",
@@ -73,26 +73,26 @@
     "generationChurn": {
       "generations": 10000,
       "retainedStages": 1,
-      "tailGrowthBytes": 1432,
+      "tailGrowthBytes": 2960,
       "ceilingBytes": 8388608
     }
   },
   "footprint": {
-    "javascriptBytes": 159893,
+    "javascriptBytes": 159925,
     "declarationBytes": 44405,
-    "sourceMapBytes": 114973,
-    "packedBytes": 55011,
+    "sourceMapBytes": 114835,
+    "packedBytes": 70728,
     "declarationFiles": 17,
     "publicSubpaths": 9
   },
   "consumerScenarios": [
     "tabular-base-without-virtual",
-    "dom-runtime-virtual-without-type-peer",
     "dom-base-without-optional-peers",
     "vue-base-without-optional-peers",
     "dom-tabular-explicit-opt-in",
     "vue-tabular-explicit-opt-in",
     "tabular-virtual-explicit-opt-in",
+    "virtual-foundation-subpaths",
     "dom-virtual-explicit-opt-in",
     "vue-virtual-explicit-opt-in",
     "dom-temporal-explicit-opt-in",

@@ -33,6 +33,31 @@ const rows = [
   { kind: 'leaf', id: 'r2', cells: { name: 'Beta', score: 2 } },
 ];
 
+test('ISSUE-182: context-only changes invalidate the addressable cell projection', () => {
+  const controller = createDataTreeGrid({
+    columns,
+    initialValues: {
+      query: { sort: [], filters: [], groups: [{ id: 'by-name', columnID: 'name', policy: 'group' }], aggregates: [], pivots: [] },
+      accessState: { kind: 'window', window: { revision: 0, requestGeneration: 0, start: 1, size: 2, total: null, pending: null } },
+    },
+  });
+  const acceptedRows = rows.slice(0, 2);
+  assert.equal(controller.synchronizeView(response(controller, acceptedRows, { visibleRowCount: { kind: 'known', value: 3 } })).ok, true);
+  const generation = controller.getProjection().generation;
+  const address = { rowID: 'group:a', columnID: 'name' };
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: address }).ok, true);
+  controller.requestView();
+  const contextRows = [{ ...acceptedRows[0], contextOnly: true }, acceptedRows[1]];
+  assert.equal(controller.synchronizeView(response(controller, contextRows, { viewRevision: 2 })).ok, true);
+  assert.notEqual(controller.getProjection().generation, generation);
+  assert.equal(controller.getProjection().rows[0].cells.length, 0);
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: address }).ok, false);
+  controller.requestView();
+  assert.equal(controller.synchronizeView(response(controller, acceptedRows, { viewRevision: 3, visibleRowCount: { kind: 'known', value: 3 } })).ok, true);
+  assert.equal(controller.dispatch({ type: 'focus-cell', cell: address }).ok, true);
+  controller.dispose();
+});
+
 test('TAB-TGR-01: tree projection derives ordered parentage and navigates visible cells', () => {
   const controller = createDataTreeGrid({ columns });
   assert.equal(controller.synchronizeView(response(controller, rows)).ok, true);

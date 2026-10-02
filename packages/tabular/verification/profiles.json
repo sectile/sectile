@@ -62,91 +62,91 @@
       "id": "TAB-TBL-01",
       "title": "TAB-TBL-01: controller begins pending and one executor resolves the current native-table projection",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-02",
       "title": "TAB-TBL-02: observer and sole executor channels remain distinct and disposable",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-03",
       "title": "TAB-TBL-03: response envelopes, abandonment, and stale requests are failure-atomic",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-04",
       "title": "TAB-TBL-04: DataTable value commit is application intent without cell cursor or edit authority",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-05",
       "title": "TAB-TBL-05: controlled query proposes once and requests only after external synchronization",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-06",
       "title": "TAB-TBL-06: DataTable events and controlled sync share slice canonicalization failures",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-07",
       "title": "TAB-TBL-07: command delivery snapshots observers, completes channels, and rolls back failed attachment",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-08",
       "title": "TAB-TBL-08: request-basis and projection counters stop at the safe-integer ceiling",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-09",
       "title": "TAB-TBL-09: unchanged projection reads retain column partitions across domain sizes",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TBL-10",
       "title": "TAB-TBL-10: row range events use accepted leaf order and reject stale endpoints",
       "file": "tests/profiles/data-table.test.mjs",
-      "sha256": "4029816f5965f704a105f02fdf2ed84170d4218417aa44ad7916b79d8b16330a"
+      "sha256": "8e999c94c57c5b4c1630119bbd48e488d12b02e4a51c79d3127075de4c861509"
     },
     {
       "id": "TAB-TGR-01",
       "title": "TAB-TGR-01: tree projection derives ordered parentage and navigates visible cells",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "3a228e90f6c2cb365f63361a9e8a7a3f724253c3198349a16d2c332dc79e8193"
+      "sha256": "3780ad030c1df215c1df614e2136d8e4608a2459af954fe1256f0b1f29cf3786"
     },
     {
       "id": "TAB-TGR-02",
       "title": "TAB-TGR-02: group cells are read-only while leaf edit commands keep exact payloads",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "3a228e90f6c2cb365f63361a9e8a7a3f724253c3198349a16d2c332dc79e8193"
+      "sha256": "3780ad030c1df215c1df614e2136d8e4608a2459af954fe1256f0b1f29cf3786"
     },
     {
       "id": "TAB-TGR-03",
       "title": "TAB-TGR-03: row expansion is source intent and malformed ancestry rejects atomically",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "3a228e90f6c2cb365f63361a9e8a7a3f724253c3198349a16d2c332dc79e8193"
+      "sha256": "3780ad030c1df215c1df614e2136d8e4608a2459af954fe1256f0b1f29cf3786"
     },
     {
       "id": "TAB-TGR-04",
       "title": "TAB-TGR-04: tree profile emits no renderer reveal commands",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "3a228e90f6c2cb365f63361a9e8a7a3f724253c3198349a16d2c332dc79e8193"
+      "sha256": "3780ad030c1df215c1df614e2136d8e4608a2459af954fe1256f0b1f29cf3786"
     },
     {
       "id": "TAB-TGR-05",
       "title": "TAB-TGR-05: controlled tree-grid owner synchronizes null cursor and navigation edit state",
       "file": "tests/profiles/data-tree-grid.test.mjs",
-      "sha256": "3a228e90f6c2cb365f63361a9e8a7a3f724253c3198349a16d2c332dc79e8193"
+      "sha256": "3780ad030c1df215c1df614e2136d8e4608a2459af954fe1256f0b1f29cf3786"
     }
   ],
   "expectedFailures": [

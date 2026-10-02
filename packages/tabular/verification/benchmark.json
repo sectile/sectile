@@ -4,7 +4,7 @@
   "status": "passed",
   "seed": "sectile-tabular-benchmark-v1",
   "environment": {
-    "node": "v24.20.0",
+    "node": "v24.21.0",
     "platform": "linux",
     "architecture": "x64"
   },
@@ -43,11 +43,11 @@
         }
       },
       "timingsMs": {
-        "construct": 1.251,
-        "resolve": 4.769,
-        "warm": 0.061,
-        "queryInvalidation": 2.867,
-        "total": 8.948
+        "construct": 1.245,
+        "resolve": 4.015,
+        "warm": 0.105,
+        "queryInvalidation": 3.201,
+        "total": 8.566
       }
     },
     {
@@ -83,11 +83,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.091,
-        "resolve": 14.251,
-        "warm": 0.044,
-        "queryInvalidation": 6.811,
-        "total": 21.197
+        "construct": 0.26,
+        "resolve": 17.139,
+        "warm": 0.124,
+        "queryInvalidation": 8.142,
+        "total": 25.665
       }
     },
     {
@@ -123,11 +123,11 @@
         }
       },
       "timingsMs": {
-        "construct": 0.349,
-        "resolve": 198.165,
-        "warm": 0.057,
-        "queryInvalidation": 115.195,
-        "total": 313.766
+        "construct": 1.465,
+        "resolve": 159.901,
+        "warm": 0.111,
+        "queryInvalidation": 87.288,
+        "total": 248.766
       }
     }
   ],
@@ -143,7 +143,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 1.218
+      "durationMs": 1.308
     },
     {
       "axis": "filter",
@@ -156,7 +156,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 1.057
+      "durationMs": 0.945
     },
     {
       "axis": "sort",
@@ -169,7 +169,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 0.956
+      "durationMs": 0.812
     },
     {
       "axis": "sort",
@@ -182,7 +182,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 0.658
+      "durationMs": 0.786
     },
     {
       "axis": "group",
@@ -195,7 +195,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 0.862
+      "durationMs": 0.914
     },
     {
       "axis": "group",
@@ -208,7 +208,7 @@
         "aggregateElements": 0,
         "pivotElements": 0
       },
-      "durationMs": 1.354
+      "durationMs": 1.342
     },
     {
       "axis": "aggregate",
@@ -221,7 +221,7 @@
         "aggregateElements": 1000,
         "pivotElements": 0
       },
-      "durationMs": 0.436
+      "durationMs": 0.706
     },
     {
       "axis": "aggregate",
@@ -234,7 +234,7 @@
         "aggregateElements": 8000,
         "pivotElements": 0
       },
-      "durationMs": 0.433
+      "durationMs": 0.493
     },
     {
       "axis": "pivot",
@@ -247,7 +247,7 @@
         "aggregateElements": 1000,
         "pivotElements": 1000
       },
-      "durationMs": 0.65
+      "durationMs": 0.836
     },
     {
       "axis": "pivot",
@@ -260,7 +260,7 @@
         "aggregateElements": 1000,
         "pivotElements": 8000
       },
-      "durationMs": 0.676
+      "durationMs": 1.1
     }
   ],
   "generationChurn": {
@@ -268,11 +268,11 @@
     "recordsPerGeneration": 64,
     "retainedStages": 1,
     "heapUsedBytes": {
-      "before": 44979928,
-      "middle": 44965200,
-      "after": 44966632
+      "before": 42649560,
+      "middle": 42647328,
+      "after": 42650288
     },
-    "tailGrowthBytes": 1432,
+    "tailGrowthBytes": 2960,
     "ceilingBytes": 8388608,
     "status": "passed"
   },
@@ -282,31 +282,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 1.736,
+          "durationMs": 1.661,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 48632
+          "retainedHeapDeltaBytes": 75280
         },
         {
           "name": "rotation",
-          "durationMs": 0.445,
+          "durationMs": 0.336,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 0.393,
+          "durationMs": 0.26,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 0.475,
+          "durationMs": 0.466,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 21904
+          "retainedHeapDeltaBytes": 35944
         }
       ]
     },
@@ -315,31 +315,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 5.952,
+          "durationMs": 5.699,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 671176
+          "retainedHeapDeltaBytes": 684464
         },
         {
           "name": "rotation",
-          "durationMs": 2.334,
+          "durationMs": 1.88,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 2.078,
+          "durationMs": 1.729,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 5.755,
+          "durationMs": 4.937,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 397992
+          "retainedHeapDeltaBytes": 415200
         }
       ]
     },
@@ -348,31 +348,31 @@
       "scenarios": [
         {
           "name": "reverse",
-          "durationMs": 95.745,
+          "durationMs": 128.808,
           "mutationCount": 1,
           "extentCallbackCount": 0,
-          "retainedHeapDeltaBytes": 4937480
+          "retainedHeapDeltaBytes": 4647752
         },
         {
           "name": "rotation",
-          "durationMs": 19.57,
+          "durationMs": 19.892,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "large-filter",
-          "durationMs": 26.481,
+          "durationMs": 26.233,
           "mutationCount": 1,
           "extentCallbackCount": 0,
           "retainedHeapDeltaBytes": 0
         },
         {
           "name": "mixed",
-          "durationMs": 74.365,
+          "durationMs": 74.649,
           "mutationCount": 1,
           "extentCallbackCount": 2,
-          "retainedHeapDeltaBytes": 3091664
+          "retainedHeapDeltaBytes": 3077568
         }
       ]
     }

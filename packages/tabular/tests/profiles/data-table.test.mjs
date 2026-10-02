@@ -13,6 +13,26 @@ const source = createClientTabularSource({
   getValue: (record, columnID) => record[columnID],
 });
 
+test('ISSUE-136: response getter reentrancy cannot clear a newer request or commit after dispose', () => {
+  for (const operation of ['requestView', 'dispose']) {
+    const table = createDataTable({ columns });
+    const pending = table.getSnapshot().state.requestState.pendingRequest;
+    const resolved = resolveClientTabularRequest(source, pending).value;
+    const response = { ...resolved, get rows() {
+      table[operation]();
+      return resolved.rows;
+    } };
+    const result = table.synchronizeView(response);
+    assert.equal(result.ok, false, operation);
+    assert.equal(table.getSnapshot().state.acceptedViewState.kind, 'none');
+    if (operation === 'requestView') {
+      assert.notEqual(table.getSnapshot().state.requestState.pendingRequest.requestID, pending.requestID);
+      assert.equal(result.error.code, 'stale-request');
+    }
+    table.dispose();
+  }
+});
+
 test('TAB-TBL-01: controller begins pending and one executor resolves the current native-table projection', () => {
   const table = createDataTable({ columns });
   assert.equal(table.getSnapshot().state.requestState.kind, 'pending');
