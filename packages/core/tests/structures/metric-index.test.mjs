@@ -5,6 +5,26 @@ import {
   tryCreateMetricIndex,
 } from '../../.verification-dist/structures/metric-index.js';
 
+test('metric queries search the coordinates accepted at their input boundary', () => {
+  const index = createMetricIndex([
+    { id: 'near', coordinates: [0, 0] },
+    { id: 'far', coordinates: [100, 0] },
+  ]);
+  for (const query of [
+    (target) => index.nearest(target),
+    (target) => index.withinRadius(target, 1)[0],
+    (target) => index.forwardNearest(target, [1, 0]),
+  ]) {
+    let reads = 0;
+    const target = [-1, 0];
+    Object.defineProperty(target, 0, { get: () => reads++ === 0 ? -1 : 100 });
+    const match = query(target);
+    assert.equal(match.id, 'near');
+    assert.equal(match.squaredDistance, 1);
+    assert.equal(reads, 1);
+  }
+});
+
 test('lookup, distance, nearest, radius, and forward half-space are deterministic', () => {
   const index = createMetricIndex([
     { id: 'origin', coordinates: [0, 0] },

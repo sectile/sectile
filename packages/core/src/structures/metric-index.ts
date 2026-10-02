@@ -353,12 +353,15 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
         actual: Array.isArray(vector) ? vector.length : null,
       }));
     }
+    const captured = new Array<number>(this.dimensions);
     for (let dimension = 0; dimension < this.dimensions; dimension += 1) {
-      if (!validCoordinate(vector[dimension], this.maxCoordinateMagnitude)) {
+      const coordinate = vector[dimension];
+      if (!validCoordinate(coordinate, this.maxCoordinateMagnitude)) {
         return unwrap(fail('construction', 'invalid-boundary', `${label} coordinates must be finite and bounded.`, { dimension }));
       }
+      captured[dimension] = coordinate as number;
     }
-    return vector;
+    return captured;
   }
 
   #normalizeDirection(direction: readonly number[]): readonly number[] {
