@@ -7,6 +7,8 @@ import { renderToString } from 'vue/server-renderer';
 import { createServer } from 'vite';
 import {
   areas,
+  components,
+  componentPath,
   examplePath,
   examples,
   hosts,
@@ -40,6 +42,8 @@ test('the shell derives separate Vue and DOM package and example routes', () => 
     for (const area of areas) assert.ok(paths.includes(`/${host.id}/${area.id}`));
   }
   for (const example of examples) assert.ok(paths.includes(examplePath(example)));
+  for (const component of components) assert.ok(paths.includes(componentPath(component.subject)));
+  assert.throws(() => componentPath('Unknown'), /Unknown documented component/u);
   assert.ok(!paths.includes('/components'));
   assert.ok(!paths.includes('/packages'));
 });

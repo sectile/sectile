@@ -1,5 +1,7 @@
 import {
   areas,
+  components,
+  componentPath,
   examplePath,
   examples,
   hosts,
@@ -54,9 +56,7 @@ export const routes: readonly DocsRoute[] = [
   { path: '/vue/getting-started', label: 'Getting started', title: 'Getting started with Vue', kind: 'guide', host: 'vue', guide: 'getting-started' },
   { path: '/vue/guides/styling', label: 'Styling', title: 'Styling Vue components', kind: 'guide', host: 'vue', guide: 'styling' },
   { path: '/vue/guides/state', label: 'State ownership', title: 'State ownership', kind: 'guide', host: 'vue', guide: 'state' },
-  { path: '/vue/components/checkbox', label: 'Checkbox', title: 'Checkbox', kind: 'component', host: 'vue', area: 'components', subject: 'Checkbox' },
-  { path: '/vue/components/dialog', label: 'Dialog', title: 'Dialog', kind: 'component', host: 'vue', area: 'components', subject: 'Dialog' },
-  { path: '/vue/components/disclosure', label: 'Disclosure', title: 'Disclosure', kind: 'component', host: 'vue', area: 'components', subject: 'Disclosure' },
+  ...components.map((component): DocsRoute => ({ path: componentPath(component.subject), label: component.subject, title: component.subject, kind: 'component', host: 'vue', area: 'components', subject: component.subject })),
   ...areaRoutes,
   ...exampleRoutes,
 ];

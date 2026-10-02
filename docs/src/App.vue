@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch, watchEffect } from 'vue';
-import { areas, areaPath, examplesFor, findExample, hosts } from './examples/catalog.js';
+import { areas, areaPath, components, componentPath, examplesFor, findExample, hosts } from './examples/catalog.js';
 import { currentPath, currentRoute, handleRouteClick, routeHref, routes } from './router.js';
 import CodeBlock from './components/CodeBlock.vue';
 import ExampleGallery from './components/ExampleGallery.vue';
@@ -18,11 +18,7 @@ const componentRoutes = routes.filter((route) => route.kind === 'component');
 const guideRoutes = routes.filter((route) => route.kind === 'guide');
 const subjectExamples = computed(() => areaExamples.value.filter((example) => example.subject === currentRoute.value?.subject));
 const installation = 'pnpm add @sectile/vue';
-const componentDescriptions: Record<string, string> = {
-  Checkbox: 'A two-state or indeterminate selection control. Compose its interactive root and conditional indicator, with state owned by the component or your application.',
-  Dialog: 'A modal surface for a task that needs protected focus. Compose a trigger, portal, overlay, and labeled content while Sectile coordinates dismissal and focus.',
-  Disclosure: 'Show or hide a section of content. Its presence handling retains the section during an exit transition and makes the exiting content inert.',
-};
+const activeComponent = computed(() => components.find((component) => component.subject === currentRoute.value?.subject));
 watchEffect(() => { document.title = `${currentRoute.value?.title ?? 'Not found'} · Sectile`; });
 watch(currentPath, async () => {
   menuOpen.value = false;
@@ -79,7 +75,7 @@ function closeMenu(event: KeyboardEvent): void {
             <nav v-if="currentRoute && currentRoute.kind !== 'home'" class="docs-breadcrumb" aria-label="Breadcrumb">
               <a :href="routeHref(`/${activeHost.id}`)" @click="handleRouteClick($event, `/${activeHost.id}`)">{{ activeHost.label }}</a>
               <template v-if="activeArea"><span aria-hidden="true">/</span><a :href="routeHref(areaPath(activeHost.id, activeArea.id))" @click="handleRouteClick($event, areaPath(activeHost.id, activeArea.id))">{{ activeArea.label }}</a></template>
-              <template v-if="activeExample && activeHost.id === 'vue' && activeArea?.id === 'components'"><span aria-hidden="true">/</span><a :href="routeHref(`/vue/components/${activeExample.subject.toLowerCase()}`)" @click="handleRouteClick($event, `/vue/components/${activeExample.subject.toLowerCase()}`)">{{ activeExample.subject }}</a></template>
+              <template v-if="activeExample && activeHost.id === 'vue' && activeArea?.id === 'components'"><span aria-hidden="true">/</span><a :href="routeHref(componentPath(activeExample.subject))" @click="handleRouteClick($event, componentPath(activeExample.subject))">{{ activeExample.subject }}</a></template>
             </nav>
             <template v-if="currentRoute?.kind === 'home' || (currentRoute?.kind === 'host' && activeHost.id === 'vue')">
               <h1 class="docs-home-title">Interaction without<br class="docs-desktop-break" /> a prescribed look.</h1>
@@ -112,12 +108,14 @@ function closeMenu(event: KeyboardEvent): void {
               <div class="docs-reading-links"><a v-for="area in areas" :key="area.id" :href="routeHref(areaPath('dom', area.id))" @click="handleRouteClick($event, areaPath('dom', area.id))"><strong>{{ area.label }}</strong><span>{{ area.description }}</span></a></div>
             </template>
             <template v-else-if="currentRoute?.kind === 'component' && currentRoute.subject">
-              <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ componentDescriptions[currentRoute.subject] }}</p>
+              <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ activeComponent?.description }}</p>
               <h2 class="docs-section-heading">Examples</h2><ExampleGallery :examples="subjectExamples" />
-              <section class="docs-prose-section"><h2>Composition</h2>
-                <template v-if="currentRoute.subject === 'Checkbox'"><p>Import <code>CheckboxRoot</code> and <code>CheckboxIndicator</code> from <code>@sectile/vue/checkbox</code>. The root renders the interactive element; the indicator appears for checked or indeterminate state.</p><p>Give the root a visible label or an <code>aria-label</code>. Bind <code>v-model</code> when the application owns the value. Use <code>defaultValue</code> for an initial component-owned value.</p><h2>Keyboard interaction</h2><p>Tab focuses the control. Space changes its checked state. <code>disabled</code> prevents interaction; <code>readonly</code> keeps the value fixed without making the control disabled.</p></template>
-                <template v-else-if="currentRoute.subject === 'Disclosure'"><p>Import <code>DisclosureRoot</code>, <code>DisclosureTrigger</code>, and <code>DisclosureContent</code> from <code>@sectile/vue/disclosure</code>. Bind <code>v-model</code> when your application owns the open state.</p><h2>Exit transitions</h2><p>Style the content’s <code>data-state</code> attribute with CSS transitions. During an exit, content remains present but inert; once the transition ends it becomes hidden. Reopening during an exit keeps the content available. A reduced-motion rule can disable the transition.</p></template>
-                <template v-else><p>Import the dialog parts from <code>@sectile/vue/dialog</code>. Keep the trigger and portal under the same <code>DialogRoot</code>. Place the overlay, content, title, description, and close control inside the portal.</p><p><code>DialogTitle</code> and <code>DialogDescription</code> supply the accessible name and description. Bind <code>v-model:open</code> when the application owns open state.</p><h2>Focus and dismissal</h2><p>The default modal dialog moves focus into its content and keeps keyboard focus inside while open. Escape dismisses it; focus returns to the trigger on close. A visible close control gives pointer and keyboard users an explicit way to dismiss it.</p></template>
+              <section v-if="activeComponent" class="docs-prose-section">
+                <h2>Composition</h2>
+                <p>Import <template v-for="(part, index) in activeComponent.parts" :key="part"><span v-if="index">, </span><code>{{ part }}</code></template> from <code>{{ activeComponent.module }}</code>.</p>
+                <p v-for="paragraph in activeComponent.composition" :key="paragraph">{{ paragraph }}</p>
+                <h2>Interaction</h2>
+                <p v-for="paragraph in activeComponent.interaction" :key="paragraph">{{ paragraph }}</p>
               </section>
             </template>
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">

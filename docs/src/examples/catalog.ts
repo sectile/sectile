@@ -18,6 +18,46 @@ export type ExampleArea = (typeof areas)[number]['id'];
 export type ExampleKind = 'behavior' | 'styling';
 export type PreviewFixture = 'control' | 'form' | 'surface' | 'viewport' | 'table' | 'chart';
 
+export interface ComponentDefinition {
+  readonly subject: string;
+  readonly slug: string;
+  readonly description: string;
+  readonly module: string;
+  readonly parts: readonly string[];
+  readonly composition: readonly string[];
+  readonly interaction: readonly string[];
+}
+
+export const components: readonly ComponentDefinition[] = [
+  {
+    subject: 'Checkbox', slug: 'checkbox', module: '@sectile/vue/checkbox',
+    description: 'A two-state or indeterminate selection control. Compose its interactive root and conditional indicator, with state owned by the component or your application.',
+    parts: ['CheckboxRoot', 'CheckboxIndicator'],
+    composition: ['The root renders the interactive element; the indicator appears for checked or indeterminate state. Give the root a visible label or an aria-label.', 'Bind v-model when the application owns the value. Use defaultValue for an initial component-owned value.'],
+    interaction: ['Tab focuses the control. Space changes its checked state. disabled prevents interaction; readonly keeps the value fixed without making the control disabled.'],
+  },
+  {
+    subject: 'Dialog', slug: 'dialog', module: '@sectile/vue/dialog',
+    description: 'A modal surface for a task that needs protected focus. Compose a trigger, portal, overlay, and labeled content while Sectile coordinates dismissal and focus.',
+    parts: ['DialogRoot', 'DialogTrigger', 'DialogPortal', 'DialogOverlay', 'DialogContent', 'DialogTitle', 'DialogDescription', 'DialogClose'],
+    composition: ['Keep the trigger and portal under the same DialogRoot. Place the overlay, content, title, description, and close control inside the portal.', 'DialogTitle and DialogDescription supply the accessible name and description. Bind v-model:open when the application owns open state.'],
+    interaction: ['The default modal dialog moves focus into its content and keeps keyboard focus inside while open. Escape dismisses it; focus returns to the trigger on close. A visible close control gives pointer and keyboard users an explicit way to dismiss it.'],
+  },
+  {
+    subject: 'Disclosure', slug: 'disclosure', module: '@sectile/vue/disclosure',
+    description: 'Show or hide a section of content. Its presence handling retains the section during an exit transition and makes the exiting content inert.',
+    parts: ['DisclosureRoot', 'DisclosureTrigger', 'DisclosureContent'],
+    composition: ['Place the trigger and content inside DisclosureRoot. Bind v-model when your application owns the open state.'],
+    interaction: ['Style the content’s data-state attribute with CSS transitions. During an exit, content remains present but inert; once the transition ends it becomes hidden. Reopening during an exit keeps the content available. A reduced-motion rule can disable the transition.'],
+  },
+];
+
+export function componentPath(subject: string): string {
+  const component = components.find((entry) => entry.subject === subject);
+  if (!component) throw new TypeError(`Unknown documented component: ${subject}`);
+  return `/vue/components/${component.slug}`;
+}
+
 export interface ExampleDefinition {
   readonly id: string;
   readonly host: ExampleHost;
