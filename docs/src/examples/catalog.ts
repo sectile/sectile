@@ -30,6 +30,120 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "Select",
+    "slug": "select",
+    "module": "@sectile/vue/select",
+    "description": "Select one delivery method while an unavailable option remains visible but cannot be chosen.",
+    "parts": [
+      "SelectRoot",
+      "SelectTrigger",
+      "SelectValue",
+      "SelectContent",
+      "SelectViewport",
+      "SelectItem",
+      "SelectItemText"
+    ],
+    "composition": [
+      "Provide ordered item values, matching items and a visible trigger. Bind v-model to the selected string or null."
+    ],
+    "interaction": [
+      "The trigger opens the list. Arrow keys navigate enabled choices; Enter accepts a choice and Escape dismisses the list."
+    ]
+  },
+  {
+    "subject": "Combobox",
+    "slug": "combobox",
+    "module": "@sectile/vue/combobox",
+    "description": "Search a small member collection while keeping the query separate from the selected member ID.",
+    "parts": [
+      "ComboboxRoot",
+      "ComboboxInput",
+      "ComboboxContent",
+      "ComboboxItem",
+      "ComboboxEmpty"
+    ],
+    "composition": [
+      "Each item has a stable id and label. v-model owns the accepted ID; v-model:inputValue owns the editable search text."
+    ],
+    "interaction": [
+      "Typing filters matches. Arrow keys highlight an available result and Enter accepts it. ComboboxEmpty describes a query with no results."
+    ]
+  },
+  {
+    "subject": "Listbox",
+    "slug": "listbox",
+    "module": "@sectile/vue/listbox",
+    "description": "Choose several notification destinations from a persistently visible list.",
+    "parts": [
+      "ListboxRoot",
+      "ListboxItem",
+      "ListboxItemIndicator"
+    ],
+    "composition": [
+      "Supply item values and selectionMode. In multiple mode, bind v-model to an array of selected strings."
+    ],
+    "interaction": [
+      "Arrow keys navigate items. Each item exposes aria-selected so selection can be styled without relying on its text."
+    ]
+  },
+  {
+    "subject": "TagsInput",
+    "slug": "tags-input",
+    "module": "@sectile/vue/tags-input",
+    "description": "Edit a collection of delivery tags with a native text input and explicit removal controls.",
+    "parts": [
+      "TagsInputRoot",
+      "TagsInputInput",
+      "TagsInputItem",
+      "TagsInputItemText",
+      "TagsInputItemDelete",
+      "TagsInputClear"
+    ],
+    "composition": [
+      "Bind v-model to an array of strings. Give each item its current index and put its text and removal control inside that item."
+    ],
+    "interaction": [
+      "Enter commits a typed tag. A removal control deletes one tag; Clear removes the whole collection."
+    ]
+  },
+  {
+    "subject": "PinInput",
+    "slug": "pin-input",
+    "module": "@sectile/vue/pin-input",
+    "description": "Collect a four-character verification code in coordinated input segments.",
+    "parts": [
+      "PinInputRoot",
+      "PinInputInput"
+    ],
+    "composition": [
+      "Set length and use zero-based input indexes. Bind v-model to the complete string. otp requests one-time-code input semantics; it does not verify a code."
+    ],
+    "interaction": [
+      "Typing advances between segments. The root slot exposes complete when all segments are filled."
+    ]
+  },
+  {
+    "subject": "Editable",
+    "slug": "editable",
+    "module": "@sectile/vue/editable",
+    "description": "Edit a delivery name while keeping the saved value separate from its active draft.",
+    "parts": [
+      "EditableRoot",
+      "EditableArea",
+      "EditablePreview",
+      "EditableInput",
+      "EditableEditTrigger",
+      "EditableSubmitTrigger",
+      "EditableCancelTrigger"
+    ],
+    "composition": [
+      "Keep the preview, input and action triggers under the same root. Bind v-model to the committed string; submitOnBlur=false keeps saving explicit."
+    ],
+    "interaction": [
+      "Edit starts a draft. Save commits that draft; Cancel restores the committed value."
+    ]
+  },
+  {
     "subject": "NumberField",
     "slug": "number-field",
     "module": "@sectile/vue/number-field",
@@ -261,6 +375,156 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-select-disabled-options",
+    "host": "vue",
+    "area": "components",
+    "subject": "Select",
+    "slug": "select/disabled-options",
+    "title": "Unavailable delivery methods",
+    "description": "Select one delivery method while an unavailable option remains visible but cannot be chosen.",
+    "focus": "Unavailable delivery methods",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Select"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/select/disabled-options/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/select/disabled-options/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-combobox-search-results",
+    "host": "vue",
+    "area": "components",
+    "subject": "Combobox",
+    "slug": "combobox/search-results",
+    "title": "Searchable members",
+    "description": "Search a small member collection while keeping the query separate from the selected member ID.",
+    "focus": "Searchable members",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Combobox"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/combobox/search-results/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/combobox/search-results/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-listbox-multiple-selection",
+    "host": "vue",
+    "area": "components",
+    "subject": "Listbox",
+    "slug": "listbox/multiple-selection",
+    "title": "Multiple destinations",
+    "description": "Choose several notification destinations from a persistently visible list.",
+    "focus": "Multiple destinations",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Listbox"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/listbox/multiple-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/listbox/multiple-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-tags-input-edit-tags",
+    "host": "vue",
+    "area": "components",
+    "subject": "TagsInput",
+    "slug": "tags-input/edit-tags",
+    "title": "Adding and removing tags",
+    "description": "Edit a collection of delivery tags with a native text input and explicit removal controls.",
+    "focus": "Adding and removing tags",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "TagsInput"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/tags-input/edit-tags/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/tags-input/edit-tags/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-pin-input-verification-code",
+    "host": "vue",
+    "area": "components",
+    "subject": "PinInput",
+    "slug": "pin-input/verification-code",
+    "title": "A verification code",
+    "description": "Collect a four-character verification code in coordinated input segments.",
+    "focus": "A verification code",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "PinInput"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/pin-input/verification-code/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/pin-input/verification-code/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-editable-commit-cancel",
+    "host": "vue",
+    "area": "components",
+    "subject": "Editable",
+    "slug": "editable/commit-cancel",
+    "title": "Saving or cancelling a draft",
+    "description": "Edit a delivery name while keeping the saved value separate from its active draft.",
+    "focus": "Saving or cancelling a draft",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Editable"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/editable/commit-cancel/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/editable/commit-cancel/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     "id": "vue-components-number-field-decimal-value",
     "host": "vue",

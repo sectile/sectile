@@ -15,7 +15,7 @@ const count = (example: ExampleDefinition) => props.examples.filter((entry) => e
   <div class="docs-example-grid">
     <a v-for="example in entries" :key="example.id" class="docs-example-card" :href="routeHref(destination(example))" @click="handleRouteClick($event, destination(example))">
       <div class="docs-example-card__thumbnail" aria-hidden="true">
-        <div v-if="['NumberField', 'SpinButton', 'Slider', 'Progress', 'Meter', 'Rating', 'Timer'].includes(example.subject)" class="docs-thumbnail-dialog"><strong>{{ example.subject }}</strong><span>{{ example.title }}</span><i>{{ example.focus }}</i></div>
+        <div v-if="['NumberField', 'SpinButton', 'Slider', 'Progress', 'Meter', 'Rating', 'Timer', 'Select', 'Combobox', 'Listbox', 'TagsInput', 'PinInput', 'Editable'].includes(example.subject)" class="docs-thumbnail-dialog"><strong>{{ example.subject }}</strong><span>{{ example.title }}</span><i>{{ example.focus }}</i></div>
         <div v-else-if="example.subject === 'Calendar'" class="docs-thumbnail-dialog"><strong>Delivery date</strong><span>October 2026</span><i>Selected day: 3</i></div>
         <div v-else-if="example.subject === 'VirtualList'" class="docs-thumbnail-dialog"><strong>Deliveries</strong><span>500 items</span><i>Nearby rows only</i></div>
         <div v-else-if="example.subject === 'DataTable'" class="docs-thumbnail-dialog"><strong>Project members</strong><span>Ada · Engineer</span><i>Grace · Designer</i></div>

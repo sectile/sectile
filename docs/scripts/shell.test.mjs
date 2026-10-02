@@ -209,6 +209,12 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-select-disabled-options': [/Delivery: Standard/u, /aria-disabled="true"/u],
+          'vue-components-combobox-search-results': [/role="combobox"/u, /Member: none/u],
+          'vue-components-listbox-multiple-selection': [/aria-multiselectable="true"/u, /Destinations: Email/u],
+          'vue-components-tags-input-edit-tags': [/Tags: priority/u, /data-part="item-delete"/u],
+          'vue-components-pin-input-verification-code': [/Code incomplete/u, /data-part="input"/u],
+          'vue-components-editable-commit-cancel': [/Saved name: Reception delivery/u, /Cancel edit/u],
           'vue-components-number-field-decimal-value': [/value="12.5"/u, /Committed weight: 12.5/u],
           'vue-components-spin-button-bounded-quantity': [/role="spinbutton"/u, /Quantity: 3/u],
           'vue-components-slider-stepped-value': [/role="slider"/u, /aria-valuenow="40"/u, /--sectile-slider-percentage:40%/u],
