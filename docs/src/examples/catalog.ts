@@ -813,6 +813,16 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    id: 'vue-tabular-sortable-data-grid', host: 'vue', area: 'tabular', subject: 'DataGrid', slug: 'sortable-data-grid', title: 'Sort and search a data grid',
+    description: 'Evaluate sort and search requests with a bounded client source.', focus: 'Query-driven sort and filtering', kind: 'behavior', fixture: 'table', tags: ['query', 'source', 'grid'], sourceOwner: 'vue', previewPath: './vue/tabular/sortable-data-grid/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/sortable-data-grid/Preview.vue' }, { label: 'Source', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
+  },
+  {
+    id: 'vue-tabular-grouped-data-tree-grid', host: 'vue', area: 'tabular', subject: 'DataTreeGrid', slug: 'grouped-data-tree-grid', title: 'Grouped member tree grid',
+    description: 'Request grouped rows and expand their matching source view.', focus: 'Grouping and expansion requests', kind: 'behavior', fixture: 'table', tags: ['groups', 'expansion', 'source'], sourceOwner: 'vue', previewPath: './vue/tabular/grouped-data-tree-grid/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/grouped-data-tree-grid/Preview.vue' }, { label: 'Source', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
+  },
+  {
     id: 'vue-form-validation-and-server-issues', host: 'vue', area: 'form', subject: 'Form', slug: 'validation-and-server-issues',
     title: 'Validation and submission issues', description: 'Combine native constraints, cross-field validation, returned field issues and reset.', focus: 'Field validation and failed submissions',
     kind: 'behavior', fixture: 'form', tags: ['validation', 'server issues', 'reset'], sourceOwner: 'vue', previewPath: './vue/form/validation-and-server-issues/Preview.vue',

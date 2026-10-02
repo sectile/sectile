@@ -202,7 +202,50 @@ test('every shipped route renders and all internal page links resolve', async ()
       assert.equal(prevented, true);
       if (!accepted) assert.equal(result.issues[0].path, 'email');
     }
-    const { resolveMembers } = await server.ssrLoadModule('/src/examples/vue/tabular/local-source/example.ts');
+    const { resolveMembers, createMemberSource, createMemberInitialView } = await server.ssrLoadModule('/src/examples/vue/tabular/local-source/example.ts');
+    const { createTabularQuery } = await server.ssrLoadModule('@sectile/tabular/query');
+    const { useDataGrid } = await server.ssrLoadModule('@sectile/vue/data-grid');
+    const { useDataTreeGrid } = await server.ssrLoadModule('@sectile/vue/data-tree-grid');
+    for (const grouped of [false, true]) {
+      const source = createMemberSource();
+      const profile = grouped
+        ? useDataTreeGrid({ source, initialView: createMemberInitialView(source) })
+        : useDataGrid({ source, initialView: createMemberInitialView(source) });
+      const acceptPending = async () => {
+        const request = profile.requestState.value.pendingRequest;
+        assert.ok(request);
+        const response = await source(request, { signal: new AbortController().signal });
+        const accepted = profile.synchronizeView(response);
+        assert.equal(accepted.ok, true, JSON.stringify(accepted));
+        return response;
+      };
+      try {
+        assert.equal(profile.requestView().ok, true);
+        let initial = await acceptPending();
+        const columns = profile.getProjection().columns;
+        assert.deepEqual([...columns.start, ...columns.center, ...columns.end], ['name', 'role']);
+        if (grouped) {
+          assert.equal(profile.dispatch({ type: 'set-query', query: createTabularQuery({ groups: [{ id: 'member-role', columnID: 'role', policy: 'role' }] }) }).ok, true);
+          initial = await acceptPending();
+          assert.equal(initial.rows.length, 2);
+          assert.ok(initial.rows.every(row => row.kind === 'group'));
+          assert.equal(profile.dispatch({ type: 'set-row-expanded', rowID: initial.rows[0].id, open: true }).ok, true);
+          const expanded = await acceptPending();
+          assert.ok(expanded.rows.some(row => row.kind === 'leaf'));
+          assert.equal(expanded.matchingLeafCount.value, 3);
+        } else {
+          assert.deepEqual(initial.rows.map(row => row.id), ['ada', 'grace', 'linus']);
+          const query = createTabularQuery({ sort: [{ id: 'member-name', columnID: 'name', direction: 'descending', comparator: 'text' }] });
+          const sorted = profile.dispatch({ type: 'set-query', query });
+          assert.equal(sorted.ok, true, JSON.stringify(sorted));
+          assert.deepEqual((await acceptPending()).rows.map(row => row.id), ['linus', 'grace', 'ada']);
+          assert.equal(profile.dispatch({ type: 'set-query', query: createTabularQuery({ filters: [{ id: 'member-search', scope: 'global', predicate: 'contains', value: 'designer' }] }) }).ok, true);
+          assert.deepEqual((await acceptPending()).rows.map(row => row.id), ['grace']);
+        }
+      } finally {
+        profile.dispose();
+      }
+    }
     const { useDataTable } = await server.ssrLoadModule('@sectile/vue/data-table');
     const table = useDataTable({ source: resolveMembers });
     try {
@@ -238,6 +281,8 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-tabular-sortable-data-grid': [/Sortable project members/u, /Search members/u, /evaluates the query/u],
+          'vue-tabular-grouped-data-tree-grid': [/Project members grouped by role/u, /Expansion requests a new source view/u],
           'vue-form-validation-and-server-issues': [/No accepted submission yet/u, /Confirm email/u, /does not contact a server/u],
           'vue-components-primitive-element-adoption': [/Activations: 0/u, /data-example-adopted-button/u],
           'vue-components-host-provider-rtl-tabs': [/Direction: rtl/u, /dir="rtl"/u, /Switch to LTR/u],
