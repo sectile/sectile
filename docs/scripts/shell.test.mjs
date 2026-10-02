@@ -184,6 +184,24 @@ test('every shipped route renders and all internal page links resolve', async ()
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const { validateNotificationEmail, submitNotificationEmail } = await server.ssrLoadModule('/src/examples/vue/form/validation-and-server-issues/example.ts');
+    const validationContext = { trigger: 'submit', intent: 'submission', changedFieldId: null, signal: new AbortController().signal };
+    assert.deepEqual(await validateNotificationEmail({ email: 'USER@example.com', confirmation: 'user@example.com' }, validationContext), { issues: [] });
+    const mismatch = await validateNotificationEmail({ email: 'first@example.com', confirmation: 'second@example.com' }, validationContext);
+    assert.equal(mismatch.issues[0].path, 'confirmation');
+    assert.deepEqual(mismatch.issues[0].relatedPaths, ['email']);
+    const abortedValidation = new AbortController();
+    abortedValidation.abort();
+    assert.throws(() => validateNotificationEmail({}, { ...validationContext, signal: abortedValidation.signal }), { name: 'AbortError' });
+    for (const [email, accepted] of [['blocked@example.com', false], ['user@example.com', true]]) {
+      let prevented = false;
+      const formData = new FormData();
+      formData.set('email', email);
+      const result = await submitNotificationEmail({ formData, preventDefault: () => { prevented = true; } });
+      assert.equal(result.ok, accepted);
+      assert.equal(prevented, true);
+      if (!accepted) assert.equal(result.issues[0].path, 'email');
+    }
     const { resolveMembers } = await server.ssrLoadModule('/src/examples/vue/tabular/local-source/example.ts');
     const { useDataTable } = await server.ssrLoadModule('@sectile/vue/data-table');
     const table = useDataTable({ source: resolveMembers });
@@ -220,6 +238,9 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-form-validation-and-server-issues': [/No accepted submission yet/u, /Confirm email/u, /does not contact a server/u],
+          'vue-components-primitive-element-adoption': [/Activations: 0/u, /data-example-adopted-button/u],
+          'vue-components-host-provider-rtl-tabs': [/Direction: rtl/u, /dir="rtl"/u, /Switch to LTR/u],
           'vue-components-cascade-list-visible-columns': [/Delivery city: Seoul/u, /Country/u, /Busan/u],
           'vue-components-cascade-select-hierarchical-choice': [/Delivery city: Seoul/u, /Korea \/ Seoul/u],
           'vue-components-color-picker-native-and-text': [/Committed color: #4659d4/u, /native-input/u],

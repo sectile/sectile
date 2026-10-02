@@ -30,6 +30,16 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    subject: 'Primitive', slug: 'primitive', module: '@sectile/vue/primitive', description: 'Render an element or adopt one application-owned child without a wrapper.',
+    parts: ['Primitive'], composition: ['Use as to choose a tag or asChild to adopt exactly one element. Attributes and handlers merge onto that child.'],
+    interaction: ['Primitive does not implement a control state machine. Native elements or the component composed above it own their interaction behavior.'],
+  },
+  {
+    subject: 'HostProvider', slug: 'host-provider', module: '@sectile/vue/host-provider', description: 'Supply shared host direction, portal target and ID generation context.',
+    parts: ['HostProvider'], composition: ['Place the provider around controls that consume host context. It renders no wrapper; use application markup to apply visual dir. Nested providers inherit unspecified values.'],
+    interaction: ['The example changes directional tab navigation and visual direction together. Portal targets and custom ID generators are separate optional host policies.'],
+  },
+  {
     "subject": "CascadeList",
     "slug": "cascade-list",
     "module": "@sectile/vue/cascade-list",
@@ -802,6 +812,22 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    id: 'vue-form-validation-and-server-issues', host: 'vue', area: 'form', subject: 'Form', slug: 'validation-and-server-issues',
+    title: 'Validation and submission issues', description: 'Combine native constraints, cross-field validation, returned field issues and reset.', focus: 'Field validation and failed submissions',
+    kind: 'behavior', fixture: 'form', tags: ['validation', 'server issues', 'reset'], sourceOwner: 'vue', previewPath: './vue/form/validation-and-server-issues/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/form/validation-and-server-issues/Preview.vue' }, { label: 'Handlers', language: 'ts', path: './vue/form/validation-and-server-issues/example.ts' }], related: [],
+  },
+  {
+    id: 'vue-components-primitive-element-adoption', host: 'vue', area: 'components', subject: 'Primitive', slug: 'primitive/element-adoption',
+    title: 'Adopt an application element', description: 'Merge handlers and attributes without adding a wrapper.', focus: 'Single-element adoption', kind: 'behavior', fixture: 'control', tags: ['composition'], sourceOwner: 'vue', previewPath: './vue/components/primitive/element-adoption/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/primitive/element-adoption/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-components-host-provider-rtl-tabs', host: 'vue', area: 'components', subject: 'HostProvider', slug: 'host-provider/rtl-tabs',
+    title: 'Shared direction context', description: 'Change host interaction direction and application visual direction together.', focus: 'LTR and RTL tabs', kind: 'behavior', fixture: 'surface', tags: ['direction', 'context'], sourceOwner: 'vue', previewPath: './vue/components/host-provider/rtl-tabs/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/host-provider/rtl-tabs/Preview.vue' }], related: [],
+  },
   {
     "id": "vue-components-cascade-list-visible-columns",
     "host": "vue",
