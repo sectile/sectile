@@ -211,6 +211,12 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-tooltip-focus-hover': [/Archive message/u],
+          'vue-components-alert-dialog-explicit-confirmation': [/Request: active/u],
+          'vue-components-drawer-side-panel': [/Drawer open: false/u],
+          'vue-components-toast-transient-feedback': [/0 notifications/u, /Show saved notification/u],
+          'vue-components-menu-button-action-menu': [/Invoked: none/u, /Message actions/u],
+          'vue-components-dialog-exit-transition': [/Open: false/u, /Open transition dialog/u],
           'vue-components-toolbar-action-navigation': [/role="toolbar"/u, /Last action: none/u],
           'vue-components-pagination-page-selection': [/Page 1 of 6/u, /Previous/u, /Next/u],
           'vue-components-stepper-manual-steps': [/Step: Address/u, /Confirm your delivery address./u],

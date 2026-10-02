@@ -884,6 +884,20 @@
 }
 
 /* A portal leaves the preview ancestor; only example-owned class hooks are global. */
+.docs-preview :is([data-scope="tooltip"], [data-scope="drawer"], [data-scope="alert-dialog"], [data-scope="menu-button"])[data-part="trigger"], .docs-preview--surface button:not([data-scope]) { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-4); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview [data-scope="menu"][data-part="root"] { position: relative; }
+.docs-preview [data-scope="menu-button"][data-part="content"] { z-index: 2; min-width: 200px; padding: var(--docs-surface-inset); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-radius); background: var(--docs-bg); }
+.docs-preview [data-scope="menu"][data-part="item"] { display: flex; width: 100%; min-height: var(--docs-control-height); align-items: center; padding: var(--docs-space-2) var(--docs-space-3); border: 0; border-radius: var(--docs-inner-radius); background: var(--docs-bg); color: var(--docs-text); text-align: left; }
+.docs-preview [data-scope="menu"][data-highlighted] { background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-example-tooltip-content { z-index: 52; max-width: min(280px, calc(100vw - 48px)); padding: var(--docs-space-3) var(--docs-space-4); border-radius: var(--docs-control-radius); background: var(--docs-text); color: var(--docs-bg); font-size: var(--docs-font-size-label); }
+.docs-example-popup-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--docs-space-2); }
+.docs-example-dialog-content.docs-example-drawer-content { inset: 0 0 0 auto; width: min(400px, calc(100vw - 48px)); max-height: 100dvh; border-radius: var(--docs-radius) 0 0 var(--docs-radius); transform: none; }
+.docs-example-drawer-content p { margin: 0 0 var(--docs-space-5); }
+.docs-example-toast-viewport { position: fixed; right: var(--docs-space-5); bottom: var(--docs-space-5); z-index: 55; display: grid; gap: var(--docs-space-3); width: min(360px, calc(100vw - 48px)); margin: 0; padding: 0; list-style: none; }
+.docs-example-toast-viewport [data-part="root"] { padding: var(--docs-space-5); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-example-toast-viewport [data-part="title"] { display: block; margin: 0 0 var(--docs-space-2); font-weight: 600; }
+.docs-example-toast-viewport [data-part="description"] { display: block; margin: 0 0 var(--docs-space-4); color: var(--docs-text-muted); font-size: var(--docs-font-size-label); }
+.docs-example-toast-viewport [data-part="close"] { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
 .docs-example-dialog-overlay {
   position: fixed;
   inset: 0;

@@ -30,6 +30,107 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "Tooltip",
+    "slug": "tooltip",
+    "module": "@sectile/vue/tooltip",
+    "description": "Add supplementary help that is available from keyboard focus as well as pointer hover.",
+    "parts": [
+      "TooltipRoot",
+      "TooltipTrigger",
+      "TooltipPortal",
+      "TooltipContent"
+    ],
+    "composition": [
+      "Keep the trigger and portaled content under the same root. Use a visible trigger label; the tooltip supplies a supplementary description."
+    ],
+    "interaction": [
+      "Focus or hover opens the tooltip. Do not place actions or inputs in tooltip content."
+    ]
+  },
+  {
+    "subject": "AlertDialog",
+    "slug": "alert-dialog",
+    "module": "@sectile/vue/alert-dialog",
+    "description": "Ask for confirmation before changing the preview request state.",
+    "parts": [
+      "AlertDialogRoot",
+      "AlertDialogTrigger",
+      "AlertDialogPortal",
+      "AlertDialogOverlay",
+      "AlertDialogContent",
+      "AlertDialogTitle",
+      "AlertDialogDescription",
+      "AlertDialogClose"
+    ],
+    "composition": [
+      "Provide a title, description and explicit cancel/confirm actions. Application code decides what a confirmation does."
+    ],
+    "interaction": [
+      "The alert dialog protects focus during the decision. A close control dismisses it; this example does not perform a server mutation."
+    ]
+  },
+  {
+    "subject": "Drawer",
+    "slug": "drawer",
+    "module": "@sectile/vue/drawer",
+    "description": "Present delivery details in a modal panel attached to the right edge.",
+    "parts": [
+      "DrawerRoot",
+      "DrawerTrigger",
+      "DrawerPortal",
+      "DrawerOverlay",
+      "DrawerContent",
+      "DrawerTitle",
+      "DrawerDescription",
+      "DrawerClose"
+    ],
+    "composition": [
+      "Choose side on the root and place labeled content in its portal. Bind v-model:open when the application owns visibility."
+    ],
+    "interaction": [
+      "Close the panel with its control or Escape. Modal focus handling keeps interaction within the open panel."
+    ]
+  },
+  {
+    "subject": "Toast",
+    "slug": "toast",
+    "module": "@sectile/vue/toast",
+    "description": "Show bounded, dismissible feedback without interrupting the current task.",
+    "parts": [
+      "ToastProvider",
+      "ToastPortal",
+      "ToastViewport",
+      "ToastRoot",
+      "ToastTitle",
+      "ToastDescription",
+      "ToastClose"
+    ],
+    "composition": [
+      "The provider owns notifications; the slot exposes toast and dismissal actions. Give every pushed notification a unique ID and each root its matching value."
+    ],
+    "interaction": [
+      "Notifications can expire or be dismissed. maxVisible bounds the visible collection; this example disables the global hotkey."
+    ]
+  },
+  {
+    "subject": "MenuButton",
+    "slug": "menu-button",
+    "module": "@sectile/vue/menu-button",
+    "description": "Open message actions from one trigger while retaining explicit unavailable items.",
+    "parts": [
+      "MenuButtonRoot",
+      "MenuButtonTrigger",
+      "MenuButtonContent",
+      "MenuItem"
+    ],
+    "composition": [
+      "Supply action nodes with stable IDs and matching MenuItem values. Handle invoke to run an application action."
+    ],
+    "interaction": [
+      "The trigger opens the menu; arrow keys move through enabled actions. Activation emits the action ID. Escape dismisses the menu."
+    ]
+  },
+  {
     "subject": "Toolbar",
     "slug": "toolbar",
     "module": "@sectile/vue/toolbar",
@@ -486,6 +587,156 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-tooltip-focus-hover",
+    "host": "vue",
+    "area": "components",
+    "subject": "Tooltip",
+    "slug": "tooltip/focus-hover",
+    "title": "A focus and hover tooltip",
+    "description": "Add supplementary help that is available from keyboard focus as well as pointer hover.",
+    "focus": "A focus and hover tooltip",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "Tooltip"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/tooltip/focus-hover/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/tooltip/focus-hover/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-alert-dialog-explicit-confirmation",
+    "host": "vue",
+    "area": "components",
+    "subject": "AlertDialog",
+    "slug": "alert-dialog/explicit-confirmation",
+    "title": "Explicit confirmation",
+    "description": "Ask for confirmation before changing the preview request state.",
+    "focus": "Explicit confirmation",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "AlertDialog"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/alert-dialog/explicit-confirmation/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/alert-dialog/explicit-confirmation/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-drawer-side-panel",
+    "host": "vue",
+    "area": "components",
+    "subject": "Drawer",
+    "slug": "drawer/side-panel",
+    "title": "A right-side drawer",
+    "description": "Present delivery details in a modal panel attached to the right edge.",
+    "focus": "A right-side drawer",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "Drawer"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/drawer/side-panel/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/drawer/side-panel/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-toast-transient-feedback",
+    "host": "vue",
+    "area": "components",
+    "subject": "Toast",
+    "slug": "toast/transient-feedback",
+    "title": "Transient feedback",
+    "description": "Show bounded, dismissible feedback without interrupting the current task.",
+    "focus": "Transient feedback",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "Toast"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/toast/transient-feedback/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/toast/transient-feedback/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-menu-button-action-menu",
+    "host": "vue",
+    "area": "components",
+    "subject": "MenuButton",
+    "slug": "menu-button/action-menu",
+    "title": "An action menu",
+    "description": "Open message actions from one trigger while retaining explicit unavailable items.",
+    "focus": "An action menu",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "MenuButton"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/menu-button/action-menu/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/menu-button/action-menu/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-dialog-exit-transition",
+    "host": "vue",
+    "area": "components",
+    "subject": "Dialog",
+    "slug": "dialog/exit-transition",
+    "title": "Retained dialog reopening",
+    "description": "Close and reopen a modal during its CSS exit transition without replacing its state owner.",
+    "focus": "Retained dialog reopening",
+    "kind": "styling",
+    "fixture": "surface",
+    "tags": [
+      "Dialog"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/dialog/exit-transition/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/dialog/exit-transition/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     "id": "vue-components-toolbar-action-navigation",
     "host": "vue",
