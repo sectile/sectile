@@ -28,6 +28,25 @@ test('range construction retains the accepted count and decimal observations', (
   assert.equal(stepReads, 1);
 });
 
+test('range construction rejects ceilings and count before reading decimal inputs', () => {
+  const unreadable = () => { throw new Error('Rejected input must not be observed.'); };
+  for (const [count, maxCount, code] of [
+    [-1, 4, 'invalid-count'],
+    [Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, 'cardinality-not-safe'],
+    [2, 1, 'count-ceiling-exceeded'],
+  ]) {
+    const result = tryCreateRange({ count, maxCount, get origin() { return unreadable(); }, get step() { return unreadable(); } });
+    assert.equal(result.ok, false);
+    assert.equal(result.error.code, code);
+  }
+  const result = tryCreateRange({ maxCount: -1, get count() { return unreadable(); }, get origin() { return unreadable(); }, get step() { return unreadable(); } });
+  assert.equal(result.ok, false);
+  assert.equal(result.error.code, 'invalid-max-count');
+  const bounded = tryCreateBoundedRange({ maxCount: -1, get min() { return unreadable(); }, get max() { return unreadable(); }, get step() { return unreadable(); } });
+  assert.equal(bounded.ok, false);
+  assert.equal(bounded.error.code, 'invalid-max-count');
+});
+
 test('RNG-01,07,08: tick/value and ratio observations are exact inverses', () => {
   const configurations = [
     ['0', '1', 12],

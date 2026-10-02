@@ -411,9 +411,6 @@ export function createRange(input: RangeInput): QuantizedRange {
 }
 
 export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
-  const count = input.count;
-  const originInput = input.origin;
-  const stepInput = input.step;
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -425,6 +422,7 @@ export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
     const error = validateSafeCeiling(value, name, minimum);
     if (error !== null) return { ok: false, error };
   }
+  const count = input.count;
   const countError = validateSafeCeiling(count, 'count');
   if (countError !== null) return { ok: false, error: countError };
   if (count >= Number.MAX_SAFE_INTEGER) {
@@ -441,6 +439,8 @@ export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
       maxCount,
     });
   }
+  const originInput = input.origin;
+  const stepInput = input.step;
   for (const [value, name] of [
     [originInput, 'origin'],
     [stepInput, 'step'],
@@ -474,9 +474,6 @@ export function createBoundedRange(input: BoundedRangeInput): QuantizedRange {
 }
 
 export function tryCreateBoundedRange(input: BoundedRangeInput): Result<QuantizedRange> {
-  const minInput = input.min;
-  const maxInput = input.max;
-  const stepInput = input.step;
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -488,6 +485,9 @@ export function tryCreateBoundedRange(input: BoundedRangeInput): Result<Quantize
     const error = validateSafeCeiling(value, name, minimum);
     if (error !== null) return { ok: false, error };
   }
+  const minInput = input.min;
+  const maxInput = input.max;
+  const stepInput = input.step;
   for (const [value, name] of [
     [minInput, 'min'],
     [maxInput, 'max'],
