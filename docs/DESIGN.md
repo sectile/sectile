@@ -57,6 +57,8 @@ rounded:
   inner: "7px"
   surface: "16px"
   dialog: "16px"
+  switch-track: "14px"
+  switch-thumb: "10px"
 spacing:
   space-1: "4px"
   space-2: "8px"
@@ -99,6 +101,14 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "8px 12px"
+  switch-track:
+    backgroundColor: "{colors.control-border}"
+    rounded: "{rounded.switch-track}"
+    padding: "3px"
+    width: "44px"
+    height: "28px"
+  switch-track-checked:
+    backgroundColor: "{colors.accent}"
   code-block:
     backgroundColor: "{colors.code-background}"
     textColor: "{colors.code-text}"
@@ -213,6 +223,11 @@ yielding 7px. This equation describes concentric surfaces, not every control
 placed somewhere inside a larger preview. Independent controls use the control
 radius; checkbox squares and inline code use the small radius.
 
+The switch track is 44px wide and 28px high with a 1px border and a 20px thumb.
+Its equal inset is (28 − 2 × 1 − 20) / 2 = 3px, and thumb travel is
+44 − 2 × 1 − 2 × 3 − 20 = 16px. Circular corners use half the element height:
+14px outside and 10px inside, also equal to 14 − 1 − 3.
+
 **The Concentric Corners Rule.** Derive a flush inset surface from its actual outer
 radius, border, and inset. Keep independent control geometry a separate role.
 
@@ -233,6 +248,9 @@ Sidebar links change from muted ink to ink on a muted-paper hover; the current
 page uses violet wash and violet text. Nested component links indent within their
 package group. The mobile menu exposes expanded state, closes on route changes
 or Escape, and returns focus to its trigger on Escape.
+
+Component child routes are expanded within the Components area. Other guides
+retain the same area navigation without showing every component child.
 
 ### Reading links and galleries
 
@@ -261,6 +279,13 @@ and translation transition. Its status reflects the content element's actual
 hidden and inert attributes rather than an application timer. Closing, reopening
 during exit, completing exit, and reduced motion are separate inspection cases.
 The example's attribute observer is disconnected when the example unmounts.
+
+Switches, toggle buttons, toggle groups, radio groups, tabs, and popovers share
+the control height, spacing, border, and focus roles. Group rows wrap and align
+their controls at the center. Pressed choices and active tabs use violet wash;
+disabled controls are subdued. Tabs keep explanatory panel text in the sans-serif
+voice. Popover content uses the surface radius and equal padding; positioning is
+owned by the interaction rather than a fixed documentation offset.
 
 ## Do's and Don'ts
 

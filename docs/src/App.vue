@@ -61,7 +61,7 @@ function closeMenu(event: KeyboardEvent): void {
             <p class="docs-sidebar__label">Explore</p>
             <template v-for="area in areas" :key="area.id">
               <a class="docs-sidebar__link" :class="{ 'is-parent': currentRoute?.area === area.id }" :href="routeHref(areaPath(activeHost.id, area.id))" :aria-current="currentPath === areaPath(activeHost.id, area.id) ? 'page' : undefined" @click="handleRouteClick($event, areaPath(activeHost.id, area.id))">{{ area.label }}<span class="docs-sidebar__count" :aria-label="`${examplesFor(activeHost.id, area.id).length} examples`">{{ examplesFor(activeHost.id, area.id).length }}</span></a>
-              <template v-if="activeHost.id === 'vue' && area.id === 'components'">
+              <template v-if="activeHost.id === 'vue' && area.id === 'components' && currentRoute?.area === 'components'">
                 <a v-for="route in componentRoutes" :key="route.path" class="docs-sidebar__link docs-sidebar__link--nested" :class="{ 'is-parent': currentPath.startsWith(`${route.path}/`) }" :href="routeHref(route.path)" :aria-current="currentPath === route.path ? 'page' : undefined" @click="handleRouteClick($event, route.path)">{{ route.label }}</a>
               </template>
             </template>

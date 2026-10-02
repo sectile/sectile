@@ -183,6 +183,16 @@ test('every shipped route renders and all internal page links resolve', async ()
       if (route.kind === 'example') {
         assert.match(html, /class="docs-preview/u);
         assert.match(html, /<details class="docs-code-disclosure">/u);
+        const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
+        const initialStates = {
+          'vue-components-switch-controlled-state': [/role="switch"/u, /aria-checked="false"/u, /Enabled: false/u],
+          'vue-components-toggle-button-pressed-state': [/aria-pressed="false"/u, /Pinned: false/u],
+          'vue-components-toggle-group-multiple-selection': [/aria-pressed="true"/u, /Selected: bold/u, /aria-disabled="true"/u],
+          'vue-components-radio-group-disabled-options': [/role="radiogroup"/u, /aria-checked="true"/u, /Delivery: Standard/u, /aria-disabled="true"/u],
+          'vue-components-tabs-manual-activation': [/role="tablist"/u, /aria-selected="true"/u, /Selected: Overview/u, /aria-disabled="true"/u],
+          'vue-components-popover-positioned-dismissal': [/aria-expanded="false"/u, /Open: false/u],
+        };
+        for (const state of initialStates[route.exampleId] ?? []) assert.match(preview, state, route.path);
         if (route.exampleId === 'vue-components-disclosure-exit-transition') {
           assert.match(html, /<output[^>]*aria-live="polite"[^>]*>Open: true · Present<\/output>/u);
           assert.match(html, /aria-expanded="true"/u);

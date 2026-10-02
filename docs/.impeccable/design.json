@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-02T20:30:09Z",
+  "generatedAt": "2026-10-02T20:50:24Z",
   "title": "Design System: Sectile Documentation",
   "extensions": {
     "colorMeta": {
@@ -84,6 +84,14 @@
       "description": "Dark source surface with visible copy control; this panel specimen is visual only.",
       "html": "<div class=\"ds-source\"><div class=\"ds-source-header\"><span>Install in your Vue application</span><button type=\"button\">Copy code</button></div><pre tabindex=\"0\" aria-label=\"Installation command\"><code>pnpm add @sectile/vue</code></pre></div>",
       "css": ".ds-source{min-width:0;overflow:hidden;border-radius:var(--docs-radius);background:var(--docs-code-bg);color:var(--docs-code-text);font-family:var(--docs-font-sans);line-height:1.65}.ds-source-header{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:12px;padding:8px 24px;border-bottom:1px solid var(--docs-code-border);color:var(--docs-code-muted);font-size:12px}.ds-source-header button{min-height:36px;padding:4px 8px;border:1px solid transparent;border-radius:var(--docs-small-radius);background:transparent;color:var(--docs-code-text);font-family:var(--docs-font-sans);font-size:12px;line-height:1.65;cursor:pointer}.ds-source-header button:hover{border-color:var(--docs-code-control-border)}.ds-source-header button:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-source pre{max-height:560px;margin:0;overflow:auto;padding:24px;font-family:var(--docs-font-mono);font-size:13px;line-height:1.75;tab-size:2;scrollbar-color:var(--docs-code-control-border) transparent}.ds-source pre:focus-visible{outline:2px solid var(--docs-focus);outline-offset:-3px}.ds-source code{font:inherit}@media(max-width:760px){.ds-source pre{padding:16px;font-size:12px}}"
+    },
+    {
+      "name": "Switch Setting",
+      "kind": "custom",
+      "refersTo": "switch-track",
+      "description": "A checked setting whose track inset and thumb travel are calculated from shared geometry.",
+      "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\"><span class=\"ds-switch-track\"><i></i></span>Email notifications</button>",
+      "css": ".ds-switch{display:inline-flex;min-height:var(--docs-control-height);align-items:center;gap:var(--docs-space-3);padding:var(--docs-space-2) var(--docs-space-3);border:0;border-radius:var(--docs-control-radius);background:transparent;color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;cursor:pointer}.ds-switch-track{display:inline-flex;box-sizing:border-box;width:var(--docs-switch-width);height:var(--docs-switch-height);align-items:center;padding:var(--docs-switch-inset);border:var(--docs-border-width) solid var(--docs-checkbox-border);border-radius:calc(var(--docs-switch-height) / 2);background:var(--docs-control-border)}.ds-switch-track i{width:var(--docs-switch-thumb);height:var(--docs-switch-thumb);flex:none;border-radius:50%;background:var(--docs-bg)}.ds-switch[aria-checked=true] .ds-switch-track{border-color:var(--docs-accent);background:var(--docs-accent)}.ds-switch[aria-checked=true] i{transform:translateX(var(--docs-switch-travel))}.ds-switch:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-switch:disabled{opacity:.5;cursor:not-allowed}"
     }
   ],
   "narrative": {

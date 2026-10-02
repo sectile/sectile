@@ -20,6 +20,11 @@
   --docs-small-radius: 4px;
   --docs-control-height: 44px;
   --docs-checkbox-size: 20px;
+  --docs-switch-width: 44px;
+  --docs-switch-height: 28px;
+  --docs-switch-thumb: 20px;
+  --docs-switch-inset: calc((var(--docs-switch-height) - 2 * var(--docs-border-width) - var(--docs-switch-thumb)) / 2);
+  --docs-switch-travel: calc(var(--docs-switch-width) - 2 * var(--docs-border-width) - 2 * var(--docs-switch-inset) - var(--docs-switch-thumb));
   --docs-reading-width: 760px;
   --docs-border: #e2e2e3;
   --docs-control-border: #8b8b90;

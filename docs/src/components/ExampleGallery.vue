@@ -8,7 +8,12 @@ defineProps<{ examples: readonly ExampleDefinition[] }>();
   <div class="docs-example-grid">
     <a v-for="example in examples" :key="example.id" class="docs-example-card" :href="routeHref(examplePath(example))" @click="handleRouteClick($event, examplePath(example))">
       <div class="docs-example-card__thumbnail" aria-hidden="true">
-        <div v-if="example.subject === 'Checkbox'" class="docs-thumbnail-checkbox"><span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>Notifications</div>
+        <div v-if="example.subject === 'Switch'" class="docs-thumbnail-switch-label"><span class="docs-thumbnail-switch"><i /></span>Email notifications</div>
+        <div v-else-if="example.subject === 'ToggleButton' || example.subject === 'ToggleGroup'" class="docs-thumbnail-choice-row"><span class="is-selected">{{ example.subject === 'ToggleButton' ? 'Pin conversation' : 'bold' }}</span><span v-if="example.subject === 'ToggleGroup'">italic</span></div>
+        <div v-else-if="example.subject === 'RadioGroup'" class="docs-thumbnail-radio"><span />Standard delivery</div>
+        <div v-else-if="example.subject === 'Tabs'" class="docs-thumbnail-tabs"><div><strong>Overview</strong><span>Activity</span></div><p>Project settings</p></div>
+        <div v-else-if="example.subject === 'Popover'" class="docs-thumbnail-dialog"><strong>Delivery details</strong><span>Email notifications</span><i>Close details</i></div>
+        <div v-else-if="example.subject === 'Checkbox'" class="docs-thumbnail-checkbox"><span><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg></span>Notifications</div>
         <div v-else-if="example.subject === 'Dialog'" class="docs-thumbnail-dialog"><strong>Notification settings</strong><span>Manage delivery preferences.</span><i>Close</i></div>
         <div v-else-if="example.subject === 'Disclosure'" class="docs-thumbnail-dialog"><strong>Delivery preferences</strong><span>Present → exiting → hidden</span><i>Hide details</i></div>
         <div v-else class="docs-thumbnail-form"><span>Email address</span><i>you@example.com</i><strong>Save preferences</strong></div>
