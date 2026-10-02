@@ -138,6 +138,38 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    id: 'vue-temporal-calendar-selection', host: 'vue', area: 'temporal', subject: 'Calendar',
+    slug: 'calendar-selection', title: 'Selecting a calendar date',
+    description: 'Choose a calendar day, move to the previous or next month, and inspect the application value. A fixed reference date keeps this example deterministic.', focus: 'Calendar selection with a reference date',
+    kind: 'behavior', fixture: 'surface', tags: ["v-model","referenceDate","keyboard"], sourceOwner: 'vue',
+    previewPath: './vue/temporal/calendar-selection/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/temporal/calendar-selection/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-virtual-fixed-list', host: 'vue', area: 'virtual', subject: 'VirtualList',
+    slug: 'fixed-list', title: 'Fixed-height virtual list',
+    description: 'Scroll through 500 deliveries while only nearby placements are mounted. Each row has an exact 44px extent and the root owns scrolling.', focus: 'Fixed sizing and bounded mounted rows',
+    kind: 'behavior', fixture: 'viewport', tags: ["sizePolicy","getID","overscan"], sourceOwner: 'vue',
+    previewPath: './vue/virtual/fixed-list/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/virtual/fixed-list/Preview.vue' }], related: [],
+  },
+  {
+    id: 'vue-tabular-local-source', host: 'vue', area: 'tabular', subject: 'DataTable',
+    slug: 'local-source', title: 'A native table from a source',
+    description: 'Render project members from a local resolver with native table semantics. The source runs after mounting; loading and retry presentation belong to the application.', focus: 'Typed source response and native table composition',
+    kind: 'behavior', fixture: 'table', tags: ["source","Provider","native table"], sourceOwner: 'vue',
+    previewPath: './vue/tabular/local-source/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/local-source/Preview.vue' }, { label: 'TypeScript · source resolver', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
+  },
+  {
+    id: 'vue-chart-line-series', host: 'vue', area: 'chart', subject: 'Chart',
+    slug: 'line-series', title: 'A labeled line series',
+    description: 'Map delivery records to two numeric axes and a line layer. Drawing begins after mounting; keyboard navigation uses application-provided record labels.', focus: 'Declarative axes, stable IDs and accessible records',
+    kind: 'behavior', fixture: 'chart', tags: ["ChartLine","keyboard","stable IDs"], sourceOwner: 'vue',
+    previewPath: './vue/chart/line-series/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/chart/line-series/Preview.vue' }], related: [],
+  },
+  {
     id: 'vue-components-checkbox-default-state', host: 'vue', area: 'components',
     subject: 'Checkbox', slug: 'checkbox/default-state', title: 'Component-owned state',
     description: 'Start checked with defaultValue. The component owns later updates, and its slot exposes the current value without an application ref.', focus: 'Default value and state slot',

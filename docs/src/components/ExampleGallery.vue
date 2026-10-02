@@ -15,7 +15,11 @@ const count = (example: ExampleDefinition) => props.examples.filter((entry) => e
   <div class="docs-example-grid">
     <a v-for="example in entries" :key="example.id" class="docs-example-card" :href="routeHref(destination(example))" @click="handleRouteClick($event, destination(example))">
       <div class="docs-example-card__thumbnail" aria-hidden="true">
-        <div v-if="example.subject === 'Accordion'" class="docs-thumbnail-dialog"><strong>Delivery</strong><span>Standard delivery takes three working days.</span><i>Returns</i></div>
+        <div v-if="example.subject === 'Calendar'" class="docs-thumbnail-dialog"><strong>Delivery date</strong><span>October 2026</span><i>Selected day: 3</i></div>
+        <div v-else-if="example.subject === 'VirtualList'" class="docs-thumbnail-dialog"><strong>Deliveries</strong><span>500 items</span><i>Nearby rows only</i></div>
+        <div v-else-if="example.subject === 'DataTable'" class="docs-thumbnail-dialog"><strong>Project members</strong><span>Ada · Engineer</span><i>Grace · Designer</i></div>
+        <div v-else-if="example.subject === 'Chart'" class="docs-thumbnail-dialog"><strong>Weekday deliveries</strong><span>Stable records and numeric axes</span><i>Keyboard inspection</i></div>
+        <div v-else-if="example.subject === 'Accordion'" class="docs-thumbnail-dialog"><strong>Delivery</strong><span>Standard delivery takes three working days.</span><i>Returns</i></div>
         <div v-else-if="example.subject === 'Text'" class="docs-thumbnail-form"><span>Display name</span><i>Ada</i></div>
         <div v-else-if="example.subject === 'Switch'" class="docs-thumbnail-switch-label"><span class="docs-thumbnail-switch"><i /></span>Email notifications</div>
         <div v-else-if="example.subject === 'ToggleButton' || example.subject === 'ToggleGroup'" class="docs-thumbnail-choice-row"><span class="is-selected">{{ example.subject === 'ToggleButton' ? 'Pin conversation' : 'bold' }}</span><span v-if="example.subject === 'ToggleGroup'">italic</span></div>

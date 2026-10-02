@@ -10,7 +10,12 @@
     "typecheck": "sectile-typecheck-sfc --noEmit"
   },
   "dependencies": {
+    "@sectile/chart": "workspace:*",
     "@sectile/dom": "workspace:*",
+    "@sectile/form": "workspace:*",
+    "@sectile/tabular": "workspace:*",
+    "@sectile/temporal": "workspace:*",
+    "@sectile/virtual": "workspace:*",
     "@sectile/vue": "workspace:*",
     "vue": "^3.5.22"
   },

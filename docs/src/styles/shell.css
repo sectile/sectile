@@ -863,6 +863,29 @@
   width: min(100%, 360px);
 }
 
+.docs-preview :is([data-example-calendar], [data-example-virtual-list], [data-example-tabular], [data-example-chart]) { width: 100%; min-width: 0; }
+.docs-preview [data-example-calendar] { max-width: 360px; }
+.docs-preview [data-example-calendar-heading] { display: flex; align-items: center; justify-content: space-between; gap: var(--docs-space-2); margin-bottom: var(--docs-space-4); }
+.docs-preview [data-example-calendar-heading] strong { font-size: var(--docs-font-size-label); font-variant-numeric: tabular-nums; }
+.docs-preview [data-example-calendar] [role="row"] { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: var(--docs-space-1); }
+.docs-preview [data-example-calendar] [role="gridcell"] { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-1); border: 0; border-radius: var(--docs-control-radius); background: transparent; color: var(--docs-text); }
+.docs-preview [data-example-calendar] [aria-selected="true"] { background: var(--docs-accent); color: var(--docs-on-accent); }
+.docs-preview [data-example-calendar] [aria-disabled="true"] { color: var(--docs-disabled-text); background: var(--docs-disabled-bg); }
+.docs-preview [data-example-calendar-heading] button,
+.docs-preview :is([data-example-tabular], [data-example-chart]) button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview [data-example-virtual-list] [data-part="root"] { height: 264px; width: 100%; border-radius: var(--docs-control-radius); background: var(--docs-bg); }
+.docs-preview [data-example-virtual-row] { display: flex; height: 44px; align-items: center; padding-inline: var(--docs-space-4); }
+.docs-preview [data-example-virtual-list] output { margin-top: var(--docs-space-4); }
+.docs-preview [data-example-tabular] { overflow-x: auto; }
+.docs-preview [data-example-tabular] table { width: 100%; border-collapse: collapse; background: var(--docs-bg); text-align: left; font-size: var(--docs-font-size-label); }
+.docs-preview [data-example-tabular] caption { padding: var(--docs-space-3); font-weight: 600; text-align: left; }
+.docs-preview [data-example-tabular] :is(th, td) { padding: var(--docs-space-3) var(--docs-space-4); border-bottom: var(--docs-border-width) solid var(--docs-border); }
+.docs-preview [data-example-tabular] output { display: block; margin-top: var(--docs-space-4); }
+.docs-preview [data-example-chart] [data-part="root"] { position: relative; width: 100%; }
+.docs-preview [data-example-chart] [data-part="plot"] { height: 264px; width: 100%; }
+.docs-preview [data-example-chart] canvas { display: block; height: 100%; width: 100%; }
+.docs-preview [data-example-chart] p { margin-top: var(--docs-space-4); font-family: var(--docs-font-sans); font-size: var(--docs-font-size-label); }
+
 .docs-preview--form form {
   display: grid;
   gap: var(--docs-space-5);
@@ -1109,7 +1132,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .docs-code-disclosure[open] .docs-code-stack {
-    animation: docs-code-reveal 160ms cubic-bezier(.16,1,.3,1);
+    animation: docs-code-reveal var(--docs-motion-reveal) var(--docs-ease-out);
   }
   @keyframes docs-code-reveal {
     from {

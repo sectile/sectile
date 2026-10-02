@@ -111,9 +111,24 @@ importers:
 
   docs:
     dependencies:
+      '@sectile/chart':
+        specifier: workspace:*
+        version: link:../packages/chart
       '@sectile/dom':
         specifier: workspace:*
         version: link:../packages/dom
+      '@sectile/form':
+        specifier: workspace:*
+        version: link:../packages/form
+      '@sectile/tabular':
+        specifier: workspace:*
+        version: link:../packages/tabular
+      '@sectile/temporal':
+        specifier: workspace:*
+        version: link:../packages/temporal
+      '@sectile/virtual':
+        specifier: workspace:*
+        version: link:../packages/virtual
       '@sectile/vue':
         specifier: workspace:*
         version: link:../packages/vue

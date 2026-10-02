@@ -173,6 +173,22 @@ test('every shipped route renders and all internal page links resolve', async ()
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const { resolveMembers } = await server.ssrLoadModule('/src/examples/vue/tabular/local-source/example.ts');
+    const { useDataTable } = await server.ssrLoadModule('@sectile/vue/data-table');
+    const table = useDataTable({ source: resolveMembers });
+    try {
+      const request = table.requestState.value.pendingRequest;
+      assert.ok(request, 'table supplies its public source request');
+      const response = await resolveMembers(request, { signal: new AbortController().signal });
+      const accepted = table.synchronizeView(response);
+      assert.equal(accepted.ok, true, 'the actual example resolver produces an accepted view');
+      assert.deepEqual(table.getProjection().rows.map((row) => row.id), ['ada', 'grace', 'linus']);
+      const aborted = new AbortController();
+      aborted.abort();
+      assert.throws(() => resolveMembers(request, { signal: aborted.signal }), { name: 'AbortError' });
+    } finally {
+      table.dispose();
+    }
     const paths = new Set(routes.map((route) => route.path));
     for (const route of routes) {
       currentPath.value = route.path;
@@ -193,6 +209,10 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-temporal-calendar-selection': [/role="grid"/u, /aria-selected="true"/u, /Selected date: 2026-10-03/u],
+          'vue-virtual-fixed-list': [/Delivery 1/u, /500 items/u],
+          'vue-tabular-local-source': [/<table/u, /Project members/u, /Status: idle/u],
+          'vue-chart-line-series': [/<canvas/u, /drawn after mounting/u],
           'vue-components-checkbox-default-state': [/aria-checked="true"/u, /Weekly summary · enabled/u],
           'vue-components-checkbox-indeterminate-state': [/aria-checked="mixed"/u, /Value: indeterminate/u],
           'vue-components-checkbox-readonly-disabled': [/aria-readonly="true"/u, /<button[^>]*\sdisabled(?:=""|\s|>)/u, /Read-only notifications/u, /Disabled notifications/u],

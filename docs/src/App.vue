@@ -127,7 +127,7 @@ function closeMenu(event: KeyboardEvent): void {
             </template>
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">
               <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
-              <template v-if="activeArea.id === 'form' && activeHost.id === 'vue'"><p class="docs-install-note">Form integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" source="pnpm add @sectile/vue @sectile/form" /></template>
+              <template v-if="activeArea.id !== 'components' && activeHost.id === 'vue'"><p class="docs-install-note">This integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" :source="`pnpm add @sectile/vue @sectile/${activeArea.id}`" /></template>
               <ExampleGallery v-if="areaExamples.length" :examples="areaExamples" :component-index="activeHost.id === 'vue' && activeArea.id === 'components'" />
               <div v-else class="docs-empty-state"><h2>Examples are not documented yet</h2><p>This package area has no runnable {{ activeHost.label }} examples on this site yet. This is a documentation gap, not a statement about package availability.</p><a :href="routeHref(areaPath(activeHost.id, 'components'))" @click="handleRouteClick($event, areaPath(activeHost.id, 'components'))">Browse available component examples</a></div>
             </template>
