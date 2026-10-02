@@ -2275,6 +2275,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/chart/line-series/Preview.vue' }], related: [],
   },
   {
+    id: 'vue-chart-projected-svg', host: 'vue', area: 'chart', subject: 'Chart',
+    slug: 'projected-svg', title: 'Token-colored SVG drawing',
+    description: 'Switch between line, scatter, bar, heatmap, pie and donut projections, update a record, and draw public projected geometry with application-owned SVG and documentation colors.', focus: 'useChart, reactive definitions and application rendering',
+    kind: 'behavior', fixture: 'chart', tags: ['useChart', 'projection', 'SVG', 'reactive data'], sourceOwner: 'vue',
+    previewPath: './vue/chart/projected-svg/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/chart/projected-svg/Preview.vue' }], related: [],
+  },
+  {
     id: 'vue-components-checkbox-default-state', host: 'vue', area: 'components',
     subject: 'Checkbox', slug: 'checkbox/default-state', title: 'Component-owned state',
     description: 'Start checked with defaultValue. The component owns later updates, and its slot exposes the current value without an application ref.', focus: 'Default value and state slot',

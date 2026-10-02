@@ -1038,6 +1038,14 @@
 .docs-preview [data-example-virtual-core] { width: 100%; min-width: 0; }
 .docs-preview [data-example-virtual-core] [data-part="root"] { height: 264px; overflow: auto; border-radius: var(--docs-control-radius); background: var(--docs-bg); }
 .docs-preview [data-example-virtual-core] [data-part="header"] { padding: var(--docs-space-4); }
+.docs-preview [data-example-chart-svg] { width: 100%; min-width: 0; }
+.docs-preview [data-example-chart-svg] svg { display: block; width: 100%; height: auto; background: var(--docs-bg); border-radius: var(--docs-inner-radius); }
+.docs-preview [data-example-chart-svg] :is(circle, rect) { fill: var(--docs-accent); }
+.docs-preview [data-example-chart-svg] path { fill: var(--docs-accent); stroke: var(--docs-bg); stroke-width: 2; }
+.docs-preview [data-example-chart-svg] polyline { fill: none; stroke: var(--docs-accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.docs-preview [data-example-chart-svg] table { width: 100%; border-collapse: collapse; text-align: left; }
+.docs-preview [data-example-chart-svg] :is(th, td) { padding: var(--docs-space-2) var(--docs-space-3); }
+.docs-preview [data-example-chart-svg] caption { text-align: left; font-weight: 600; padding-bottom: var(--docs-space-2); }
 .docs-preview [data-example-tabular] { overflow-x: auto; }
 .docs-preview [data-example-tabular] table { width: 100%; border-collapse: collapse; background: var(--docs-bg); text-align: left; font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-tabular] caption { padding: var(--docs-space-3); font-weight: 600; text-align: left; }

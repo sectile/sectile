@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { createSSRApp } from 'vue';
+import { createSSRApp, nextTick, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createServer } from 'vite';
 import {
@@ -184,6 +184,39 @@ test('every shipped route renders and all internal page links resolve', async ()
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const { useChart } = await server.ssrLoadModule('@sectile/vue/chart');
+    for (const [kind, batchType] of [['line', 'polyline'], ['scatter', 'point'], ['bar', 'rectangle'], ['heatmap', 'cell'], ['pie', 'arc'], ['donut', 'arc']]) {
+      const radial = kind === 'pie' || kind === 'donut';
+      const data = [{ id: 'mon', day: 1, count: 12 }, { id: 'tue', day: 2, count: 18 }];
+      const definition = shallowRef({
+        coordinate: radial ? { kind: 'radial' } : { kind: 'cartesian', axes: [
+          kind === 'bar' || kind === 'heatmap'
+            ? { id: 'day', orientation: 'x', scale: 'categorical', field: 'day', domain: { kind: 'categorical', values: [1, 2] } }
+            : { id: 'day', orientation: 'x', scale: 'linear', field: 'day', domain: { kind: 'numeric', minimum: 0.5, maximum: 5.5 } },
+          kind === 'heatmap'
+            ? { id: 'count', orientation: 'y', scale: 'categorical', getValue: () => 'Week', domain: { kind: 'categorical', values: ['Week'] } }
+            : { id: 'count', orientation: 'y', scale: 'linear', field: 'count', domain: { kind: 'numeric', minimum: 0, maximum: 30 } },
+        ] },
+        layers: [{ id: 'deliveries', kind, data, ...(radial ? { valueField: 'count', ...(kind === 'donut' ? { innerRadius: 0.6 } : {}) } : { xAxis: 'day', yAxis: 'count', ...(kind === 'heatmap' ? { valueField: 'count' } : {}) }) }],
+      });
+      const chart = useChart({ definition });
+      try {
+        const projected = chart.controller.project({ viewport: { width: 360, height: 220 }, insets: { top: 16, right: 16, bottom: 16, left: 16 } });
+        assert.equal(projected.ok, true);
+        assert.equal(projected.value.batches[0].type, batchType);
+        const batch = projected.value.batches[0];
+        assert.equal(batch.identityIndices.length, 2);
+        const readGeometry = (value) => Array.from(value.type === 'rectangle' ? value.rectangles : value.type === 'cell' ? value.cells : value.type === 'arc' ? value.arcs : value.positions);
+        const originalGeometry = readGeometry(batch);
+        assert.ok(originalGeometry.every(Number.isFinite));
+        if (batch.type === 'polyline') assert.deepEqual(Array.from(batch.offsets), [0, 2]);
+        definition.value = { ...definition.value, layers: [{ ...definition.value.layers[0], data: data.map(row => row.id === 'mon' ? { ...row, count: 26 } : row) }] };
+        await nextTick();
+        const updated = chart.controller.project({ viewport: { width: 360, height: 220 }, insets: { top: 16, right: 16, bottom: 16, left: 16 } });
+        assert.equal(updated.ok, true);
+        assert.notDeepEqual(readGeometry(updated.value.batches[0]), originalGeometry, `${kind} responds to a new definition`);
+      } finally { chart.dispose(); }
+    }
     const { validateNotificationEmail, submitNotificationEmail } = await server.ssrLoadModule('/src/examples/vue/form/validation-and-server-issues/example.ts');
     const validationContext = { trigger: 'submit', intent: 'submission', changedFieldId: null, signal: new AbortController().signal };
     assert.deepEqual(await validateNotificationEmail({ email: 'USER@example.com', confirmation: 'user@example.com' }, validationContext), { issues: [] });
@@ -308,6 +341,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-virtual-masonry-notes': [/Delivery 1/u, /120px estimate/u],
           'vue-virtual-spatial-rectangles': [/Parcel 1/u, /surface-local rectangles/u],
           'vue-virtual-core-composition': [/Delivery 1/u, /Delivery 150/u, /outside the item domain/u],
+          'vue-chart-projected-svg': [/Weekday deliveries/u, /<polyline/u, /Wednesday/u, /color tokens/u],
           'vue-components-grid-two-dimensional-selection': [/Selected slot: A1/u, /data-part="cell"/u],
           'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /data-expanded/u],
           'vue-components-feed-window-request': [/3 updates · Revision 0/u, /Load newer updates/u],
