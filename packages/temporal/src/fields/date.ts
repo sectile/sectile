@@ -17,7 +17,7 @@ import {
 } from '@sectile/core/text';
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { ok, fail } from '../internal/foundation.js';
+import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 
 export type {
@@ -109,6 +109,7 @@ export function applyDateFieldEvent(
   if (!valid.ok) return transitionFailure(valid);
   const bounds = validatePolicies(policies);
   if (!bounds.ok) return bounds;
+  const accepted = bounds.value;
   if (typeof event === 'object' && event.type === 'text') {
     const edited = applyTextEvent(valid.value.inputState, event.event);
     if (!edited.ok) return edited;
@@ -120,7 +121,7 @@ export function applyDateFieldEvent(
     ]);
   }
   if (typeof event === 'object' && event.type === 'set-value') {
-    return commitValue(event.value, policies);
+    return commitValue(event.value, accepted);
   }
   if (event === 'cancel') {
     const input = committedInput(valid.value.value);
@@ -139,21 +140,23 @@ export function applyDateFieldEvent(
     const adjusted = segment === 'year' ? addDateYears(base, amount)
       : segment === 'month' ? addDateMonths(base, amount)
         : addDateDays(base, amount);
-    return adjusted.ok ? commitValue(adjusted.value, policies, segment) : adjusted;
+    return adjusted.ok ? commitValue(adjusted.value, accepted, segment) : adjusted;
   }
   if (event !== 'commit') return fail('transition-rejection', 'unsupported-date-field-event', 'Date field event is unsupported.');
   if (valid.value.inputState.composition !== null) return fail('transition-rejection', 'date-field-composition-active', 'Date field cannot commit while text composition is active.');
   const text = valid.value.inputState.snapshot.text.trim();
-  if (text.length === 0) return commitValue(null, policies);
+  if (text.length === 0) return commitValue(null, accepted);
   const parsed = parseDateValue(text);
-  return parsed.ok ? commitValue(parsed.value, policies) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted) : parsed;
 }
 
 export function dateSegmentAt(offset: number): DateSegment {
   return offset <= 4 ? 'year' : offset <= 7 ? 'month' : 'day';
 }
 
-function commitValue(value: DateValue | null, policies: DateFieldPolicies, segment?: DateSegment): TemporalResult<DateFieldUpdate> {
+type CapturedPolicies = { [Key in keyof DateFieldPolicies]-?: DateFieldPolicies[Key] | undefined };
+
+function commitValue(value: DateValue | null, policies: CapturedPolicies, segment?: DateSegment): TemporalResult<DateFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'date-field-value-required', 'Date field requires a value.');
   } else {
@@ -181,20 +184,23 @@ function committedInput(value: DateValue | null, segment?: DateSegment): Tempora
   return tryCreateTextEditingState(text, selection);
 }
 
-function validatePolicies(policies: DateFieldPolicies): TemporalResult<true> {
-  if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') return fail('construction', 'invalid-date-unavailable-policy', 'Date unavailable policy must be a function.');
-  if (policies.min !== undefined) {
-    const min = tryCreateDateValue(policies.min.year, policies.min.month, policies.min.day);
-    if (!min.ok) return min;
+function validatePolicies(policies: DateFieldPolicies): TemporalResult<CapturedPolicies> {
+  let { min, max, required, unavailable } = policies;
+  if (min !== undefined) {
+    const valid = tryCreateDateValue(min.year, min.month, min.day);
+    if (!valid.ok) return valid;
+    min = valid.value;
   }
-  if (policies.max !== undefined) {
-    const max = tryCreateDateValue(policies.max.year, policies.max.month, policies.max.day);
-    if (!max.ok) return max;
+  if (max !== undefined) {
+    const valid = tryCreateDateValue(max.year, max.month, max.day);
+    if (!valid.ok) return valid;
+    max = valid.value;
   }
-  if (policies.min !== undefined && policies.max !== undefined && compareDateValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-date-field-bounds', 'Date field minimum must not follow its maximum.');
-  return ok(true);
-}
-
-function transitionFailure<T>(result: TemporalResult<T>): TemporalResult<never> {
-  return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
+  if (unavailable !== undefined && typeof unavailable !== 'function') {
+    return fail('construction', 'invalid-date-unavailable-policy', 'Date unavailable policy must be a function.');
+  }
+  if (min !== undefined && max !== undefined && compareDateValues(min, max) > 0) {
+    return fail('construction', 'inverted-date-field-bounds', 'Date field minimum exceeds its maximum.');
+  }
+  return ok({ min, max, required, unavailable });
 }

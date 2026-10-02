@@ -23,6 +23,30 @@ import {
 
 const date = (year, month, day) => createDateValue(year, month, day);
 
+test('ISSUE-137: Calendar view and selected month retain validated getter captures', () => {
+  let yearReads = 0;
+  let monthReads = 0;
+  const result = tryCreateCalendarState({ referenceDate: date(2024, 1, 31), view: {
+    get year() { yearReads += 1; return yearReads === 1 ? 2024 : 0; },
+    get month() { monthReads += 1; return monthReads === 1 ? 2 : 99; },
+  } });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.view, { year: 2024, month: 2 });
+  assert.equal(tryCreateCalendarState(result.value).ok, true);
+  assert.equal(yearReads, 1);
+  assert.equal(monthReads, 1);
+  yearReads = 0;
+  monthReads = 0;
+  const selected = applyCalendarEvent(result.value, { type: 'select-month', value: {
+    get year() { yearReads += 1; return yearReads === 1 ? 2024 : 0; },
+    get month() { monthReads += 1; return monthReads === 1 ? 2 : 99; },
+  } });
+  assert.equal(selected.ok, true);
+  assert.deepEqual(selected.value.state.highlighted, date(2024, 2, 29));
+  assert.equal(yearReads, 1);
+  assert.equal(monthReads, 1);
+});
+
 test('TMP-01: canonical ISO date formatting and parsing are inverse', () => {
   for (let year = 1; year <= 9_999; year += 137) {
     for (let month = 1; month <= 12; month += 1) {

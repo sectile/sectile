@@ -33,8 +33,94 @@ import {
 
 const date = (year, month, day) => createDateValue(year, month, day);
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
+
+test('time formatting captures extended fields once and preserves all formats', () => {
+  for (const [second, millisecond, expected] of [
+    [0, 0, '03:25'], [45, 0, '03:25:45'], [0, 7, '03:25:00.007'], [45, 678, '03:25:45.678'],
+  ]) {
+    let secondReads = 0;
+    let millisecondReads = 0;
+    assert.equal(formatTimeValue({ hour: 3, minute: 25,
+      get second() { secondReads += 1; return secondReads === 1 ? second : 59; },
+      get millisecond() { millisecondReads += 1; return millisecondReads === 1 ? millisecond : 999; },
+    }), expected);
+    assert.equal(secondReads, 1);
+    assert.equal(millisecondReads, 1);
+  }
+});
+
+test('wall-clock deltas and segment steps are exact at safe-integer limits', () => {
+  const value = time(3, 25, 45, 678);
+  const day = 86_400_000n;
+  const start = 12_345_678n;
+  for (const amount of [Number.MAX_SAFE_INTEGER, -Number.MAX_SAFE_INTEGER, 1, -1]) {
+    const result = addTimeMilliseconds(value, amount);
+    assert.equal(result.ok, true);
+    const expected = Number(((start + BigInt(amount)) % day + day) % day);
+    const actual = result.value;
+    assert.equal(((actual.hour * 60 + actual.minute) * 60 + actual.second) * 1000 + actual.millisecond, expected);
+  }
+  for (const [segment, offset, unit] of [['hour', 0, 3_600_000], ['minute', 3, 60_000], ['second', 6, 1000], ['millisecond', 9, 1]]) {
+    let state = createTimeFieldState(value);
+    const selected = applyTimeFieldEvent(state, { type: 'text', event: {
+      type: 'replace', startCodeUnitOffset: offset, endCodeUnitOffset: offset, text: '',
+      selection: { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset },
+    } });
+    assert.equal(selected.ok, true);
+    state = selected.value.state;
+    const result = applyTimeFieldEvent(state, 'increment-segment', { step: { [segment]: Number.MAX_SAFE_INTEGER } });
+    assert.equal(result.ok, true);
+    const expected = Number((start + BigInt(unit) * BigInt(Number.MAX_SAFE_INTEGER)) % day);
+    const actual = result.value.state.value;
+    assert.equal(((actual.hour * 60 + actual.minute) * 60 + actual.second) * 1000 + actual.millisecond, expected);
+  }
+});
+test('field bounds enforce the validated capture for all three temporal fields', () => {
+  const configurations = [
+    [createDateFieldState, applyDateFieldEvent, date(2024, 6, 1), date(2024, 5, 1), date(2024, 7, 1), 'year'],
+    [createTimeFieldState, applyTimeFieldEvent, time(12, 0), time(11, 0), time(13, 0), 'hour'],
+    [createDateTimeFieldState, applyDateTimeFieldEvent,
+      createDateTimeValue(date(2024, 6, 1), time(12, 0)),
+      createDateTimeValue(date(2024, 5, 1), time(12, 0)),
+      createDateTimeValue(date(2024, 7, 1), time(12, 0)), 'date'],
+  ];
+  for (const [create, apply, value, minimum, maximum, key] of configurations) {
+    let minReads = 0;
+    let maxReads = 0;
+    let componentReads = 0;
+    const min = { ...minimum, get [key]() { componentReads += 1; return componentReads === 1 ? minimum[key] : undefined; } };
+    const result = apply(create(value), { type: 'set-value', value }, {
+      get min() { minReads += 1; return minReads === 1 ? min : maximum; },
+      get max() { maxReads += 1; return maxReads === 1 ? maximum : minimum; },
+    });
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.value.state.value, value);
+    assert.equal(minReads, 1);
+    assert.equal(maxReads, 1);
+    assert.equal(componentReads, 1);
+  }
+});
+
 const dateTime = (year, month, day, hour, minute, second = 0, millisecond = 0) =>
   createDateTimeValue(date(year, month, day), time(hour, minute, second, millisecond));
+
+test('date-time stepping consumes a validated step getter only once', () => {
+  const state = createDateTimeFieldState(dateTime(2024, 6, 1, 12, 0));
+  let reads = 0;
+  const step = { get minute() { reads += 1; return reads === 1 ? 2 : NaN; } };
+  const selected = applyDateTimeFieldEvent(state, { type: 'text', event: {
+    type: 'replace', startCodeUnitOffset: 14, endCodeUnitOffset: 14, text: '',
+    selection: { anchorCodeUnitOffset: 14, focusCodeUnitOffset: 14 },
+  } });
+  assert.equal(selected.ok, true);
+  const result = applyDateTimeFieldEvent(selected.value.state, 'increment-segment', { step });
+  assert.equal(result.ok, true);
+  assert.equal(result.value.state.value.time.minute, 2);
+  assert.equal(reads, 1);
+  const rejected = applyDateTimeFieldEvent(state, 'increment-segment', { step: { minute: NaN } });
+  assert.equal(rejected.ok, false);
+  assert.equal(rejected.error.code, 'invalid-date-time-field-step');
+});
 
 test('date values are strict Gregorian calendar values without host time', () => {
   assert.equal(formatDateValue(createDateValue(2024, 2, 29)), '2024-02-29');

@@ -9,7 +9,7 @@ import {
   type CalendarState,
   type CalendarStateInput,
 } from '../calendar.js';
-import { fail, ok } from '../internal/foundation.js';
+import { transitionFailure, fail, ok } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 
 export interface DatePickerState extends CalendarState {
@@ -46,7 +46,7 @@ export function tryCreateDatePickerState(input: DatePickerStateInput = {}): Temp
 
 export function applyDatePickerEvent(state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies = {}): TemporalResult<DatePickerUpdate> {
   const valid = tryCreateDatePickerState(state);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (event === 'open' || event === 'close' || event === 'toggle') {
     const open = event === 'toggle' ? !state.open : event === 'open';
     if (open === state.open) return createMachineUpdate(state);
@@ -69,7 +69,4 @@ function closesPicker(event: CalendarEvent): boolean {
 }
 function openChanged(previous: boolean, next: boolean): DatePickerCommand[] {
   return previous === next ? [] : [{ type: 'open-changed', open: next }];
-}
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
-  return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
 }

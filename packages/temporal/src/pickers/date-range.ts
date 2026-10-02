@@ -1,6 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { fail, ok } from '../internal/foundation.js';
+import { transitionFailure, fail, ok } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import {
   compareDateValues,
@@ -81,7 +81,7 @@ export function applyDateRangePickerEvent(
   policies: DatePickerPolicies = {},
 ): TemporalResult<DateRangePickerUpdate> {
   const valid = tryCreateDateRangePickerState(state);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (event === 'clear') {
     if (policies.required === true) return fail('transition-rejection', 'date-range-picker-value-required', 'Date range picker requires a range.');
     return createMachineUpdate(Object.freeze({ value: null, anchor: null, calendar: state.calendar }), [
@@ -103,7 +103,7 @@ export function applyDateRangePickerEvent(
 
 function selectDate(state: DateRangePickerState, requested: DateValue, policies: DatePickerPolicies): TemporalResult<DateRangePickerUpdate> {
   const valid = tryCreateDateValue(requested.year, requested.month, requested.day);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (!isCalendarValueAvailable(valid.value, policies)) return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
   if (state.anchor === null) {
     const calendar = tryCreateDatePickerState({ ...state.calendar, value: null, highlighted: valid.value, view: { year: valid.value.year, month: valid.value.month }, open: true });
@@ -125,5 +125,3 @@ function selectDate(state: DateRangePickerState, requested: DateValue, policies:
     { type: 'highlight-changed', value: valid.value },
   ]);
 }
-
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

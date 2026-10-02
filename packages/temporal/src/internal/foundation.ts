@@ -18,3 +18,9 @@ export function fail<T = never, Code extends TemporalErrorCode = TemporalErrorCo
 export function freezeArray<T>(values: readonly T[]): readonly T[] {
   return Object.freeze([...values]);
 }
+
+export function transitionFailure(
+  result: Extract<TemporalResult<unknown>, { readonly ok: false }>,
+): TemporalResult<never> {
+  return { ok: false, error: { ...result.error, class: 'transition-rejection' } };
+}

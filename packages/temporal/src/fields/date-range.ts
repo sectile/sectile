@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import type { ErrorClass } from '@sectile/core';
 import type { TemporalResult } from '../error.js';
-import { fail, ok } from '../internal/foundation.js';
+import { transitionFailure, fail, ok } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import type { TextEditingState } from '@sectile/core/text';
 import {
@@ -47,7 +47,7 @@ export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {
 
 export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> {
   const valid = tryCreateDateRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active });
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (event === 'cancel') {
     const start = applyDateFieldEvent(valid.value.start, 'cancel', endpointPolicies(policies)); if (!start.ok) return start;
     const end = applyDateFieldEvent(valid.value.end, 'cancel', endpointPolicies(policies)); if (!end.ok) return end;
@@ -74,4 +74,3 @@ function composeState(start: DateFieldState, end: DateFieldState, active: DateRa
 function completeRange(start: DateValue | null, end: DateValue | null, errorClass: ErrorClass = 'transition-rejection'): TemporalResult<DateRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateDateRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-date-range-field', 'Date range field start must not be after end.'); }
 function endpointPolicies(policies: DateRangeFieldPolicies): DateFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
 function sameRange(left: DateRange | null, right: DateRange | null): boolean { return left === null || right === null ? left === right : compareDateValues(left.start, right.start) === 0 && compareDateValues(left.end, right.end) === 0; }
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

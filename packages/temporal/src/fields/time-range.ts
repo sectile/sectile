@@ -9,7 +9,7 @@ import {
 import type { TextEditingState } from '@sectile/core/text';
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { ok, fail } from '../internal/foundation.js';
+import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import type { ErrorClass } from '@sectile/core';
 
@@ -51,7 +51,7 @@ export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {
 }
 
 export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: TimeRangeFieldEvent, policies: TimeRangeFieldPolicies = {}): TemporalResult<TimeRangeFieldUpdate> {
-  const valid = tryCreateTimeRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active }); if (!valid.ok) return invalidTransition(valid);
+  const valid = tryCreateTimeRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active }); if (!valid.ok) return transitionFailure(valid);
   if (event === 'cancel') {
     const start = applyTimeFieldEvent(valid.value.start, 'cancel', endpointPolicies(policies)); if (!start.ok) return start;
     const end = applyTimeFieldEvent(valid.value.end, 'cancel', endpointPolicies(policies)); if (!end.ok) return end;
@@ -75,5 +75,3 @@ function completeRange(start: TimeValue | null, end: TimeValue | null, errorClas
 function endpointPolicies(policies: TimeRangeFieldPolicies): TimeFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
 
 function sameRange(left: TimeRange | null, right: TimeRange | null): boolean { return left === null || right === null ? left === right : compareTimeValues(left.start, right.start) === 0 && compareTimeValues(left.end, right.end) === 0; }
-
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

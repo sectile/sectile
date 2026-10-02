@@ -1,6 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from './error.js';
-import { fail, freezeArray, ok } from './internal/foundation.js';
+import { transitionFailure, fail, freezeArray, ok } from './internal/foundation.js';
 import { createMachineUpdate } from './internal/machine.js';
 import {
   addDateDays,
@@ -90,28 +90,32 @@ export function createCalendarState(input: CalendarStateInput = {}): CalendarSta
 }
 
 export function tryCreateCalendarState(input: CalendarStateInput = {}): TemporalResult<CalendarState> {
-  const validValue = input.value === undefined || input.value === null
+  const valueInput = input.value;
+  const referenceInput = input.referenceDate;
+  const highlightedInput = input.highlighted;
+  const viewInput = input.view;
+  const validValue = valueInput === undefined || valueInput === null
     ? ok<DateValue | null>(null)
-    : tryCreateDateValue(input.value.year, input.value.month, input.value.day);
+    : tryCreateDateValue(valueInput.year, valueInput.month, valueInput.day);
   if (!validValue.ok) return validValue;
   const value = validValue.value;
-  const referenceDate = input.referenceDate === undefined
+  const referenceDate = referenceInput === undefined
     ? ok<DateValue | null>(null)
     : tryCreateDateValue(
-      input.referenceDate.year,
-      input.referenceDate.month,
-      input.referenceDate.day,
+      referenceInput.year,
+      referenceInput.month,
+      referenceInput.day,
     );
   if (!referenceDate.ok) return referenceDate;
   const fallback = value ?? referenceDate.value;
-  if (input.highlighted === undefined && fallback === null) {
+  if (highlightedInput === undefined && fallback === null) {
     return fail(
       'construction',
       'calendar-reference-date-required',
       'Calendar requires a value, highlighted date, or referenceDate.',
     );
   }
-  const highlighted = input.highlighted ?? fallback;
+  const highlighted = highlightedInput ?? fallback;
   if (highlighted === null) {
     return fail(
       'internal-invariant',
@@ -121,17 +125,17 @@ export function tryCreateCalendarState(input: CalendarStateInput = {}): Temporal
   }
   const validHighlight = tryCreateDateValue(highlighted.year, highlighted.month, highlighted.day);
   if (!validHighlight.ok) return validHighlight;
-  const view = input.view ?? Object.freeze({ year: validHighlight.value.year, month: validHighlight.value.month });
+  const view = viewInput ?? validHighlight.value;
   const validView = tryCreateDateValue(view.year, view.month, 1);
   if (!validView.ok) return validView;
   const viewMode = input.viewMode ?? 'month';
   if (!isCalendarViewMode(viewMode)) return fail('construction', 'invalid-calendar-view-mode', 'Calendar view mode must be week, month, or year.');
-  return ok(calendarState(value, validHighlight.value, Object.freeze({ year: view.year, month: view.month }), viewMode));
+  return ok(calendarState(value, validHighlight.value, Object.freeze({ year: validView.value.year, month: validView.value.month }), viewMode));
 }
 
 export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, policies: CalendarPolicies = {}): TemporalResult<CalendarUpdate> {
   const valid = tryCreateCalendarState(state);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   const policy = validateCalendarPolicies(policies);
   if (!policy.ok) return policy;
   if (typeof event === 'object' && event.type === 'set-view-mode') {
@@ -140,12 +144,13 @@ export function applyCalendarEvent(state: CalendarState, event: CalendarEvent, p
     return createMachineUpdate(calendarState(state.value, state.highlighted, state.view, event.value), [{ type: 'view-mode-changed', value: event.value }]);
   }
   if (typeof event === 'object' && event.type === 'select-month') {
-    const month = tryCreateDateValue(event.value.year, event.value.month, 1);
-    if (!month.ok) return invalidTransition(month);
-    const delta = (event.value.year - state.highlighted.year) * 12 + event.value.month - state.highlighted.month;
+    const value = event.value;
+    const month = tryCreateDateValue(value.year, value.month, 1);
+    if (!month.ok) return transitionFailure(month);
+    const delta = (month.value.year - state.highlighted.year) * 12 + month.value.month - state.highlighted.month;
     const highlighted = addDateMonths(state.highlighted, delta);
     if (!highlighted.ok) return highlighted;
-    const eligible = findEligibleInMonth(highlighted.value, event.value, policies);
+    const eligible = findEligibleInMonth(highlighted.value, month.value, policies);
     if (!eligible.ok) return eligible;
     if (eligible.value === null) return fail('transition-rejection', 'calendar-month-unavailable', 'Calendar month has no available date within maxScan.');
     const view = Object.freeze({ year: eligible.value.year, month: eligible.value.month });
@@ -264,7 +269,7 @@ function commit(value: DateValue | null, state: CalendarState, policies: Calenda
     return createMachineUpdate(calendarState(null, state.highlighted, state.view, state.viewMode), [{ type: 'value-committed', value: null }]);
   }
   const valid = tryCreateDateValue(value.year, value.month, value.day);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (!isCalendarValueAvailable(valid.value, policies)) return fail('transition-rejection', 'calendar-value-unavailable', 'Calendar value is outside its selectable domain.');
   const view = Object.freeze({ year: valid.value.year, month: valid.value.month });
   return createMachineUpdate(calendarState(valid.value, valid.value, view, state.viewMode), [
@@ -321,4 +326,3 @@ function calendarState(value: DateValue | null, highlighted: DateValue, view: Ca
   return Object.freeze({ value, highlighted, view, viewMode });
 }
 function isCalendarViewMode(value: unknown): value is CalendarViewMode { return value === 'week' || value === 'month' || value === 'year'; }
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }

@@ -15,7 +15,7 @@ import {
 } from '@sectile/core/text';
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { ok, fail } from '../internal/foundation.js';
+import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import { addDateYears, addDateMonths, addDateDays } from '../values/date.js';
 
@@ -111,9 +111,10 @@ export function applyDateTimeFieldEvent(
   policies: DateTimeFieldPolicies = {},
 ): TemporalResult<DateTimeFieldUpdate> {
   const valid = tryCreateDateTimeFieldState(state.value, state.inputState);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
+  const accepted = policy.value;
 
   if (typeof event === 'object' && event.type === 'text') {
     const edited = applyTextEvent(valid.value.inputState, event.event);
@@ -132,7 +133,7 @@ export function applyDateTimeFieldEvent(
   }
 
   if (typeof event === 'object' && event.type === 'set-value') {
-    return commitValue(event.value, policies);
+    return commitValue(event.value, accepted);
   }
 
   if (event === 'cancel') {
@@ -152,17 +153,10 @@ export function applyDateTimeFieldEvent(
       return fail('transition-rejection', 'date-time-field-value-missing', 'Date-time field has no value to adjust.');
     }
     const segment = dateTimeSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
-    const requested = policies.step?.[segment] ?? 1;
-    if (!Number.isSafeInteger(requested) || requested < 1) {
-      return fail(
-        'construction',
-        'invalid-date-time-field-step',
-        'Date-time field segment steps must be positive safe integers.',
-      );
-    }
+    const requested = accepted.step?.[segment] ?? 1;
     const direction = event === 'increment-segment' ? 1 : -1;
     const adjusted = adjustSegment(base, segment, requested * direction);
-    return adjusted.ok ? commitValue(adjusted.value, policies, segment) : adjusted;
+    return adjusted.ok ? commitValue(adjusted.value, accepted, segment) : adjusted;
   }
 
   if (event !== 'commit') {
@@ -176,9 +170,9 @@ export function applyDateTimeFieldEvent(
     );
   }
   const text = valid.value.inputState.snapshot.text.trim();
-  if (text.length === 0) return commitValue(null, policies);
+  if (text.length === 0) return commitValue(null, accepted);
   const parsed = parseDateTimeValue(text);
-  return parsed.ok ? commitValue(parsed.value, policies) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted) : parsed;
 }
 
 export function dateTimeSegmentAt(offset: number): DateTimeSegment {
@@ -214,9 +208,11 @@ function adjustSegment(
   return addDateTimeMilliseconds(value, unit * amount);
 }
 
+type CapturedPolicies = { [Key in keyof DateTimeFieldPolicies]-?: DateTimeFieldPolicies[Key] | undefined };
+
 function commitValue(
   value: DateTimeValue | null,
-  policies: DateTimeFieldPolicies,
+  policies: CapturedPolicies,
   segment?: DateTimeSegment,
 ): TemporalResult<DateTimeFieldUpdate> {
   if (value === null) {
@@ -225,7 +221,7 @@ function commitValue(
     }
   } else {
     const valid = tryCreateDateTimeValue(value.date, value.time);
-    if (!valid.ok) return invalidTransition(valid);
+    if (!valid.ok) return transitionFailure(valid);
     value = valid.value;
     if (policies.min !== undefined && compareDateTimeValues(value, policies.min) < 0) {
       return fail(
@@ -262,17 +258,18 @@ function committedInput(
   segment?: DateTimeSegment,
 ): TemporalResult<TextEditingState> {
   const text = value === null ? '' : formatDateTimeFieldInput(value, segment);
-  const range = segment === 'year' ? [0, 4]
-    : segment === 'month' ? [5, 7]
-      : segment === 'day' ? [8, 10]
-        : segment === 'hour' ? [11, 13]
-          : segment === 'minute' ? [14, 16]
-            : segment === 'second' ? [17, 19]
-              : segment === 'millisecond' ? [20, 23]
-                : [text.length, text.length];
+  const start = segment === 'year' ? 0
+    : segment === 'month' ? 5
+      : segment === 'day' ? 8
+        : segment === 'hour' ? 11
+          : segment === 'minute' ? 14
+            : segment === 'second' ? 17
+              : segment === 'millisecond' ? 20 : text.length;
+  const end = segment === undefined ? text.length
+    : start + (segment === 'year' ? 4 : segment === 'millisecond' ? 3 : 2);
   return tryCreateTextEditingState(text, {
-    anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length),
-    focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length),
+    anchorCodeUnitOffset: Math.min(start, text.length),
+    focusCodeUnitOffset: Math.min(end, text.length),
   });
 }
 
@@ -283,49 +280,36 @@ function formatDateTimeFieldInput(value: DateTimeValue, segment?: DateTimeSegmen
   return text;
 }
 
-function validatePolicies(policies: DateTimeFieldPolicies): TemporalResult<true> {
-  if (policies.unavailable !== undefined && typeof policies.unavailable !== 'function') {
-    return fail(
-      'construction',
-      'invalid-date-time-unavailable-policy',
-      'Date-time unavailable policy must be a function.',
-    );
+function validatePolicies(policies: DateTimeFieldPolicies): TemporalResult<CapturedPolicies> {
+  let { min, max, required, unavailable, step } = policies;
+  if (min !== undefined) {
+    const valid = tryCreateDateTimeValue(min.date, min.time);
+    if (!valid.ok) return valid;
+    min = valid.value;
   }
-  if (policies.min !== undefined) {
-    const min = tryCreateDateTimeValue(policies.min.date, policies.min.time);
-    if (!min.ok) return min;
+  if (max !== undefined) {
+    const valid = tryCreateDateTimeValue(max.date, max.time);
+    if (!valid.ok) return valid;
+    max = valid.value;
   }
-  if (policies.max !== undefined) {
-    const max = tryCreateDateTimeValue(policies.max.date, policies.max.time);
-    if (!max.ok) return max;
+  if (unavailable !== undefined && typeof unavailable !== 'function') {
+    return fail('construction', 'invalid-date-time-unavailable-policy', 'Date-time unavailable policy must be a function.');
   }
-  if (
-    policies.min !== undefined
-    && policies.max !== undefined
-    && compareDateTimeValues(policies.min, policies.max) > 0
-  ) {
-    return fail(
-      'construction',
-      'inverted-date-time-field-bounds',
-      'Date-time field minimum must not follow its maximum.',
-    );
+  if (min !== undefined && max !== undefined && compareDateTimeValues(min, max) > 0) {
+    return fail('construction', 'inverted-date-time-field-bounds', 'Date-time minimum exceeds its maximum.');
   }
-  if (policies.step !== undefined) {
-    for (const value of Object.values(policies.step)) {
-      if (value !== undefined && (!Number.isSafeInteger(value) || value < 1)) {
-        return fail(
-          'construction',
-          'invalid-date-time-field-step',
-          'Date-time field segment steps must be positive safe integers.',
+  if (step !== undefined) {
+    const input = step;
+    step = {};
+    for (const segment of ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'] as const) {
+      const value = input[segment];
+      if (value !== undefined) {
+        if (!Number.isSafeInteger(value) || value < 1) return fail(
+          'construction', 'invalid-date-time-field-step', 'Date-time field segment steps must be positive safe integers.',
         );
+        step[segment] = value;
       }
     }
   }
-  return ok(true);
-}
-
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
-  return result.ok
-    ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.')
-    : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
+  return ok({ min, max, required, unavailable, step });
 }

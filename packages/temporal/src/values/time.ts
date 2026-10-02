@@ -9,17 +9,23 @@ export interface TimeValue {
   readonly millisecond: number;
 }
 
+const timeParts = { hour: 23, minute: 59, second: 59, millisecond: 999 } as const;
+const timePartNames = Object.keys(timeParts) as (keyof TimeValue)[];
+
 export function createTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): TimeValue {
   return unwrap(tryCreateTimeValue(hour, minute, second, millisecond));
 }
 
 export function tryCreateTimeValue(hour: number, minute = 0, second = 0, millisecond = 0): TemporalResult<TimeValue> {
-  for (const [name, value, maximum] of [['hour', hour, 23], ['minute', minute, 59], ['second', second, 59], ['millisecond', millisecond, 999]] as const) {
+  const captured = { hour, minute, second, millisecond };
+  for (const name of timePartNames) {
+    const maximum = timeParts[name];
+    const value = captured[name];
     if (!Number.isSafeInteger(value) || value < 0 || value > maximum) {
       return fail('construction', `invalid-time-${name}`, `Time ${name} must be an integer from 0 through ${maximum}.`, { [name]: value });
     }
   }
-  return ok(Object.freeze({ hour, minute, second, millisecond }));
+  return ok(Object.freeze(captured));
 }
 
 export function parseTimeValue(text: string): TemporalResult<TimeValue> {
@@ -31,8 +37,11 @@ export function parseTimeValue(text: string): TemporalResult<TimeValue> {
 
 export function formatTimeValue(value: TimeValue): string {
   const base = `${pad(value.hour, 2)}:${pad(value.minute, 2)}`;
-  if (value.millisecond !== 0) return `${base}:${pad(value.second, 2)}.${pad(value.millisecond, 3)}`;
-  return value.second === 0 ? base : `${base}:${pad(value.second, 2)}`;
+  const millisecond = value.millisecond;
+  const second = value.second;
+  if (millisecond === 0 && second === 0) return base;
+  const seconds = `${base}:${pad(second, 2)}`;
+  return millisecond === 0 ? seconds : `${seconds}.${pad(millisecond, 3)}`;
 }
 
 export function compareTimeValues(left: TimeValue, right: TimeValue): -1 | 0 | 1 {
@@ -44,7 +53,7 @@ export function compareTimeValues(left: TimeValue, right: TimeValue): -1 | 0 | 1
 export function addTimeMilliseconds(value: TimeValue, amount: number): TemporalResult<TimeValue> {
   if (!Number.isSafeInteger(amount)) return fail('transition-rejection', 'invalid-time-delta', 'Time delta must be a safe integer.');
   const day = 86_400_000;
-  const next = ((timeToMilliseconds(value) + amount) % day + day) % day;
+  const next = ((timeToMilliseconds(value) + amount % day) % day + day) % day;
   const hour = Math.floor(next / 3_600_000);
   const minute = Math.floor((next % 3_600_000) / 60_000);
   const second = Math.floor((next % 60_000) / 1_000);

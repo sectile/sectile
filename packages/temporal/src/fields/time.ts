@@ -15,7 +15,7 @@ import {
 } from '@sectile/core/text';
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { ok, fail } from '../internal/foundation.js';
+import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 
 export type {
@@ -68,26 +68,30 @@ export function createTimeFieldState(value: TimeValue | null = null, inputState?
 }
 
 export function tryCreateTimeFieldState(value: TimeValue | null = null, inputState?: TextEditingState): TemporalResult<TimeFieldState> {
-  const valid = value === null ? ok(null) : tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
-  if (!valid.ok) return valid;
-  const input = inputState === undefined ? committedInput(valid.value) : normalizeTextEditingState(inputState);
+  if (value !== null) {
+    const valid = normalizeTime(value);
+    if (!valid.ok) return valid;
+    value = valid.value;
+  }
+  const input = inputState === undefined ? committedInput(value) : normalizeTextEditingState(inputState);
   if (!input.ok) return input;
   if (input.value.snapshot.text.length > TIME_FIELD_MAX_CODE_UNITS) return fail('construction', 'time-field-draft-too-long', 'Time field drafts must fit HH:mm, HH:mm:ss, or HH:mm:ss.SSS.');
-  return ok(Object.freeze({ value: valid.value, inputState: input.value }));
+  return ok(Object.freeze({ value, inputState: input.value }));
 }
 
 export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent, policies: TimeFieldPolicies = {}): TemporalResult<TimeFieldUpdate> {
   const valid = tryCreateTimeFieldState(state.value, state.inputState);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
+  const accepted = policy.value;
   if (typeof event === 'object' && event.type === 'text') {
     const edited = applyTextEvent(valid.value.inputState, event.event);
     if (!edited.ok) return edited;
     if (edited.value.state.snapshot.text.length > TIME_FIELD_MAX_CODE_UNITS) return fail('transition-rejection', 'time-field-draft-too-long', 'Time field drafts must fit HH:mm, HH:mm:ss, or HH:mm:ss.SSS.');
     return createMachineUpdate(Object.freeze({ value: valid.value.value, inputState: edited.value.state }), [{ type: 'input-state-changed', value: edited.value.state }]);
   }
-  if (typeof event === 'object' && event.type === 'set-value') return commitValue(event.value, policies);
+  if (typeof event === 'object' && event.type === 'set-value') return commitValue(event.value, accepted);
   if (event === 'cancel') {
     const input = committedInput(valid.value.value);
     if (!input.ok) return input;
@@ -100,29 +104,31 @@ export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent
     if (base === null) return fail('transition-rejection', 'time-field-value-missing', 'Time field has no value to adjust.');
     const segment = timeSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
     const defaultStep = segment === 'hour' ? 3_600_000 : segment === 'minute' ? 60_000 : segment === 'second' ? 1_000 : 1;
-    const requested = policies.step?.[segment] ?? 1;
+    const requested = accepted.step?.[segment] ?? 1;
     if (!Number.isSafeInteger(requested) || requested < 1) return fail('construction', 'invalid-time-field-step', 'Time field segment steps must be positive safe integers.');
-    const adjusted = addTimeMilliseconds(base, defaultStep * requested * (event === 'increment-segment' ? 1 : -1));
-    return adjusted.ok ? commitValue(adjusted.value, policies, segment) : adjusted;
+    const adjusted = addTimeMilliseconds(base, defaultStep * (requested % (86_400_000 / defaultStep)) * (event === 'increment-segment' ? 1 : -1));
+    return adjusted.ok ? commitValue(adjusted.value, accepted, segment) : adjusted;
   }
   if (event !== 'commit') return fail('transition-rejection', 'unsupported-time-field-event', 'Time field event is unsupported.');
   if (valid.value.inputState.composition !== null) return fail('transition-rejection', 'time-field-composition-active', 'Time field cannot commit while text composition is active.');
   const text = valid.value.inputState.snapshot.text.trim();
-  if (text.length === 0) return commitValue(null, policies);
+  if (text.length === 0) return commitValue(null, accepted);
   const parsed = parseTimeValue(text);
-  return parsed.ok ? commitValue(parsed.value, policies) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted) : parsed;
 }
 
 export function timeSegmentAt(offset: number): TimeSegment {
   return offset <= 2 ? 'hour' : offset <= 5 ? 'minute' : offset <= 8 ? 'second' : 'millisecond';
 }
 
-function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segment?: TimeSegment): TemporalResult<TimeFieldUpdate> {
+type CapturedPolicies = { [Key in keyof TimeFieldPolicies]-?: TimeFieldPolicies[Key] | undefined };
+
+function commitValue(value: TimeValue | null, policies: CapturedPolicies, segment?: TimeSegment): TemporalResult<TimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'time-field-value-required', 'Time field requires a value.');
   } else {
-    const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
-    if (!valid.ok) return invalidTransition(valid);
+    const valid = normalizeTime(value);
+    if (!valid.ok) return transitionFailure(valid);
     value = valid.value;
     if (policies.min !== undefined && compareTimeValues(value, policies.min) < 0) return fail('transition-rejection', 'time-field-value-below-minimum', 'Time field value is below its minimum.');
     if (policies.max !== undefined && compareTimeValues(value, policies.max) > 0) return fail('transition-rejection', 'time-field-value-above-maximum', 'Time field value is above its maximum.');
@@ -137,8 +143,9 @@ function commitValue(value: TimeValue | null, policies: TimeFieldPolicies, segme
 
 function committedInput(value: TimeValue | null, segment?: TimeSegment): TemporalResult<TextEditingState> {
   const text = value === null ? '' : formatTimeFieldInput(value, segment);
-  const range = segment === 'hour' ? [0, 2] : segment === 'minute' ? [3, 5] : segment === 'second' ? [6, 8] : segment === 'millisecond' ? [9, 12] : [text.length, text.length];
-  return tryCreateTextEditingState(text, { anchorCodeUnitOffset: Math.min(range[0] ?? 0, text.length), focusCodeUnitOffset: Math.min(range[1] ?? 0, text.length) });
+  const start = segment === 'hour' ? 0 : segment === 'minute' ? 3 : segment === 'second' ? 6 : segment === 'millisecond' ? 9 : text.length;
+  const end = segment === undefined ? text.length : start + (segment === 'millisecond' ? 3 : 2);
+  return tryCreateTextEditingState(text, { anchorCodeUnitOffset: Math.min(start, text.length), focusCodeUnitOffset: Math.min(end, text.length) });
 }
 
 function formatTimeFieldInput(value: TimeValue, segment?: TimeSegment): string {
@@ -148,11 +155,23 @@ function formatTimeFieldInput(value: TimeValue, segment?: TimeSegment): string {
   return text;
 }
 
-function validatePolicies(policies: TimeFieldPolicies): TemporalResult<true> {
-  if (policies.min !== undefined) { const min = tryCreateTimeValue(policies.min.hour, policies.min.minute, policies.min.second, policies.min.millisecond); if (!min.ok) return min; }
-  if (policies.max !== undefined) { const max = tryCreateTimeValue(policies.max.hour, policies.max.minute, policies.max.second, policies.max.millisecond); if (!max.ok) return max; }
-  if (policies.min !== undefined && policies.max !== undefined && compareTimeValues(policies.min, policies.max) > 0) return fail('construction', 'inverted-time-field-bounds', 'Time field minimum must not follow its maximum.');
-  return ok(true);
+function validatePolicies(policies: TimeFieldPolicies): TemporalResult<CapturedPolicies> {
+  let { min, max, required, step } = policies;
+  if (min !== undefined) {
+    const valid = normalizeTime(min);
+    if (!valid.ok) return valid;
+    min = valid.value;
+  }
+  if (max !== undefined) {
+    const valid = normalizeTime(max);
+    if (!valid.ok) return valid;
+    max = valid.value;
+  }
+  if (min !== undefined && max !== undefined && compareTimeValues(min, max) > 0) {
+    return fail('construction', 'inverted-time-field-bounds', 'Time field minimum exceeds its maximum.');
+  }
+  return ok({ min, max, required, step });
 }
-
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> { return result.ok ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.') : { ok: false, error: { ...result.error, class: 'transition-rejection' } }; }
+function normalizeTime(value: TimeValue): TemporalResult<TimeValue> {
+  return tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
+}

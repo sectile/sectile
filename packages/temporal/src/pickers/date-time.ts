@@ -1,6 +1,6 @@
 import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
-import { fail, ok } from '../internal/foundation.js';
+import { transitionFailure, fail, ok } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import { compareDateValues, createDateValue, type DateValue, tryCreateDateValue } from '../values/date.js';
 import { isCalendarValueAvailable, type CalendarViewMode } from '../calendar.js';
@@ -123,7 +123,7 @@ export function applyDateTimePickerEvent(
   policies: DateTimePickerPolicies = {},
 ): TemporalResult<DateTimePickerUpdate> {
   const valid = tryCreateDateTimePickerState(state);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
 
@@ -158,7 +158,7 @@ function selectDate(
   policies: DateTimePickerPolicies,
 ): TemporalResult<DateTimePickerUpdate> {
   const date = tryCreateDateValue(requested.year, requested.month, requested.day);
-  if (!date.ok) return invalidTransition(date);
+  if (!date.ok) return transitionFailure(date);
   if (!isCalendarValueAvailable(date.value, policies.date)) {
     return fail(
       'transition-rejection',
@@ -217,7 +217,7 @@ function validateValue(
   policies: DateTimePickerPolicies,
 ): TemporalResult<DateTimeValue> {
   const value = tryCreateDateTimeValue(requested.date, requested.time);
-  if (!value.ok) return invalidTransition(value);
+  if (!value.ok) return transitionFailure(value);
   if (!isCalendarValueAvailable(value.value.date, policies.date)) {
     return fail('transition-rejection', 'date-time-picker-date-unavailable', 'Date-time picker date is outside its selectable domain.');
   }
@@ -237,7 +237,7 @@ function validateValue(
 
 function validateTime(value: TimeValue, policies: TimeFieldPolicies = {}): TemporalResult<TimeValue> {
   const valid = tryCreateTimeValue(value.hour, value.minute, value.second, value.millisecond);
-  if (!valid.ok) return invalidTransition(valid);
+  if (!valid.ok) return transitionFailure(valid);
   if (policies.min !== undefined && compareTimeValues(valid.value, policies.min) < 0) {
     return fail('transition-rejection', 'date-time-picker-time-below-minimum', 'Date-time picker time is below its minimum.');
   }
@@ -259,10 +259,4 @@ function validatePolicies(policies: DateTimePickerPolicies): TemporalResult<true
     return fail('construction', 'inverted-date-time-picker-bounds', 'Date-time picker minimum must not follow its maximum.');
   }
   return ok(true);
-}
-
-function invalidTransition<T>(result: TemporalResult<T>): TemporalResult<never> {
-  return result.ok
-    ? fail('internal-invariant', 'unexpected-valid-result', 'Expected an invalid result.')
-    : { ok: false, error: { ...result.error, class: 'transition-rejection' } };
 }
