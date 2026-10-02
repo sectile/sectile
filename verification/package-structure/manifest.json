@@ -850,6 +850,10 @@
           "role": "model-storage",
           "kind": "owner"
         },
+        "src/internal/projection/input.ts": {
+          "role": "projection",
+          "kind": "owner"
+        },
         "src/internal/projection/project.ts": {
           "role": "projection",
           "kind": "owner"

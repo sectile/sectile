@@ -11,6 +11,7 @@ import {
   type ChartProjectionInput,
   tryCreateChartProjection,
 } from '../projection/project.js';
+import { captureChartProjectionInput } from '../projection/input.js';
 import { chartFail, chartOK } from '../result.js';
 import {
   type ChartCommand,
@@ -315,6 +316,9 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   public project(input: ChartProjectionInput): ChartResult<ChartProjection<ID>> {
     if (this.#disposed) return disposedController();
     if (input === null || typeof input !== 'object') return invalidController('Chart projection input must be an object.');
+    const captured = captureChartProjectionInput(input);
+    if (!captured.ok) return captured;
+    input = captured.value;
     const view = input.view ?? this.#snapshot.state.view ?? undefined;
     const transform = input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM;
     const insets = input.insets === undefined ? DEFAULT_CHART_PLOT_INSETS : input.insets;

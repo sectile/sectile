@@ -9,6 +9,27 @@ const options = () => ({ model: { layers: [{ id: 'points', profile: 'point', dat
   { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
 ] }] } });
 
+test('projection cache keys retain the same captured viewport and representative demand', () => {
+  const controller = createChartController(options());
+  let widthReads = 0;
+  let maximumReads = 0;
+  const first = controller.project({
+    viewport: { get width() { widthReads += 1; return widthReads === 1 ? 100 : 200; }, height: 100 },
+    get maximumRepresentatives() { maximumReads += 1; return maximumReads === 1 ? 1 : 2; },
+  });
+  assert.equal(first.ok, true);
+  assert.equal(first.value.viewport.width, 100);
+  assert.equal(first.value.diagnostics.representedDatums, 1);
+  assert.equal(widthReads, 1);
+  assert.equal(maximumReads, 1);
+  assert.equal(controller.project({ viewport: { width: 100, height: 100 }, maximumRepresentatives: 1 }).value, first.value);
+  const second = controller.project({ viewport: { width: 200, height: 100 }, maximumRepresentatives: 2 }).value;
+  assert.notEqual(second, first.value);
+  assert.equal(second.viewport.width, 200);
+  assert.equal(second.diagnostics.representedDatums, 2);
+  controller.dispose();
+});
+
 test('controller serializes model and interaction transitions by revision', () => {
   const controller = createChartController(options());
   const initial = controller.getSnapshot();

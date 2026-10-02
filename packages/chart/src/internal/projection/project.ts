@@ -1,4 +1,5 @@
 import type { ChartRepresentative, ChartViewState } from '../../contract.js';
+import { captureChartProjectionInput } from './input.js';
 import type { ChartResult } from '../../result.js';
 import {
   type ChartScale,
@@ -364,6 +365,9 @@ export function tryCreateChartProjection<ID extends StableID>(
   source: ChartProjectionSource<ID>,
   input: ChartProjectionInput,
 ): ChartResult<ChartProjection<ID>> {
+  const captured = captureChartProjectionInput(input);
+  if (!captured.ok) return captured;
+  input = captured.value;
   if (isDefinitionState(source)) return tryCreateDefinitionProjection(source, input);
   const model = source;
   if (input === null || typeof input !== 'object' || !validViewport(input.viewport)) {
