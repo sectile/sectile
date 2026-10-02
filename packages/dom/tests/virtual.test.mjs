@@ -6,6 +6,45 @@ import {
   virtualSurfaceStyle,
 } from '../.verification-dist/virtual.js';
 
+test('ISSUE-191: nested frame mutation publishes the latest coherent state and plan', () => {
+  const fixture = createFixture();
+  const notifications = [];
+  let connection;
+  connection = createVirtualizer({
+    ...fixture.options,
+    onStateChange: (state) => {
+      assert.equal(connection.getPlan().generation, state.generation);
+      if (state.generation === 1) connection.setState(Object.freeze({ generation: 2 }));
+    },
+    onPlanChange: (next) => notifications.push(next.generation),
+  });
+  notifications.length = 0;
+  const accepted = connection.setState(Object.freeze({ generation: 1 }));
+  assert.equal(accepted.ok, true);
+  assert.equal(accepted.value.generation, 1, 'outer call reports its accepted frame');
+  assert.equal(connection.getState().generation, 2);
+  assert.equal(connection.getPlan().generation, 2);
+  assert.deepEqual(notifications, [2]);
+  connection.disconnect();
+});
+
+test('ISSUE-119: quirks document viewport belongs to body while ordinary scroll stays scalar', () => {
+  const fixture = createDocumentFixture();
+  fixture.document.compatMode = 'BackCompat';
+  fixture.document.body = { clientWidth: 120, clientHeight: 90 };
+  fixture.document.documentElement = { clientWidth: 120, clientHeight: 5000 };
+  const connection = createVirtualizer(fixture.options);
+  assert.equal(connection.getPlan().viewport.height, 90);
+  fixture.resetEvidence();
+  fixture.setPageScroll(0, 30);
+  fixture.document.dispatch('scroll');
+  fixture.runFrame();
+  assert.equal(connection.getPlan().viewport.height, 90);
+  assert.equal(fixture.surface.geometryReads, 0);
+  assert.equal(fixture.scrollingElement.rangeReads, 0);
+  connection.disconnect();
+});
+
 test('DOM virtualizer projects the physical scrollport through the explicit surface frame', () => {
   let observedViewport;
   const fixture = createFixture({

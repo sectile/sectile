@@ -692,8 +692,10 @@ class DOMVirtualizer<
     this.#viewportInsets = viewportInsets;
     this.#surfaceFrame = surfaceFrame;
     this.#dirty = 0;
+    this.#plan = plan;
+    this.#indexPlacements(plan);
     if (stateChanged) this.#onStateChange?.(state);
-    this.#publish(plan);
+    if (!this.#disconnected && this.#plan === plan) this.#onPlanChange?.(plan, this);
   }
 
   #query(
@@ -710,12 +712,6 @@ class DOMVirtualizer<
       ...(overscan === undefined ? {} : { overscan }),
     });
     return plan.ok ? plan : this.#report(plan);
-  }
-
-  #publish(plan: VirtualLayoutPlan<ID>): void {
-    this.#plan = plan;
-    this.#indexPlacements(plan);
-    this.#onPlanChange?.(plan, this);
   }
 
   #indexPlacements(plan: VirtualLayoutPlan<ID>): void {

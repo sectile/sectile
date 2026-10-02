@@ -28,7 +28,8 @@ export function createScrollHost(
   if (scrollingElement === null || (element === null && view === null)) {
     throw new TypeError('browser view and scrolling element');
   }
-  const root = element ?? document.documentElement;
+  const root = element ?? (document.compatMode === 'BackCompat' ? document.body : document.documentElement);
+  if (root === null) throw new TypeError('document viewport element');
   if (
     element === null
     && (surface === scrollingElement || surface === root || surface === document.body)
