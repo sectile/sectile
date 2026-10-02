@@ -10,6 +10,27 @@ import {
 import { ReferenceSequence } from '../../.verification-dist/internal/reference/structures/sequence.js';
 import { canonicalIDs, permutations, powerset, unwrap } from '../support.mjs';
 
+test('move overlays and policy changes use one accepted coordinate record', () => {
+  const sequence = createSequence(['a', 'b', 'c', 'd']);
+  for (const options of [{}, { maxItems: 8 }]) {
+    const reads = { from: 0, to: 0, count: 0 };
+    const patch = {
+      type: 'move',
+      get from() { return reads.from++ === 0 ? 0 : 3; },
+      get to() { return reads.to++ === 0 ? 2 : 0; },
+      get count() { return reads.count++ === 0 ? 1 : 0; },
+    };
+    const result = tryApplySequencePatch(sequence, patch, options);
+    assert.equal(result.ok, true);
+    assert.deepEqual(result.value.ids, ['b', 'c', 'a', 'd']);
+    for (let i = 0; i < 4; i++) {
+      assert.equal(result.value.at(i), result.value.ids[i]);
+      assert.equal(result.value.indexOf(result.value.ids[i]), i);
+    }
+    assert.deepEqual(reads, { from: 1, to: 1, count: 1 });
+  }
+});
+
 test('SEQ-01..03: reference sequence exposes a strict total order with inverse observations', () => {
   let models = 0;
   for (let size = 0; size <= 6; size += 1) {

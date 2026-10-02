@@ -197,28 +197,35 @@ export function tryApplySequencePatch<ID extends StableID>(
       insertedIndex,
     ));
   } else {
+    const { from, to, count } = patch;
+    const movePatch = Object.freeze({
+      type: 'move' as const,
+      from,
+      to,
+      count,
+    });
     // Explicit policy changes establish a newly validated owner and its metadata.
     if (policyChanged) {
-      return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
+      return applyMaterializedSequencePatch(sequence, movePatch, maxItems, maxIDCodeUnits);
     }
     if (
-      !Number.isSafeInteger(patch.from)
-      || !Number.isSafeInteger(patch.to)
-      || !Number.isSafeInteger(patch.count)
-      || patch.from < 0
-      || patch.count < 0
-      || patch.from > size
-      || patch.count > size - patch.from
-      || patch.to < 0
-      || patch.to > size - patch.count
-    ) return invalidPatch(patch, size);
-    if (patch.count === 0 || patch.from === patch.to) return ok(sequence);
-    if (shouldMaterializeSequencePatch(sequence, patch.count, size)) {
-      return applyMaterializedSequencePatch(sequence, patch, maxItems, maxIDCodeUnits);
+      !Number.isSafeInteger(from)
+      || !Number.isSafeInteger(to)
+      || !Number.isSafeInteger(count)
+      || from < 0
+      || count < 0
+      || from > size
+      || count > size - from
+      || to < 0
+      || to > size - count
+    ) return invalidPatch(movePatch, size);
+    if (count === 0 || from === to) return ok(sequence);
+    if (shouldMaterializeSequencePatch(sequence, count, size)) {
+      return applyMaterializedSequencePatch(sequence, movePatch, maxItems, maxIDCodeUnits);
     }
     return ok(new PatchedSequence(
       sequence,
-      Object.freeze({ ...patch }),
+      movePatch,
       maxItems,
       maxIDCodeUnits,
     ));
