@@ -1,221 +1,132 @@
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
-import {
-  areas,
-  areaPath,
-  examplesFor,
-  findExample,
-  hosts,
-} from './examples/catalog.js';
-import { runtimeFor } from './examples/runtime.js';
-import {
-  currentPath,
-  currentRoute,
-  handleRouteClick,
-  routeHref,
-  routes,
-} from './router.js';
+import { computed, nextTick, ref, watch, watchEffect } from 'vue';
+import { areas, areaPath, examplesFor, findExample, hosts } from './examples/catalog.js';
+import { currentPath, currentRoute, handleRouteClick, routeHref, routes } from './router.js';
+import CodeBlock from './components/CodeBlock.vue';
+import ExampleGallery from './components/ExampleGallery.vue';
+import ExamplePage from './components/ExamplePage.vue';
+import GuidePage from './components/GuidePage.vue';
 
-const hostRoutes = routes.filter((route) => route.kind === 'host');
-const activeHost = computed(() => hosts.find((host) => host.id === currentRoute.value?.host));
+const menuOpen = ref(false);
+const menuButton = ref<HTMLButtonElement>();
+const main = ref<HTMLElement>();
+const activeHost = computed(() => hosts.find((host) => host.id === currentRoute.value?.host) ?? hosts[0]);
 const activeArea = computed(() => areas.find((area) => area.id === currentRoute.value?.area));
-const activeExample = computed(() => currentRoute.value?.exampleId === undefined
-  ? undefined
-  : findExample(currentRoute.value.exampleId));
-const activeRuntime = computed(() => activeExample.value === undefined
-  ? undefined
-  : runtimeFor(activeExample.value));
-const areaExamples = computed(() => currentRoute.value?.host === undefined || currentRoute.value?.area === undefined
-  ? []
-  : examplesFor(currentRoute.value.host, currentRoute.value.area));
-
-watchEffect(() => {
-  document.title = currentRoute.value?.title
-    ? `${currentRoute.value.title} · Sectile`
-    : 'Not found · Sectile';
+const activeExample = computed(() => findExample(currentRoute.value?.exampleId ?? ''));
+const areaExamples = computed(() => activeArea.value ? examplesFor(activeHost.value.id, activeArea.value.id) : []);
+const componentRoutes = routes.filter((route) => route.kind === 'component');
+const guideRoutes = routes.filter((route) => route.kind === 'guide');
+const subjectExamples = computed(() => areaExamples.value.filter((example) => example.subject === currentRoute.value?.subject));
+const installation = 'pnpm add @sectile/vue';
+const componentDescriptions: Record<string, string> = {
+  Checkbox: 'A two-state or indeterminate selection control. Compose its interactive root and conditional indicator, with state owned by the component or your application.',
+  Dialog: 'A modal surface for a task that needs protected focus. Compose a trigger, portal, overlay, and labeled content while Sectile coordinates dismissal and focus.',
+};
+watchEffect(() => { document.title = `${currentRoute.value?.title ?? 'Not found'} · Sectile`; });
+watch(currentPath, async () => {
+  menuOpen.value = false;
+  await nextTick();
+  main.value?.focus({ preventScroll: true });
 });
+function closeMenu(event: KeyboardEvent): void {
+  if (event.key !== 'Escape' || !menuOpen.value) return;
+  menuOpen.value = false;
+  menuButton.value?.focus();
+}
 </script>
 
 <template>
   <a class="docs-skip-link" href="#docs-content">Skip to content</a>
-
-  <div class="docs-shell">
+  <div class="docs-shell" @keydown="closeMenu">
     <header class="docs-header">
       <a class="docs-brand" :href="routeHref('/')" @click="handleRouteClick($event, '/')">
-        Sectile
+        Sectile <span>Docs</span>
       </a>
-
-      <nav class="docs-primary-nav" aria-label="Documentation environment">
-        <a
-          v-for="route in hostRoutes"
-          :key="route.path"
-          class="docs-primary-nav__link"
-          :class="{ 'is-active': currentRoute?.host === route.host }"
-          :href="routeHref(route.path)"
-          :aria-current="currentPath === route.path ? 'page' : undefined"
-          @click="handleRouteClick($event, route.path)"
-        >
-          {{ route.label }}
-        </a>
+      <nav class="docs-primary-nav" aria-label="Documentation environments">
+        <a :href="routeHref('/vue')" :aria-current="activeHost.id === 'vue' ? 'location' : undefined" @click="handleRouteClick($event, '/vue')">Vue</a>
+        <a :href="routeHref('/dom')" :aria-current="activeHost.id === 'dom' ? 'location' : undefined" @click="handleRouteClick($event, '/dom')">DOM</a>
       </nav>
+      <button ref="menuButton" class="docs-menu-button" type="button" :aria-expanded="menuOpen" aria-controls="docs-navigation" @click="menuOpen = !menuOpen">{{ menuOpen ? 'Close menu' : 'Menu' }}</button>
     </header>
-
     <div class="docs-body">
-      <aside class="docs-sidebar" aria-label="Package navigation">
-        <div v-if="activeHost" class="docs-sidebar__group">
-          <p class="docs-sidebar__label">Environment</p>
-          <p class="docs-sidebar__title">{{ activeHost.label }}</p>
-          <a
-            v-for="area in areas"
-            :key="area.id"
-            class="docs-sidebar__link"
-            :class="{ 'is-active': currentRoute?.area === area.id }"
-            :href="routeHref(areaPath(activeHost.id, area.id))"
-            :aria-current="currentRoute?.area === area.id ? 'page' : undefined"
-            @click="handleRouteClick($event, areaPath(activeHost.id, area.id))"
-          >
-            {{ area.label }}
-          </a>
-        </div>
-
-        <div v-else class="docs-sidebar__group">
-          <p class="docs-sidebar__label">Examples</p>
-          <p class="docs-sidebar__title">Choose an environment</p>
-          <a
-            v-for="route in hostRoutes"
-            :key="route.path"
-            class="docs-sidebar__link"
-            :href="routeHref(route.path)"
-            @click="handleRouteClick($event, route.path)"
-          >
-            {{ route.label }}
-          </a>
-        </div>
+      <aside id="docs-navigation" class="docs-sidebar" :class="{ 'is-open': menuOpen }">
+        <nav :aria-label="`${activeHost.label} documentation`">
+          <div class="docs-sidebar__group">
+            <p class="docs-sidebar__label">{{ activeHost.label }} documentation</p>
+            <a class="docs-sidebar__link" :href="routeHref(activeHost.id === 'vue' ? '/' : '/dom')" :aria-current="currentRoute?.kind === 'home' || currentRoute?.kind === 'host' ? 'page' : undefined" @click="handleRouteClick($event, activeHost.id === 'vue' ? '/' : '/dom')">Overview</a>
+            <a v-if="activeHost.id === 'vue'" class="docs-sidebar__link" :href="routeHref('/vue/getting-started')" :aria-current="currentPath === '/vue/getting-started' ? 'page' : undefined" @click="handleRouteClick($event, '/vue/getting-started')">Getting started</a>
+          </div>
+          <div v-if="activeHost.id === 'vue'" class="docs-sidebar__group">
+            <p class="docs-sidebar__label">Guides</p>
+            <a v-for="route in guideRoutes.filter((route) => route.guide !== 'getting-started')" :key="route.path" class="docs-sidebar__link" :href="routeHref(route.path)" :aria-current="currentPath === route.path ? 'page' : undefined" @click="handleRouteClick($event, route.path)">{{ route.label }}</a>
+          </div>
+          <div class="docs-sidebar__group">
+            <p class="docs-sidebar__label">Explore</p>
+            <template v-for="area in areas" :key="area.id">
+              <a class="docs-sidebar__link" :class="{ 'is-parent': currentRoute?.area === area.id }" :href="routeHref(areaPath(activeHost.id, area.id))" :aria-current="currentPath === areaPath(activeHost.id, area.id) ? 'page' : undefined" @click="handleRouteClick($event, areaPath(activeHost.id, area.id))">{{ area.label }}<span class="docs-sidebar__count" :aria-label="`${examplesFor(activeHost.id, area.id).length} examples`">{{ examplesFor(activeHost.id, area.id).length }}</span></a>
+              <template v-if="activeHost.id === 'vue' && area.id === 'components'">
+                <a v-for="route in componentRoutes" :key="route.path" class="docs-sidebar__link docs-sidebar__link--nested" :class="{ 'is-parent': currentPath.startsWith(`${route.path}/`) }" :href="routeHref(route.path)" :aria-current="currentPath === route.path ? 'page' : undefined" @click="handleRouteClick($event, route.path)">{{ route.label }}</a>
+              </template>
+            </template>
+          </div>
+        </nav>
+        <p class="docs-sidebar__note">Headless components.<br>Your visual system.</p>
       </aside>
-
-      <main id="docs-content" class="docs-main" tabindex="-1">
+      <main id="docs-content" ref="main" class="docs-main" tabindex="-1">
         <article class="docs-page">
           <div class="docs-page__inner">
-            <template v-if="currentRoute?.kind === 'home'">
-              <p class="docs-page__eyebrow">Examples</p>
-              <h1>Choose your environment</h1>
-              <p class="docs-page__lede">
-                Vue and DOM examples are documented separately. Each area is organized around focused, runnable situations rather than long package walkthroughs.
-              </p>
-              <div class="docs-choice-grid">
-                <a
-                  v-for="route in hostRoutes"
-                  :key="route.path"
-                  class="docs-choice-card"
-                  :href="routeHref(route.path)"
-                  @click="handleRouteClick($event, route.path)"
-                >
-                  <span class="docs-choice-card__title">{{ route.label }}</span>
-                  <span>{{ hosts.find((host) => host.id === route.host)?.description }}</span>
-                </a>
-              </div>
-            </template>
-
-            <template v-else-if="currentRoute?.kind === 'host' && activeHost">
-              <p class="docs-page__eyebrow">{{ activeHost.label }}</p>
-              <h1>{{ activeHost.label }} examples</h1>
-              <p class="docs-page__lede">Choose a package area, then open one focused example.</p>
-              <div class="docs-choice-grid">
-                <a
-                  v-for="area in areas"
-                  :key="area.id"
-                  class="docs-choice-card"
-                  :href="routeHref(areaPath(activeHost.id, area.id))"
-                  @click="handleRouteClick($event, areaPath(activeHost.id, area.id))"
-                >
-                  <span class="docs-choice-card__title">{{ area.label }}</span>
-                  <span>{{ area.description }}</span>
-                  <small>{{ examplesFor(activeHost.id, area.id).length }} examples</small>
-                </a>
-              </div>
-            </template>
-
-            <template v-else-if="currentRoute?.kind === 'area' && activeHost && activeArea">
-              <p class="docs-page__eyebrow">{{ activeHost.label }} · {{ activeArea.label }}</p>
-              <h1>{{ activeArea.label }}</h1>
-              <p class="docs-page__lede">{{ activeArea.description }}</p>
-
-              <div v-if="areaExamples.length > 0" class="docs-example-grid">
-                <a
-                  v-for="example in areaExamples"
-                  :key="example.id"
-                  class="docs-example-card"
-                  :href="routeHref(`/${example.host}/${example.area}/${example.slug}`)"
-                  @click="handleRouteClick($event, `/${example.host}/${example.area}/${example.slug}`)"
-                >
-                  <div class="docs-example-card__thumbnail" aria-hidden="true">
-                    <span>{{ example.subject }}</span>
-                    <strong>{{ example.focus }}</strong>
-                  </div>
-                  <div class="docs-example-card__body">
-                    <p>{{ example.subject }}</p>
-                    <h2>{{ example.title }}</h2>
-                    <span>{{ example.description }}</span>
-                    <ul class="docs-tag-list" aria-label="Example topics">
-                      <li v-for="tag in example.tags" :key="tag">{{ tag }}</li>
-                    </ul>
-                  </div>
-                </a>
-              </div>
-
-              <div v-else class="docs-empty-state">
-                <strong>No examples yet</strong>
-                <span>This area is ready for focused examples without changing the navigation structure.</span>
-              </div>
-            </template>
-
-            <template v-else-if="currentRoute?.kind === 'example' && activeExample && activeRuntime">
-              <p class="docs-page__eyebrow">{{ activeHost?.label }} · {{ activeArea?.label }} · {{ activeExample.subject }}</p>
-              <h1>{{ activeExample.title }}</h1>
-              <p class="docs-page__lede">{{ activeExample.description }}</p>
-
-              <section class="docs-example-detail" aria-labelledby="preview-title">
-                <div class="docs-example-detail__heading">
-                  <div>
-                    <p class="docs-page__eyebrow">Preview</p>
-                    <h2 id="preview-title">{{ activeExample.focus }}</h2>
-                  </div>
-                  <span class="docs-example-kind">{{ activeExample.kind }}</span>
+            <nav v-if="currentRoute && currentRoute.kind !== 'home'" class="docs-breadcrumb" aria-label="Breadcrumb">
+              <a :href="routeHref(`/${activeHost.id}`)" @click="handleRouteClick($event, `/${activeHost.id}`)">{{ activeHost.label }}</a>
+              <template v-if="activeArea"><span aria-hidden="true">/</span><a :href="routeHref(areaPath(activeHost.id, activeArea.id))" @click="handleRouteClick($event, areaPath(activeHost.id, activeArea.id))">{{ activeArea.label }}</a></template>
+              <template v-if="activeExample && activeHost.id === 'vue' && activeArea?.id === 'components'"><span aria-hidden="true">/</span><a :href="routeHref(`/vue/components/${activeExample.subject.toLowerCase()}`)" @click="handleRouteClick($event, `/vue/components/${activeExample.subject.toLowerCase()}`)">{{ activeExample.subject }}</a></template>
+            </nav>
+            <template v-if="currentRoute?.kind === 'home' || (currentRoute?.kind === 'host' && activeHost.id === 'vue')">
+              <h1 class="docs-home-title">Interaction without<br class="docs-desktop-break" /> a prescribed look.</h1>
+              <p class="docs-page__lede">Sectile is a renderer-neutral interaction system. Its headless Vue components handle state, keyboard input, and focus while your application owns the presentation.</p>
+              <div class="docs-home-actions"><a class="docs-button" :href="routeHref('/vue/getting-started')" @click="handleRouteClick($event, '/vue/getting-started')">Get started with Vue</a><span>Vue 3.5+</span></div>
+              <CodeBlock label="Install in your Vue application" :source="installation" />
+              <section class="docs-prose-section">
+                <h2>Behavior and appearance, kept separate</h2>
+                <p>Compose the parts you need, connect state to your application, and style the elements with your own CSS. Sectile does not supply a theme or replace your visual system.</p>
+                <div class="docs-reading-links">
+                  <a :href="routeHref('/vue/guides/styling')" @click="handleRouteClick($event, '/vue/guides/styling')"><strong>Styling</strong><span>Classes, component parts, and state attributes</span></a>
+                  <a :href="routeHref('/vue/guides/state')" @click="handleRouteClick($event, '/vue/guides/state')"><strong>State ownership</strong><span>Controlled values and component-owned defaults</span></a>
                 </div>
-
-                <div class="docs-preview" :class="`docs-preview--${activeExample.fixture}`">
-                  <component :is="activeRuntime.preview" />
+              </section>
+              <section class="docs-prose-section">
+                <h2>Explore the interactions</h2>
+                <p>Focused examples show one behavior at a time, with runnable previews and the source behind them.</p>
+                <div class="docs-reading-links">
+                  <a :href="routeHref('/vue/components/checkbox')" @click="handleRouteClick($event, '/vue/components/checkbox')"><strong>Checkbox</strong><span>Checked state, composition, and styling</span></a>
+                  <a :href="routeHref('/vue/components/dialog')" @click="handleRouteClick($event, '/vue/components/dialog')"><strong>Dialog</strong><span>Open state, dismissal, and modal focus</span></a>
+                  <a :href="routeHref('/vue/form')" @click="handleRouteClick($event, '/vue/form')"><strong>Form</strong><span>Native fields and validated submission</span></a>
                 </div>
-
-                <div class="docs-example-focus">
-                  <strong>This example isolates</strong>
-                  <span>{{ activeExample.focus }}</span>
-                  <ul class="docs-tag-list" aria-label="Focused APIs">
-                    <li v-for="tag in activeExample.tags" :key="tag">{{ tag }}</li>
-                  </ul>
-                </div>
-
-                <details class="docs-code-disclosure">
-                  <summary>Relevant code</summary>
-                  <div class="docs-code-stack">
-                    <section v-for="section in activeRuntime.code" :key="section.label" class="docs-code-section">
-                      <div class="docs-code-section__header">
-                        <span>{{ section.label }}</span>
-                        <code>{{ section.language }}</code>
-                      </div>
-                      <pre><code>{{ section.source.trim() }}</code></pre>
-                    </section>
-                  </div>
-                </details>
+              </section>
+              <p class="docs-environment-note">Working without Vue? <a :href="routeHref('/dom')" @click="handleRouteClick($event, '/dom')">DOM documentation</a> covers connections to application-owned elements.</p>
+            </template>
+            <GuidePage v-else-if="currentRoute?.kind === 'guide' && currentRoute.guide" :guide="currentRoute.guide" />
+            <template v-else-if="currentRoute?.kind === 'host'">
+              <h1>DOM documentation</h1><p class="docs-page__lede">Connect Sectile interaction behavior to elements owned by your application. Each connection has an explicit lifecycle.</p>
+              <h2 class="docs-section-heading">Explore the packages</h2>
+              <div class="docs-reading-links"><a v-for="area in areas" :key="area.id" :href="routeHref(areaPath('dom', area.id))" @click="handleRouteClick($event, areaPath('dom', area.id))"><strong>{{ area.label }}</strong><span>{{ area.description }}</span></a></div>
+            </template>
+            <template v-else-if="currentRoute?.kind === 'component' && currentRoute.subject">
+              <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ componentDescriptions[currentRoute.subject] }}</p>
+              <h2 class="docs-section-heading">Examples</h2><ExampleGallery :examples="subjectExamples" />
+              <section class="docs-prose-section"><h2>Composition</h2>
+                <template v-if="currentRoute.subject === 'Checkbox'"><p>Import <code>CheckboxRoot</code> and <code>CheckboxIndicator</code> from <code>@sectile/vue/checkbox</code>. The root renders the interactive element; the indicator appears for checked or indeterminate state.</p><p>Give the root a visible label or an <code>aria-label</code>. Bind <code>v-model</code> when the application owns the value. Use <code>defaultValue</code> for an initial component-owned value.</p><h2>Keyboard interaction</h2><p>Tab focuses the control. Space changes its checked state. <code>disabled</code> prevents interaction; <code>readonly</code> keeps the value fixed without making the control disabled.</p></template>
+                <template v-else><p>Import the dialog parts from <code>@sectile/vue/dialog</code>. Keep the trigger and portal under the same <code>DialogRoot</code>. Place the overlay, content, title, description, and close control inside the portal.</p><p><code>DialogTitle</code> and <code>DialogDescription</code> supply the accessible name and description. Bind <code>v-model:open</code> when the application owns open state.</p><h2>Focus and dismissal</h2><p>The default modal dialog moves focus into its content and keeps keyboard focus inside while open. Escape dismisses it; focus returns to the trigger on close. A visible close control gives pointer and keyboard users an explicit way to dismiss it.</p></template>
               </section>
             </template>
-
-            <template v-else>
-              <p class="docs-page__eyebrow">404</p>
-              <h1>Page not found</h1>
-              <p class="docs-page__lede">This route is not part of this documentation environment.</p>
-              <a class="docs-text-link" :href="routeHref('/')" @click="handleRouteClick($event, '/')">Return home</a>
+            <template v-else-if="currentRoute?.kind === 'area' && activeArea">
+              <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
+              <template v-if="activeArea.id === 'form' && activeHost.id === 'vue'"><p class="docs-install-note">Form integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" source="pnpm add @sectile/vue @sectile/form" /></template>
+              <ExampleGallery v-if="areaExamples.length" :examples="areaExamples" />
+              <div v-else class="docs-empty-state"><h2>Examples are not documented yet</h2><p>This package area has no runnable {{ activeHost.label }} examples on this site yet. This is a documentation gap, not a statement about package availability.</p><a :href="routeHref(areaPath(activeHost.id, 'components'))" @click="handleRouteClick($event, areaPath(activeHost.id, 'components'))">Browse available component examples</a></div>
             </template>
+            <ExamplePage v-else-if="currentRoute?.kind === 'example' && activeExample" :example="activeExample" />
+            <template v-else><h1>Page not found</h1><p class="docs-page__lede">This address is not part of the documentation. The overview links to the available guides and examples.</p><a class="docs-next-link" :href="routeHref('/')" @click="handleRouteClick($event, '/')">Return to the overview</a></template>
+            <footer class="docs-page-footer">Sectile · {{ activeHost.label }} documentation</footer>
           </div>
         </article>
       </main>

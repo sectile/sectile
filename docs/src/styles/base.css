@@ -10,7 +10,7 @@ html {
   color: var(--docs-text);
   font-family: var(--docs-font-sans);
   font-size: 16px;
-  line-height: 1.5;
+  line-height: 1.65;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -22,12 +22,43 @@ body {
 }
 
 button,
-a {
+input,
+textarea,
+select {
   font: inherit;
 }
 
 a {
   color: inherit;
+  text-underline-offset: 3px;
+}
+
+input,
+textarea {
+  caret-color: var(--docs-accent);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--docs-text-muted);
+  opacity: 1;
+}
+
+* {
+  scrollbar-color: var(--docs-control-border) transparent;
+  scrollbar-width: thin;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+[hidden] {
+  display: none !important;
 }
 
 :focus-visible {

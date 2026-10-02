@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { createSSRApp } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import { createServer } from 'vite';
 import {
   areas,
   examplePath,
@@ -46,7 +50,7 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
 
   assert.match(tokens, /--docs-header-height: 56px/u);
   assert.match(tokens, /--docs-sidebar-width: 256px/u);
-  assert.match(tokens, /--docs-content-width: 1040px/u);
+  assert.match(tokens, /--docs-reading-width: 760px/u);
   assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
   assert.doesNotMatch(shell, /--vp-/u);
 });
@@ -100,11 +104,72 @@ test('runtime modules are resolved from catalog paths instead of a second exampl
 });
 
 test('preview is primary and relevant code stays collapsed by default', async () => {
-  const app = await read('src/App.vue');
+  const app = await read('src/components/ExamplePage.vue');
   const previewIndex = app.indexOf('class="docs-preview"');
   const codeIndex = app.indexOf('class="docs-code-disclosure"');
 
   assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
   assert.match(app, /<details class="docs-code-disclosure">/u);
   assert.doesNotMatch(app, /<details class="docs-code-disclosure"\s+open/u);
+});
+
+test('Vue readers have a complete introduction and representative component destinations', () => {
+  for (const path of ['/vue/getting-started', '/vue/guides/styling', '/vue/guides/state', '/vue/components/checkbox', '/vue/components/dialog', '/vue/form/native-submission']) {
+    const route = routes.find((candidate) => candidate.path === path);
+    assert.ok(route, path);
+    assert.equal(route.host, 'vue');
+  }
+  assert.ok(examples.some((example) => example.subject === 'Dialog'));
+  assert.ok(examples.some((example) => example.area === 'form'));
+  assert.ok(examples.some((example) => example.kind === 'styling'));
+});
+
+test('every shipped route renders and all internal page links resolve', async () => {
+  const server = await createServer({
+    root: fileURLToPath(new URL('..', import.meta.url)),
+    server: { middlewareMode: true, watch: null },
+    appType: 'custom',
+  });
+  // The client router reads location at import time. This fixture supplies only
+  // that boundary; rendering is real Vue SSR, not a browser-behavior assertion.
+  const originalWindow = globalThis.window;
+  const originalDocument = globalThis.document;
+  globalThis.window = {
+    location: { pathname: '/sectile/' },
+    addEventListener() {},
+    history: { pushState() {} },
+    scrollTo() {},
+  };
+  globalThis.document = { title: '' };
+  try {
+    const { default: App } = await server.ssrLoadModule('/src/App.vue');
+    const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const paths = new Set(routes.map((route) => route.path));
+    for (const route of routes) {
+      currentPath.value = route.path;
+      const html = await renderToString(createSSRApp(App));
+      assert.match(html, /<h1(?:\s[^>]*)?>[^<]/u, route.path);
+      assert.ok(!html.includes('Page not found'), route.path);
+      for (const [, href] of html.matchAll(/href="([^"#]+)"/gu)) {
+        assert.ok(href.startsWith('/sectile/'), `${route.path}: ${href}`);
+        const path = href.slice('/sectile'.length).replace(/\/$/u, '') || '/';
+        assert.ok(paths.has(path), `${route.path}: unresolved link ${href}`);
+      }
+      if (route.kind === 'example') {
+        assert.match(html, /class="docs-preview/u);
+        assert.match(html, /<details class="docs-code-disclosure">/u);
+      } else {
+        assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
+      }
+      if (route.host === 'dom') assert.doesNotMatch(html, /Vue documentation/u);
+    }
+    currentPath.value = '/missing';
+    assert.match(await renderToString(createSSRApp(App)), /Page not found/u);
+  } finally {
+    await server.close();
+    if (originalWindow === undefined) delete globalThis.window;
+    else globalThis.window = originalWindow;
+    if (originalDocument === undefined) delete globalThis.document;
+    else globalThis.document = originalDocument;
+  }
 });
