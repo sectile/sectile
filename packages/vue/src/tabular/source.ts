@@ -32,6 +32,7 @@ export function useProfileSource<State, Event, Command>(
   let mounted = false;
   let disposed = false;
   let queued: TabularRequest | null = null;
+  let sequence = 0;
 
   const setStatus = (next: SourceStatus): void => {
     status.value = next;
@@ -39,6 +40,7 @@ export function useProfileSource<State, Event, Command>(
   };
   const abandon = (requestID: number): void => { controller.abandonRequest(requestID); };
   const cancel = (): void => {
+    const cancellation = ++sequence;
     const current = active;
     const pending = queued;
     active = null;
@@ -48,21 +50,32 @@ export function useProfileSource<State, Event, Command>(
       abandon(current.requestID);
     }
     if (pending !== null && pending.requestID !== current?.requestID) abandon(pending.requestID);
-    if (!disposed) setStatus('idle');
+    if (!disposed && sequence === cancellation) setStatus('idle');
   };
   const execute = (request: TabularRequest): void => {
-    if (!mounted || disposed) { queued = request; return; }
-    if (active !== null) {
-      active.abort.abort();
-      abandon(active.requestID);
+    if (disposed) return;
+    if (!mounted) { queued = request; return; }
+    const execution = ++sequence;
+    const previous = active;
+    active = null;
+    if (previous !== null) {
+      previous.abort.abort();
+      abandon(previous.requestID);
     }
+    if (disposed || execution !== sequence) return;
     const abort = new AbortController();
-    active = { requestID: request.requestID, abort };
+    const owner = { requestID: request.requestID, abort };
+    const executeResolver = resolver;
+    active = owner;
     error.value = null;
     setStatus('loading');
-    Promise.resolve().then(() => resolver(request, { signal: abort.signal })).then((response) => {
-      if (disposed || abort.signal.aborted || active?.requestID !== request.requestID) return;
+    Promise.resolve().then(() => {
+      if (disposed || abort.signal.aborted || active !== owner) return undefined;
+      return executeResolver(request, { signal: abort.signal });
+    }).then((response) => {
+      if (response === undefined || disposed || abort.signal.aborted || active !== owner) return;
       const synchronized = controller.synchronizeView(response);
+      if (disposed || abort.signal.aborted || active !== owner) return;
       if (!synchronized.ok) {
         active = null;
         error.value = synchronized.error;
@@ -73,7 +86,7 @@ export function useProfileSource<State, Event, Command>(
       active = null;
       setStatus('success');
     }, (reason: unknown) => {
-      if (disposed || abort.signal.aborted || active?.requestID !== request.requestID) return;
+      if (disposed || abort.signal.aborted || active !== owner) return;
       active = null;
       abandon(request.requestID);
       error.value = reason;
@@ -89,8 +102,10 @@ export function useProfileSource<State, Event, Command>(
     if (!requested.ok) throw new TypeError(requested.error.message);
   };
   const replaceResolver = (next: SourceResolver): void => {
-    cancel();
     resolver = next;
+    const replacement = sequence + 1;
+    cancel();
+    if (disposed || replacement !== sequence) return;
     const replaced = controller.dispatch({ type: 'replace-source' } as Event);
     if (!replaced.ok) throw new TypeError(replaced.error.message);
   };

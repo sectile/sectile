@@ -40,6 +40,34 @@ test('Vue Tabular source cancellation during setup abandons the queued initial r
   app.unmount(); host.remove();
 });
 
+test('ISSUE-171: canceled scheduled resolver work never invokes a replacement resolver', async () => {
+  for (const operation of ['cancel', 'replaceResolver', 'dispose']) {
+    let source;
+    let oldCalls = 0;
+    let newCalls = 0;
+    const app = createApp({ setup() {
+      source = useDataTable({ source: (request) => { oldCalls += 1; return response(request); } });
+      return () => h('div');
+    } });
+    const host = document.createElement('div');
+    document.body.append(host);
+    app.mount(host);
+    if (operation === 'replaceResolver') source.replaceResolver((request) => {
+      newCalls += 1;
+      return response(request, 'new');
+    });
+    else source[operation]();
+    await nextTick();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    assert.equal(oldCalls, 0, operation);
+    assert.equal(newCalls, operation === 'replaceResolver' ? 1 : 0, operation);
+    if (operation === 'replaceResolver') assert.equal(source.status.value, 'success');
+    else if (operation === 'cancel') assert.equal(source.status.value, 'idle');
+    app.unmount();
+    host.remove();
+  }
+});
+
 test('Vue Tabular source cancels stale work and exposes resolver errors without rendering policy', async () => {
   let release; let source; let controller;
   const app = createApp({ setup() { controller = useDataTable({ source: (request, { signal }) => new Promise((resolve) => { release = () => resolve(response(request, signal.aborted ? 'stale' : 'late')); }) }); source = controller; const DataTable = createDataTableComponents(controller); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) }); } });
