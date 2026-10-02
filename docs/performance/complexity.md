@@ -176,7 +176,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | terminal:tty.keyboard-close | connected | `O(lInput)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/terminal/tests/keyboard.test.mjs |
 | virtual:collection.extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | packages/virtual/tests/runtime/collection.test.mjs |
 | virtual:collection.lanes.resolve | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/virtual/tests/runtime/collection.test.mjs |
-| virtual:collection.patch.trusted | external | `O(jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | forbidden | packages/virtual/tests/runtime/collection.test.mjs |
+| virtual:collection.patch.trusted | external | `O(nItem + jChanged)` worst-case | `O(nItem + jChanged)` | `O(1)` | `O(nItem + jChanged)` | allowed | packages/virtual/tests/runtime/collection.test.mjs |
 | virtual:collection.project.raw | external | `O(nItem)` worst-case | `O(nItem)` | `O(1)` | `O(nItem)` | allowed | packages/virtual/tests/runtime/collection.test.mjs |
 | virtual:collection.replace.raw | external | `O(nItem + jChanged)` worst-case | `O(jChanged)` | `O(1)` | `O(jChanged)` | allowed | packages/virtual/tests/runtime/collection.test.mjs |
 | virtual:collection.value-extents.reconcile | trusted | `O(jChanged log nItem)` worst-case | `O(jChanged)` | `O(jChanged)` | `O(jChanged)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

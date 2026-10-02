@@ -30595,10 +30595,15 @@
       "benchmarkIDs": [
         "VAL-003:trusted-collection-patch-work"
       ],
-      "specificationCeiling": "O(jChanged)",
+      "specificationCeiling": "O(nItem + jChanged)",
       "reviewedWeakening": null,
       "contract": {
         "variables": [
+          {
+            "name": "nItem",
+            "meaning": "external items array slots captured into one immutable owner snapshot; zero for reused owner arrays",
+            "ceiling": "projection maxItems"
+          },
           {
             "name": "jChanged",
             "meaning": "inserted identities plus explicitly changed values",
@@ -30606,18 +30611,18 @@
           }
         ],
         "time": {
-          "bound": "O(jChanged)",
+          "bound": "O(nItem + jChanged)",
           "kind": "worst-case",
           "runtimeState": "external"
         },
         "space": {
-          "auxiliary": "O(jChanged)",
+          "auxiliary": "O(nItem + jChanged)",
           "output": "O(1)",
-          "retained": "O(jChanged)"
+          "retained": "O(nItem + jChanged)"
         },
         "resources": {
-          "allocations": "O(jChanged)",
-          "cacheEntries": "O(jChanged)",
+          "allocations": "O(nItem + jChanged)",
+          "cacheEntries": "O(1)",
           "listeners": "0",
           "observers": "0",
           "timers": "0",
@@ -30637,18 +30642,18 @@
         ],
         "deterministicWork": [
           "resolver calls equal inserted identities plus the declared value-change range",
-          "no unchanged source position is read",
-          "packages/virtual/tests/runtime/collection.test.mjs ISSUE-083"
+          "each external items slot is captured once before resolver callbacks; owner-created arrays reuse their snapshot",
+          "packages/virtual/tests/runtime/collection.test.mjs ISSUE-083 and ISSUE-189"
         ],
-        "resourceRationale": "The trusted path retains one bounded Core Sequence patch, changed IDs, and an opaque update token. Scalar rejection occurs before an inserted snapshot is allocated.",
-        "proof": "Patch creation runs splice-range and resulting-cardinality scalar preflight first, then snapshots and validates only an accepted inserted/value-change range before Core applies one bounded structural patch; token application is constant time.",
-        "adversarialWitness": "ISSUE-083 proves that over-ceiling and out-of-range patches read zero inserted elements and invoke the resolver zero times. Accepted sparse patches retain the existing local identity checks without scanning unchanged values.",
+        "resourceRationale": "The full-array input contract requires one immutable nItem-slot snapshot per external array. Weak provenance retains no caller array, and owner arrays are reused. The projection also retains one bounded Core Sequence patch, changed IDs, and an opaque update token. Scalar rejection precedes slot allocation.",
+        "proof": "Scalar splice/cardinality preflight precedes indexed inserted-ID and item-slot capture. Resolver calls cover only inserted/value-change ranges. Weak owner provenance skips copying for previously captured arrays; token application is constant time.",
+        "adversarialWitness": "ISSUE-083 proves rejected patches read zero inserted slots and call no resolver. ISSUE-189 proves accepted external patches read exactly nItem slots, resolve one changed identity, and reuse owner snapshots without further external reads at 1k/10k scales.",
         "evidence": [
           "packages/virtual/tests/runtime/collection.test.mjs"
         ],
         "fullScan": {
-          "allowed": false,
-          "rationale": "A trusted patch must never rediscover unchanged raw-array identity."
+          "allowed": true,
+          "rationale": "External full-array ownership requires indexed slot capture. Identity resolution stays change-bounded; owner-created arrays avoid the copy."
         }
       }
     },
