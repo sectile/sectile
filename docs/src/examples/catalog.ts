@@ -30,6 +30,110 @@ export interface ComponentDefinition {
 
 export const components: readonly ComponentDefinition[] = [
   {
+    "subject": "Grid",
+    "slug": "grid",
+    "module": "@sectile/vue/grid",
+    "description": "Select a delivery slot in a two-row grid with coordinated cell navigation.",
+    "parts": [
+      "GridRoot",
+      "GridRow",
+      "GridCell"
+    ],
+    "composition": [
+      "Supply rows of stable cell IDs and render matching cells. Bind v-model to the selected ID; highlightedValue is a separate focus-navigation value."
+    ],
+    "interaction": [
+      "Arrow keys move through the grid. Selection and editing are separate capabilities; this example does not use cell editors."
+    ]
+  },
+  {
+    "subject": "TreeView",
+    "slug": "tree-view",
+    "module": "@sectile/vue/tree-view",
+    "description": "Select a delivery service while controlling branch expansion separately.",
+    "parts": [
+      "TreeViewRoot",
+      "TreeViewItem",
+      "TreeViewGroup",
+      "TreeViewDisclosure"
+    ],
+    "composition": [
+      "Nodes declare stable IDs and parentID relationships. Compose child groups under their branch item and associate each disclosure with that branch."
+    ],
+    "interaction": [
+      "Tree navigation follows the visible hierarchy. Expansion and selected values are separate arrays."
+    ]
+  },
+  {
+    "subject": "Feed",
+    "slug": "feed",
+    "module": "@sectile/vue/feed",
+    "description": "Append a small local batch in response to a feed window request.",
+    "parts": [
+      "FeedRoot",
+      "FeedItem",
+      "FeedLoadNewer"
+    ],
+    "composition": [
+      "Supply items, revision and requestGeneration. Answer requestWindow with a newer revision and the matching generation so stale requests are distinguishable."
+    ],
+    "interaction": [
+      "The load control requests more items. The application supplies data; this example is local, bounded to 15 items and synchronous."
+    ]
+  },
+  {
+    "subject": "Menu",
+    "slug": "menu",
+    "module": "@sectile/vue/menu",
+    "description": "Expose a persistently visible action menu with a nested sharing group.",
+    "parts": [
+      "MenuRoot",
+      "MenuItem",
+      "MenuSubContent"
+    ],
+    "composition": [
+      "Items declare ID and parentID; null identifies top-level actions. Match item values and associate each submenu with its parent ID."
+    ],
+    "interaction": [
+      "Arrow keys navigate the menu hierarchy. Activating a leaf emits invoke; the application performs the action."
+    ]
+  },
+  {
+    "subject": "Menubar",
+    "slug": "menubar",
+    "module": "@sectile/vue/menubar",
+    "description": "Expose top-level application menus with nested actions.",
+    "parts": [
+      "MenubarRoot",
+      "MenubarItem",
+      "MenubarContent"
+    ],
+    "composition": [
+      "Declare flat ID/parentID nodes. Keep top-level items in one horizontal row and connect each submenu to its parent with for."
+    ],
+    "interaction": [
+      "Keyboard navigation moves through top-level menus and their children. Leaf activation emits an application action ID."
+    ]
+  },
+  {
+    "subject": "NavigationMenu",
+    "slug": "navigation-menu",
+    "module": "@sectile/vue/navigation-menu",
+    "description": "Compose navigation links while keeping their destinations and routing in the application.",
+    "parts": [
+      "NavigationMenuRoot",
+      "NavigationMenuList",
+      "NavigationMenuItem",
+      "NavigationMenuLink"
+    ],
+    "composition": [
+      "Declare stable nodes and render link values that match them. Use as=a and an application-owned href for each link."
+    ],
+    "interaction": [
+      "NavigationMenu coordinates keyboard navigation. The native link and application router determine the destination."
+    ]
+  },
+  {
     "subject": "Tooltip",
     "slug": "tooltip",
     "module": "@sectile/vue/tooltip",
@@ -587,6 +691,156 @@ export interface ExampleDefinition {
 }
 
 export const examples: readonly ExampleDefinition[] = [
+  {
+    "id": "vue-components-grid-two-dimensional-selection",
+    "host": "vue",
+    "area": "components",
+    "subject": "Grid",
+    "slug": "grid/two-dimensional-selection",
+    "title": "Two-dimensional selection",
+    "description": "Select a delivery slot in a two-row grid with coordinated cell navigation.",
+    "focus": "Two-dimensional selection",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Grid"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/grid/two-dimensional-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/grid/two-dimensional-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-tree-view-expanded-selection",
+    "host": "vue",
+    "area": "components",
+    "subject": "TreeView",
+    "slug": "tree-view/expanded-selection",
+    "title": "Expansion and selection",
+    "description": "Select a delivery service while controlling branch expansion separately.",
+    "focus": "Expansion and selection",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "TreeView"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/tree-view/expanded-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/tree-view/expanded-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-feed-window-request",
+    "host": "vue",
+    "area": "components",
+    "subject": "Feed",
+    "slug": "feed/window-request",
+    "title": "Accepting a window request",
+    "description": "Append a small local batch in response to a feed window request.",
+    "focus": "Accepting a window request",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Feed"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/feed/window-request/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/feed/window-request/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-menu-nested-actions",
+    "host": "vue",
+    "area": "components",
+    "subject": "Menu",
+    "slug": "menu/nested-actions",
+    "title": "Nested action menus",
+    "description": "Expose a persistently visible action menu with a nested sharing group.",
+    "focus": "Nested action menus",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Menu"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/menu/nested-actions/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/menu/nested-actions/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-menubar-nested-actions",
+    "host": "vue",
+    "area": "components",
+    "subject": "Menubar",
+    "slug": "menubar/nested-actions",
+    "title": "A menu bar with submenus",
+    "description": "Expose top-level application menus with nested actions.",
+    "focus": "A menu bar with submenus",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "Menubar"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/menubar/nested-actions/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/menubar/nested-actions/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-components-navigation-menu-link-destinations",
+    "host": "vue",
+    "area": "components",
+    "subject": "NavigationMenu",
+    "slug": "navigation-menu/link-destinations",
+    "title": "Application-owned destinations",
+    "description": "Compose navigation links while keeping their destinations and routing in the application.",
+    "focus": "Application-owned destinations",
+    "kind": "behavior",
+    "fixture": "control",
+    "tags": [
+      "NavigationMenu"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/components/navigation-menu/link-destinations/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/components/navigation-menu/link-destinations/Preview.vue"
+      }
+    ],
+    "related": []
+  },
   {
     "id": "vue-components-tooltip-focus-hover",
     "host": "vue",

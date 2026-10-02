@@ -570,6 +570,24 @@
 }
 
 .docs-preview [data-example-control-row] { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--docs-space-2); }
+.docs-preview [data-scope="grid"][data-part="root"] { display: grid; gap: var(--docs-space-2); width: min(100%, 360px); }
+.docs-preview [data-scope="grid"][data-part="row"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--docs-space-2); }
+.docs-preview [data-scope="grid"][data-part="cell"] { display: grid; min-height: var(--docs-control-height); place-items: center; border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); }
+.docs-preview [data-scope="grid"][data-selected] { border-color: var(--docs-accent); background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-preview [data-scope="tree-view"][data-part="root"] { width: min(100%, 360px); }
+.docs-preview [data-scope="tree-view"][data-part="item"] { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border-radius: var(--docs-control-radius); }
+.docs-preview [data-scope="tree-view"][data-selected] { background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-preview [data-scope="tree-view"][data-part="group"] { margin-left: var(--docs-space-5); }
+.docs-preview [data-scope="tree-view"][data-part="disclosure"] { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: 0; border-radius: var(--docs-control-radius); background: transparent; color: var(--docs-text); }
+.docs-preview [data-scope="feed"][data-part="root"] { display: grid; gap: var(--docs-space-4); width: min(100%, 400px); max-height: 360px; overflow: auto; }
+.docs-preview [data-scope="feed"][data-part="item"] { padding: var(--docs-space-4); border-radius: var(--docs-control-radius); background: var(--docs-bg); }
+.docs-preview [data-scope="feed"][data-part="item"] p { margin-top: var(--docs-space-2); }
+.docs-preview [data-scope="feed"] button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview :is([data-scope="menubar"], [data-scope="navigation-menu"])[data-part="root"] { position: relative; width: min(100%, 360px); }
+.docs-preview [data-scope="navigation-menu"][data-part="list"] { margin: 0; padding: 0; list-style: none; }
+.docs-preview :is([data-scope="menubar"], [data-scope="navigation-menu"])[data-part="item"] { display: flex; min-height: var(--docs-control-height); align-items: center; padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); text-decoration: none; }
+.docs-preview :is([data-scope="menubar"], [data-scope="navigation-menu"])[data-highlighted] { background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-preview [data-scope="menu"][data-part="sub-content"] { margin: var(--docs-space-2) 0 var(--docs-space-2) var(--docs-space-4); padding: var(--docs-surface-inset); border-radius: var(--docs-radius); background: var(--docs-bg); }
 .docs-preview :is([data-scope="toolbar"], [data-scope="pagination"], [data-scope="stepper"]) button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
 .docs-preview :is([data-scope="pagination"][data-selected], [data-scope="stepper"][aria-selected="true"]) { border-color: var(--docs-accent); background: var(--docs-accent-soft); color: var(--docs-accent); }
 .docs-preview :is([data-scope="pagination"], [data-scope="stepper"])[data-part="root"] { display: grid; justify-items: center; gap: var(--docs-space-4); width: min(100%, 440px); }

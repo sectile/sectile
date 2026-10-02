@@ -211,6 +211,12 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-components-grid-two-dimensional-selection': [/Selected slot: A1/u, /data-part="cell"/u],
+          'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /data-expanded/u],
+          'vue-components-feed-window-request': [/3 updates · Revision 0/u, /Load newer updates/u],
+          'vue-components-menu-nested-actions': [/Invoked: none/u, /Share/u],
+          'vue-components-menubar-nested-actions': [/Invoked: none/u, /File/u, /Help/u],
+          'vue-components-navigation-menu-link-destinations': [/Destination: none/u, /<a /u],
           'vue-components-tooltip-focus-hover': [/Archive message/u],
           'vue-components-alert-dialog-explicit-confirmation': [/Request: active/u],
           'vue-components-drawer-side-panel': [/Drawer open: false/u],
