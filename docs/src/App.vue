@@ -19,7 +19,9 @@ const guideRoutes = routes.filter((route) => route.kind === 'guide');
 const subjectExamples = computed(() => areaExamples.value.filter((example) => example.subject === currentRoute.value?.subject));
 const installation = 'pnpm add @sectile/vue';
 const activeComponent = computed(() => components.find((component) => component.subject === currentRoute.value?.subject));
-watchEffect(() => { document.title = `${currentRoute.value?.title ?? 'Not found'} · Sectile`; });
+watchEffect(() => {
+  if (typeof document !== 'undefined') document.title = `${currentRoute.value?.title ?? 'Not found'} · Sectile`;
+});
 watch(currentPath, async () => {
   menuOpen.value = false;
   await nextTick();

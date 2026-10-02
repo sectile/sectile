@@ -713,6 +713,240 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    "id": "vue-temporal-date-popover",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DatePicker",
+    "slug": "date-popover",
+    "title": "Choose a delivery date",
+    "description": "Calendar selection and typed date input.",
+    "focus": "Calendar selection and typed date input",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "day",
+      "single selection"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-popover/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-popover/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-date-range-popover",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateRangePicker",
+    "slug": "date-range-popover",
+    "title": "Choose a delivery window",
+    "description": "Range endpoints and calendar selection.",
+    "focus": "Range endpoints and calendar selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "day",
+      "range"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-range-popover/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-range-popover/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-inline-range-calendar",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "RangeCalendar",
+    "slug": "inline-range-calendar",
+    "title": "Inline date range",
+    "description": "Visible range selection.",
+    "focus": "Visible range selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "day",
+      "range"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/inline-range-calendar/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/inline-range-calendar/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-month-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "MonthPicker",
+    "slug": "month-selection",
+    "title": "Choose a billing month",
+    "description": "Month-granularity selection.",
+    "focus": "Month-granularity selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "month",
+      "single selection"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/month-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/month-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-month-range-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "MonthRangePicker",
+    "slug": "month-range-selection",
+    "title": "Choose a billing period",
+    "description": "Month-granularity range selection.",
+    "focus": "Month-granularity range selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "month",
+      "range"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/month-range-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/month-range-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-year-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "YearPicker",
+    "slug": "year-selection",
+    "title": "Choose a reporting year",
+    "description": "Year-granularity selection.",
+    "focus": "Year-granularity selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "year",
+      "single selection"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/year-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/year-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-year-range-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "YearRangePicker",
+    "slug": "year-range-selection",
+    "title": "Choose reporting years",
+    "description": "Year-granularity range selection.",
+    "focus": "Year-granularity range selection",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "year",
+      "range"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/year-range-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/year-range-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-date-time-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateTimePicker",
+    "slug": "date-time-selection",
+    "title": "Choose a dispatch date and time",
+    "description": "Calendar date and typed local time.",
+    "focus": "Calendar date and typed local time",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "day",
+      "single selection"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-time-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-time-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-temporal-date-time-range-selection",
+    "host": "vue",
+    "area": "temporal",
+    "subject": "DateTimeRangePicker",
+    "slug": "date-time-range-selection",
+    "title": "Choose a dispatch interval",
+    "description": "Local date-time range endpoints.",
+    "focus": "Local date-time range endpoints",
+    "kind": "behavior",
+    "fixture": "surface",
+    "tags": [
+      "day",
+      "range"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/temporal/date-time-range-selection/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/temporal/date-time-range-selection/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
     id: 'vue-components-meter-group-storage-budget', host: 'vue', area: 'components', subject: 'MeterGroup', slug: 'meter-group/storage-budget',
     title: 'Shared storage budget', description: 'Update two labeled segments within one measurement budget.', focus: 'Segment totals and remaining budget',
     kind: 'behavior', fixture: 'surface', tags: ['measurement', 'segments'], sourceOwner: 'vue',

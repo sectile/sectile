@@ -972,6 +972,19 @@
 .docs-preview [data-example-calendar] [role="gridcell"] { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-1); border: 0; border-radius: var(--docs-control-radius); background: transparent; color: var(--docs-text); }
 .docs-preview [data-example-calendar] [aria-selected="true"] { background: var(--docs-accent); color: var(--docs-on-accent); }
 .docs-preview [data-example-calendar] [aria-disabled="true"] { color: var(--docs-disabled-text); background: var(--docs-disabled-bg); }
+.docs-preview [data-example-picker] { width: 100%; min-width: 0; max-width: 400px; }
+.docs-preview [data-example-picker] [data-part="content"] { margin-top: var(--docs-space-4); padding: var(--docs-surface-inset); border: var(--docs-border-width) solid var(--docs-border); border-radius: var(--docs-radius); background: var(--docs-bg); }
+.docs-preview [data-example-picker] [role="row"] { display: grid; gap: var(--docs-space-1); grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.docs-preview [data-example-picker-unit="month"] [role="row"],
+.docs-preview [data-example-picker-unit="year"] [role="row"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.docs-preview [data-example-picker] [role="gridcell"] { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-1); border: 0; border-radius: var(--docs-inner-radius); color: var(--docs-text); background: transparent; font: inherit; font-size: var(--docs-font-size-label); }
+.docs-preview [data-example-picker] [data-in-range] { background: var(--docs-accent-soft); color: var(--docs-accent); }
+.docs-preview [data-example-picker] [data-selected] { background: var(--docs-accent); color: var(--docs-on-accent); }
+.docs-preview [data-example-picker] [role="gridcell"][aria-disabled="true"] { background: var(--docs-disabled-bg); color: var(--docs-disabled-text); }
+.docs-preview [data-example-picker] :is(input, [data-part="trigger"]) { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); color: var(--docs-text); background: var(--docs-bg); font: inherit; font-size: var(--docs-font-size-label); }
+.docs-preview [data-example-picker] input { width: 100%; flex: 1 1 180px; }
+.docs-preview [data-example-picker-inputs] { display: grid; gap: var(--docs-space-2); margin-bottom: var(--docs-space-2); }
+.docs-preview [data-example-picker] output { display: block; margin-top: var(--docs-space-4); }
 .docs-preview [data-example-calendar-heading] button,
 .docs-preview :is([data-example-tabular], [data-example-chart]) button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
 .docs-preview [data-example-virtual-list] [data-part="root"] { height: 264px; width: 100%; border-radius: var(--docs-control-radius); background: var(--docs-bg); }

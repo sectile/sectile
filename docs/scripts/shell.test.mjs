@@ -59,6 +59,13 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.doesNotMatch(shell, /--vp-/u);
   assert.match(shell, /\[data-highlighted\]/u);
   assert.doesNotMatch(shell, /\[data-highlighted="true"\]/u, 'highlight is a presence attribute, not a string boolean');
+  const styleSources = [tokens, shell, await read('src/styles/base.css')];
+  const declarations = new Set(styleSources.flatMap(source => [...source.matchAll(/(--docs-[\w-]+)\s*:/gu)].map(([, name]) => name)));
+  for (const source of styleSources) {
+    for (const [, name] of source.matchAll(/var\((--docs-[\w-]+)/gu)) {
+      assert.ok(declarations.has(name), `${name} must have a declaration; missing tokens silently drop CSS rules`);
+    }
+  }
 });
 
 test('documentation palette maintains readable text and identifiable control edges', async () => {
@@ -171,7 +178,9 @@ test('every shipped route renders and all internal page links resolve', async ()
     history: { pushState() {} },
     scrollTo() {},
   };
-  globalThis.document = { title: '' };
+  // Keep document absent: a title-only fake incorrectly selects browser-only
+  // component setup paths during server rendering.
+  delete globalThis.document;
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
@@ -211,6 +220,15 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-temporal-date-popover': [/Selected: 2026-10-03/u, /Choose date/u],
+          'vue-temporal-date-range-popover': [/Selected: 2026-10-03 → 2026-10-08/u, /Range start/u, /Range end/u],
+          'vue-temporal-inline-range-calendar': [/Selected: 2026-10-03 → 2026-10-08/u, /data-in-range/u],
+          'vue-temporal-month-selection': [/Selected: 2026-10-01/u, />Oct<\/button>/u],
+          'vue-temporal-month-range-selection': [/Selected: 2026-10-01 → 2026-12-01/u, />Dec<\/button>/u],
+          'vue-temporal-year-selection': [/Selected: 2026-01-01/u, /year page/u],
+          'vue-temporal-year-range-selection': [/Selected: 2026-01-01 → 2028-01-01/u, /Choose years/u],
+          'vue-temporal-date-time-selection': [/Selected: 2026-10-03T09:00/u, /without a time zone/u],
+          'vue-temporal-date-time-range-selection': [/Selected: 2026-10-03T09:00.*2026-10-08T17:00/u, /Range end/u],
           'vue-components-meter-group-storage-budget': [/60 \/ 100/u, /40 units remaining/u, /Documents/u, /Media/u],
           'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u],
           'vue-components-window-splitter-bounded-panes': [/First pane: 50%/u, /Resize delivery panels/u],
