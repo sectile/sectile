@@ -411,6 +411,9 @@ export function createRange(input: RangeInput): QuantizedRange {
 }
 
 export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
+  const count = input.count;
+  const originInput = input.origin;
+  const stepInput = input.step;
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -422,25 +425,25 @@ export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
     const error = validateSafeCeiling(value, name, minimum);
     if (error !== null) return { ok: false, error };
   }
-  const countError = validateSafeCeiling(input.count, 'count');
+  const countError = validateSafeCeiling(count, 'count');
   if (countError !== null) return { ok: false, error: countError };
-  if (input.count >= Number.MAX_SAFE_INTEGER) {
+  if (count >= Number.MAX_SAFE_INTEGER) {
     return fail(
       'resource-rejection',
       'cardinality-not-safe',
       'count + 1 must remain within the safe integer domain.',
-      { count: input.count },
+      { count },
     );
   }
-  if (input.count > maxCount) {
+  if (count > maxCount) {
     return fail('resource-rejection', 'count-ceiling-exceeded', 'Range count exceeds maxCount.', {
-      count: input.count,
+      count,
       maxCount,
     });
   }
   for (const [value, name] of [
-    [input.origin, 'origin'],
-    [input.step, 'step'],
+    [originInput, 'origin'],
+    [stepInput, 'step'],
   ] as const) {
     if (value.length > maxDecimalCodeUnits) {
       return fail('resource-rejection', 'decimal-code-unit-ceiling-exceeded', `${name} exceeds maxDecimalCodeUnits.`, {
@@ -450,8 +453,8 @@ export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
       });
     }
   }
-  const origin = parseDecimal(input.origin);
-  const step = parseDecimal(input.step);
+  const origin = parseDecimal(originInput);
+  const step = parseDecimal(stepInput);
   if (origin === null || step === null) {
     return fail('construction', 'invalid-decimal', 'origin and step must be finite canonical decimal spellings.');
   }
@@ -463,7 +466,7 @@ export function tryCreateRange(input: RangeInput): Result<QuantizedRange> {
   if (step.coefficient <= 0n) {
     return fail('construction', 'non-positive-step', 'step must be greater than zero.');
   }
-  return ok(new ExactQuantizedRange(origin, step, input.count));
+  return ok(new ExactQuantizedRange(origin, step, count));
 }
 
 export function createBoundedRange(input: BoundedRangeInput): QuantizedRange {
@@ -471,6 +474,9 @@ export function createBoundedRange(input: BoundedRangeInput): QuantizedRange {
 }
 
 export function tryCreateBoundedRange(input: BoundedRangeInput): Result<QuantizedRange> {
+  const minInput = input.min;
+  const maxInput = input.max;
+  const stepInput = input.step;
   const maxCount = input.maxCount ?? 10_000_000;
   const maxDecimalCodeUnits = input.maxDecimalCodeUnits ?? 1_024;
   const maxScale = input.maxScale ?? 100;
@@ -483,9 +489,9 @@ export function tryCreateBoundedRange(input: BoundedRangeInput): Result<Quantize
     if (error !== null) return { ok: false, error };
   }
   for (const [value, name] of [
-    [input.min, 'min'],
-    [input.max, 'max'],
-    [input.step, 'step'],
+    [minInput, 'min'],
+    [maxInput, 'max'],
+    [stepInput, 'step'],
   ] as const) {
     if (value.length > maxDecimalCodeUnits) {
       return fail(
@@ -497,9 +503,9 @@ export function tryCreateBoundedRange(input: BoundedRangeInput): Result<Quantize
     }
   }
 
-  const min = parseDecimal(input.min);
-  const max = parseDecimal(input.max);
-  const step = parseDecimal(input.step);
+  const min = parseDecimal(minInput);
+  const max = parseDecimal(maxInput);
+  const step = parseDecimal(stepInput);
   if (min === null || max === null || step === null) {
     return fail('construction', 'invalid-decimal', 'min, max, and step must be finite decimal spellings.');
   }
@@ -529,8 +535,8 @@ export function tryCreateBoundedRange(input: BoundedRangeInput): Result<Quantize
     });
   }
   return tryCreateRange({
-    origin: input.min,
-    step: input.step,
+    origin: minInput,
+    step: stepInput,
     count: Number(count),
     maxCount,
     maxDecimalCodeUnits,

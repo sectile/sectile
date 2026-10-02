@@ -5,6 +5,29 @@ import { createBoundedRange, createRange, tryCreateBoundedRange, tryCreateRange 
 import { ReferenceRange } from '../../.verification-dist/internal/reference/structures/range.js';
 import { unwrap } from '../support.mjs';
 
+test('range construction retains the accepted count and decimal observations', () => {
+  let countReads = 0;
+  const range = tryCreateRange({
+    origin: '0', step: '1', maxCount: 4,
+    get count() { return countReads++ === 0 ? 4 : 100; },
+  });
+  assert.equal(range.ok, true);
+  assert.equal(range.value.count, 4);
+  assert.equal(countReads, 1);
+  let minReads = 0;
+  let stepReads = 0;
+  const bounded = tryCreateBoundedRange({
+    get min() { return minReads++ === 0 ? '0' : '100'; },
+    max: '4',
+    get step() { return stepReads++ === 0 ? '1' : '2'; },
+  });
+  assert.equal(bounded.ok, true);
+  assert.equal(bounded.value.valueAt(0), '0');
+  assert.equal(bounded.value.valueAt(4), '4');
+  assert.equal(minReads, 1);
+  assert.equal(stepReads, 1);
+});
+
 test('RNG-01,07,08: tick/value and ratio observations are exact inverses', () => {
   const configurations = [
     ['0', '1', 12],
