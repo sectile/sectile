@@ -33,6 +33,7 @@ const checked = ref<CheckboxValue>(false);
   cursor: pointer;
 }
 .styled-checkbox__box {
+  box-sizing: border-box;
   display: inline-grid;
   width: 20px;
   height: 20px;
@@ -42,6 +43,14 @@ const checked = ref<CheckboxValue>(false);
   border-radius: 4px;
   background: white;
   color: white;
+}
+.styled-checkbox__box :deep([data-part="indicator"]) {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+.styled-checkbox__box svg {
+  display: block;
 }
 .styled-checkbox[data-state="checked"] .styled-checkbox__box,
 .styled-checkbox[data-state="indeterminate"] .styled-checkbox__box {

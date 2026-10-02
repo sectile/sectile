@@ -109,7 +109,11 @@ function closeMenu(event: KeyboardEvent): void {
             </template>
             <template v-else-if="currentRoute?.kind === 'component' && currentRoute.subject">
               <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ activeComponent?.description }}</p>
-              <h2 class="docs-section-heading">Examples</h2><ExampleGallery :examples="subjectExamples" />
+              <div class="docs-inline-examples">
+                <section v-for="example in subjectExamples" :key="example.id" :aria-labelledby="`${example.id}-title`">
+                  <ExamplePage :example="example" embedded />
+                </section>
+              </div>
               <section v-if="activeComponent" class="docs-prose-section">
                 <h2>Composition</h2>
                 <p>Import <template v-for="(part, index) in activeComponent.parts" :key="part"><span v-if="index">, </span><code>{{ part }}</code></template> from <code>{{ activeComponent.module }}</code>.</p>

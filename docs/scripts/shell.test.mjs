@@ -197,6 +197,14 @@ test('every shipped route renders and all internal page links resolve', async ()
           assert.match(html, /<output[^>]*aria-live="polite"[^>]*>Open: true · Present<\/output>/u);
           assert.match(html, /aria-expanded="true"/u);
         }
+      } else if (route.kind === 'component') {
+        const subjectExamples = examples.filter((example) => example.host === route.host && example.subject === route.subject);
+        assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, subjectExamples.length, route.path);
+        assert.equal([...html.matchAll(/<details class="docs-code-disclosure">/gu)].length, subjectExamples.length, route.path);
+        assert.equal([...html.matchAll(/>Reset example<\/button>/gu)].length, subjectExamples.length, route.path);
+        for (const example of subjectExamples) assert.ok(html.includes(`id="${example.id}-preview"`));
+        const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id);
+        assert.equal(new Set(ids).size, ids.length, `${route.path}: unique element IDs`);
       } else {
         assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
       }

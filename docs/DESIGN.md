@@ -255,10 +255,15 @@ retain the same area navigation without showing every component child.
 ### Reading links and galleries
 
 Reading links use open rows with a short title and explanation, stacking on
-small screens. Example cards combine an inert representative thumbnail and a
+small screens. Package example cards combine an inert representative thumbnail and a
 title/description, an equal inset, and a calculated thumbnail corner; hover
 strengthens the perimeter. A gallery does not mount live
 interaction controls.
+
+Component pages display their focused examples inline with matching headings,
+live previews and collapsed source. A reset control restores each example by
+remounting only that preview; its dedicated route remains available for sharing.
+Readers can compare behaviors without returning through a gallery.
 
 ### Preview and source
 
@@ -268,6 +273,12 @@ documentation-owned presentation from source that includes its own styling.
 The preview uses a 240px minimum height and equal 32px padding; below 760px
 padding becomes 24px. A checkbox label row has no outer perimeter; its persistent
 20px square carries the control boundary.
+
+Checkbox squares use border-box sizing in both fixtures and copyable styling.
+Indicators center a block SVG with unit line height; inline baselines do not
+determine checkmark placement. Thumbnails use the same 20px outer square and
+14px icon with a 1px border. Preview layout is applied to a documentation-owned
+wrapper rather than the component root.
 
 Source blocks have a dark header, visible copy control, and focusable scrolling
 code region capped at 560px high. Copy feedback reports success or a selection
