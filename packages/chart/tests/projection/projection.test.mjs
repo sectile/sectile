@@ -18,6 +18,31 @@ const model = createChartModel({ layers: [
   { id: 'pie', profile: 'radial-segment', data: [{ id: 7, value: 1 }, { id: 8, value: 3, innerRadius: 0.5 }] },
 ] });
 
+test('successful packed geometry remains finite at the Float32 boundary', () => {
+  const layers = [
+    { id: 'p', profile: 'point', data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 1, y: 1 }] },
+    { id: 'l', profile: 'ordered-series', data: [{ id: 1, x: 0, y: 0 }, { id: 2, x: 1, y: 1 }] },
+    { id: 'r', profile: 'cartesian-segment', data: [{ id: 1, x1: 0, y1: 0, x2: 1, y2: 1 }] },
+    { id: 'c', profile: 'grid-cell', data: [{ id: 1, column: 0, row: 0, value: 1 }] },
+    { id: 'a', profile: 'radial-segment', data: [{ id: 1, value: 1 }] },
+  ];
+  for (const layer of layers) {
+    const source = createChartModel({ layers: [layer] });
+    for (const input of [
+      { viewport: { width: 1e40, height: 1e40 } },
+      { viewport: { width: 100, height: 100 }, viewTransform: { xScale: 1, yScale: 1, xOffset: 1e40, yOffset: 0 } },
+    ]) assert.equal(tryCreateChartProjection(source, input).ok, false, layer.profile);
+    const result = tryCreateChartProjection(source, { viewport: { width: 1e30, height: 1e30 } });
+    assert.equal(result.ok, true, layer.profile);
+    for (const batch of result.value.batches) {
+      const geometry = batch.positions ?? batch.rectangles ?? batch.cells ?? batch.arcs;
+      assert.equal([...geometry].every(Number.isFinite), true);
+    }
+  }
+  const hugeCell = createChartModel({ layers: [{ id: 'c', profile: 'grid-cell', data: [{ id: 1, column: 0, row: 0, value: 1e40 }] }] });
+  assert.equal(tryCreateChartProjection(hugeCell, { viewport: { width: 100, height: 100 } }).ok, false);
+});
+
 test('projects all five semantic profiles into renderer-neutral packed batches', () => {
   const projection = createChartProjection(model, { viewport: { width: 200, height: 100 } });
   assert.equal(projection.profile, 'layered');

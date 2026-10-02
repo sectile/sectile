@@ -647,8 +647,9 @@ function projectDefinitionLayer<ID extends StableID>(
     const selected = selectPackedAggregateFrontier(layer.owner, quota, cartesianBounds);
     if (selected.overflow) return exactCeiling(semantics.id, selected.visibleDatums, quota);
     const batch = projectAggregateCells(layerIndex, selected.entries, xScale, yScale, transform, 'density');
+    if (!batch.ok) return batch;
     const aggregateRevision = batchRevision(layer, selected.entries.length);
-    const decorated = Object.freeze({ ...batch, revision: aggregateRevision });
+    const decorated = Object.freeze({ ...batch.value, revision: aggregateRevision });
     return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: selected.visibleDatums, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
   }
   if (semantics.kind === 'heatmap' && semantics.projection === 'heatmap-aggregate') {
@@ -664,8 +665,9 @@ function projectDefinitionLayer<ID extends StableID>(
       maximumY: semantics.heatmap?.yEdges[Math.min(semantics.heatmap.yEdges.length - 1, Math.ceil(entry.maximumY))] as number,
     }));
     const batch = projectAggregateCells(layerIndex, entries, xScale, yScale, transform, reduction);
+    if (!batch.ok) return batch;
     const aggregateRevision = batchRevision(layer, selected.entries.length);
-    const decorated = Object.freeze({ ...batch, revision: aggregateRevision });
+    const decorated = Object.freeze({ ...batch.value, revision: aggregateRevision });
     return chartOK({ batch: decorated, dataBatch: createDataBatch(layer, semantics, decorated, aggregateRevision), representedDatums: selected.visibleDatums, emittedPrimitives: selected.entries.length, aggregateRepresentatives: selected.entries.length, visitedIndexNodes: selected.visitedNodes, revision: aggregateRevision });
   }
   const selectionBounds = semantics.kind === 'heatmap' ? heatmapSelectionBounds(semantics, cartesianBounds) : cartesianBounds;
@@ -742,6 +744,7 @@ function projectDefinitionCells<ID extends StableID>(
     const target = output * CHART_CELL_STRIDE;
     cells[target] = Math.min(x1, x2); cells[target + 1] = Math.min(y1, y2);
     cells[target + 2] = Math.abs(x2 - x1); cells[target + 3] = Math.abs(y2 - y1); cells[target + 4] = value;
+    if (!finitePackedScalars(cells, target + 2, 3)) return invalidProjection('Heatmap cell exceeds finite packed geometry.');
     identities[output] = layer.identityOffset + source;
   }
   const colors = heatmapColors(cells, minimumValue, maximumValue);
@@ -755,7 +758,7 @@ function projectAggregateCells(
   yScale: ChartScale<number>,
   transform: ChartViewTransform,
   reduction: 'density' | 'sum' | 'mean' | 'minimum' | 'maximum',
-): ChartCellBatch {
+): ChartResult<ChartCellBatch> {
   const cells = new Float32Array(entries.length * CHART_CELL_STRIDE);
   const identityIndices = new Uint32Array(entries.length);
   identityIndices.fill(0xffff_ffff);
@@ -764,10 +767,11 @@ function projectAggregateCells(
   let maximumValue = Number.NEGATIVE_INFINITY;
   for (let index = 0; index < entries.length; index += 1) {
     const entry = entries[index] as import('../model/layer-owner.js').PackedAggregateSelectionEntry;
-    const x1 = projectedAxis(entry.minimumX, xScale, transform.xScale, transform.xOffset) as number;
-    const x2 = projectedAxis(entry.maximumX, xScale, transform.xScale, transform.xOffset) as number;
-    const y1 = projectedAxis(entry.minimumY, yScale, transform.yScale, transform.yOffset) as number;
-    const y2 = projectedAxis(entry.maximumY, yScale, transform.yScale, transform.yOffset) as number;
+    const x1 = projectedAxis(entry.minimumX, xScale, transform.xScale, transform.xOffset);
+    const x2 = projectedAxis(entry.maximumX, xScale, transform.xScale, transform.xOffset);
+    const y1 = projectedAxis(entry.minimumY, yScale, transform.yScale, transform.yOffset);
+    const y2 = projectedAxis(entry.maximumY, yScale, transform.yScale, transform.yOffset);
+    if (x1 === null || x2 === null || y1 === null || y2 === null) return invalidProjection('Aggregate cell cannot be represented by its axes.');
     const value = reduction === 'density' ? entry.count
       : reduction === 'sum' ? entry.sum
         : reduction === 'mean' ? entry.sum / entry.count
@@ -776,15 +780,16 @@ function projectAggregateCells(
     const target = index * CHART_CELL_STRIDE;
     cells[target] = Math.min(x1, x2); cells[target + 1] = Math.min(y1, y2);
     cells[target + 2] = Math.max(1, Math.abs(x2 - x1)); cells[target + 3] = Math.max(1, Math.abs(y2 - y1)); cells[target + 4] = value;
+    if (!finitePackedScalars(cells, target + 2, 3)) return invalidProjection('Aggregate cell exceeds finite packed geometry.');
     representatives.push(Object.freeze({
       kind: 'aggregate', reduction, count: entry.count,
       bounds: Object.freeze({ minimumX: entry.minimumX, maximumX: entry.maximumX, minimumY: entry.minimumY, maximumY: entry.maximumY }),
     }));
   }
-  return {
+  return chartOK({
     type: 'cell', layerIndex, cells, identityIndices, representatives: Object.freeze(representatives), reduction,
     colors: heatmapColors(cells, minimumValue, maximumValue),
-  };
+  });
 }
 
 interface DataGeometryCacheEntry {
@@ -1322,6 +1327,7 @@ function projectRectangles<ID extends StableID>(
     const target = output * 4;
     rectangles[target] = Math.min(x1, x2); rectangles[target + 1] = Math.min(y1, y2);
     rectangles[target + 2] = Math.abs(x2 - x1); rectangles[target + 3] = Math.abs(y2 - y1);
+    if (!finitePackedScalars(rectangles, target + 2, 2)) return invalidProjection('Rectangle exceeds finite packed geometry.');
     identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'rectangle', layerIndex, rectangles, identityIndices: identities });
@@ -1346,6 +1352,7 @@ function projectCells<ID extends StableID>(
     cells[target] = Math.min(x1, x2); cells[target + 1] = Math.min(y1, y2);
     cells[target + 2] = Math.abs(x2 - x1); cells[target + 3] = Math.abs(y2 - y1);
     cells[target + 4] = readPackedLayerValue(layer.owner, source, 2);
+    if (!finitePackedScalars(cells, target + 2, 3)) return invalidProjection('Cell exceeds finite packed geometry.');
     identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'cell', layerIndex, cells, identityIndices: identities });
@@ -1372,16 +1379,24 @@ function projectArcs<ID extends StableID>(
     arcs[target + 3] = readPackedLayerValue(layer.owner, source, 2) * radius * radialScale;
     arcs[target + 4] = total === 0 ? 0 : (layer.index.prefix[source] as number) / total * Math.PI * 2;
     arcs[target + 5] = total === 0 ? 0 : (layer.index.prefix[source + 1] as number) / total * Math.PI * 2;
+    if (!finitePackedScalars(arcs, target, CHART_ARC_STRIDE)) return invalidProjection('Arc exceeds finite packed geometry.');
     identities[output] = layer.identityOffset + (layer.identityIndices[source] as number);
   }
   return chartOK({ type: 'arc', layerIndex, arcs, identityIndices: identities });
+}
+
+function finitePackedScalars(values: Float32Array, offset: number, count: number): boolean {
+  for (let index = offset; index < offset + count; index += 1) {
+    if (!Number.isFinite(values[index])) return false;
+  }
+  return true;
 }
 
 function projectedAxis(value: number, scale: ChartScale<number>, factor: number, offset: number): number | null {
   const projected = scale.normalize(value);
   if (projected === null) return null;
   const transformed = projected * factor + offset;
-  return Number.isFinite(transformed) ? transformed : null;
+  return Number.isFinite(Math.fround(transformed)) ? transformed : null;
 }
 
 function validViewport(value: ChartViewport): boolean {
