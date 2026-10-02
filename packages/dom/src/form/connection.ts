@@ -68,6 +68,11 @@ import {
   normalizeSubmissionIssues,
 } from './submission.js';
 
+const summaryAttributes = [
+  ['data-scope', 'form'], ['data-part', 'summary'], ['role', 'alert'],
+  ['aria-live', 'polite'], ['tabindex', '-1'],
+] as const;
+
 interface SelectorSubscription<Input> {
   readonly select: (input: Input) => unknown;
   readonly listener: (selected: unknown, previous: unknown) => void;
@@ -160,9 +165,16 @@ export function tryCreateForm<
   let updateHandler: FormUpdateHandler | undefined = options.onUpdate;
   let subscriptionErrorHandler: ((error: unknown) => void) | undefined = options.onSubscriptionError;
   let dispatchingNotifications = false;
+  let summaryOwner: {
+    readonly element: HTMLElement;
+    readonly attributes: readonly (string | null)[];
+    readonly content: readonly ChildNode[];
+    renderedNode: ChildNode | null | undefined;
+    renderedText: string | null;
+    hidden: string | null | undefined;
+  } | null = null;
 
   const detachPendingValidationForTopologyChange = (): AbortController | null => {
-    if (state.validation.status !== 'validating') return null;
     const retired = validationController;
     validationController = null;
     validationSequence += 1;
@@ -171,21 +183,61 @@ export function tryCreateForm<
 
   options.form.dataset['scope'] = 'form';
   options.form.dataset['part'] = 'root';
-  const syncSummary = (): void => {
-    if (summary === undefined) return;
-    if (renderSummaryContent) {
-      summary.textContent = summaryMessage(state.allIssues, state.submission.failure);
+  const restoreSummaryAttribute = (element: HTMLElement, name: string, value: string | null): void => {
+    if (value === null) element.removeAttribute(name);
+    else element.setAttribute(name, value);
+  };
+  const releaseSummary = (): void => {
+    const owner = summaryOwner;
+    summaryOwner = null;
+    summary = undefined;
+    if (owner === null) return;
+    const { element } = owner;
+    for (let index = 0; index < summaryAttributes.length; index += 1) {
+      const [name, installed] = summaryAttributes[index]!;
+      if (element.getAttribute(name) === installed) {
+        restoreSummaryAttribute(element, name, owner.attributes[index] ?? null);
+      }
     }
-    if (manageSummaryVisibility) summary.hidden = state.allIssues.length === 0 && state.submission.failure === null;
+    if (owner.hidden !== undefined && element.getAttribute('hidden') === owner.hidden) {
+      restoreSummaryAttribute(element, 'hidden', owner.attributes[summaryAttributes.length] ?? null);
+    }
+    if (owner.renderedNode !== undefined
+      && element.textContent === owner.renderedText
+      && element.childNodes.length === (owner.renderedNode === null ? 0 : 1)
+      && element.firstChild === owner.renderedNode) {
+      element.replaceChildren(...owner.content);
+    }
+  };
+  const syncSummary = (
+    issues: FormState<ID>['allIssues'] = state.allIssues,
+    failure: FormSubmissionFailure | null = state.submission.failure,
+  ): void => {
+    const owner = summaryOwner;
+    if (owner === null) return;
+    if (renderSummaryContent) {
+      const text = summaryMessage(issues, failure);
+      owner.element.textContent = text;
+      owner.renderedText = text;
+      owner.renderedNode = owner.element.firstChild;
+    }
+    if (manageSummaryVisibility) {
+      owner.element.hidden = issues.length === 0 && failure === null;
+      owner.hidden = owner.element.getAttribute('hidden');
+    }
   };
   const configureSummary = (element: HTMLElement | undefined): void => {
     summary = element;
     if (element === undefined) return;
-    element.dataset['scope'] = 'form';
-    element.dataset['part'] = 'summary';
-    element.setAttribute('role', 'alert');
-    element.setAttribute('aria-live', 'polite');
-    element.tabIndex = -1;
+    summaryOwner = {
+      element,
+      attributes: [...summaryAttributes.map(([name]) => element.getAttribute(name)), element.getAttribute('hidden')],
+      content: Array.from(element.childNodes),
+      renderedNode: undefined,
+      renderedText: null,
+      hidden: undefined,
+    };
+    for (const [name, value] of summaryAttributes) element.setAttribute(name, value);
     syncSummary();
   };
   configureSummary(summary);
@@ -202,6 +254,7 @@ export function tryCreateForm<
       || validateOption !== next.validate
       || !sameTriggers(validateOn, nextValidateOn)
       || !sameTriggers(revalidateOn, nextRevalidateOn);
+    releaseSummary();
     renderSummaryContent = next.renderSummaryContent ?? true;
     manageSummaryVisibility = next.manageSummaryVisibility ?? true;
     configureSummary(next.summary);
@@ -217,11 +270,11 @@ export function tryCreateForm<
     updateHandler = next.onUpdate;
     subscriptionErrorHandler = next.onSubscriptionError;
     if (!validationChanged) return;
-    validationController?.abort();
-    validationController = null;
-    validationSequence += 1;
-    transition({ type: 'validation-invalidated' });
+    const sequence = validationSequence + 1;
+    transition({ type: 'validation-invalidated' }, true);
+    if (!active || sequence !== validationSequence) return;
     transition({ type: 'replace-issues', source: 'validate', issues: [] });
+    if (!active || sequence !== validationSequence) return;
     transition({ type: 'replace-issues', source: 'schema', issues: [] });
   };
 
@@ -393,23 +446,13 @@ export function tryCreateForm<
   const reinitialize = (reinitializeOptions: FormReinitializeOptions = {}): void => {
     if (!active) return;
     const canceledPendingValidation = state.validation.status === 'validating';
-    validationController?.abort();
-    validationController = null;
-    validationSequence += 1;
     nativeResume = null;
     pendingReinitializations.clear();
     captureAllCurrentValues();
     const transitionOptions = canceledPendingValidation && reinitializeOptions.preserve?.validation === true
       ? { ...reinitializeOptions, preserve: { ...reinitializeOptions.preserve, validation: false } }
       : reinitializeOptions;
-    transition({ type: 'reinitialize', options: transitionOptions });
-    if (summary !== undefined) {
-      const remaining = orderedIssues(state);
-      if (renderSummaryContent) {
-        summary.textContent = summaryMessage(remaining, state.submission.failure);
-      }
-      if (manageSummaryVisibility) summary.hidden = remaining.length === 0 && state.submission.failure === null;
-    }
+    transition({ type: 'reinitialize', options: transitionOptions }, true);
   };
   const focusInvalid = (startId: ID): boolean => {
     const invalid = state.fields.filter((candidate) => !candidate.valid);
@@ -434,21 +477,13 @@ export function tryCreateForm<
   };
   const announce = (issueIds: readonly StableID[]): void => {
     const issues = orderedIssues(state).filter((issue) => issueIds.includes(issue.id));
-    if (summary !== undefined) {
-      if (renderSummaryContent) {
-        summary.textContent = summaryMessage(issues, state.submission.failure);
-      }
-      if (manageSummaryVisibility) summary.hidden = issues.length === 0 && state.submission.failure === null;
-    }
+    syncSummary(issues);
     announceSummaryHandler?.(issues, state.submission.failure);
   };
   const announceFailure = (): void => {
     const failure = state.submission.failure;
     if (failure === null) return;
-    if (summary !== undefined) {
-      if (renderSummaryContent) summary.textContent = summaryMessage([], failure);
-      if (manageSummaryVisibility) summary.hidden = false;
-    }
+    syncSummary([], failure);
     announceSummaryHandler?.([], failure);
   };
   const execute = (commands: readonly FormCommand<ID>[]): void => {
@@ -616,13 +651,17 @@ export function tryCreateForm<
       event?.preventDefault();
       return;
     }
-    validationController?.abort();
+    const retired = detachPendingValidationForTopologyChange();
+    const sequence = validationSequence;
+    retired?.abort();
+    if (!active || sequence !== validationSequence) return;
     const controller = new AbortController();
     validationController = controller;
-    const sequence = ++validationSequence;
     const commands = transition({ type: 'validation-started', trigger, intent });
     if (commands === null) return;
+    if (!active || sequence !== validationSequence) return;
     execute(commands);
+    if (!active || sequence !== validationSequence) return;
     const generation = state.validation.generation;
 
     const formData = createNativeFormData(options.form, submitter);
@@ -674,6 +713,7 @@ export function tryCreateForm<
     } catch (error) {
       custom = validationException(error);
     }
+    if (!active || sequence !== validationSequence) return;
     if (intent === 'submission' && schemaOption !== undefined) {
       try {
         const candidate = schemaOption['~standard'].validate(input);
@@ -789,7 +829,9 @@ export function tryCreateForm<
       : null,
   ): void => {
     if (previousIntent !== null && !revalidateOn.has(trigger)) return;
-    transition({ type: 'validation-invalidated' });
+    const sequence = validationSequence + 1;
+    transition({ type: 'validation-invalidated' }, true);
+    if (!active || sequence !== validationSequence) return;
     const intent = previousIntent ?? (validateOn.has(trigger) ? 'interaction' : null);
     if (intent !== null) runValidation(trigger, intent, participant?.id ?? null);
   };
@@ -811,8 +853,9 @@ export function tryCreateForm<
       updateParticipant(participant, {
         dirty: !valuesEqual(participant, current, baseline),
       });
+      const sequence = validationSequence;
       transition({ type: 'field-value-changed', id: participant.id });
-      invalidateAfterInteraction('input', participant, previousIntent);
+      if (sequence === validationSequence) invalidateAfterInteraction('input', participant, previousIntent);
     };
     if (event.type === 'input' || event.type === 'change') updateValue();
     else queueMicrotask(updateValue);
@@ -835,16 +878,12 @@ export function tryCreateForm<
   };
   const onSubmit = (event: Event): void => submit(event as SubmitEvent);
   const onReset = (): void => {
-    validationController?.abort();
-    validationSequence += 1;
     nativeResume = null;
     pendingReinitializations.clear();
-    const commands = transition('reset');
+    const sequence = validationSequence + 1;
+    const commands = transition('reset', true);
+    if (!active || sequence !== validationSequence) return;
     if (commands !== null) execute(commands);
-    if (summary !== undefined) {
-      if (renderSummaryContent) summary.textContent = '';
-      if (manageSummaryVisibility) summary.hidden = true;
-    }
     resetHandler?.();
     queueMicrotask(captureAllCurrentValues);
   };
@@ -1011,8 +1050,9 @@ export function tryCreateForm<
       const previousIntent = state.validation.status === 'invalid'
         ? state.validation.intent
         : null;
-      transition({ type: 'field-value-changed', id });
-      if (previousIntent !== null) runValidation('input', previousIntent, id);
+      const sequence = validationSequence + 1;
+      transition({ type: 'field-value-changed', id }, true);
+      if (sequence === validationSequence && previousIntent !== null) runValidation('input', previousIntent, id);
       return true;
     },
     getField: (id) => getFormField(state, id),
@@ -1055,7 +1095,8 @@ export function tryCreateForm<
       if (!active) return;
       active = false;
       pendingNotifications.length = 0;
-      validationController?.abort();
+      detachPendingValidationForTopologyChange()?.abort();
+      releaseSummary();
       nativeResume = null;
       options.form.removeEventListener('input', onValueInteraction);
       options.form.removeEventListener('change', onValueInteraction);

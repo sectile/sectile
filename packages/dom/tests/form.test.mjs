@@ -1248,6 +1248,93 @@ test('ISSUE-123: reinitialize still preserves settled validation metadata', () =
   }
 });
 
+test('ISSUE-193: invalidation and lifecycle retirement preserve reentrant replacement ownership', async () => {
+  for (const operation of ['input', 'reset', 'reinitialize', 'reconfigure', 'destroy']) {
+    for (const reenter of [false, true]) {
+      const dom = installDOM();
+      try {
+        const { document, Event } = dom.window;
+        const element = document.createElement('form');
+        const input = document.createElement('input');
+        input.name = 'a';
+        input.value = 'initial';
+        element.append(input);
+        document.body.append(element);
+        const signals = [];
+        const pending = [];
+        let form;
+        const validate = (_values, { signal }) => {
+          signals.push(signal);
+          if (signals.length === 1 && reenter) signal.addEventListener('abort', () => {
+            input.dispatchEvent(new Event('blur'));
+          }, { once: true });
+          return new Promise((resolve) => pending.push(resolve));
+        };
+        form = createForm({ form: element, participants: [{ id: 'a', element: input }], validateOn: ['blur'], validate });
+        input.dispatchEvent(new Event('blur'));
+        if (operation === 'input') {
+          input.value = 'changed';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        } else if (operation === 'reconfigure') {
+          form.reconfigure({ validate, validateOn: ['blur', 'input'] });
+        } else form[operation]();
+        assert.equal(signals[0].aborted, true, operation);
+        const replacement = reenter && operation !== 'destroy';
+        assert.equal(signals.length, replacement ? 2 : 1, operation);
+        if (replacement) {
+          assert.equal(signals[1].aborted, false, operation);
+          assert.equal(form.state.validation.status, 'validating', operation);
+        } else if (operation !== 'destroy') assert.equal(form.state.validation.status, 'idle', operation);
+        pending[0]({ issues: [{ message: 'stale', path: 'a' }] });
+        await Promise.resolve();
+        await Promise.resolve();
+        assert.equal(form.state.allIssues.some((issue) => issue.message === 'stale'), false);
+        form.destroy();
+        assert.equal(signals.every((signal) => signal.aborted), true);
+      } finally { dom.restore(); }
+    }
+  }
+});
+
+test('ISSUE-175: summary ownership is released on replacement, removal, and destroy', () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const element = document.createElement('form');
+    const first = document.createElement('div');
+    const second = document.createElement('div');
+    const content = document.createElement('strong');
+    content.textContent = 'Original';
+    first.append(content);
+    first.setAttribute('role', 'status');
+    first.tabIndex = 2;
+    first.hidden = true;
+    second.textContent = 'Second';
+    const form = createForm({ form: element, summary: first });
+    form.replaceIssues('form', [{ id: 'problem', message: 'Problem', source: 'form' }]);
+    form.reconfigure({ summary: second });
+    assert.equal(first.firstChild, content);
+    assert.equal(first.getAttribute('role'), 'status');
+    assert.equal(first.tabIndex, 2);
+    assert.equal(first.hidden, true);
+    assert.equal(first.hasAttribute('aria-live'), false);
+    assert.equal(first.hasAttribute('data-scope'), false);
+    assert.equal(second.textContent, 'Problem');
+    form.reconfigure({});
+    assert.equal(second.textContent, 'Second');
+    assert.equal(second.hasAttribute('role'), false);
+    form.reconfigure({ summary: first, renderSummaryContent: false, manageSummaryVisibility: false });
+    assert.equal(first.firstChild, content);
+    assert.equal(first.hidden, true);
+    first.setAttribute('aria-live', 'assertive');
+    form.destroy();
+    assert.equal(first.firstChild, content);
+    assert.equal(first.getAttribute('aria-live'), 'assertive');
+    assert.equal(first.getAttribute('role'), 'status');
+    assert.equal(first.tabIndex, 2);
+  } finally { dom.restore(); }
+});
+
 test('ISSUE-132: participant topology changes retire pending interaction validation and fresh validation sees current fields', async () => {
   const dom = installDOM();
   try {
