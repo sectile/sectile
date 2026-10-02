@@ -692,6 +692,110 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    "id": "vue-virtual-measured-list",
+    "host": "vue",
+    "area": "virtual",
+    "subject": "VirtualList",
+    "slug": "measured-list",
+    "title": "Measured delivery notes",
+    "description": "Virtualize different note lengths with mounted-content size ownership.",
+    "focus": "Measured delivery notes",
+    "kind": "behavior",
+    "fixture": "viewport",
+    "tags": [
+      "VirtualList",
+      "size ownership"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/virtual/measured-list/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/virtual/measured-list/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-virtual-responsive-grid",
+    "host": "vue",
+    "area": "virtual",
+    "subject": "VirtualGrid",
+    "slug": "responsive-grid",
+    "title": "Responsive virtual lanes",
+    "description": "Pack fixed-height parcels into one to three responsive lanes.",
+    "focus": "Responsive virtual lanes",
+    "kind": "behavior",
+    "fixture": "viewport",
+    "tags": [
+      "VirtualGrid",
+      "size ownership"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/virtual/responsive-grid/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/virtual/responsive-grid/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-virtual-masonry-notes",
+    "host": "vue",
+    "area": "virtual",
+    "subject": "VirtualMasonry",
+    "slug": "masonry-notes",
+    "title": "Measured masonry cards",
+    "description": "Start with an estimate and refine the heights of mounted delivery notes.",
+    "focus": "Measured masonry cards",
+    "kind": "behavior",
+    "fixture": "viewport",
+    "tags": [
+      "VirtualMasonry",
+      "size ownership"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/virtual/masonry-notes/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/virtual/masonry-notes/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
+    "id": "vue-virtual-spatial-rectangles",
+    "host": "vue",
+    "area": "virtual",
+    "subject": "VirtualSpatial",
+    "slug": "spatial-rectangles",
+    "title": "Declared spatial rectangles",
+    "description": "Project application-owned rectangles into a two-dimensional scrollport.",
+    "focus": "Declared spatial rectangles",
+    "kind": "behavior",
+    "fixture": "viewport",
+    "tags": [
+      "VirtualSpatial",
+      "size ownership"
+    ],
+    "sourceOwner": "vue",
+    "previewPath": "./vue/virtual/spatial-rectangles/Preview.vue",
+    "code": [
+      {
+        "label": "Vue",
+        "language": "vue",
+        "path": "./vue/virtual/spatial-rectangles/Preview.vue"
+      }
+    ],
+    "related": []
+  },
+  {
     "id": "vue-components-grid-two-dimensional-selection",
     "host": "vue",
     "area": "components",

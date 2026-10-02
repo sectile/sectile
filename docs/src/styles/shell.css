@@ -975,6 +975,12 @@
 .docs-preview [data-example-calendar-heading] button,
 .docs-preview :is([data-example-tabular], [data-example-chart]) button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
 .docs-preview [data-example-virtual-list] [data-part="root"] { height: 264px; width: 100%; border-radius: var(--docs-control-radius); background: var(--docs-bg); }
+.docs-preview [data-example-virtual-cards] { width: 100%; min-width: 0; }
+.docs-preview [data-example-virtual-cards] [data-part="root"] { width: 100%; height: 264px; border-radius: var(--docs-control-radius); }
+.docs-preview [data-example-virtual-card] { padding: var(--docs-space-4); border-radius: var(--docs-control-radius); background: var(--docs-bg); font-size: var(--docs-font-size-label); }
+.docs-preview [data-example-virtual-card] p { margin: var(--docs-space-2) 0 0; color: var(--docs-text-muted); }
+.docs-preview [data-example-virtual-fixed-card] { display: flex; height: 64px; min-width: 0; align-items: center; justify-content: center; padding: var(--docs-space-4); border-radius: var(--docs-control-radius); background: var(--docs-bg); font-size: var(--docs-font-size-label); }
+.docs-preview [data-example-virtual-cards] > p { margin: var(--docs-space-4) 0 0; color: var(--docs-text-muted); font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-virtual-row] { display: flex; height: 44px; align-items: center; padding-inline: var(--docs-space-4); }
 .docs-preview [data-example-virtual-list] output { margin-top: var(--docs-space-4); }
 .docs-preview [data-example-tabular] { overflow-x: auto; }

@@ -211,6 +211,10 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.match(html, /<details class="docs-code-disclosure">/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
+          'vue-virtual-measured-list': [/Delivery 1/u, /Mounted content establishes/u],
+          'vue-virtual-responsive-grid': [/Parcel 1/u, /64px tall/u],
+          'vue-virtual-masonry-notes': [/Delivery 1/u, /120px estimate/u],
+          'vue-virtual-spatial-rectangles': [/Parcel 1/u, /surface-local rectangles/u],
           'vue-components-grid-two-dimensional-selection': [/Selected slot: A1/u, /data-part="cell"/u],
           'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /data-expanded/u],
           'vue-components-feed-window-request': [/3 updates · Revision 0/u, /Load newer updates/u],
