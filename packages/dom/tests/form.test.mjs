@@ -1257,11 +1257,14 @@ test('ISSUE-193: invalidation and lifecycle retirement preserve reentrant replac
         const element = document.createElement('form');
         const input = document.createElement('input');
         input.name = 'a';
+        input.defaultValue = 'initial';
         input.value = 'initial';
         element.append(input);
         document.body.append(element);
         const signals = [];
         const pending = [];
+        let participantResets = 0;
+        let formResets = 0;
         let form;
         const validate = (_values, { signal }) => {
           signals.push(signal);
@@ -1270,7 +1273,16 @@ test('ISSUE-193: invalidation and lifecycle retirement preserve reentrant replac
           }, { once: true });
           return new Promise((resolve) => pending.push(resolve));
         };
-        form = createForm({ form: element, participants: [{ id: 'a', element: input }], validateOn: ['blur'], validate });
+        form = createForm({
+          form: element,
+          participants: [{ id: 'a', element: input, reset: () => { participantResets += 1; } }],
+          validateOn: ['blur'], validate,
+          onReset: () => { formResets += 1; },
+        });
+        if (operation === 'reset') {
+          input.value = 'changed';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
         input.dispatchEvent(new Event('blur'));
         if (operation === 'input') {
           input.value = 'changed';
@@ -1285,6 +1297,15 @@ test('ISSUE-193: invalidation and lifecycle retirement preserve reentrant replac
           assert.equal(signals[1].aborted, false, operation);
           assert.equal(form.state.validation.status, 'validating', operation);
         } else if (operation !== 'destroy') assert.equal(form.state.validation.status, 'idle', operation);
+        if (operation === 'reset') {
+          assert.equal(participantResets, 1, 'reset executes participant effects despite replacement validation');
+          assert.equal(formResets, 1, 'reset callback is not validation-owned work');
+          await Promise.resolve();
+          assert.equal(input.value, 'initial');
+          input.value = 'changed';
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          assert.equal(form.state.dirty, true, 'post-reset value cache observes the native reset');
+        }
         pending[0]({ issues: [{ message: 'stale', path: 'a' }] });
         await Promise.resolve();
         await Promise.resolve();

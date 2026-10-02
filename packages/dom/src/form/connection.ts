@@ -880,9 +880,8 @@ export function tryCreateForm<
   const onReset = (): void => {
     nativeResume = null;
     pendingReinitializations.clear();
-    const sequence = validationSequence + 1;
     const commands = transition('reset', true);
-    if (!active || sequence !== validationSequence) return;
+    if (!active) return;
     if (commands !== null) execute(commands);
     resetHandler?.();
     queueMicrotask(captureAllCurrentValues);
