@@ -157,17 +157,14 @@ export function useNativeInputFormControl(
     readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
   } = {},
 ): FormControlParticipation {
-  return useFormControl({
+  return useFormControl(withFormCallbacks({
     element: element as FormElementSource<HTMLInputElement>,
     semanticControl: element as FormElementSource<HTMLInputElement>,
     focusTarget: element as FormElementSource<HTMLInputElement>,
     validationTarget: element as FormElementSource<HTMLInputElement>,
     labelMode: 'for',
     capabilities: nativeInputControlCapabilities,
-    ...(options.reset === undefined ? {} : { reset: options.reset }),
-    ...(options.getValue === undefined ? {} : { getValue: options.getValue }),
-    ...(options.isValueEqual === undefined ? {} : { isValueEqual: options.isValueEqual }),
-  });
+  }, options));
 }
 
 export function useCompositeFormControl(options: {
@@ -180,7 +177,7 @@ export function useCompositeFormControl(options: {
   readonly getValue?: () => unknown;
   readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
 }): FormControlParticipation {
-  return useFormControl({
+  return useFormControl(withFormCallbacks({
     element: options.root,
     semanticControl: options.root,
     focusTarget: options.focusTarget ?? options.root,
@@ -188,36 +185,50 @@ export function useCompositeFormControl(options: {
     labelMode: options.labelMode ?? 'labelledby',
     capabilities: compositeControlCapabilities,
     ...(options.submissions === undefined ? {} : { submissions: options.submissions }),
-    ...(options.reset === undefined ? {} : { reset: options.reset }),
-    ...(options.getValue === undefined ? {} : { getValue: options.getValue }),
-    ...(options.isValueEqual === undefined ? {} : { isValueEqual: options.isValueEqual }),
-  });
+  }, options));
+}
+
+const formCallbackKeys = ['reset', 'getValue', 'isValueEqual'] as const;
+
+function withFormCallbacks(
+  registration: FormControlRegistration,
+  options: Pick<FormControlRegistration, typeof formCallbackKeys[number]>,
+): FormControlRegistration {
+  const target = registration as unknown as Record<string, unknown>;
+  for (const key of formCallbackKeys) {
+    const callback = options[key];
+    if (callback !== undefined) target[key] = callback;
+  }
+  return registration;
 }
 
 export function provideFormControlOwner(): void {
   provide(formControlOwnerKey, true);
 }
 
+const metadataAliases: Readonly<Record<FormMetadataAttribute, string>> = {
+  id: 'id', name: 'name', form: 'form', required: 'required', disabled: 'disabled',
+  readonly: 'readOnly',
+  'aria-describedby': 'ariaDescribedby',
+  'aria-errormessage': 'ariaErrormessage',
+  'aria-invalid': 'ariaInvalid',
+  'aria-labelledby': 'ariaLabelledby',
+  'aria-disabled': 'ariaDisabled',
+  'aria-required': 'ariaRequired',
+  'aria-readonly': 'ariaReadonly',
+};
+const metadataAttributes = Object.keys(metadataAliases) as FormMetadataAttribute[];
+
 function explicitMetadataAttributes(
   vnodeProps: Readonly<Record<string, unknown>> | null,
 ): readonly FormMetadataAttribute[] {
-  if (vnodeProps === null) return [];
-  const aliases: Readonly<Record<FormMetadataAttribute, readonly string[]>> = {
-    id: ['id'],
-    name: ['name'],
-    form: ['form'],
-    required: ['required'],
-    disabled: ['disabled'],
-    readonly: ['readonly', 'readOnly'],
-    'aria-describedby': ['aria-describedby', 'ariaDescribedby'],
-    'aria-errormessage': ['aria-errormessage', 'ariaErrormessage'],
-    'aria-invalid': ['aria-invalid', 'ariaInvalid'],
-    'aria-labelledby': ['aria-labelledby', 'ariaLabelledby'],
-    'aria-disabled': ['aria-disabled', 'ariaDisabled'],
-    'aria-required': ['aria-required', 'ariaRequired'],
-    'aria-readonly': ['aria-readonly', 'ariaReadonly'],
-  };
-  return (Object.entries(aliases) as [FormMetadataAttribute, readonly string[]][])
-    .filter(([, names]) => names.some((name) => Object.hasOwn(vnodeProps, name)))
-    .map(([attribute]) => attribute);
+  const explicit: FormMetadataAttribute[] = [];
+  if (vnodeProps !== null) {
+    for (const attribute of metadataAttributes) {
+      if (Object.hasOwn(vnodeProps, attribute) || Object.hasOwn(vnodeProps, metadataAliases[attribute])) {
+        explicit.push(attribute);
+      }
+    }
+  }
+  return explicit;
 }

@@ -76,6 +76,28 @@ const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } =
 const { ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
 const { formValueControlInventory } = await import('../.verification-dist/form/control-inventory.js');
 
+test('native and composite Form callback slots are captured once', async () => {
+  for (const composite of [false, true]) {
+    const reads = { reset: 0, getValue: 0, isValueEqual: 0 };
+    const host = document.createElement('div');
+    const app = createApp({ setup() {
+      const element = shallowRef(null);
+      const options = {
+        get reset() { reads.reset += 1; return () => {}; },
+        get getValue() { reads.getValue += 1; return () => 'owned'; },
+        get isValueEqual() { reads.isValueEqual += 1; return Object.is; },
+      };
+      if (composite) useCompositeFormControl(Object.defineProperty(options, 'root', { value: element }));
+      else useNativeInputFormControl(element, options);
+      return () => h('input', { ref: (value) => { element.value = value; } });
+    } });
+    app.mount(host);
+    await nextTick();
+    assert.deepEqual(reads, { reset: 1, getValue: 1, isValueEqual: 1 });
+    app.unmount();
+  }
+});
+
 test('nested Form controls mount without a reactive render loop', () => {
   const fixture = fileURLToPath(new URL('./fixtures/form-nested-mount.mjs', import.meta.url));
   const result = spawnSync(process.execPath, [fixture], {
