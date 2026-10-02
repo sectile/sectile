@@ -559,8 +559,12 @@ class FakeElement {
     this.listeners.get(type)?.delete(listener);
   }
 
-  emit(type, event) {
-    for (const listener of this.listeners.get(type) ?? []) listener(event);
+  emit(type, event = {}) {
+    const dispatched = { ...event, type };
+    for (const listener of this.listeners.get(type) ?? []) {
+      if (typeof listener === 'function') listener.call(this, dispatched);
+      else listener.handleEvent(dispatched);
+    }
   }
 
   setAttribute(name, value) {

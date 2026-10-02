@@ -83,7 +83,13 @@ class FakeInput {
   attributes = new Map(); listeners = new Map(); value = ''; type = ''; inputMode = ''; disabled = false; readOnly = false; required = false; selectionStart = 0; selectionEnd = 0; selectionDirection = 'none';
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
-  emit(type, event) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
+  emit(type, event = {}) {
+    const dispatched = { ...event, type };
+    for (const listener of this.listeners.get(type) ?? []) {
+      if (typeof listener === 'function') listener.call(this, dispatched);
+      else listener.handleEvent(dispatched);
+    }
+  }
   setAttribute(name, value) { this.attributes.set(name, value); }
   removeAttribute(name) { this.attributes.delete(name); }
   setSelectionRange(start, end, direction = 'none') { this.selectionStart = start; this.selectionEnd = end; this.selectionDirection = direction; }

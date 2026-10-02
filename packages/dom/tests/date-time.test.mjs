@@ -767,7 +767,13 @@ class FakeElement {
   attributes = new Map(); listeners = new Map(); dataset = {}; disabled = false; hidden = false; tabIndex = 0;
   addEventListener(type, listener) { const values = this.listeners.get(type) ?? new Set(); values.add(listener); this.listeners.set(type, values); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
-  emit(type, event) { for (const listener of this.listeners.get(type) ?? []) listener(event); }
+  emit(type, event = {}) {
+    const dispatched = { ...event, type };
+    for (const listener of this.listeners.get(type) ?? []) {
+      if (typeof listener === 'function') listener.call(this, dispatched);
+      else listener.handleEvent(dispatched);
+    }
+  }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
   getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
