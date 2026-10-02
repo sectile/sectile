@@ -68,7 +68,7 @@ export function createNumberField(options: NumberFieldOptions): FacadeConnection
 }
 
 export function tryCreateNumberField(options: NumberFieldOptions): Result<FacadeConnection<NumberFieldConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateNumberFieldConnection(options));
+  return createFacadeConnection(options, tryCreateNumberFieldConnection);
 }
 
 function tryCreateNumberFieldConnection(options: NumberFieldOptions): Result<NumberFieldConnection> {
@@ -204,7 +204,7 @@ class DOMNumberField implements NumberFieldConnection {
     input.type = 'text';
     input.inputMode = this.#options.inputMode ?? 'decimal';
     input.required = this.#options.required ?? this.#options.policies?.required ?? false;
-    setInteractionAttributes(input, this.#options, { native: true, readOnly: true });
+    setInteractionAttributes(input, this.#options, true, true);
     if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label);
     this.#binding.render();
   }

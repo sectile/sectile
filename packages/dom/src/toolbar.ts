@@ -62,7 +62,7 @@ export function createToolbar<ID extends StableID>(
 export function tryCreateToolbar<ID extends StableID>(
   options: ToolbarOptions<ID>,
 ): Result<FacadeConnection<ToolbarConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateToolbarConnection(options));
+  return createFacadeConnection(options, tryCreateToolbarConnection);
 }
 
 function tryCreateToolbarConnection<ID extends StableID>(

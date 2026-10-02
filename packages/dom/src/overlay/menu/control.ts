@@ -98,7 +98,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       rank: (id) => order.indexOf(id),
     });
     this.#rootVisibility = options.manageVisibility === false || options.kind !== 'menu-button' ? undefined : createHiddenBinding(options.root);
-    setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, { native: true });
+    setInteractionAttributes(options.root, options); if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options, true);
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close-popup'); } }) : undefined;
     this.#popupPosition = options.kind === 'menu-button' && options.trigger !== undefined

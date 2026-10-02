@@ -3,8 +3,8 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { PositionAlign, PositionOptions, PositionSide } from './position.js';
-import { createPosition, manualPositionConnection, type PositionConnection } from './overlay/position/connection.js';
-import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
+import { PositionedPopup } from './overlay/positioned-popup.js';
+import { createDOMPopup, readPopupOpen, type DOMPopupConnection } from './overlay/popup/connection.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
@@ -52,74 +52,41 @@ export function createPopover(options: PopoverOptions): FacadeConnection<Popover
 }
 
 export function tryCreatePopover(options: PopoverOptions): Result<FacadeConnection<PopoverConnection>> {
-  return createFacadeConnection(options, (normalized) => tryCreatePopoverConnection(normalized));
+  return createFacadeConnection(options, tryCreatePopoverConnection);
 }
 
 function tryCreatePopoverConnection(options: PopoverOptions): Result<PopoverConnection> {
-  let connection: PositionedPopover | undefined;
+  let connection: PositionedPopup<PopoverState, PopoverEvent> | undefined;
   const modal = options.modal ?? false;
   const popup = createDOMPopup<PopoverState, PopoverEvent, PopoverCommand>({
     root: options.root,
-    ...(options.trigger === undefined ? {} : { trigger: options.trigger }),
+    trigger: options.trigger,
     role: 'dialog',
     modal,
-    ...(options.label === undefined ? {} : { label: options.label }),
-    ...(options.labelledBy === undefined ? {} : { labelledBy: options.labelledBy }),
-    ...(options.describedBy === undefined ? {} : { describedBy: options.describedBy }),
+    label: options.label,
+    labelledBy: options.labelledBy,
+    describedBy: options.describedBy,
     controlled: options.open !== undefined,
     initial: tryCreatePopoverState(options.open ?? options.defaultOpen ?? false),
     open: 'open', toggle: 'toggle', close: 'close',
     reducer: applyPopoverEvent,
     create: tryCreatePopoverState,
-    read: (state) => state.open,
+    read: readPopupOpen,
     interaction: options,
-    ...(options.initialFocus === undefined ? {} : { initialFocus: options.initialFocus }),
+    initialFocus: options.initialFocus,
     autoFocus: options.autoFocus ?? false,
     restoreFocus: options.restoreFocus ?? true,
     trapFocus: options.trapFocus ?? modal,
     closeOnInteractOutside: options.closeOnInteractOutside ?? true,
-    ...(options.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: options.interactOutsideExclusions }),
-    ...(options.onInteractOutside === undefined ? {} : { onInteractOutside: options.onInteractOutside }),
-    ...(options.manageVisibility === undefined ? {} : { manageVisibility: options.manageVisibility }),
+    interactOutsideExclusions: options.interactOutsideExclusions,
+    onInteractOutside: options.onInteractOutside,
+    manageVisibility: options.manageVisibility,
     onOpenChange: options.onOpenChange,
     command: (command) => command.type === 'request-initial-focus' ? options.onInitialFocus?.() : options.onFocusRestore?.(),
     onUpdate: () => { connection?.updatePosition(); options.onUpdate?.(); },
   });
   if (!popup.ok) return popup;
-  connection = new PositionedPopover(popup.value, options);
+  connection = new PositionedPopup<PopoverState, PopoverEvent>(popup.value, options);
   connection.updatePosition();
   return { ok: true, value: connection };
-}
-
-class PositionedPopover implements PopoverConnection {
-  readonly #popup: DOMPopupConnection<PopoverState, PopoverEvent>;
-  readonly #position: PositionConnection;
-
-  public constructor(popup: DOMPopupConnection<PopoverState, PopoverEvent>, options: PopoverOptions) {
-    this.#popup = popup;
-    this.#position = options.position === false ? manualPositionConnection : createPosition({
-      root: options.root,
-      reference: options.anchor ?? options.trigger,
-      ...(options.arrow === undefined ? {} : { arrow: options.arrow }),
-      side: options.side,
-      align: options.align,
-      sideOffset: options.sideOffset,
-      collisionPadding: options.collisionPadding,
-      collisionBoundary: options.collisionBoundary,
-      avoidCollisions: options.avoidCollisions,
-      arrowPadding: options.arrowPadding,
-      hideWhenDetached: options.hideWhenDetached,
-      strategy: options.strategy,
-      tracking: options.tracking,
-    });
-  }
-  public getSnapshot() { return this.#popup.getSnapshot(); }
-  public syncControlledValue(open: boolean) { return this.#popup.syncControlledValue(open); }
-  public handleEvent(event: PopoverEvent): boolean { return this.#popup.handleEvent(event); }
-  public refresh(): void { this.#popup.refresh(); this.updatePosition(); }
-  public disconnect(): void {
-    this.#popup.disconnect();
-    this.#position.disconnect();
-  }
-  public updatePosition(): void { this.#position.update(); }
 }

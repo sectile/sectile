@@ -97,7 +97,7 @@ export function createCheckbox(options: CheckboxOptions): FacadeConnection<Check
 }
 
 export function tryCreateCheckbox(options: CheckboxOptions): Result<FacadeConnection<CheckboxConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateCheckboxConnection(options));
+  return createFacadeConnection(options, tryCreateCheckboxConnection);
 }
 
 function tryCreateCheckboxConnection(options: CheckboxOptions): Result<CheckboxConnection> { return createDOMCheckedControl<CheckboxState, CheckboxEvent, CheckboxCommand, CheckboxValue>({ element: options.element, role: 'checkbox', attribute: 'aria-checked', controlled: options.value !== undefined, initial: tryCreateCheckboxState(options.value ?? options.defaultValue ?? false, options.policies), toggleEvent: 'toggle', reducer: (state, event) => applyCheckboxEvent(state, event, options.policies), create: (value) => tryCreateCheckboxState(value, options.policies), read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, applyValue: applyNativeCheckboxValue, onChange: options.onValueChange, onUpdate: options.onUpdate }); }

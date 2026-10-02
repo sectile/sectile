@@ -101,7 +101,7 @@ export function createPagination(
 export function tryCreatePagination(
   options: PaginationOptions,
 ): Result<FacadeConnection<PaginationConnection>> {
-  return createFacadeConnection(options, (options) => tryCreatePaginationConnection(options));
+  return createFacadeConnection(options, tryCreatePaginationConnection);
 }
 
 function tryCreatePaginationConnection(options: PaginationOptions): Result<PaginationConnection> {
@@ -191,7 +191,7 @@ class DOMPagination implements PaginationConnection {
     options.root.addEventListener('click', this.#click);
     options.root.setAttribute('role', 'navigation');
     options.root.setAttribute('aria-label', options.label ?? 'Pagination');
-    setInteractionAttributes(options.root, options, { readOnly: true });
+    setInteractionAttributes(options.root, options, false, true);
   }
 
   public getSnapshot(): RevisionSnapshot<PaginationState> { return this.#runtime.getSnapshot(); }

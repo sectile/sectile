@@ -2,7 +2,7 @@ import { createFacadeConnection, type FacadeConnection } from '@sectile/core/ada
 import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import { applyAlertDialogEvent, tryCreateAlertDialogState, type AlertDialogCommand, type AlertDialogEvent, type AlertDialogState } from '@sectile/core/alert-dialog';
-import { createDOMPopup, type DOMPopupConnection } from './overlay/popup/connection.js';
+import { createDOMPopup, readPopupOpen, type DOMPopupConnection } from './overlay/popup/connection.js';
 import type { InteractOutsideHandler } from './interact-outside.js';
 
 export type { InteractOutsideEvent, InteractOutsideHandler } from './interact-outside.js';
@@ -28,9 +28,9 @@ export function createAlertDialog(o: AlertDialogOptions): FacadeConnection<Alert
 }
 
 export function tryCreateAlertDialog(o: AlertDialogOptions): Result<FacadeConnection<AlertDialogConnection>> {
-  return createFacadeConnection(o, (o) => tryCreateAlertDialogConnection(o));
+  return createFacadeConnection(o, tryCreateAlertDialogConnection);
 }
 
 function tryCreateAlertDialogConnection(o: AlertDialogOptions): Result<AlertDialogConnection> {
-  return createDOMPopup<AlertDialogState, AlertDialogEvent, AlertDialogCommand>({ root: o.root, ...(o.trigger === undefined ? {} : { trigger: o.trigger }), role: 'alertdialog', modal: true, ...(o.label === undefined ? {} : { label: o.label }), ...(o.labelledBy === undefined ? {} : { labelledBy: o.labelledBy }), ...(o.describedBy === undefined ? {} : { describedBy: o.describedBy }), controlled: o.open !== undefined, initial: tryCreateAlertDialogState(o.open ?? o.defaultOpen ?? false), open: 'open', toggle: 'toggle', close: 'close', reducer: applyAlertDialogEvent, create: tryCreateAlertDialogState, read: (s) => s.open, interaction: o, ...(o.initialFocus === undefined ? {} : { initialFocus: o.initialFocus }), autoFocus: o.autoFocus ?? true, restoreFocus: o.restoreFocus ?? true, trapFocus: o.trapFocus ?? true, closeOnInteractOutside: o.closeOnInteractOutside ?? false, ...(o.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: o.interactOutsideExclusions }), ...(o.overlay === undefined ? {} : { modalBranches: [o.overlay] }), ...(o.onInteractOutside === undefined ? {} : { onInteractOutside: o.onInteractOutside }), ...(o.manageVisibility === undefined ? {} : { manageVisibility: o.manageVisibility }), onOpenChange: o.onOpenChange, command: (c) => c.type === 'request-initial-focus' ? o.onInitialFocus?.() : c.type === 'request-focus-restore' ? o.onFocusRestore?.() : o.onAnnounce?.(), onUpdate: o.onUpdate });
+  return createDOMPopup<AlertDialogState, AlertDialogEvent, AlertDialogCommand>({ root: o.root, trigger: o.trigger, role: 'alertdialog', modal: true, label: o.label, labelledBy: o.labelledBy, describedBy: o.describedBy, controlled: o.open !== undefined, initial: tryCreateAlertDialogState(o.open ?? o.defaultOpen ?? false), open: 'open', toggle: 'toggle', close: 'close', reducer: applyAlertDialogEvent, create: tryCreateAlertDialogState, read: readPopupOpen, interaction: o, initialFocus: o.initialFocus, autoFocus: o.autoFocus ?? true, restoreFocus: o.restoreFocus ?? true, trapFocus: o.trapFocus ?? true, closeOnInteractOutside: o.closeOnInteractOutside ?? false, interactOutsideExclusions: o.interactOutsideExclusions, ...(o.overlay === undefined ? {} : { modalBranches: [o.overlay] }), onInteractOutside: o.onInteractOutside, manageVisibility: o.manageVisibility, onOpenChange: o.onOpenChange, command: (c) => c.type === 'request-initial-focus' ? o.onInitialFocus?.() : c.type === 'request-focus-restore' ? o.onFocusRestore?.() : o.onAnnounce?.(), onUpdate: o.onUpdate });
 }

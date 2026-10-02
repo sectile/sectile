@@ -96,7 +96,7 @@ export function createCarousel<ID extends StableID>(options: CarouselOptions<ID>
 }
 
 export function tryCreateCarousel<ID extends StableID>(options: CarouselOptions<ID>): Result<FacadeConnection<CarouselConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateCarouselConnection(options));
+  return createFacadeConnection(options, tryCreateCarouselConnection);
 }
 
 function tryCreateCarouselConnection<ID extends StableID>(options: CarouselOptions<ID>): Result<CarouselConnection<ID>> {
@@ -209,9 +209,9 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
 
     options.root.addEventListener('keydown', this.#keydown);
     setInteractionAttributes(options.root, options);
-    if (options.previousButton !== undefined) setInteractionAttributes(options.previousButton, options, { native: true });
-    if (options.nextButton !== undefined) setInteractionAttributes(options.nextButton, options, { native: true });
-    if (options.pauseButton !== undefined) setInteractionAttributes(options.pauseButton, options, { native: true });
+    if (options.previousButton !== undefined) setInteractionAttributes(options.previousButton, options, true);
+    if (options.nextButton !== undefined) setInteractionAttributes(options.nextButton, options, true);
+    if (options.pauseButton !== undefined) setInteractionAttributes(options.pauseButton, options, true);
     options.previousButton?.addEventListener('click', this.#previous);
     options.nextButton?.addEventListener('click', this.#next);
     options.pauseButton?.addEventListener('click', this.#pause);

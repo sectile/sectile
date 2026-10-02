@@ -190,7 +190,7 @@ export function createTreeView<ID extends StableID>(
 export function tryCreateTreeView<ID extends StableID>(
   options: TreeViewOptions<ID>,
 ): Result<FacadeConnection<TreeViewConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateTreeViewConnection(options));
+  return createFacadeConnection(options, tryCreateTreeViewConnection);
 }
 
 function tryCreateTreeViewConnection<ID extends StableID>(
@@ -256,7 +256,7 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
       mode: 'root', root: this.#root, current: this.#controller.getSnapshot().state.cursor.current,
       rootEnabled: !this.#interactionDisabled,
     });
-    setInteractionAttributes(this.#root, options, { readOnly: true });
+    setInteractionAttributes(this.#root, options, false, true);
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };

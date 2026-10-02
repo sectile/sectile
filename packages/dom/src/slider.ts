@@ -231,7 +231,7 @@ export function createSlider(options: SliderOptions): FacadeConnection<SliderCon
 }
 
 export function tryCreateSlider(options: SliderOptions): Result<FacadeConnection<SliderConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateSliderConnection(options));
+  return createFacadeConnection(options, tryCreateSliderConnection);
 }
 
 function tryCreateSliderConnection(options: SliderOptions): Result<SliderConnection> {
@@ -331,7 +331,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#pointerTarget.addEventListener('pointermove', this.#handlePointer);
     this.#pointerTarget.addEventListener('pointerup', this.#handlePointerUp);
     this.#pointerTarget.addEventListener('pointercancel', this.#handlePointerUp);
-    setInteractionAttributes(this.#root, options, { readOnly: this.#role === 'slider' });
+    setInteractionAttributes(this.#root, options, false, this.#role === 'slider');
     this.refreshAttributes();
   }
 

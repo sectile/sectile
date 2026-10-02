@@ -2592,6 +2592,10 @@
           "role": "overlay-position-connection",
           "kind": "owner"
         },
+        "src/overlay/positioned-popup.ts": {
+          "role": "overlays",
+          "kind": "owner"
+        },
         "src/overlay/position/engine.ts": {
           "role": "overlay-position-engine",
           "kind": "owner"

@@ -263,7 +263,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     options.root.setAttribute('role', 'dialog');
     options.root.setAttribute('aria-modal', 'false');
     options.grid.setAttribute('role', 'grid');
-    setInteractionAttributes(options.trigger, options, { native: true });
+    setInteractionAttributes(options.trigger, options, true);
     setInteractionAttributes(options.grid, options);
     this.refresh();
   }
@@ -357,7 +357,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     ] as const) {
       if (input !== undefined) {
         input.value = value === undefined ? '' : formatDateTimeValue(value);
-        setInteractionAttributes(input, this.options, { native: true });
+        setInteractionAttributes(input, this.options, true);
         input.readOnly = true;
         input.setAttribute('aria-readonly', 'true');
       }

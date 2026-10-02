@@ -273,7 +273,7 @@ export function createListbox<ID extends StableID>(
 export function tryCreateListbox<ID extends StableID>(
   options: ListboxOptions<ID>,
 ): Result<FacadeConnection<ListboxConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateListboxConnection(options));
+  return createFacadeConnection(options, tryCreateListboxConnection);
 }
 
 function tryCreateListboxConnection<ID extends StableID>(
@@ -377,7 +377,7 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
     this.#root.addEventListener('click', this.#handleClick);
-    setInteractionAttributes(this.#root, options, { readOnly: true });
+    setInteractionAttributes(this.#root, options, false, true);
     this.setListboxAttributes(options.label);
   }
 

@@ -222,7 +222,7 @@ export function createCombobox<ID extends StableID>(
 export function tryCreateCombobox<ID extends StableID>(
   options: ComboboxOptions<ID>,
 ): Result<FacadeConnection<ComboboxConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateComboboxConnection(options));
+  return createFacadeConnection(options, tryCreateComboboxConnection);
 }
 
 function tryCreateComboboxConnection<ID extends StableID>(
@@ -339,7 +339,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     };
     this.#input.addEventListener('keydown', this.#handleKeydown);
     this.#popup?.addEventListener('click', this.#handleClick);
-    setInteractionAttributes(this.#input, options, { native: true, readOnly: true });
+    setInteractionAttributes(this.#input, options, true, true);
     this.render();
   }
 

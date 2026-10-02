@@ -70,7 +70,7 @@ export function createToggleGroup<ID extends StableID>(options: ToggleGroupOptio
 }
 
 export function tryCreateToggleGroup<ID extends StableID>(options: ToggleGroupOptions<ID>): Result<FacadeConnection<ToggleGroupConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateToggleGroupConnection(options));
+  return createFacadeConnection(options, tryCreateToggleGroupConnection);
 }
 
 function tryCreateToggleGroupConnection<ID extends StableID>(options: ToggleGroupOptions<ID>): Result<ToggleGroupConnection<ID>> {

@@ -82,7 +82,7 @@ export function createCascadeSelect<ID extends StableID>(options: CascadeSelectO
 }
 
 export function tryCreateCascadeSelect<ID extends StableID>(options: CascadeSelectOptions<ID>): Result<FacadeConnection<CascadeSelectConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateCascadeSelectConnection(options));
+  return createFacadeConnection(options, tryCreateCascadeSelectConnection);
 }
 
 function tryCreateCascadeSelectConnection<ID extends StableID>(options: CascadeSelectOptions<ID>): Result<CascadeSelectConnection<ID>> {

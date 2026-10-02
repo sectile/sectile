@@ -116,7 +116,7 @@ export function createText(options: TextOptions): FacadeConnection<TextConnectio
 }
 
 export function tryCreateText(options: TextOptions): Result<FacadeConnection<TextConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateTextConnection(options));
+  return createFacadeConnection(options, tryCreateTextConnection);
 }
 
 function tryCreateTextConnection(options: TextOptions): Result<TextConnection> {
@@ -196,7 +196,7 @@ class DOMTextConnection implements TextConnection {
       getState: () => this.#controller.getSnapshot().state,
       dispatch: (input) => this.#dispatch(input).ok,
     });
-    setInteractionAttributes(options.element, options, { native: true, readOnly: true });
+    setInteractionAttributes(options.element, options, true, true);
   }
 
   public getSnapshot(): RevisionSnapshot<TextEditingState> {

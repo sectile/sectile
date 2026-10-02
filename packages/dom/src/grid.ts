@@ -55,7 +55,7 @@ export function createGridControl<ID extends StableID>(options: GridOptions<ID>)
 }
 
 export function tryCreateGridControl<ID extends StableID>(options: GridOptions<ID>): Result<FacadeConnection<GridConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateGridControlConnection(options));
+  return createFacadeConnection(options, tryCreateGridControlConnection);
 }
 
 function tryCreateGridControlConnection<ID extends StableID>(options: GridOptions<ID>): Result<GridConnection<ID>> {
@@ -113,7 +113,7 @@ class DOMGrid<ID extends StableID> implements GridConnection<ID> {
     this.#focus = (event) => { const id = this.#findID(event.target); if (id === null || id === this.getSnapshot().state.cursor.current) return; this.#dispatch({ type: 'focus', id }, true); };
     options.root.addEventListener('keydown', this.#keydown); options.root.addEventListener('click', this.#click); options.root.addEventListener('focusin', this.#focus);
     options.root.setAttribute('role', 'grid'); options.root.setAttribute('aria-rowcount', String(grid.rowCount)); options.root.setAttribute('aria-colcount', String(grid.columnCount)); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
-    setInteractionAttributes(options.root, options, { readOnly: true });
+    setInteractionAttributes(options.root, options, false, true);
   }
   public getSnapshot(): RevisionSnapshot<GridState<ID>> { return this.#runtime.getSnapshot(); }
   public syncControlledValues(values: GridControlledValues<ID>): Result<RevisionSnapshot<GridState<ID>>> {

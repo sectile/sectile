@@ -47,7 +47,7 @@ export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbS
 }
 
 export function tryCreateMultiThumbSlider<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<FacadeConnection<MultiThumbSliderConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateMultiThumbSliderConnection(options));
+  return createFacadeConnection(options, tryCreateMultiThumbSliderConnection);
 }
 
 function tryCreateMultiThumbSliderConnection<ID extends StableID>(options: MultiThumbSliderOptions<ID>): Result<MultiThumbSliderConnection<ID>> {
@@ -173,7 +173,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
         : (state.ticks[index + 1] as number) - gap;
       const value = this.range.valueAt(tick) as string;
       element.setAttribute('role', 'slider');
-      setInteractionAttributes(element, this.#options, { readOnly: true });
+      setInteractionAttributes(element, this.#options, false, true);
       element.setAttribute('aria-valuemin', this.range.valueAt(lowerTick) as string);
       element.setAttribute('aria-valuemax', this.range.valueAt(upperTick) as string);
       element.setAttribute('aria-valuenow', value);

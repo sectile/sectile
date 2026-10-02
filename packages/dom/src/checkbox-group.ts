@@ -19,7 +19,7 @@ export function createCheckboxGroup<ID extends StableID>(options: CheckboxGroupO
 }
 
 export function tryCreateCheckboxGroup<ID extends StableID>(options: CheckboxGroupOptions<ID>): Result<FacadeConnection<CheckboxGroupConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateCheckboxGroupConnection(options));
+  return createFacadeConnection(options, tryCreateCheckboxGroupConnection);
 }
 
 function tryCreateCheckboxGroupConnection<ID extends StableID>(options: CheckboxGroupOptions<ID>): Result<CheckboxGroupConnection<ID>> {

@@ -19,7 +19,7 @@ export function createPinInput(options: PinInputOptions): FacadeConnection<PinIn
 }
 
 export function tryCreatePinInput(options: PinInputOptions): Result<FacadeConnection<PinInputConnection>> {
-  return createFacadeConnection(options, (options) => tryCreatePinInputConnection(options));
+  return createFacadeConnection(options, tryCreatePinInputConnection);
 }
 
 function tryCreatePinInputConnection(options: PinInputOptions): Result<PinInputConnection> {
@@ -47,7 +47,7 @@ class DOMPinInputConnection implements PinInputConnection {
   constructor(options: PinInputOptions, runtime: SemanticController<PinInputState, PinInputEvent, PinInputEffect>, controlled: boolean) {
     this.#options = options; this.#runtime = runtime; this.#controlled = controlled;
     options.root.setAttribute('role', 'group'); if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
-    setInteractionAttributes(options.root, options, { readOnly: true });
+    setInteractionAttributes(options.root, options, false, true);
     options.inputs.forEach((input, index) => {
       input.maxLength = 1; input.inputMode = 'numeric'; input.disabled = options.disabled === true; input.readOnly = options.readOnly === true;
       input.setAttribute('aria-label', `${options.label ?? 'PIN'} digit ${index + 1} of ${options.inputs.length}`);

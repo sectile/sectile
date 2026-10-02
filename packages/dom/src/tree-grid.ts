@@ -244,7 +244,7 @@ export function createTreeGrid<RowID extends StableID, CellID extends StableID>(
 export function tryCreateTreeGrid<RowID extends StableID, CellID extends StableID>(
   options: TreeGridOptions<RowID, CellID>,
 ): Result<FacadeConnection<TreeGridConnection<RowID, CellID>>> {
-  return createFacadeConnection(options, (options) => tryCreateTreeGridConnection(options));
+  return createFacadeConnection(options, tryCreateTreeGridConnection);
 }
 
 function tryCreateTreeGridConnection<RowID extends StableID, CellID extends StableID>(
@@ -352,7 +352,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       mode: 'root', root: this.#root, current: this.#controller.getSnapshot().state.cursor.current,
       rootEnabled: !this.#disabled,
     });
-    setInteractionAttributes(this.#root, options, { readOnly: true });
+    setInteractionAttributes(this.#root, options, false, true);
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
@@ -447,7 +447,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     setInteractionAttributes(element, {
       disabled: this.#disabled,
       readOnly: this.#readOnly,
-    }, { readOnly: true, native: true });
+    }, true, true);
     element.setAttribute('aria-label', options.label ?? `Edit ${String(options.id)}`);
     if (previous?.id === options.id) {
       if (!this.#composing && (typeof document === 'undefined' || document.activeElement !== element)) {

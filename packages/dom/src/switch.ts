@@ -68,7 +68,7 @@ export function createSwitch(options: SwitchOptions): FacadeConnection<SwitchCon
 }
 
 export function tryCreateSwitch(options: SwitchOptions): Result<FacadeConnection<SwitchConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateSwitchConnection(options));
+  return createFacadeConnection(options, tryCreateSwitchConnection);
 }
 
 function tryCreateSwitchConnection(options: SwitchOptions): Result<SwitchConnection> { return createDOMCheckedControl<SwitchState, SwitchEvent, SwitchCommand, boolean>({ element: options.element, role: 'switch', attribute: 'aria-checked', controlled: options.checked !== undefined, initial: tryCreateSwitchState(options.checked ?? options.defaultChecked ?? false), toggleEvent: 'toggle', reducer: applySwitchEvent, create: tryCreateSwitchState, read: (state) => state.checked, format: String, interaction: options, supportsReadOnly: true, onChange: options.onCheckedChange, onUpdate: options.onUpdate }); }

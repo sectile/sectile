@@ -55,7 +55,7 @@ export function createToggleButton(options: ToggleButtonOptions): FacadeConnecti
 }
 
 export function tryCreateToggleButton(options: ToggleButtonOptions): Result<FacadeConnection<ToggleButtonConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateToggleButtonConnection(options));
+  return createFacadeConnection(options, tryCreateToggleButtonConnection);
 }
 
 function tryCreateToggleButtonConnection(options: ToggleButtonOptions): Result<ToggleButtonConnection> { return createDOMCheckedControl<ToggleButtonState, ToggleButtonEvent, ToggleButtonCommand, boolean>({ element: options.element, attribute: 'aria-pressed', controlled: options.pressed !== undefined, initial: tryCreateToggleButtonState(options.pressed ?? options.defaultPressed ?? false), toggleEvent: 'toggle', reducer: applyToggleButtonEvent, create: tryCreateToggleButtonState, read: (state) => state.pressed, format: String, interaction: options, onChange: options.onPressedChange, onUpdate: options.onUpdate }); }

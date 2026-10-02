@@ -50,7 +50,7 @@ export interface ColorPickerConnection {
 }
 
 export function createColorPicker(options: ColorPickerOptions): FacadeConnection<ColorPickerConnection> { return unwrap(tryCreateColorPicker(options)); }
-export function tryCreateColorPicker(options: ColorPickerOptions): Result<FacadeConnection<ColorPickerConnection>> { return createFacadeConnection(options, (normalized) => tryCreateColorPickerConnection(normalized)); }
+export function tryCreateColorPicker(options: ColorPickerOptions): Result<FacadeConnection<ColorPickerConnection>> { return createFacadeConnection(options, tryCreateColorPickerConnection); }
 
 function tryCreateColorPickerConnection(options: ColorPickerOptions): Result<ColorPickerConnection> {
   const valueControlled = options.value !== undefined;

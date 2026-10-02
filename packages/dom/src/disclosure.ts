@@ -125,7 +125,7 @@ export function createDisclosure(options: DisclosureOptions): FacadeConnection<D
 }
 
 export function tryCreateDisclosure(options: DisclosureOptions): Result<FacadeConnection<DisclosureConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateDisclosureConnection(options));
+  return createFacadeConnection(options, tryCreateDisclosureConnection);
 }
 
 function tryCreateDisclosureConnection(options: DisclosureOptions): Result<DisclosureConnection> {
@@ -153,7 +153,7 @@ class DOMDisclosureConnection implements DisclosureConnection {
     this.#controller = controller;
     this.#click = (): void => { this.handleEvent('toggle'); };
     options.trigger.addEventListener('click', this.#click);
-    setInteractionAttributes(options.trigger, options, { native: true });
+    setInteractionAttributes(options.trigger, options, true);
     this.updateAttributes();
   }
   public getSnapshot(): RevisionSnapshot<DisclosureState> { return this.#controller.getSnapshot(); }

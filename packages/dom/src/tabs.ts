@@ -149,7 +149,7 @@ export function createTabs<ID extends StableID>(
 export function tryCreateTabs<ID extends StableID>(
   options: TabsOptions<ID>,
 ): Result<FacadeConnection<TabsConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateTabsConnection(options));
+  return createFacadeConnection(options, tryCreateTabsConnection);
 }
 
 function tryCreateTabsConnection<ID extends StableID>(

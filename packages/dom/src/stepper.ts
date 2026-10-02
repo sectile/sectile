@@ -19,7 +19,7 @@ export function createStepper<ID extends StableID>(options: StepperOptions<ID>):
 }
 
 export function tryCreateStepper<ID extends StableID>(options: StepperOptions<ID>): Result<FacadeConnection<StepperConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateStepperConnection(options));
+  return createFacadeConnection(options, tryCreateStepperConnection);
 }
 
 function tryCreateStepperConnection<ID extends StableID>(options: StepperOptions<ID>): Result<StepperConnection<ID>> {

@@ -95,7 +95,7 @@ export function createQuantityField(options: QuantityFieldOptions): FacadeConnec
 }
 
 export function tryCreateQuantityField(options: QuantityFieldOptions): Result<FacadeConnection<QuantityFieldConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateQuantityFieldConnection(options));
+  return createFacadeConnection(options, tryCreateQuantityFieldConnection);
 }
 
 function tryCreateQuantityFieldConnection(options: QuantityFieldOptions): Result<QuantityFieldConnection> {
@@ -242,7 +242,7 @@ class DOMQuantityField implements QuantityFieldConnection {
     const input = this.#options.input;
     input.type = 'text';
     input.inputMode = this.#options.policies.evaluator === undefined ? 'decimal' : 'text';
-    setInteractionAttributes(input, this.#options, { native: true, readOnly: true });
+    setInteractionAttributes(input, this.#options, true, true);
     if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label);
     this.#binding.render();
     const select = this.#options.unitSelect;

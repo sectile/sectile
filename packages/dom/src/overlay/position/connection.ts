@@ -10,7 +10,7 @@ export interface DOMPositionOptions {
   readonly root: HTMLElement;
   readonly onPositioned?: () => void;
   readonly reference?: HTMLElement | undefined;
-  readonly arrow?: HTMLElement;
+  readonly arrow?: HTMLElement | undefined;
   readonly side?: PositionOptions['side'] | undefined;
   readonly align?: PositionOptions['align'] | undefined;
   readonly sideOffset?: PositionOptions['sideOffset'] | undefined;
@@ -50,25 +50,17 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
       const engineOptions: PositionEngineOptions = {
         root: options.root,
         reference,
-        ...(options.arrow === undefined ? {} : { arrow: options.arrow }),
-        ...(options.side === undefined ? {} : { side: options.side }),
-        ...(options.align === undefined ? {} : { align: options.align }),
-        ...(options.sideOffset === undefined ? {} : { sideOffset: options.sideOffset }),
-        ...(options.collisionPadding === undefined
-          ? {}
-          : { collisionPadding: options.collisionPadding }),
-        ...(options.collisionBoundary === undefined
-          ? {}
-          : { collisionBoundary: options.collisionBoundary }),
-        ...(options.avoidCollisions === undefined
-          ? {}
-          : { avoidCollisions: options.avoidCollisions }),
-        ...(options.arrowPadding === undefined ? {} : { arrowPadding: options.arrowPadding }),
-        ...(options.hideWhenDetached === undefined
-          ? {}
-          : { hideWhenDetached: options.hideWhenDetached }),
-        ...(options.strategy === undefined ? {} : { strategy: options.strategy }),
-        ...(options.tracking === undefined ? {} : { tracking: options.tracking }),
+        arrow: options.arrow,
+        side: options.side,
+        align: options.align,
+        sideOffset: options.sideOffset,
+        collisionPadding: options.collisionPadding,
+        collisionBoundary: options.collisionBoundary,
+        avoidCollisions: options.avoidCollisions,
+        arrowPadding: options.arrowPadding,
+        hideWhenDetached: options.hideWhenDetached,
+        strategy: options.strategy,
+        tracking: options.tracking,
       };
       // Keep CSS anchoring eligible: it has no asynchronous layout to await.
       engine = createPositionEngine(options.onPositioned !== undefined

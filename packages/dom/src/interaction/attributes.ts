@@ -8,17 +8,18 @@ interface ValidationResult {
 export function setInteractionAttributes(
   element: HTMLElement,
   interaction: InteractionStateInput,
-  options: { readonly readOnly?: boolean | undefined; readonly native?: boolean | undefined } = {},
+  native = false,
+  projectReadOnly = false,
 ): void {
   const disabled = interaction.disabled ?? false;
   if (disabled) element.setAttribute('aria-disabled', 'true');
   else (element as Partial<HTMLElement>).removeAttribute?.('aria-disabled');
 
-  if (options.native && 'disabled' in element) {
+  if (native && 'disabled' in element) {
     (element as HTMLButtonElement).disabled = disabled;
   }
 
-  if (options.readOnly) {
+  if (projectReadOnly) {
     const readOnly = interaction.readOnly ?? false;
     if (readOnly) element.setAttribute('aria-readonly', 'true');
     else (element as Partial<HTMLElement>).removeAttribute?.('aria-readonly');

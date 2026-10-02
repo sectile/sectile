@@ -20,7 +20,7 @@ export type EditableUpdateHandler = NonNullable<EditableOptions['onUpdate']>;
 export interface EditableConnection { getSnapshot(): RevisionSnapshot<EditableState>; syncControlledValue(value: string): Result<RevisionSnapshot<EditableState>>; handleEvent(event: EditableEvent): boolean; refresh(): void; disconnect(): void }
 
 export function createEditable(options: EditableOptions): FacadeConnection<EditableConnection> { return unwrap(tryCreateEditable(options)); }
-export function tryCreateEditable(options: EditableOptions): Result<FacadeConnection<EditableConnection>> { return createFacadeConnection(options, (resolved) => tryCreateEditableConnection(resolved)); }
+export function tryCreateEditable(options: EditableOptions): Result<FacadeConnection<EditableConnection>> { return createFacadeConnection(options, tryCreateEditableConnection); }
 
 function tryCreateEditableConnection(options: EditableOptions): Result<EditableConnection> {
   const controlled = options.value !== undefined; const initial = options.value ?? options.defaultValue ?? '';
@@ -80,10 +80,10 @@ class DOMEditable implements EditableConnection {
     options.submitTrigger?.addEventListener('click', this.#submit);
     options.cancelTrigger?.addEventListener('click', this.#cancel);
     setInteractionAttributes(options.preview, options);
-    setInteractionAttributes(options.input, options, { native: true });
-    if (options.editTrigger !== undefined) setInteractionAttributes(options.editTrigger, options, { native: true });
-    if (options.submitTrigger !== undefined) setInteractionAttributes(options.submitTrigger, options, { native: true });
-    if (options.cancelTrigger !== undefined) setInteractionAttributes(options.cancelTrigger, options, { native: true });
+    setInteractionAttributes(options.input, options, true);
+    if (options.editTrigger !== undefined) setInteractionAttributes(options.editTrigger, options, true);
+    if (options.submitTrigger !== undefined) setInteractionAttributes(options.submitTrigger, options, true);
+    if (options.cancelTrigger !== undefined) setInteractionAttributes(options.cancelTrigger, options, true);
     this.refresh();
   }
 

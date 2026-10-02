@@ -45,7 +45,7 @@ export interface ToastConnection<ID extends StableID = StableID> {
   disconnect(): void;
 }
 export function createToast<ID extends StableID>(options: ToastOptions<ID>): FacadeConnection<ToastConnection<ID>> { return unwrap(tryCreateToast(options)); }
-export function tryCreateToast<ID extends StableID>(options: ToastOptions<ID>): Result<FacadeConnection<ToastConnection<ID>>> { return createFacadeConnection(options, (normalized) => tryCreateToastConnection(normalized)); }
+export function tryCreateToast<ID extends StableID>(options: ToastOptions<ID>): Result<FacadeConnection<ToastConnection<ID>>> { return createFacadeConnection(options, tryCreateToastConnection); }
 
 function tryCreateToastConnection<ID extends StableID>(options: ToastOptions<ID>): Result<ToastConnection<ID>> {
   let connection: DOMToast<ID> | undefined;

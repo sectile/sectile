@@ -9,7 +9,7 @@ export function createWindowSplitter(options: WindowSplitterOptions): FacadeConn
 }
 
 export function tryCreateWindowSplitter(options: WindowSplitterOptions): Result<FacadeConnection<WindowSplitterConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateWindowSplitterConnection(options));
+  return createFacadeConnection(options, tryCreateWindowSplitterConnection);
 }
 
 function tryCreateWindowSplitterConnection(options: WindowSplitterOptions): Result<WindowSplitterConnection> {

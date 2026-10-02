@@ -48,7 +48,7 @@ export function createSpinButton(options: SpinButtonOptions): FacadeConnection<S
 }
 
 export function tryCreateSpinButton(options: SpinButtonOptions): Result<FacadeConnection<SpinButtonConnection>> {
-  return createFacadeConnection(options, (options) => tryCreateSpinButtonConnection(options));
+  return createFacadeConnection(options, tryCreateSpinButtonConnection);
 }
 
 function tryCreateSpinButtonConnection(options: SpinButtonOptions): Result<SpinButtonConnection> {

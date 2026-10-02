@@ -141,7 +141,7 @@ export function createRadioGroup<ID extends StableID>(
 export function tryCreateRadioGroup<ID extends StableID>(
   options: RadioGroupOptions<ID>,
 ): Result<FacadeConnection<RadioGroupConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateRadioGroupConnection(options));
+  return createFacadeConnection(options, tryCreateRadioGroupConnection);
 }
 
 function tryCreateRadioGroupConnection<ID extends StableID>(

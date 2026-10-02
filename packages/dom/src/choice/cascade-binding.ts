@@ -68,7 +68,7 @@ class DOMCascadeChoiceBindingImplementation<
     setInteractionAttributes(options.root, {
       disabled: options.disabled ?? false,
       readOnly: options.readOnly ?? false,
-    }, { readOnly: true });
+    }, false, true);
     options.surface.setAttribute('role', 'group');
     options.surface.dataset['scope'] = options.scope;
     options.surface.dataset['part'] = list ? 'root' : 'content';

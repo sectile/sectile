@@ -57,7 +57,7 @@ export function createDrawer(options: DrawerOptions): FacadeConnection<DrawerCon
 }
 
 export function tryCreateDrawer(options: DrawerOptions): Result<FacadeConnection<DrawerConnection>> {
-  return createFacadeConnection(options, (normalized) => tryCreateDrawerConnection(normalized));
+  return createFacadeConnection(options, tryCreateDrawerConnection);
 }
 
 function tryCreateDrawerConnection(options: DrawerOptions): Result<DrawerConnection> {

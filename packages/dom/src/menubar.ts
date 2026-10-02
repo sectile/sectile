@@ -5,7 +5,7 @@ import type { Result, StableID } from '@sectile/core'; import { createMenuContro
 }
 
 export function tryCreateMenubar<ID extends StableID>(options: MenubarOptions<ID>): Result<FacadeConnection<MenubarConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateMenubarConnection(options));
+  return createFacadeConnection(options, tryCreateMenubarConnection);
 }
 
 function tryCreateMenubarConnection<ID extends StableID>(options: MenubarOptions<ID>): Result<MenubarConnection<ID>> { return createMenuControl({ ...options, kind: 'menubar' }); }

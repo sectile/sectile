@@ -7,7 +7,7 @@ import { applyDateRangeFieldEvent, tryCreateDateRangeFieldState, type DateRangeF
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
-import { synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
+import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
 
 export interface DateRangeFieldOptions {
@@ -76,12 +76,14 @@ class DOMDateRangeField implements DateRangeFieldConnection {
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); } return result;
   }
   public handleEvent(event: DateRangeFieldEvent): boolean { const result = this.#runtime.handle(event); if (typeof event === 'object' && event.type === 'field') setFieldValidity(this.#input(event.endpoint), result); if (result.ok) { for (const command of result.commands) { if (command.type === 'range-committed') this.#options.onValueChange?.(command.value); if (command.type === 'focus-endpoint') this.#input(command.endpoint).focus(); } this.refresh(); this.#options.onUpdate?.(); } return result.ok; }
-  public refresh(): void { for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); input.type = 'text'; input.inputMode = 'numeric'; input.placeholder = 'YYYY-MM-DD'; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, { native: true, readOnly: true }); const label = endpoint === 'start' ? this.#options.startLabel : this.#options.endLabel; if (label !== undefined) input.setAttribute('aria-label', label); this.#bindings[endpoint].render(); } }
+  public refresh(): void { for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); input.type = 'text'; input.inputMode = 'numeric'; input.placeholder = 'YYYY-MM-DD'; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); const label = endpoint === 'start' ? this.#options.startLabel : this.#options.endLabel; if (label !== undefined) input.setAttribute('aria-label', label); this.#bindings[endpoint].render(); } }
   public disconnect(): void { for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); this.#bindings[endpoint].disconnect(); input.removeEventListener('keydown', this.#keydown[endpoint]); input.removeEventListener('blur', this.#blur[endpoint]); input.removeEventListener('focus', this.#focus[endpoint]); } }
   #input(endpoint: DateRangeFieldEndpoint): HTMLInputElement { return endpoint === 'start' ? this.#options.startInput : this.#options.endInput; }
   #text(endpoint: DateRangeFieldEndpoint, input: TextInput): boolean { const event = toTextEvent(input); return event !== null && this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event } }); }
   #key(endpoint: DateRangeFieldEndpoint, nativeEvent: Event): void { const event = nativeEvent as KeyboardEvent; if (this.#bindings[endpoint].isComposing || event.isComposing) return; const semantic = event.key === 'ArrowUp' ? 'increment-segment' : event.key === 'ArrowDown' ? 'decrement-segment' : event.key === 'Enter' ? 'commit' : event.key === 'Escape' ? 'cancel' : null; if (semantic !== null) { event.preventDefault(); if (semantic === 'increment-segment' || semantic === 'decrement-segment') this.#syncSelection(endpoint); this.handleEvent(semantic === 'cancel' ? 'cancel' : { type: 'field', endpoint, event: semantic }); } }
-  #syncSelection(endpoint: DateRangeFieldEndpoint): void { const input = this.#input(endpoint); const start = input.selectionStart ?? 0; const end = input.selectionEnd ?? start; const backward = input.selectionDirection === 'backward'; this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event: { type: 'replace', startCodeUnitOffset: backward ? end : start, endCodeUnitOffset: backward ? end : start, text: '', selection: { anchorCodeUnitOffset: backward ? end : start, focusCodeUnitOffset: backward ? start : end } } } }); }
+  #syncSelection(endpoint: DateRangeFieldEndpoint): void {
+    this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event: nativeFieldSelectionEvent(this.#input(endpoint)) } });
+  }
   #commitOrCancel(endpoint: DateRangeFieldEndpoint): void { if (!this.#bindings[endpoint].isComposing && !this.handleEvent({ type: 'field', endpoint, event: 'commit' })) this.handleEvent({ type: 'field', endpoint, event: 'cancel' }); }
 }
 

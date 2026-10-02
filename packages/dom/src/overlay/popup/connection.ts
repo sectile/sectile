@@ -29,12 +29,12 @@ export interface DOMPopupConnection<State, Event> {
 
 export interface DOMPopupOptions<State, Event, Command extends object> {
   readonly root: HTMLElement;
-  readonly trigger?: HTMLElement;
+  readonly trigger?: HTMLElement | undefined;
   readonly role: 'dialog' | 'alertdialog' | 'tooltip';
   readonly modal?: boolean;
-  readonly label?: string;
-  readonly labelledBy?: string;
-  readonly describedBy?: string;
+  readonly label?: string | undefined;
+  readonly labelledBy?: string | undefined;
+  readonly describedBy?: string | undefined;
   readonly controlled: boolean;
   readonly initial: Result<State>;
   readonly open: Event;
@@ -44,20 +44,24 @@ export interface DOMPopupOptions<State, Event, Command extends object> {
   readonly create: (open: boolean, state: State) => Result<State>;
   readonly read: (state: State) => boolean;
   readonly triggerMode?: 'click' | 'focus-hover';
-  readonly tooltipID?: string;
-  readonly initialFocus?: HTMLElement;
+  readonly tooltipID?: string | undefined;
+  readonly initialFocus?: HTMLElement | undefined;
   readonly autoFocus?: boolean;
   readonly restoreFocus?: boolean;
   readonly trapFocus?: boolean;
   readonly closeOnInteractOutside?: boolean;
-  readonly interactOutsideExclusions?: readonly HTMLElement[];
+  readonly interactOutsideExclusions?: readonly HTMLElement[] | undefined;
   readonly modalBranches?: readonly HTMLElement[];
-  readonly onInteractOutside?: InteractOutsideHandler;
+  readonly onInteractOutside?: InteractOutsideHandler | undefined;
   readonly onOpenChange?: ((open: boolean) => void) | undefined;
   readonly command?: (command: Command) => void;
   readonly onUpdate?: (() => void) | undefined;
-  readonly interaction?: InteractionStateInput;
-  readonly manageVisibility?: boolean;
+  readonly interaction: InteractionStateInput;
+  readonly manageVisibility?: boolean | undefined;
+}
+
+export function readPopupOpen(state: { readonly open: boolean }): boolean {
+  return state.open;
 }
 
 export function createDOMPopup<State, Event, Command extends object>(options: DOMPopupOptions<State, Event, Command>): Result<DOMPopupConnection<State, Event>> {
@@ -68,7 +72,7 @@ export function createDOMPopup<State, Event, Command extends object>(options: DO
     create: options.create,
     read: options.read,
     onChange: (open) => options.onOpenChange?.(open),
-    ...(options.interaction === undefined ? {} : { interaction: options.interaction }),
+    interaction: options.interaction,
   });
   if (!runtime.ok) return runtime;
   return { ok: true, value: new DOMPopup(options, runtime.value) };
@@ -152,8 +156,8 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     if (options.labelledBy !== undefined) options.root.setAttribute('aria-labelledby', options.labelledBy);
     if (options.describedBy !== undefined) options.root.setAttribute('aria-describedby', options.describedBy);
-    setInteractionAttributes(options.root, options.interaction ?? {});
-    if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options.interaction ?? {}, { native: true });
+    setInteractionAttributes(options.root, options.interaction);
+    if (options.trigger !== undefined) setInteractionAttributes(options.trigger, options.interaction, true);
     options.root.addEventListener('keydown', this.#keydown);
     options.trigger?.addEventListener('keydown', this.#keydown);
     options.root.ownerDocument?.addEventListener?.('keydown', this.#documentKeydown, true);

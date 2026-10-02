@@ -12,7 +12,7 @@ export function createMenuButton<ID extends StableID>(options: MenuButtonOptions
 }
 
 export function tryCreateMenuButton<ID extends StableID>(options: MenuButtonOptions<ID>): Result<FacadeConnection<MenuButtonConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateMenuButtonConnection(options));
+  return createFacadeConnection(options, tryCreateMenuButtonConnection);
 }
 
 function tryCreateMenuButtonConnection<ID extends StableID>(options: MenuButtonOptions<ID>): Result<MenuButtonConnection<ID>> { return createMenuControl({ ...options, kind: 'menu-button' }); }

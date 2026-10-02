@@ -133,7 +133,7 @@ class DOMDatePicker implements DatePickerConnection {
     options.root.setAttribute('role', 'dialog');
     options.root.setAttribute('aria-modal', 'false');
     options.grid.setAttribute('role', 'grid');
-    setInteractionAttributes(options.trigger, options, { native: true });
+    setInteractionAttributes(options.trigger, options, true);
     setInteractionAttributes(options.grid, options);
     this.refresh();
   }

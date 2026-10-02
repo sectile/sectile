@@ -2,12 +2,24 @@ import {
   createTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
+  type TextEvent,
 } from '@sectile/core/text';
 
 interface SelectionElement {
   readonly selectionStart: number | null;
   readonly selectionEnd: number | null;
   readonly selectionDirection: 'forward' | 'backward' | 'none' | null;
+}
+
+export function nativeFieldSelectionEvent(element: SelectionElement): TextEvent {
+  const start = element.selectionStart ?? 0;
+  const end = element.selectionEnd ?? start;
+  const backward = element.selectionDirection === 'backward';
+  const focus = backward ? end : start;
+  return {
+    type: 'replace', startCodeUnitOffset: focus, endCodeUnitOffset: focus, text: '',
+    selection: { anchorCodeUnitOffset: focus, focusCodeUnitOffset: backward ? start : end },
+  };
 }
 
 export function synchronizeFieldInputSelection(

@@ -74,7 +74,7 @@ export function createFeed<ID extends StableID>(
 export function tryCreateFeed<ID extends StableID>(
   options: FeedOptions<ID>,
 ): Result<FacadeConnection<FeedConnection<ID>>> {
-  return createFacadeConnection(options, (normalized) => tryCreateFeedConnection(normalized));
+  return createFacadeConnection(options, tryCreateFeedConnection);
 }
 
 function tryCreateFeedConnection<ID extends StableID>(

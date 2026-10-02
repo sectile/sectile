@@ -26,17 +26,17 @@ export interface PositionEngineCapabilities {
 export interface PositionEngineOptions {
   readonly root: HTMLElement;
   readonly reference: HTMLElement;
-  readonly arrow?: HTMLElement;
-  readonly side?: RectSide;
-  readonly align?: RectAlign;
-  readonly sideOffset?: number;
-  readonly collisionPadding?: number | Partial<Insets>;
-  readonly collisionBoundary?: 'viewport' | Element;
-  readonly avoidCollisions?: boolean;
-  readonly arrowPadding?: number;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: PositionStrategy;
-  readonly tracking?: PositionTracking;
+  readonly arrow?: HTMLElement | undefined;
+  readonly side?: RectSide | undefined;
+  readonly align?: RectAlign | undefined;
+  readonly sideOffset?: number | undefined;
+  readonly collisionPadding?: number | Partial<Insets> | undefined;
+  readonly collisionBoundary?: 'viewport' | Element | undefined;
+  readonly avoidCollisions?: boolean | undefined;
+  readonly arrowPadding?: number | undefined;
+  readonly hideWhenDetached?: boolean | undefined;
+  readonly strategy?: PositionStrategy | undefined;
+  readonly tracking?: PositionTracking | undefined;
   readonly observeLayoutShift?: boolean;
   readonly requiresLayoutObservables?: boolean;
   readonly capabilities?: PositionEngineCapabilities;

@@ -72,7 +72,7 @@ export function createCascadeList<ID extends StableID>(
 export function tryCreateCascadeList<ID extends StableID>(
   options: CascadeListOptions<ID>,
 ): Result<FacadeConnection<CascadeListConnection<ID>>> {
-  return createFacadeConnection(options, (input) => tryCreateCascadeListConnection(input));
+  return createFacadeConnection(options, tryCreateCascadeListConnection);
 }
 
 function tryCreateCascadeListConnection<ID extends StableID>(

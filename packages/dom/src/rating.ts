@@ -61,7 +61,7 @@ export function createRating<ID extends StableID>(
 export function tryCreateRating<ID extends StableID>(
   options: RatingOptions<ID>,
 ): Result<FacadeConnection<RatingConnection<ID>>> {
-  return createFacadeConnection(options, (normalized) => tryCreateRatingConnection(normalized));
+  return createFacadeConnection(options, tryCreateRatingConnection);
 }
 
 function tryCreateRatingConnection<ID extends StableID>(

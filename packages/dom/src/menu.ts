@@ -7,7 +7,7 @@ export type { MenuPolicies } from '@sectile/core/menu';
 export type { TreeNodeInput as MenuItemDefinition } from '@sectile/core/tree';
 
 export function tryCreateMenu<ID extends StableID>(options: MenuOptions<ID>): Result<FacadeConnection<MenuConnection<ID>>> {
-  return createFacadeConnection(options, (options) => tryCreateMenuConnection(options));
+  return createFacadeConnection(options, tryCreateMenuConnection);
 }
 
 function tryCreateMenuConnection<ID extends StableID>(options: MenuOptions<ID>): Result<MenuConnection<ID>> { return createMenuControl({ ...options, kind: 'menu' }); }
