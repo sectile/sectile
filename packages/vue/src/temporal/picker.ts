@@ -146,13 +146,6 @@ export interface PickerRootPartComponent<Kind extends PickerKind> {
   };
 }
 
-export function specializePickerRootPart<Kind extends PickerKind>(
-  _kind: Kind,
-  component: Component,
-): PickerRootPartComponent<Kind> {
-  return component as unknown as PickerRootPartComponent<Kind>;
-}
-
 type PickerConnection = PickerCapabilityConnection;
 interface Context {
   readonly kind: PickerKind;

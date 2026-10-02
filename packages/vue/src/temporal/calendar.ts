@@ -21,7 +21,7 @@ import {
   createPickerMove,
   createPickerRoot,
   createPickerViewTrigger,
-  specializePickerRootPart,
+  type PickerRootPartComponent,
   type PickerCellSlotProps,
   type PickerMonthCellSlotProps,
   type PickerPartProps,
@@ -90,20 +90,20 @@ export const CalendarRoot = /* @__PURE__ */ defineComponent({
 });
 export type CalendarValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:modelValue']>;
 export type CalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:highlightedValue']>;
-export const CalendarContent = /* @__PURE__ */ specializePickerRootPart('calendar', PickerContent);
-export const CalendarGrid = /* @__PURE__ */ specializePickerRootPart('calendar', PickerGrid);
+export const CalendarContent = PickerContent as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarGrid = PickerGrid as unknown as PickerRootPartComponent<'calendar'>;
 export const CalendarCell = PickerCell;
 export const CalendarMonthCell = PickerMonthCell;
 export const CalendarInput = /* @__PURE__ */ createPickerInput('input', 'SectileCalendarInput', 'hidden');
-export const CalendarPreviousWeek = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('week', -1, 'SectileCalendarPreviousWeek'));
-export const CalendarNextWeek = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('week', 1, 'SectileCalendarNextWeek'));
-export const CalendarPreviousMonth = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('month', -1, 'SectileCalendarPreviousMonth'));
-export const CalendarNextMonth = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('month', 1, 'SectileCalendarNextMonth'));
-export const CalendarPreviousYear = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('year', -1, 'SectileCalendarPreviousYear'));
-export const CalendarNextYear = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerMove('year', 1, 'SectileCalendarNextYear'));
-export const CalendarWeekViewTrigger = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerViewTrigger('week', 'SectileCalendarWeekViewTrigger'));
-export const CalendarMonthViewTrigger = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerViewTrigger('month', 'SectileCalendarMonthViewTrigger'));
-export const CalendarYearViewTrigger = /* @__PURE__ */ specializePickerRootPart('calendar', createPickerViewTrigger('year', 'SectileCalendarYearViewTrigger'));
+export const CalendarPreviousWeek = /* @__PURE__ */ createPickerMove('week', -1, 'SectileCalendarPreviousWeek') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarNextWeek = /* @__PURE__ */ createPickerMove('week', 1, 'SectileCalendarNextWeek') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarPreviousMonth = /* @__PURE__ */ createPickerMove('month', -1, 'SectileCalendarPreviousMonth') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarNextMonth = /* @__PURE__ */ createPickerMove('month', 1, 'SectileCalendarNextMonth') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarPreviousYear = /* @__PURE__ */ createPickerMove('year', -1, 'SectileCalendarPreviousYear') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarNextYear = /* @__PURE__ */ createPickerMove('year', 1, 'SectileCalendarNextYear') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarWeekViewTrigger = /* @__PURE__ */ createPickerViewTrigger('week', 'SectileCalendarWeekViewTrigger') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarMonthViewTrigger = /* @__PURE__ */ createPickerViewTrigger('month', 'SectileCalendarMonthViewTrigger') as unknown as PickerRootPartComponent<'calendar'>;
+export const CalendarYearViewTrigger = /* @__PURE__ */ createPickerViewTrigger('year', 'SectileCalendarYearViewTrigger') as unknown as PickerRootPartComponent<'calendar'>;
 
 export type {
   CalendarMonthValue,

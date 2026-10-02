@@ -1,7 +1,7 @@
 import type { DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
 import type { DateRange, DateValue } from '@sectile/dom/temporal/date-field';
 import {
-  PickerCell, PickerContent, PickerGrid, createPickerMove, createPickerRoot, specializePickerRootPart,
+  PickerCell, PickerContent, PickerGrid, createPickerMove, createPickerRoot, type PickerRootPartComponent,
   type PickerCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
 } from './picker.js';
 import { rangeCalendarCapability } from './capabilities/range-calendar.js';
@@ -21,7 +21,7 @@ export interface RangeCalendarRootProps extends PickerPartProps {
   readonly policies?: DateRangePickerOptions['policies'];
 }
 
-export const RangeCalendarRoot = createPickerRoot(rangeCalendarCapability, 'SectileRangeCalendarRoot', {
+export const RangeCalendarRoot = /* @__PURE__ */ createPickerRoot(rangeCalendarCapability, 'SectileRangeCalendarRoot', {
   scope: 'range-calendar',
   defaultOpen: true,
   defaultView: 'month',
@@ -31,13 +31,13 @@ export type RangeCalendarRootSlotProps = PickerRootSlotProps<DateRange | null>;
 export type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:modelValue']>;
 export type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>;
 export type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>;
-export const RangeCalendarContent = /* @__PURE__ */ specializePickerRootPart('date-range', PickerContent);
-export const RangeCalendarGrid = /* @__PURE__ */ specializePickerRootPart('date-range', PickerGrid);
+export const RangeCalendarContent = PickerContent as unknown as PickerRootPartComponent<'date-range'>;
+export const RangeCalendarGrid = PickerGrid as unknown as PickerRootPartComponent<'date-range'>;
 export const RangeCalendarCell = PickerCell;
-export const RangeCalendarPreviousMonth = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('month', -1, 'SectileRangeCalendarPreviousMonth'));
-export const RangeCalendarNextMonth = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('month', 1, 'SectileRangeCalendarNextMonth'));
-export const RangeCalendarPreviousYear = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('year', -1, 'SectileRangeCalendarPreviousYear'));
-export const RangeCalendarNextYear = /* @__PURE__ */ specializePickerRootPart('date-range', createPickerMove('year', 1, 'SectileRangeCalendarNextYear'));
+export const RangeCalendarPreviousMonth = /* @__PURE__ */ createPickerMove('month', -1, 'SectileRangeCalendarPreviousMonth') as unknown as PickerRootPartComponent<'date-range'>;
+export const RangeCalendarNextMonth = /* @__PURE__ */ createPickerMove('month', 1, 'SectileRangeCalendarNextMonth') as unknown as PickerRootPartComponent<'date-range'>;
+export const RangeCalendarPreviousYear = /* @__PURE__ */ createPickerMove('year', -1, 'SectileRangeCalendarPreviousYear') as unknown as PickerRootPartComponent<'date-range'>;
+export const RangeCalendarNextYear = /* @__PURE__ */ createPickerMove('year', 1, 'SectileRangeCalendarNextYear') as unknown as PickerRootPartComponent<'date-range'>;
 
 export type {
   DateRange,
