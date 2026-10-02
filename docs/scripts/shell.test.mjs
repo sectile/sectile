@@ -179,6 +179,10 @@ test('every shipped route renders and all internal page links resolve', async ()
       if (route.kind === 'example') {
         assert.match(html, /class="docs-preview/u);
         assert.match(html, /<details class="docs-code-disclosure">/u);
+        if (route.exampleId === 'vue-components-disclosure-exit-transition') {
+          assert.match(html, /<output[^>]*aria-live="polite"[^>]*>Open: true · Present<\/output>/u);
+          assert.match(html, /aria-expanded="true"/u);
+        }
       } else {
         assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
       }

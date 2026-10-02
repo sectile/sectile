@@ -56,6 +56,7 @@ export const routes: readonly DocsRoute[] = [
   { path: '/vue/guides/state', label: 'State ownership', title: 'State ownership', kind: 'guide', host: 'vue', guide: 'state' },
   { path: '/vue/components/checkbox', label: 'Checkbox', title: 'Checkbox', kind: 'component', host: 'vue', area: 'components', subject: 'Checkbox' },
   { path: '/vue/components/dialog', label: 'Dialog', title: 'Dialog', kind: 'component', host: 'vue', area: 'components', subject: 'Dialog' },
+  { path: '/vue/components/disclosure', label: 'Disclosure', title: 'Disclosure', kind: 'component', host: 'vue', area: 'components', subject: 'Disclosure' },
   ...areaRoutes,
   ...exampleRoutes,
 ];

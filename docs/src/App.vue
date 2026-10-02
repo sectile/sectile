@@ -21,6 +21,7 @@ const installation = 'pnpm add @sectile/vue';
 const componentDescriptions: Record<string, string> = {
   Checkbox: 'A two-state or indeterminate selection control. Compose its interactive root and conditional indicator, with state owned by the component or your application.',
   Dialog: 'A modal surface for a task that needs protected focus. Compose a trigger, portal, overlay, and labeled content while Sectile coordinates dismissal and focus.',
+  Disclosure: 'Show or hide a section of content. Its presence handling retains the section during an exit transition and makes the exiting content inert.',
 };
 watchEffect(() => { document.title = `${currentRoute.value?.title ?? 'Not found'} · Sectile`; });
 watch(currentPath, async () => {
@@ -115,6 +116,7 @@ function closeMenu(event: KeyboardEvent): void {
               <h2 class="docs-section-heading">Examples</h2><ExampleGallery :examples="subjectExamples" />
               <section class="docs-prose-section"><h2>Composition</h2>
                 <template v-if="currentRoute.subject === 'Checkbox'"><p>Import <code>CheckboxRoot</code> and <code>CheckboxIndicator</code> from <code>@sectile/vue/checkbox</code>. The root renders the interactive element; the indicator appears for checked or indeterminate state.</p><p>Give the root a visible label or an <code>aria-label</code>. Bind <code>v-model</code> when the application owns the value. Use <code>defaultValue</code> for an initial component-owned value.</p><h2>Keyboard interaction</h2><p>Tab focuses the control. Space changes its checked state. <code>disabled</code> prevents interaction; <code>readonly</code> keeps the value fixed without making the control disabled.</p></template>
+                <template v-else-if="currentRoute.subject === 'Disclosure'"><p>Import <code>DisclosureRoot</code>, <code>DisclosureTrigger</code>, and <code>DisclosureContent</code> from <code>@sectile/vue/disclosure</code>. Bind <code>v-model</code> when your application owns the open state.</p><h2>Exit transitions</h2><p>Style the content’s <code>data-state</code> attribute with CSS transitions. During an exit, content remains present but inert; once the transition ends it becomes hidden. Reopening during an exit keeps the content available. A reduced-motion rule can disable the transition.</p></template>
                 <template v-else><p>Import the dialog parts from <code>@sectile/vue/dialog</code>. Keep the trigger and portal under the same <code>DialogRoot</code>. Place the overlay, content, title, description, and close control inside the portal.</p><p><code>DialogTitle</code> and <code>DialogDescription</code> supply the accessible name and description. Bind <code>v-model:open</code> when the application owns open state.</p><h2>Focus and dismissal</h2><p>The default modal dialog moves focus into its content and keeps keyboard focus inside while open. Escape dismisses it; focus returns to the trigger on close. A visible close control gives pointer and keyboard users an explicit way to dismiss it.</p></template>
               </section>
             </template>

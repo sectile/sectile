@@ -256,6 +256,12 @@ code region capped at 560px high. Copy feedback reports success or a selection
 fallback. Code text becomes 12px with 16px padding below 760px. Source disclosure
 uses a 160ms reveal only when reduced motion is not requested.
 
+The disclosure presence example uses a deliberately observable 600ms opacity
+and translation transition. Its status reflects the content element's actual
+hidden and inert attributes rather than an application timer. Closing, reopening
+during exit, completing exit, and reduced motion are separate inspection cases.
+The example's attribute observer is disconnected when the example unmounts.
+
 ## Do's and Don'ts
 
 ### Do:

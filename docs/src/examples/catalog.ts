@@ -42,6 +42,23 @@ export interface ExampleDefinition {
 
 export const examples: readonly ExampleDefinition[] = [
   {
+    id: 'vue-components-disclosure-exit-transition',
+    host: 'vue',
+    area: 'components',
+    subject: 'Disclosure',
+    slug: 'disclosure/exit-transition',
+    title: 'Presence during an exit transition',
+    description: 'Close the panel to observe it remaining present and inert during its CSS transition. Reopen it before the fade finishes, or wait until its hidden state is reported.',
+    focus: 'Retained exit and interrupted reopening',
+    kind: 'styling',
+    fixture: 'surface',
+    tags: ['presence', 'transition', 'inert', 'reduced-motion'],
+    sourceOwner: 'vue',
+    previewPath: './vue/components/disclosure/exit-transition/Preview.vue',
+    code: [{ label: 'Vue · presence and transition', language: 'vue', path: './vue/components/disclosure/exit-transition/Preview.vue' }],
+    related: [],
+  },
+  {
     id: 'vue-components-checkbox-controlled-state',
     host: 'vue',
     area: 'components',
