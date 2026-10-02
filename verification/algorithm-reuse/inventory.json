@@ -1820,7 +1820,7 @@
       "detector": "raw-identity-lookup",
       "category": "raw-full-domain-scan",
       "path": "packages/dom/src/form/connection.ts",
-      "line": 903,
+      "line": 902,
       "evidence": ".some(",
       "rule": "dom-host-authority",
       "classification": "reuse",
