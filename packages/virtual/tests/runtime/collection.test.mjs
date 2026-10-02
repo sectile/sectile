@@ -24,6 +24,75 @@ function rejectsWithCode(operation, code) {
   assert.throws(operation, (error) => error?.cause?.code === code);
 }
 
+test('ISSUE-189: collection owns array slots across create, replace, and trusted patch', () => {
+  const original = [item('a'), item('b')];
+  const previous = createVirtualCollection(original, getID);
+  original[0] = item('changed');
+  original.push(item('extra'));
+  assert.deepEqual(previous.items.map(getID), previous.domain.ids);
+  const replacement = [item('a', 'updated'), item('b')];
+  const next = replaceVirtualCollection(previous, replacement);
+  replacement[0] = item('changed');
+  assert.deepEqual(next.items.map(getID), next.domain.ids);
+  const patchedItems = [next.items[0], item('x'), next.items[1]];
+  const token = createVirtualCollectionPatch(next, { items: patchedItems, index: 1, deleteCount: 0, inserted: ['x'] });
+  patchedItems[1] = item('changed');
+  const patched = updateVirtualCollection(next, token);
+  assert.deepEqual(patched.items.map(getID), patched.domain.ids);
+  assert.equal(Object.isFrozen(patched.items), true);
+});
+
+test('ISSUE-190: trusted patch reads each field once and ignores array iterators', () => {
+  const previous = createVirtualCollection([item('a'), item('b')], getID);
+  const items = [previous.items[0], item('x'), previous.items[1]];
+  const inserted = ['x'];
+  inserted[Symbol.iterator] = () => { throw new Error('custom iterator'); };
+  const reads = {};
+  const input = {};
+  for (const [key, value] of Object.entries({ items, inserted, index: 1, deleteCount: 0, valueChange: null })) {
+    Object.defineProperty(input, key, { get() {
+      reads[key] = (reads[key] ?? 0) + 1;
+      if (reads[key] !== 1) throw new Error('reread ' + key);
+      return value;
+    } });
+  }
+  const next = updateVirtualCollection(previous, createVirtualCollectionPatch(previous, input));
+  assert.deepEqual(next.domain.ids, ['a', 'x', 'b']);
+  assert.deepEqual(reads, { items: 1, index: 1, deleteCount: 1, inserted: 1, valueChange: 1 });
+});
+
+test('ISSUE-189: external patch captures each slot once while owner arrays are reused', () => {
+  for (const size of [1_000, 10_000]) {
+    let calls = 0;
+    const previous = createVirtualCollection(Array.from({ length: size }, (_, id) => item(id)), (value) => {
+      calls += 1;
+      return value.id;
+    });
+    let reads = 0;
+    const items = new Array(size);
+    for (let index = 0; index < size; index += 1) {
+      const value = index === 0 ? item(0, 'updated') : previous.items[index];
+      Object.defineProperty(items, index, { get() {
+        reads += 1;
+        return value;
+      } });
+    }
+    calls = 0;
+    const next = updateVirtualCollection(previous, createVirtualCollectionPatch(previous, {
+      items, index: 0, deleteCount: 0, inserted: [], valueChange: { index: 0, count: 1 },
+    }));
+    assert.equal(reads, size);
+    assert.equal(calls, 1);
+    calls = 0;
+    const reused = updateVirtualCollection(next, createVirtualCollectionPatch(next, {
+      items: next.items, index: 0, deleteCount: 0, inserted: [], valueChange: { index: 0, count: 1 },
+    }));
+    assert.equal(reused.items, next.items);
+    assert.equal(calls, 1);
+    assert.equal(reads, size);
+  }
+});
+
 test('COL-01: raw projection preserves StableID distinctions and enforces ceilings before resolution', () => {
   const projection = createVirtualCollection(
     Object.freeze([item(1), item('1'), item(-1), item('-1')]),
@@ -200,7 +269,7 @@ test('COL-02: trusted patches match raw replacement while resolving only declare
   assert.equal(calls, 1);
   assert.deepEqual(trusted.change, raw.change);
   assert.deepEqual(trusted.domain.ids, raw.domain.ids);
-  assert.equal(trusted.items, items);
+  assert.deepEqual(trusted.items, items);
 
   rejectsWithCode(
     () => updateVirtualCollection(previous, { kind: 'trusted-patch' }),

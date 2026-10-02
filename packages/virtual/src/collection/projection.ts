@@ -9,9 +9,9 @@ import {
   tryCreateSequence,
   type Sequence,
 } from '@sectile/core/sequence';
-import type { VirtualResult } from '../error.js';
+import type { VirtualError, VirtualResult } from '../error.js';
 import type { Extent, ExtentIndex, ExtentUpdate } from '../indexes/extent.js';
-import { fail, ok, preflightSequenceSplice } from '../foundation.js';
+import { fail, ok, preflightSequenceSplice, validateMaxItems } from '../foundation.js';
 
 export type VirtualCollectionIDResolver<
   Value,
@@ -158,7 +158,8 @@ interface TrustedUpdateState {
   readonly next: AnyProjection | null;
 }
 
-const projectionIdentities = new WeakMap<object, object>();
+const projections = new WeakMap<object, object>();
+const ownedItems = new WeakSet<object>();
 const trustedUpdates = new WeakMap<object, TrustedUpdateState>();
 
 export function createVirtualCollection<
@@ -182,11 +183,15 @@ export function tryCreateVirtualCollection<
 ): VirtualResult<VirtualCollectionProjection<Value, ID>> {
   const validated = validateProjectionInput(items, getID, options);
   if (!validated.ok) return validated;
+  const originalItems = items;
+  const captured = captureCollectionSlots(items, validated.value.size);
+  if (!captured.ok) return captured;
+  items = captured.value;
   const ids = new Array<ID>(items.length);
   for (let index = 0; index < ids.length; index += 1) {
     ids[index] = getID(items[index] as Value, index);
   }
-  if (items.length !== ids.length) return collectionInputFailure('Items changed.', items);
+  if (originalItems.length !== ids.length) return collectionInputFailure('Items changed.', originalItems);
   const domain = tryCreateSequence(ids, {
     maxItems: validated.value.maxItems,
     maxIDCodeUnits: validated.value.maxIDCodeUnits,
@@ -222,10 +227,7 @@ export function tryReplaceVirtualCollection<
 ): VirtualResult<VirtualCollectionProjection<Value, ID>> {
   const previousIdentity = projectionIdentityOf(previous);
   if (previousIdentity === null) {
-    return collectionInputFailure(
-      'Virtual collection replacements require an owner-created projection.',
-      previous,
-    );
+    return ownerFailure(previous);
   }
   const resolver = getID ?? previous.getID;
   const input = validateProjectionInput(items, resolver, {
@@ -234,6 +236,9 @@ export function tryReplaceVirtualCollection<
   });
   if (!input.ok) return input;
   if (previous.items === items && previous.getID === resolver) return ok(previous);
+  const captured = captureCollectionSlots(items, input.value.size);
+  if (!captured.ok) return captured;
+  items = captured.value;
 
   if (previous.getID !== resolver) {
     const prepared = tryCreateVirtualCollection(items, resolver, {
@@ -242,21 +247,12 @@ export function tryReplaceVirtualCollection<
     });
     if (!prepared.ok) return prepared;
     const window = changedIdentityWindow(previous.domain, prepared.value.domain);
-    if (window === null) {
-      return ok(freezeProjection(
-        items,
-        previous.domain,
-        resolver,
-        null,
-        changedValues(previous.items, items),
-      ));
-    }
     return ok(freezeProjection(
       items,
-      prepared.value.domain,
+      window === null ? previous.domain : prepared.value.domain,
       resolver,
       window,
-      null,
+      window === null ? changedValues(previous.items, items) : null,
     ));
   }
 
@@ -333,25 +329,36 @@ export function tryCreateVirtualCollectionPatch<
 ): VirtualResult<VirtualCollectionTrustedUpdate<Value, ID>> {
   const previousIdentity = projectionIdentityOf(previous);
   if (previousIdentity === null) {
-    return collectionInputFailure(
-      'Trusted collection patches require an owner-created projection.',
-      previous,
-    );
+    return ownerFailure(previous);
   }
   const unknownInput: unknown = input;
-  if (!isRecord(unknownInput) || !Array.isArray(unknownInput['items'])) {
+  if (!isRecord(unknownInput)) return collectionPatchFailure('Patch must be an object.', unknownInput);
+  try {
+    input = {
+      items: input.items,
+      index: input.index,
+      deleteCount: input.deleteCount,
+      inserted: input.inserted,
+      valueChange: input.valueChange ?? null,
+    };
+  } catch {
+    return collectionPatchFailure('Trusted collection patch properties must be readable.', unknownInput);
+  }
+  if (!Array.isArray(input.items)) {
     return collectionInputFailure(
-      'Trusted collection patches require an items array.',
+      'Patch items must be an array.',
       unknownInput,
     );
   }
-  if (!Array.isArray(unknownInput['inserted'])) {
+  if (!Array.isArray(input.inserted)) {
     return collectionPatchFailure(
-      'Trusted collection patches require an inserted identity array.',
+      'Patch inserted IDs must be an array.',
       unknownInput,
     );
   }
-  const insertedInput = unknownInput['inserted'] as readonly ID[];
+  const insertedInput = input.inserted;
+  const insertedCount = insertedInput.length;
+  const itemCount = input.items.length;
   if (
     !Number.isSafeInteger(input.index)
     || !Number.isSafeInteger(input.deleteCount)
@@ -359,7 +366,7 @@ export function tryCreateVirtualCollectionPatch<
     || input.deleteCount < 0
   ) {
     return collectionPatchFailure(
-      'Trusted collection patch ranges must be non-negative safe integers.',
+      'Patch ranges must be non-negative safe integers.',
       input,
     );
   }
@@ -367,10 +374,12 @@ export function tryCreateVirtualCollectionPatch<
     previous.domain,
     input.index,
     input.deleteCount,
-    insertedInput.length,
+    insertedCount,
   );
   if (!preflight.ok) return preflight;
-  const inserted = Object.freeze([...insertedInput]);
+  const capturedInserted = captureCollectionSlots(insertedInput, insertedCount);
+  if (!capturedInserted.ok) return capturedInserted;
+  const inserted = capturedInserted.value;
   const domain = tryApplySequencePatch(previous.domain, Object.freeze({
     type: 'splice' as const,
     index: input.index,
@@ -378,54 +387,43 @@ export function tryCreateVirtualCollectionPatch<
     inserted,
   }));
   if (!domain.ok) return domain;
-  if (input.items.length !== domain.value.size) {
+  if (itemCount !== domain.value.size) {
     return collectionPatchFailure(
-      'Trusted collection patch items must match the resulting identity count.',
+      'Patch items must match the resulting domain size.',
       Object.freeze({
-        itemCount: input.items.length,
+        itemCount,
         domainSize: domain.value.size,
       }),
     );
   }
-  for (let localIndex = 0; localIndex < inserted.length; localIndex += 1) {
-    const index = input.index + localIndex;
-    const id = previous.getID(input.items[index] as Value, index);
-    const valid = validateStableIDResult<ID>(
-      id,
-      previous.domain.maxIDCodeUnits,
-    );
-    if (!valid.ok) return valid;
-    if (id !== inserted[localIndex]) {
-      return collectionPatchFailure(
-        'Trusted collection inserted identities must match the item resolver.',
-        Object.freeze({
-          index,
-          expected: inserted[localIndex],
-          actual: id,
-        }),
-      );
-    }
-  }
+  const capturedItems = captureCollectionSlots(input.items, itemCount);
+  if (!capturedItems.ok) return capturedItems;
+  input = { ...input, items: capturedItems.value };
   const valueChange = normalizeValueChange(
     input.valueChange ?? null,
     domain.value.size,
   );
   if (!valueChange.ok) return valueChange;
-  if (valueChange.value !== null) {
-    const end = valueChange.value.index + valueChange.value.count;
-    for (let index = valueChange.value.index; index < end; index += 1) {
+  for (let pass = 0; pass < 2; pass += 1) {
+    const range = pass === 0
+      ? { index: input.index, count: inserted.length }
+      : valueChange.value;
+    if (range === null) continue;
+    const end = range.index + range.count;
+    for (let index = range.index; index < end; index += 1) {
       const id = previous.getID(input.items[index] as Value, index);
       const valid = validateStableIDResult<ID>(
         id,
         previous.domain.maxIDCodeUnits,
       );
       if (!valid.ok) return valid;
-      if (id !== domain.value.at(index)) {
+      const expected = pass === 0 ? inserted[index - input.index] : domain.value.at(index);
+      if (id !== expected) {
         return collectionPatchFailure(
-          'Trusted value changes must preserve the active identity at every changed index.',
+          'Patch identities must match the item resolver.',
           Object.freeze({
             index,
-            expected: domain.value.at(index),
+            expected,
             actual: id,
           }),
         );
@@ -481,15 +479,12 @@ export function tryUpdateVirtualCollection<
 ): VirtualResult<VirtualCollectionProjection<Value, ID>> {
   const previousIdentity = projectionIdentityOf(previous);
   if (previousIdentity === null) {
-    return collectionInputFailure(
-      'Virtual collection updates require an owner-created projection.',
-      previous,
-    );
+    return ownerFailure(previous);
   }
   const unknownUpdate: unknown = update;
   if (!isRecord(unknownUpdate)) {
     return collectionInputFailure(
-      'Virtual collection updates must be raw replacements or trusted patches.',
+      'Updates must be raw replacements or trusted patches.',
       unknownUpdate,
     );
   }
@@ -503,7 +498,7 @@ export function tryUpdateVirtualCollection<
   }
   if (unknownUpdate['kind'] !== 'trusted-patch') {
     return collectionInputFailure(
-      'Virtual collection updates must be raw replacements or trusted patches.',
+      'Updates must be raw replacements or trusted patches.',
       unknownUpdate,
     );
   }
@@ -513,7 +508,7 @@ export function tryUpdateVirtualCollection<
     || trusted.previousIdentity !== previousIdentity
   ) {
     return collectionPatchFailure(
-      'Trusted collection patches must be created for the active projection.',
+      'Patch must belong to the active collection.',
       unknownUpdate,
     );
   }
@@ -542,19 +537,10 @@ export function tryConstrainVirtualCollectionDomain<
   maxItems: number,
 ): VirtualResult<Sequence<ID>> {
   if (projectionIdentityOf(projection) === null) {
-    return collectionInputFailure(
-      'Virtual collection domain constraints require an owner-created projection.',
-      projection,
-    );
+    return ownerFailure(projection);
   }
-  if (!Number.isSafeInteger(maxItems) || maxItems < 0) {
-    return fail(
-      'construction',
-      'invalid-max-items',
-      'maxItems must be a non-negative safe integer.',
-      { maxItems },
-    );
-  }
+  const invalid = validateMaxItems(maxItems);
+  if (invalid !== null) return coreFailure(invalid);
   if (projection.domain.size > maxItems) {
     return fail(
       'resource-rejection',
@@ -583,16 +569,13 @@ export function reconcileVirtualCollectionExtents<
   measuredEstimate?: number,
 ): VirtualCollectionExtentPatch<ID> | null {
   if (projectionIdentityOf(next) === null) {
-    return unwrap(collectionInputFailure<never>(
-      'Virtual collection extent reconciliation requires an owner-created projection.',
-      next,
-    ));
+    return unwrap(ownerFailure<never>(next));
   }
   if (state.domain.size !== state.extents.size) {
     return unwrap(fail<never>(
       'construction',
       'virtual-layout-domain-mismatch',
-      'Virtual collection extent reconciliation requires aligned identity and extent domains.',
+      'Identity and extent domains must align.',
       Object.freeze({
         domainSize: state.domain.size,
         extentSize: state.extents.size,
@@ -638,10 +621,7 @@ export function reconcileVirtualCollectionValueExtents<
   measuredEstimate?: number,
 ): readonly ExtentUpdate[] {
   if (projectionIdentityOf(next) === null) {
-    return unwrap(collectionInputFailure<never>(
-      'Virtual collection value reconciliation requires an owner-created projection.',
-      next,
-    ));
+    return unwrap(ownerFailure<never>(next));
   }
   virtualSizePolicyRequiresMeasurement(policy);
   const change = next.valueChange;
@@ -653,7 +633,7 @@ export function reconcileVirtualCollectionValueExtents<
     return unwrap(fail<never>(
       'construction',
       'virtual-layout-domain-mismatch',
-      'Virtual collection value reconciliation requires aligned identity and extent domains.',
+      'Identity and extent domains must align.',
       Object.freeze({
         stateDomainSize: state.domain.size,
         stateExtentSize: state.extents.size,
@@ -668,7 +648,7 @@ export function reconcileVirtualCollectionValueExtents<
       return unwrap(fail<never>(
         'transition-rejection',
         'virtual-layout-domain-mismatch',
-        'Virtual collection value reconciliation requires stable identities inside the changed value window.',
+        'Changed values must preserve identity.',
         Object.freeze({ index }),
       ));
     }
@@ -857,6 +837,7 @@ function validateProjectionInput<
 ): VirtualResult<{
   readonly maxItems: number;
   readonly maxIDCodeUnits: number;
+  readonly size: number;
 }> {
   const unknownItems: unknown = items;
   const unknownResolver: unknown = getID;
@@ -880,14 +861,8 @@ function validateProjectionInput<
     );
   }
   const maxItems = options.maxItems ?? 1_000_000;
-  if (!Number.isSafeInteger(maxItems) || maxItems < 0) {
-    return fail(
-      'construction',
-      'invalid-max-items',
-      'maxItems must be a non-negative safe integer.',
-      { maxItems },
-    );
-  }
+  const invalid = validateMaxItems(maxItems);
+  if (invalid !== null) return coreFailure(invalid);
   const maxIDCodeUnits = options.maxIDCodeUnits ?? DEFAULT_MAX_ID_CODE_UNITS;
   if (!positiveSafeInteger(maxIDCodeUnits)) {
     return fail(
@@ -897,18 +872,19 @@ function validateProjectionInput<
       { maxIDCodeUnits },
     );
   }
-  if (items.length > maxItems) {
+  const size = items.length;
+  if (size > maxItems) {
     return fail(
       'resource-rejection',
       'item-ceiling-exceeded',
       'Virtual collection exceeds maxItems.',
       Object.freeze({
-        size: items.length,
+        size,
         maxItems,
       }),
     );
   }
-  return ok(Object.freeze({ maxItems, maxIDCodeUnits }));
+  return ok(Object.freeze({ maxItems, maxIDCodeUnits, size }));
 }
 
 function changedIdentityWindow<ID extends StableID>(
@@ -976,12 +952,10 @@ function changedValues<Value>(
 }
 
 function sameExtent(left: Extent, right: Extent): boolean {
-  if (left.kind !== right.kind) return false;
-  return left.kind === 'exact' && right.kind === 'exact'
-    ? left.value === right.value
-    : left.kind === 'unknown' && right.kind === 'unknown'
-      ? left.fallback === right.fallback
-      : false;
+  return left.kind === right.kind && (left.kind === 'exact'
+    ? left.value === (right as Extract<Extent, { kind: 'exact' }>).value
+    : left.kind === 'unknown'
+      && left.fallback === (right as Extract<Extent, { kind: 'unknown' }>).fallback);
 }
 
 function normalizeValueChange(
@@ -990,9 +964,14 @@ function normalizeValueChange(
 ): VirtualResult<VirtualCollectionValueChange | null> {
   if (value === null) return ok(null);
   const unknownValue: unknown = value;
+  if (!isRecord(unknownValue)) return collectionPatchFailure('Virtual collection value changes must identify a valid range.', unknownValue);
+  try {
+    value = { index: value.index, count: value.count };
+  } catch {
+    return collectionPatchFailure('Virtual collection value change properties must be readable.', unknownValue);
+  }
   if (
-    !isRecord(unknownValue)
-    || !Number.isSafeInteger(value.index)
+    !Number.isSafeInteger(value.index)
     || !Number.isSafeInteger(value.count)
     || value.index < 0
     || value.count < 0
@@ -1005,7 +984,19 @@ function normalizeValueChange(
     );
   }
   if (value.count === 0) return ok(null);
-  return ok(Object.freeze({ index: value.index, count: value.count }));
+  return ok(Object.freeze(value));
+}
+
+function captureCollectionSlots<Value>(items: readonly Value[], size: number): VirtualResult<readonly Value[]> {
+  if (ownedItems.has(items)) return ok(items);
+  try {
+    const values = new Array<Value>(size);
+    for (let index = 0; index < size; index += 1) values[index] = items[index] as Value;
+    ownedItems.add(values);
+    return ok(Object.freeze(values));
+  } catch {
+    return collectionInputFailure('Array slots must be readable.', items);
+  }
 }
 
 function freezeProjection<
@@ -1029,7 +1020,7 @@ function freezeProjection<
     change,
     valueChange,
   };
-  projectionIdentities.set(projection, Object.freeze({}));
+  projections.set(projection, {});
   return Object.freeze(projection);
 }
 
@@ -1037,9 +1028,11 @@ function projectionIdentityOf<
   Value,
   ID extends StableID,
 >(projection: VirtualCollectionProjection<Value, ID>): object | null {
-  const unknownProjection: unknown = projection;
-  if (!isRecord(unknownProjection)) return null;
-  return projectionIdentities.get(unknownProjection) ?? null;
+  return projections.get(projection) ?? null;
+}
+
+function ownerFailure<T>(value: unknown): VirtualResult<T> {
+  return collectionInputFailure('An owner-created collection is required.', value);
 }
 
 function validateStableIDResult<ID extends StableID>(
@@ -1050,7 +1043,7 @@ function validateStableIDResult<ID extends StableID>(
   return error === null ? ok(id) : coreFailure(error);
 }
 
-function coreFailure<T>(error: SectileError): VirtualResult<T> {
+function coreFailure<T>(error: SectileError | VirtualError): VirtualResult<T> {
   return fail(
     error.class,
     error.code,

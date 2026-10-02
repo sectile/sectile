@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { getHeapStatistics } from 'node:v8';
+import { setImmediate } from 'node:timers/promises';
 import { Window } from '../packages/dom/node_modules/happy-dom/lib/index.js';
 import { createFacadeConnection } from '../packages/core/dist/adapter-runtime.js';
 import { unwrap } from '../packages/core/dist/result.js';
@@ -10,6 +11,11 @@ import {
   readPositionSourceRegistryDiagnostics,
 } from '../packages/dom/dist/overlay/position/engine.js';
 import { createVirtualizer } from '../packages/dom/dist/virtual.js';
+import {
+  createVirtualCollection,
+  createVirtualCollectionPatch,
+  updateVirtualCollection,
+} from '../packages/virtual/dist/collection.js';
 import { createCheckbox as createTerminalCheckbox } from '../packages/terminal/dist/checkbox.js';
 
 if (typeof globalThis.gc !== 'function') throw new Error('Lifecycle retention requires --expose-gc.');
@@ -73,8 +79,47 @@ const band = noise === null ? null : Math.max(0.05, noise * 3);
 if (early !== null && late !== null && band !== null) {
   assert.ok(late <= early * (1 + band), `lifecycle retained heap grew ${late - early} bytes beyond ${(band * 100).toFixed(2)}%`);
 }
+const collectionTokens = workload === 'all' ? await verifyCollectionTokenRetention() : null;
 window.close();
-process.stdout.write(`${JSON.stringify({ workload, cyclesPerBatch: 1_000, batchCount, warmupBatches, measuredBatches, heapCheck, earlyMedian: early, lateMedian: late, relativeMAD: noise, band })}\n`);
+process.stdout.write(`${JSON.stringify({ workload, cyclesPerBatch: 1_000, batchCount, warmupBatches, measuredBatches, heapCheck, earlyMedian: early, lateMedian: late, relativeMAD: noise, band, collectionTokens })}\n`);
+
+async function verifyCollectionTokenRetention() {
+  const tokens = [];
+  const retired = [];
+  const pending = [];
+  const generations = 200;
+  const getID = (item) => item.id;
+  function prepare() {
+    for (let generation = 0; generation < generations; generation += 1) {
+      const previous = createVirtualCollection(Array.from({ length: 1_000 }, (_, id) => ({ id })), getID);
+      const token = createVirtualCollectionPatch(previous, {
+        items: previous.items.slice(), index: 0, deleteCount: 0, inserted: [], valueChange: { index: 0, count: 1 },
+      });
+      const next = updateVirtualCollection(previous, token);
+      tokens.push(token);
+      retired.push(new WeakRef(previous), new WeakRef(previous.items));
+      pending.push(new WeakRef(next), new WeakRef(next.items));
+    }
+  }
+  prepare();
+  await collect();
+  const retiredCollected = countCollected(retired);
+  assert.equal(retiredCollected, retired.length, 'Retained patch tokens must not retain previous projections or arrays.');
+  tokens.length = 0;
+  await collect();
+  const pendingCollected = countCollected(pending);
+  assert.equal(pendingCollected, pending.length, 'Released patch tokens must release pending projections and arrays.');
+  return { generations, retiredReferences: retired.length, retiredCollected, pendingReferences: pending.length, pendingCollected };
+}
+
+async function collect() {
+  await setImmediate();
+  for (let round = 0; round < 3; round += 1) { forceGC(); await setImmediate(); }
+}
+
+function countCollected(references) {
+  return references.filter((reference) => reference.deref() === undefined).length;
+}
 
 function runBatch(view, resources, baselineListeners, baselineRegistry, count) {
   const document = view.document;
