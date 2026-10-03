@@ -292,6 +292,7 @@ test('preview is primary and relevant code stays collapsed by default', async ()
 });
 
 test('Vue readers have a complete introduction and representative component destinations', () => {
+  assert.deepEqual(routes.filter(route => route.kind === 'guide').map(route => route.guide), ['getting-started', 'styling', 'state', 'accessibility']);
   for (const path of ['/vue/getting-started', '/vue/guides/styling', '/vue/guides/state', '/vue/components/checkbox', '/vue/components/dialog', '/vue/form/native-submission']) {
     const route = routes.find((candidate) => candidate.path === path);
     assert.ok(route, path);

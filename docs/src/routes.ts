@@ -19,7 +19,7 @@ export interface DocsRoute {
   readonly host?: ExampleHost;
   readonly area?: ExampleArea;
   readonly exampleId?: string;
-  readonly guide?: 'getting-started' | 'styling' | 'state' | 'design-system' | 'accessibility';
+  readonly guide?: 'getting-started' | 'styling' | 'state' | 'accessibility';
   readonly subject?: string;
 }
 
@@ -56,7 +56,6 @@ export const routes: readonly DocsRoute[] = [
   { path: '/vue/getting-started', label: 'Getting started', title: 'Getting started with Vue', kind: 'guide', host: 'vue', guide: 'getting-started' },
   { path: '/vue/guides/styling', label: 'Styling', title: 'Styling Vue components', kind: 'guide', host: 'vue', guide: 'styling' },
   { path: '/vue/guides/state', label: 'State ownership', title: 'State ownership', kind: 'guide', host: 'vue', guide: 'state' },
-  { path: '/vue/guides/design-system', label: 'Documentation styles', title: 'Documentation design system', kind: 'guide', host: 'vue', guide: 'design-system' },
   { path: '/vue/guides/accessibility', label: 'Accessibility', title: 'Vue accessibility', kind: 'guide', host: 'vue', guide: 'accessibility' },
   ...components.map((component): DocsRoute => ({ path: componentPath(component.subject), label: component.subject, title: component.subject, kind: 'component', host: 'vue', area: 'components', subject: component.subject })),
   ...areaRoutes,

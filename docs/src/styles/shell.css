@@ -343,13 +343,6 @@
   margin-top: var(--docs-space-6);
 }
 
-.docs-color-roles { display: grid; gap: var(--docs-space-5); margin: var(--docs-space-5) 0; }
-.docs-color-roles > div { display: grid; gap: var(--docs-space-2); }
-.docs-color-roles dt { display: flex; align-items: center; gap: var(--docs-space-3); font-weight: 600; }
-.docs-color-roles dd { display: flex; flex-wrap: wrap; gap: var(--docs-space-2) var(--docs-space-4); margin: 0; color: var(--docs-text-muted); font-size: var(--docs-font-size-label); }
-.docs-color-swatch { width: var(--docs-space-5); height: var(--docs-space-5); flex: none; border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-small-radius); }
-.docs-radius-specimen { max-width: 360px; margin-block: var(--docs-space-5); padding: var(--docs-surface-inset); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-radius); }
-.docs-radius-specimen > div { padding: var(--docs-space-6); border-radius: var(--docs-inner-radius); background: var(--docs-accent-soft); color: var(--docs-accent); text-align: center; font-family: var(--docs-font-mono); }
 
 .docs-example-card {
   display: grid;
