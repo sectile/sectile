@@ -55,6 +55,13 @@
   --docs-code-muted: #a9b5cc;
   --docs-code-border: #293852;
   --docs-code-control-border: #52617a;
+  --docs-code-keyword: #c4b5fd;
+  --docs-code-string: #a7e0bd;
+  --docs-code-constant: #f2c58b;
+  --docs-code-function: #8ecbff;
+  --docs-code-tag: #95d5ed;
+  --docs-code-attribute: #e7c3ef;
+  --docs-code-punctuation: #bfcbe0;
   --docs-error: #b42332;
   --docs-error-soft: #fff0f1;
   --docs-success: #157347;

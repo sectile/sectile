@@ -83,7 +83,7 @@ function closeMenu(event: KeyboardEvent): void {
               <h1 class="docs-home-title">Interaction without<br class="docs-desktop-break" /> a prescribed look.</h1>
               <p class="docs-page__lede">Sectile is a renderer-neutral interaction system. Its headless Vue components handle state, keyboard input, and focus while your application owns the presentation.</p>
               <div class="docs-home-actions"><a class="docs-button" :href="routeHref('/vue/getting-started')" @click="handleRouteClick($event, '/vue/getting-started')">Get started with Vue</a><span>Vue 3.5+</span></div>
-              <CodeBlock label="Install in your Vue application" :source="installation" />
+              <CodeBlock label="Install in your Vue application" language="bash" :source="installation" />
               <section class="docs-prose-section">
                 <h2>Behavior and appearance, kept separate</h2>
                 <p>Compose the parts you need, connect state to your application, and style the elements with your own CSS. Sectile does not supply a theme or replace your visual system.</p>
@@ -129,7 +129,7 @@ function closeMenu(event: KeyboardEvent): void {
             </template>
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">
               <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
-              <template v-if="activeArea.id !== 'components' && activeHost.id === 'vue'"><p class="docs-install-note">This integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" :source="`pnpm add @sectile/vue @sectile/${activeArea.id}`" /></template>
+              <template v-if="activeArea.id !== 'components' && activeHost.id === 'vue'"><p class="docs-install-note">This integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" language="bash" :source="`pnpm add @sectile/vue @sectile/${activeArea.id}`" /></template>
               <template v-if="areaExamples.length && activeHost.id === 'vue' && activeArea.id !== 'components'">
                 <nav v-if="areaExamples.length > 1" class="docs-example-jumps" aria-label="Examples on this page"><a v-for="example in areaExamples" :key="example.id" :href="`#${example.id}-title`">{{ example.title }}</a></nav>
                 <div class="docs-inline-examples"><section v-for="example in areaExamples" :key="example.id" :aria-labelledby="`${example.id}-title`"><ExamplePage :example="example" embedded /></section></div>

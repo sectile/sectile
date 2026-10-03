@@ -5,7 +5,8 @@ import { getEventListeners } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import { createRenderer, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
-import { createServer } from 'vite';
+import { compileScript, parse } from 'vue/compiler-sfc';
+import { createServer, transformWithEsbuild } from 'vite';
 import {
   areas,
   components,
@@ -16,6 +17,7 @@ import {
   validateExampleCatalog,
 } from '../src/examples/catalog.ts';
 import { routes } from '../src/routes.ts';
+import { highlightCode } from '../src/code-highlighting.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -81,6 +83,7 @@ test('documentation palette maintains readable text and identifiable control edg
     ['text', 'bg', 4.5], ['text-muted', 'bg-muted', 4.5],
     ['bg', 'accent', 4.5], ['bg', 'accent-hover', 4.5],
     ['code-text', 'code-bg', 4.5], ['code-muted', 'code-bg', 4.5],
+    ...['keyword', 'string', 'constant', 'function', 'tag', 'attribute', 'punctuation'].map(role => [`code-${role}`, 'code-bg', 4.5]),
     ['control-border', 'bg', 3], ['control-border', 'bg-muted', 3],
     ['checkbox-border', 'bg', 3], ['error', 'bg', 4.5],
     ['accent', 'accent-soft', 4.5], ['focus', 'bg-muted', 3],
@@ -91,6 +94,126 @@ test('documentation palette maintains readable text and identifiable control edg
     const levels = [luminance(palette[foreground]), luminance(palette[background])].sort((a, b) => b - a);
     const ratio = (levels[0] + 0.05) / (levels[1] + 0.05);
     assert.ok(ratio >= minimum, `${foreground} on ${background}: ${ratio.toFixed(2)} < ${minimum}`);
+  }
+});
+
+test('Shiki highlights each documented language without changing source text or inventing colors', async () => {
+  const palette = await read('src/styles/tokens.css');
+  const samples = [
+    ['ts', '// comment\r\nconst message: string = "<script>alert(1)</script>";\r\n\r\nconsole.log(message);'],
+    ['vue', '<script setup lang="ts">\nconst count = 1;\n</script>\n<template><button :disabled="false">{{ count }}</button></template>\n<style>.demo { color: red; }</style>'],
+    ['css', ':root { --demo: #123456; }\n/* comment */\n.demo { color: var(--demo); }'],
+    ['bash', '# install\npnpm add @sectile/vue\necho "$HOME"'],
+    ['ts', ''], ['vue', '\n'], ['ts', 'const 한글 = "한글";\r\n'],
+  ];
+  for (const example of examples) {
+    for (const section of example.code) samples.push([section.language, (await read(`src/examples/${section.path.slice(2)}`)).trim()]);
+  }
+  for (const [language, source] of samples) {
+    const tokens = await highlightCode(source, language);
+    assert.equal(tokens.map(token => token.content).join(''), source, language);
+    if (source.trim()) assert.ok(tokens.some(token => token.color && token.color !== 'var(--docs-code-text)'), `${language} has syntax coloring`);
+    for (const token of tokens) {
+      if (!token.color) continue;
+      const match = /^var\((--docs-code-[\w-]+)\)$/u.exec(token.color);
+      assert.ok(match, token.color);
+      assert.ok(palette.includes(`${match[1]}:`), `${token.color} resolves to the documentation palette`);
+    }
+  }
+});
+
+test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code and disposes pending work', async () => {
+  const server = await createServer({
+    root: fileURLToPath(new URL('..', import.meta.url)),
+    server: { middlewareMode: true, watch: null },
+    appType: 'custom',
+  });
+  const navigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  let mounted;
+  try {
+    const { default: CodeBlock } = await server.ssrLoadModule('/src/components/CodeBlock.vue');
+    const unsafe = '<script>alert("unsafe")</script>';
+    const html = await renderToString(createSSRApp({ render: () => h(CodeBlock, { source: unsafe, language: 'vue' }) }));
+    assert.ok(html.includes('&lt;script&gt;'));
+    assert.ok(!html.includes('<script>'));
+    assert.ok(html.includes('tabindex="0"'));
+
+    // Compile the same SFC for the client renderer. Vite's SSR module includes
+    // SSR-only setup instrumentation and cannot stand in for client mounting.
+    const { descriptor } = parse(await read('src/components/CodeBlock.vue'));
+    const compiled = compileScript(descriptor, { id: 'docs-code-block-test', inlineTemplate: true });
+    const { code } = await transformWithEsbuild(compiled.content, 'CodeBlock.ts', { loader: 'ts' });
+    const clientCode = code.replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve('vue'))}`)
+      .replaceAll("'../code-highlighting.js'", JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
+      .replaceAll('"../code-highlighting.js"', JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href));
+    const { default: ClientCodeBlock } = await import(`data:text/javascript;base64,${Buffer.from(clientCode).toString('base64')}`);
+
+    // A non-DOM Vue host exercises the component, not native browser behavior.
+    const node = (type, text = '') => ({ type, text, children: [], props: {}, parent: null });
+    let mutations = 0;
+    const host = createRenderer({
+      createElement: type => node(type), createText: text => node('#text', text), createComment: text => node('#comment', text),
+      insert(child, parent, anchor) {
+        mutations++;
+        if (child.parent) child.parent.children.splice(child.parent.children.indexOf(child), 1);
+        const index = anchor ? parent.children.indexOf(anchor) : -1;
+        parent.children.splice(index < 0 ? parent.children.length : index, 0, child);
+        child.parent = parent;
+      },
+      remove(child) { mutations++; child.parent?.children.splice(child.parent.children.indexOf(child), 1); child.parent = null; },
+      setText(child, text) { mutations++; child.text = text; },
+      setElementText(child, text) { mutations++; child.text = text; child.children = []; },
+      parentNode: child => child.parent,
+      nextSibling: child => child.parent?.children[child.parent.children.indexOf(child) + 1] ?? null,
+      patchProp(child, key, previous, value) { mutations++; child.props[key] = value; },
+    });
+    const root = node('root');
+    const find = (parent, type) => parent.type === type ? parent : parent.children.map(child => find(child, type)).find(Boolean);
+    const text = parent => (parent.type === '#comment' ? '' : parent.text) + parent.children.map(text).join('');
+    const waitFor = async predicate => {
+      const deadline = Date.now() + 10_000;
+      while (!predicate()) {
+        assert.ok(Date.now() < deadline, 'component update completed');
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+    };
+    const props = shallowRef({ source: '  const value = "original";\n', language: 'ts', active: false });
+    mounted = host.createApp({ render: () => h(ClientCodeBlock, props.value) });
+    mounted.mount(root);
+    await nextTick();
+    assert.equal(text(find(root, 'code')), props.value.source.trim());
+    assert.equal(find(find(root, 'code'), 'span'), undefined);
+    props.value = { ...props.value, active: true };
+    await waitFor(() => find(find(root, 'code'), 'span'));
+    assert.equal(text(find(root, 'code')), props.value.source.trim());
+    assert.ok(find(find(root, 'code'), 'span').props.style.color.startsWith('var(--docs-code-'));
+    props.value = { source: unsafe, language: 'vue', active: true };
+    await nextTick();
+    props.value = { source: '  .new { color: red; }  ', language: 'css', active: true };
+    await waitFor(() => find(root, 'pre').props['data-language'] === 'css' && find(find(root, 'code'), 'span'));
+    assert.equal(text(find(root, 'code')), props.value.source.trim());
+    let copied;
+    Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { async writeText(value) { copied = value; } } } });
+    await find(root, 'button').props.onClick();
+    await nextTick();
+    assert.equal(copied, '.new { color: red; }');
+    assert.ok(text(root).includes('Copied'));
+    navigator.clipboard.writeText = async () => { throw new Error('Permission denied'); };
+    await find(root, 'button').props.onClick();
+    await nextTick();
+    assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
+    props.value = { source: 'const late = 1;', language: 'ts', active: true };
+    await nextTick();
+    mounted.unmount();
+    mounted = undefined;
+    const afterUnmount = mutations;
+    await new Promise(resolve => setTimeout(resolve, 20));
+    assert.equal(mutations, afterUnmount, 'pending highlight does not render after unmount');
+  } finally {
+    mounted?.unmount();
+    if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
+    else delete globalThis.navigator;
+    await server.close();
   }
 });
 
@@ -148,7 +271,7 @@ test('preview is primary and relevant code stays collapsed by default', async ()
   const codeIndex = app.indexOf('class="docs-code-disclosure"');
 
   assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
-  assert.match(app, /<details class="docs-code-disclosure">/u);
+  assert.match(app, /<details class="docs-code-disclosure"[^>]*>/u);
   assert.doesNotMatch(app, /<details class="docs-code-disclosure"\s+open/u);
 });
 

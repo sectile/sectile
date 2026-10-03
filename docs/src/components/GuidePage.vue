@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CodeBlock from './CodeBlock.vue';
+import { ref } from 'vue';
 import { handleRouteClick, routeHref } from '../router.js';
 import tokens from '../styles/tokens.css?raw';
 
@@ -26,6 +27,10 @@ const installation = 'pnpm add @sectile/vue';
 const checkboxImport = `import { CheckboxRoot, CheckboxIndicator } from '@sectile/vue/checkbox';`;
 const controlled = `<CheckboxRoot v-model="checked">\n  <CheckboxIndicator />\n  Notifications\n</CheckboxRoot>`;
 const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicator />\n  Notifications\n</CheckboxRoot>`;
+const tokensOpen = ref(false);
+function toggleTokens(event: Event): void {
+  tokensOpen.value = (event.currentTarget as HTMLDetailsElement).open;
+}
 </script>
 
 <template>
@@ -40,9 +45,9 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
     <section id="installation" class="docs-prose-section">
       <h2>Install the Vue package</h2>
       <p>Add Sectile to your existing application. Vue is a peer dependency, so keep the Vue version already used by your application.</p>
-      <CodeBlock label="Terminal · pnpm" :source="installation" />
+      <CodeBlock label="Terminal · pnpm" language="bash" :source="installation" />
       <p>Import components from their public subpaths. Each subpath groups the parts of one interaction.</p>
-      <CodeBlock label="TypeScript" :source="checkboxImport" />
+      <CodeBlock label="TypeScript" language="ts" :source="checkboxImport" />
     </section>
     <section id="first-component" class="docs-prose-section">
       <h2>Your first component</h2>
@@ -101,7 +106,7 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
       <h2>Type and motion</h2>
       <p>Explanations and labels use the sans-serif stack. Source, API identifiers, and emitted values use monospace. A CSS transition can demonstrate retained Presence without a timer in application state; reduced motion disables that transition.</p>
       <p>The source below is the token stylesheet used by this site. It can serve as a starting point for an application-owned palette and geometry, not as a required library stylesheet.</p>
-      <details class="docs-code-disclosure"><summary>Token stylesheet</summary><CodeBlock label="CSS · documentation tokens" :source="tokens" /></details>
+      <details class="docs-code-disclosure" @toggle="toggleTokens"><summary>Token stylesheet</summary><CodeBlock label="CSS · documentation tokens" language="css" :source="tokens" :active="tokensOpen" /></details>
     </section>
   </template>
   <template v-else>
@@ -110,13 +115,13 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
     <section class="docs-prose-section">
       <h2>Controlled state</h2>
       <p>Use controlled state when another part of your application needs to read or change the value. A checkbox uses <code>modelValue</code> and emits <code>update:modelValue</code>; Vue's <code>v-model</code> connects both.</p>
-      <CodeBlock label="Vue · checked is an application ref" :source="controlled" />
+      <CodeBlock label="Vue · checked is an application ref" language="vue" :source="controlled" />
       <p>Handle updates by changing the supplied value. If the application leaves it unchanged, the component continues to reflect that value.</p>
     </section>
     <section class="docs-prose-section">
       <h2>Uncontrolled state</h2>
       <p>Use a default value when the component should own subsequent changes. The default initializes state; it is not a live binding.</p>
-      <CodeBlock label="Vue · component-owned state" :source="uncontrolled" />
+      <CodeBlock label="Vue · component-owned state" language="vue" :source="uncontrolled" />
       <p>Keep the ownership mode stable for a mounted component. Do not alternate between an omitted controlled prop and an application-supplied value.</p>
     </section>
     <section class="docs-prose-section">
