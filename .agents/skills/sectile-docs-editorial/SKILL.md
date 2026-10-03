@@ -74,7 +74,7 @@ Task guides may be instructional. Keep instructions next to the task they help c
 
 Describe examples in terms of the developer's environment and public package APIs, not the Sectile repository layout. Do not invent filenames such as `main.mjs`, `Example.vue`, or `index.html` unless the filename itself is required by the documented tool or framework. A reader should not need to infer a checkout path, docs fixture, or arbitrary file placement before understanding what the example demonstrates.
 
-Examples are preview-first. The interactive Preview is the primary surface; code is secondary and collapsed by default under **Relevant code** or an equivalent label. Give each focused example one primary behavior or styling concern and its own stable route.
+Examples are preview-first. The interactive Preview is the primary surface; code is adjacent and secondary. Initial disclosure is calculated per source block: short code starts expanded and long code starts collapsed, using the shared source-based policy rather than per-example flags. Readers can toggle each block and copy its full source. Give each focused example one primary behavior or styling concern and its own stable route.
 
 Package and component landing pages show static example cards or thumbnails rather than mounting every interactive Preview. Do not make readers scan a long prose page to find one feature-specific example.
 
@@ -104,7 +104,7 @@ For every changed public page, check:
 2. Are product claims supported by the public contract or canonical repository description?
 3. Are Vue and DOM fully separated in routes, navigation, metadata, and feature source?
 4. Does each focused example have one primary concern and its own route?
-5. Is Preview visually primary and Relevant code secondary and collapsed by default?
+5. Is Preview visually primary, with adjacent source whose initial disclosure follows the shared automatic policy?
 6. Do package and component galleries remain static instead of mounting every interactive example?
 7. Is displayed source read from the same example-owned file that executes the Preview?
 8. Does behavior source omit documentation presentation styling while styling examples are explicitly typed as styling examples?

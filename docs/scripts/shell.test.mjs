@@ -19,6 +19,7 @@ import {
 import { routes } from '../src/routes.ts';
 import { highlightCode } from '../src/code-highlighting.ts';
 import { componentAccessibility, domainAccessibility } from '../src/accessibility.ts';
+import { codePresentation } from '../src/code-disclosure.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -139,7 +140,21 @@ test('Shiki highlights each documented language without changing source text or 
   }
 });
 
-test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code and disposes pending work', async () => {
+test('source geometry determines initial disclosure at line and character boundaries', () => {
+  const eighteen = Array.from({ length: 18 }, () => 'const value = 1;').join('\n');
+  assert.deepEqual(codePresentation(eighteen), { lineCount: 18, initiallyOpen: true });
+  assert.deepEqual(codePresentation(`${eighteen}\nconst last = 1;`), { lineCount: 19, initiallyOpen: false });
+  assert.deepEqual(codePresentation(eighteen.replaceAll('\n', '\r\n')), codePresentation(eighteen));
+  assert.equal(codePresentation('x'.repeat(100)).initiallyOpen, true);
+  assert.equal(codePresentation('x'.repeat(101)).initiallyOpen, false);
+  assert.equal(codePresentation('한'.repeat(100)).initiallyOpen, true);
+  assert.equal(codePresentation('😀'.repeat(100)).initiallyOpen, true);
+  assert.deepEqual(codePresentation('  \n  '), { lineCount: 0, initiallyOpen: true });
+  assert.deepEqual(codePresentation('first\n\nlast\n'), { lineCount: 3, initiallyOpen: true });
+  assert.equal(codePresentation(`first${'\n'.repeat(18)}last`).initiallyOpen, false);
+});
+
+test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand, copies full source and disposes pending work', async () => {
   const server = await createServer({
     root: fileURLToPath(new URL('..', import.meta.url)),
     server: { middlewareMode: true, watch: null },
@@ -154,6 +169,18 @@ test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code a
     assert.ok(html.includes('&lt;script&gt;'));
     assert.ok(!html.includes('<script>'));
     assert.ok(html.includes('tabindex="0"'));
+    const short = 'const short = 1;';
+    const long = Array.from({ length: 19 }, (_, index) => `const value${index} = ${index};`).join('\n');
+    const mixed = await renderToString(createSSRApp({ render: () => h('div', [
+      h(CodeBlock, { source: short, language: 'ts', label: 'Template' }),
+      h(CodeBlock, { source: long, language: 'ts', label: 'Data' }),
+    ]) }));
+    const disclosures = [...mixed.matchAll(/<details\b([^>]*)>/gu)];
+    assert.equal(disclosures.length, 2);
+    assert.match(disclosures[0][1], /\bopen\b/u);
+    assert.doesNotMatch(disclosures[1][1], /\bopen\b/u);
+    assert.ok(mixed.includes('Hide code · 1 line'));
+    assert.ok(mixed.includes('Show code · 19 lines'));
 
     // Compile the same SFC for the client renderer. Vite's SSR module includes
     // SSR-only setup instrumentation and cannot stand in for client mounting.
@@ -162,7 +189,9 @@ test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code a
     const { code } = await transformWithEsbuild(compiled.content, 'CodeBlock.ts', { loader: 'ts' });
     const clientCode = code.replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve('vue'))}`)
       .replaceAll("'../code-highlighting.js'", JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
-      .replaceAll('"../code-highlighting.js"', JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href));
+      .replaceAll('"../code-highlighting.js"', JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
+      .replaceAll("'../code-disclosure.js'", JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href))
+      .replaceAll('"../code-disclosure.js"', JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href));
     const { default: ClientCodeBlock } = await import(`data:text/javascript;base64,${Buffer.from(clientCode).toString('base64')}`);
 
     // A non-DOM Vue host exercises the component, not native browser behavior.
@@ -195,7 +224,8 @@ test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code a
       }
     };
     const props = shallowRef({ source: '  const value = "original";\n', language: 'ts', active: false });
-    mounted = host.createApp({ render: () => h(ClientCodeBlock, props.value) });
+    const identity = shallowRef(0);
+    mounted = host.createApp({ render: () => h(ClientCodeBlock, { ...props.value, key: identity.value }) });
     mounted.mount(root);
     await nextTick();
     assert.equal(text(find(root, 'code')), props.value.source.trim());
@@ -219,6 +249,30 @@ test('CodeBlock keeps SSR safe, highlights on demand, updates, copies raw code a
     await find(root, 'button').props.onClick();
     await nextTick();
     assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
+
+    props.value = { source: long, language: 'ts' };
+    identity.value++;
+    await nextTick();
+    assert.equal(find(root, 'details').props.open, false, 'client agrees with SSR for long source');
+    assert.equal(find(find(root, 'code'), 'span'), undefined, 'closed source remains plain');
+    navigator.clipboard.writeText = async value => { copied = value; };
+    await find(root, 'button').props.onClick();
+    assert.equal(copied, long, 'copy outside the disclosure includes all collapsed lines');
+    find(root, 'details').props.onToggle({ currentTarget: { open: true } });
+    await waitFor(() => find(find(root, 'code'), 'span'));
+    assert.equal(find(root, 'details').props.open, true);
+    assert.equal(text(find(root, 'code')), long);
+    find(root, 'details').props.onToggle({ currentTarget: { open: false } });
+    await nextTick();
+    props.value = { ...props.value, source: short };
+    await nextTick();
+    assert.equal(find(root, 'details').props.open, false, 'reader choice persists through source updates');
+    assert.equal(find(find(root, 'code'), 'span'), undefined);
+    identity.value++;
+    await nextTick();
+    assert.equal(find(root, 'details').props.open, true, 'new source identity receives its automatic initial state');
+    await waitFor(() => find(find(root, 'code'), 'span'));
+    assert.equal(text(find(root, 'code')), short);
     props.value = { source: 'const late = 1;', language: 'ts', active: true };
     await nextTick();
     mounted.unmount();
@@ -297,14 +351,13 @@ test('runtime modules are resolved from catalog paths instead of a second exampl
   for (const example of examples) assert.doesNotMatch(runtime, new RegExp(example.id, 'u'));
 });
 
-test('preview is primary and relevant code stays collapsed by default', async () => {
+test('preview is primary and example files use independent automatic code blocks', async () => {
   const app = await read('src/components/ExamplePage.vue');
   const previewIndex = app.indexOf('class="docs-preview"');
-  const codeIndex = app.indexOf('class="docs-code-disclosure"');
+  const codeIndex = app.indexOf('class="docs-code-stack"');
 
   assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
-  assert.match(app, /<details class="docs-code-disclosure"[^>]*>/u);
-  assert.doesNotMatch(app, /<details class="docs-code-disclosure"\s+open/u);
+  assert.match(app, /<CodeBlock[^>]*section\.path[^>]*\/>/u);
 });
 
 test('Vue readers have a complete introduction and representative component destinations', () => {
@@ -575,8 +628,8 @@ test('every shipped route renders and all internal page links resolve', async ()
       }
       if (route.kind === 'example') {
         assert.match(html, /class="docs-preview/u);
-        assert.match(html, /<details class="docs-code-disclosure">/u);
-        const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
+        assert.match(html, /<details class="docs-code-disclosure"[^>]*>/u);
+        const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('class="docs-code-stack"'));
         const initialStates = {
           'vue-tabular-sortable-data-grid': [/Sortable project members/u, /Search members/u, /evaluates the query/u],
           'vue-tabular-page-and-retry': [/Page 1 of 2/u, /Paged project members/u, /Simulate failed reload/u, /last accepted rows/u],
@@ -675,7 +728,7 @@ test('every shipped route renders and all internal page links resolve', async ()
       } else if (route.kind === 'component') {
         const subjectExamples = examples.filter((example) => example.host === route.host && example.subject === route.subject);
         assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, subjectExamples.length, route.path);
-        assert.equal([...html.matchAll(/<details class="docs-code-disclosure">/gu)].length, subjectExamples.length, route.path);
+        assert.equal([...html.matchAll(/<details class="docs-code-disclosure"[^>]*>/gu)].length, subjectExamples.reduce((count, example) => count + example.code.length, 0), route.path);
         assert.equal([...html.matchAll(/>Reset example<\/button>/gu)].length, subjectExamples.length, route.path);
         for (const example of subjectExamples) assert.ok(html.includes(`id="${example.id}-preview"`));
         const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id);

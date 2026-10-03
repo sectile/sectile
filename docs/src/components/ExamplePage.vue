@@ -8,12 +8,7 @@ import CodeBlock from './CodeBlock.vue';
 const props = defineProps<{ example: ExampleDefinition; embedded?: boolean }>();
 const runtime = computed(() => runtimeFor(props.example));
 const generation = ref(0);
-const codeOpen = ref(false);
 const accessibilityComponent = computed(() => components.find(component => component.subject === props.example.subject));
-
-function toggleCode(event: Event): void {
-  codeOpen.value = (event.currentTarget as HTMLDetailsElement).open;
-}
 </script>
 
 <template>
@@ -35,11 +30,8 @@ function toggleCode(event: Event): void {
       </div>
     </div>
     <p class="docs-preview-note">{{ example.kind === 'styling' ? 'The source includes the styling used in this preview.' : 'Preview styling is supplied by the documentation. The source below focuses on behavior.' }}</p>
-    <details class="docs-code-disclosure" @toggle="toggleCode">
-      <summary>Relevant code</summary>
-      <div class="docs-code-stack">
-        <CodeBlock v-for="section in runtime.code" :key="section.label" :label="section.label" :source="section.source" :language="section.language" :active="codeOpen" />
-      </div>
-    </details>
+    <div class="docs-code-stack">
+      <CodeBlock v-for="section in runtime.code" :key="`${example.id}:${section.path}`" :label="section.label" :source="section.source" :language="section.language" />
+    </div>
   </section>
 </template>

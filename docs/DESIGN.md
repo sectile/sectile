@@ -211,7 +211,7 @@ Buttons use black with white text for primary actions and white with a control b
 
 Current sidebar links use neutral wash and black text; hover uses muted paper and ink. Environment navigation adds a black underline. Tags use neutral pill surfaces. Menus and popovers use white panels with inset items; selected and pressed choices use neutral wash.
 
-Gallery cards contain static representative thumbnails with calculated inner corners and aligned metadata. Component pages pair focused runnable previews with initially collapsed source. Preview notes identify the styling owner; reset remounts the local preview. Checkbox rows leave the perimeter on the 20px square and center a block SVG indicator.
+Gallery cards contain static representative thumbnails with calculated inner corners and aligned metadata. Component pages pair focused runnable previews with adjacent source. Each source block starts expanded at up to 18 logical lines and 100 characters per line; longer blocks start collapsed. The shared source-based policy preserves SSR/client agreement, readers can toggle blocks independently, and copy remains available for the complete source. Preview notes identify the styling owner; reset remounts the local preview. Checkbox rows leave the perimeter on the 20px square and center a block SVG indicator.
 
 Source blocks use the shared light Shiki palette, a thin boundary, a 44px copy control, and focusable scrolling code capped at 560px. Mobile source uses 16px padding and 12px text. Copy and highlighting failures retain readable source and status feedback. Sidecar specimens describe appearance; their markup does not implement the library's interaction semantics.
 

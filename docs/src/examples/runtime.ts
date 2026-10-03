@@ -2,6 +2,7 @@ import { defineAsyncComponent, h, type Component } from 'vue';
 import type { ExampleDefinition } from './catalog.js';
 
 export interface ExampleCodeSection {
+  readonly path: string;
   readonly label: string;
   readonly language: 'vue' | 'ts';
   readonly source: string;
@@ -36,7 +37,7 @@ export function runtimeFor(example: ExampleDefinition): ExampleRuntime {
   const code = example.code.map((section) => {
     const source = sources[section.path];
     if (source === undefined) throw new TypeError(`Missing example source: ${section.path}`);
-    return { label: section.label, language: section.language, source };
+    return { path: section.path, label: section.label, language: section.language, source };
   });
 
   return { preview, code };
