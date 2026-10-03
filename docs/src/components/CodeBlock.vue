@@ -52,7 +52,7 @@ async function copy(): Promise<void> {
     <details class="docs-code-disclosure" :open="codeOpen" @toggle="toggleCode">
       <summary>
         <svg class="docs-code-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="m4 2 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
-        <span class="docs-code-heading"><span class="docs-code-label">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></span>
+        <span class="docs-code-heading"><span class="docs-code-label" :title="label ?? 'Code'">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></span>
         <button class="docs-code-copy" type="button" @click.stop="copy">Copy code</button>
       </summary>
       <pre tabindex="0" :aria-label="label ?? 'Code'" :data-language="language"><code><template v-if="tokens"><span v-for="(token, index) in tokens" :key="index" :style="{ color: token.color }">{{ token.content }}</span></template><template v-else>{{ source }}</template></code></pre>

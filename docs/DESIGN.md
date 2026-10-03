@@ -199,7 +199,7 @@ The shell uses flat surfaces without shadows. White space, thin perimeters, and 
 
 ## Shapes
 
-Panels and tab content use the surface radius (12px); buttons and single-line fields use pills; repeated items and multiline fields use the item radius (8px); checkbox squares and inline source use the small radius (6px). Controls have a 44px minimum height. Component height entries describe this minimum, not a fixed content limit.
+Panels and tab content use the surface radius (12px); buttons and single-line fields use pills; repeated items and multiline fields use the item radius (8px); checkbox squares and inline source use the small radius (6px). Standalone controls have a 44px minimum height. Controls embedded in a fixed-height toolbar derive their height from the toolbar's height and equal inset rather than growing its parent.
 
 Gallery and inset menu geometry uses a 1px border and 8px inset: the inner radius is max(0, 12 − 1 − 8), yielding 3px. The 44 × 28px switch has a 20px circular thumb, 3px inset, and 16px travel. Its outer/inner circular radii are 14px and 10px.
 
@@ -213,7 +213,7 @@ Current sidebar links use neutral wash and black text; hover uses muted paper an
 
 Gallery cards contain static representative thumbnails with calculated inner corners and aligned metadata. Component pages pair focused runnable previews with adjacent source. Each source block starts expanded at up to 18 logical lines and 100 characters per line; longer blocks start collapsed. The shared source-based policy preserves SSR/client agreement, readers can toggle blocks independently, and copy remains available for the complete source. The Styling guide explains source and preview styling ownership; reset remounts the local preview. Checkbox rows leave the perimeter on the 20px square and center a block SVG indicator.
 
-Source blocks use the shared light Shiki palette and a thin boundary. One compact header combines the source label, native disclosure, line count, and independent copy control with a 44px minimum target height. The header uses equal 8px padding on all four sides and centers its contents vertically in normal flex layout. Long labels wrap beside copy without overlapping it. Only expanded code has a header divider. Focusable scrolling code is capped at 560px. Mobile source uses 16px padding and 12px text. Copy and highlighting failures retain readable source and status feedback. Sidecar specimens describe appearance; their markup does not implement the library's interaction semantics.
+Source blocks use the shared light Shiki palette and a thin boundary. One fixed 44px header combines the source label, native disclosure, line count, and independent copy control. Equal 8px insets derive the content and copy height: 44 − 2 × 8 = 28px. Both text and copy center within that same content row. Long labels truncate with their full label retained in text and a title; children do not grow the header. Only expanded code has a non-sizing header divider. Focusable scrolling code is capped at 560px. Mobile source uses 16px padding and 12px text. Copy and highlighting failures retain readable source and status feedback. Sidecar specimens describe appearance; their markup does not implement the library's interaction semantics.
 
 ## Do's and Don'ts
 

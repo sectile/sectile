@@ -21,6 +21,9 @@
   --docs-item-radius: 8px;
   --docs-small-radius: 6px;
   --docs-control-height: 44px;
+  --docs-code-header-height: 44px;
+  --docs-code-header-inset: var(--docs-space-2);
+  --docs-code-header-content-height: calc(var(--docs-code-header-height) - 2 * var(--docs-code-header-inset));
   --docs-checkbox-size: 20px;
   --docs-range-height: 8px;
   --docs-slider-thumb: 20px;
