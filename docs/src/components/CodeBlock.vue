@@ -3,6 +3,8 @@ import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from 'vue
 import type { CodeLanguage, CodeToken } from '../code-highlighting.js';
 import { codePresentation } from '../code-disclosure.js';
 import CopyButton from './CopyButton.vue';
+import DocsDisclosure from './DocsDisclosure.vue';
+import DocsNotice from './DocsNotice.vue';
 
 const props = withDefaults(defineProps<{ source: string; language: CodeLanguage; label?: string; active?: boolean }>(), { active: true });
 const source = computed(() => props.source.trim());
@@ -34,49 +36,21 @@ onMounted(() => {
   }, { immediate: true });
 });
 
-function toggleCode(event: Event): void {
-  codeOpen.value = (event.currentTarget as HTMLDetailsElement).open;
-}
 </script>
 
 <template>
   <div class="docs-code-section">
-    <details class="docs-code-disclosure" :open="codeOpen" @toggle="toggleCode">
-      <summary>
-        <svg class="docs-code-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="m4 2 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
-        <span class="docs-code-heading"><span class="docs-code-label" :title="label ?? 'Code'">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></span>
-        <CopyButton class="docs-code-copy" :source="source" @copied="message = ''" @error="message = $event" />
-      </summary>
+    <DocsDisclosure v-model="codeOpen" class="docs-code-disclosure">
+      <template #label><span class="docs-code-label" :title="label ?? 'Code'">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></template>
+      <template #actions><CopyButton class="docs-code-copy" :source="source" @copied="message = ''" @error="message = $event" /></template>
       <pre tabindex="0" :aria-label="label ?? 'Code'" :data-language="language"><code><template v-if="tokens"><span v-for="(token, index) in tokens" :key="index" :style="{ color: token.color }">{{ token.content }}</span></template><template v-else>{{ source }}</template></code></pre>
-    </details>
-    <p v-if="highlightingFailed" class="docs-code-message" role="status">Syntax highlighting unavailable. The source is still readable and can be copied.</p>
-    <p v-if="message" class="docs-code-message" role="status">{{ message }}</p>
+    </DocsDisclosure>
+    <DocsNotice v-if="highlightingFailed" class="docs-code-message" live>Syntax highlighting unavailable. The source is still readable and can be copied.</DocsNotice>
+    <DocsNotice v-if="message" class="docs-code-message" live>{{ message }}</DocsNotice>
   </div>
 </template>
 
 <style scoped>
-.docs-code-disclosure > summary {
-  display: flex;
-  align-items: center;
-  gap: var(--docs-space-2);
-  height: var(--docs-code-header-height);
-  padding: var(--docs-code-header-inset);
-  font-size: var(--docs-font-size-label);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.docs-code-disclosure > summary::-webkit-details-marker { display: none; }
-.docs-code-chevron { flex: none; }
-.docs-code-disclosure[open] .docs-code-chevron { transform: rotate(90deg); }
-.docs-code-heading {
-  flex: 1;
-  min-width: 0;
-  height: var(--docs-code-header-content-height);
-  display: flex;
-  align-items: center;
-  gap: var(--docs-space-3);
-}
 .docs-code-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .docs-code-disclosure__hint {
   min-width: 0;
@@ -86,10 +60,6 @@ function toggleCode(event: Event): void {
   color: var(--docs-code-muted);
   font-size: var(--docs-font-size-caption);
   font-weight: 400;
-}
-
-.docs-code-disclosure[open] > summary {
-  box-shadow: inset 0 calc(-1 * var(--docs-border-width)) var(--docs-code-border);
 }
 
 .docs-code-section {
@@ -102,7 +72,7 @@ function toggleCode(event: Event): void {
 }
 
 .docs-code-copy {
-  --docs-button-height: var(--docs-code-header-content-height);
+  --docs-button-height: var(--docs-disclosure-content-height);
   --docs-button-padding: var(--docs-space-2);
   --docs-button-font-size: var(--docs-font-size-caption);
   --docs-copy-width: calc(var(--docs-space-8) + var(--docs-space-6));
@@ -145,7 +115,7 @@ function toggleCode(event: Event): void {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .docs-code-disclosure[open] pre {
+  .docs-code-disclosure[data-state="open"] pre {
     animation: docs-code-reveal var(--docs-motion-reveal) var(--docs-ease-out);
   }
   @keyframes docs-code-reveal {

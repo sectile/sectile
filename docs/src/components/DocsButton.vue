@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { shallowRef } from 'vue';
+import { Primitive, type PrimitiveAs } from '@sectile/vue/primitive';
 
 withDefaults(defineProps<{
-  href?: string;
+  as?: PrimitiveAs;
+  asChild?: boolean;
   variant?: 'primary' | 'secondary' | 'quiet';
-}>(), { variant: 'secondary' });
+}>(), { variant: 'secondary', as: 'button', asChild: false });
 
-const element = ref<HTMLElement>();
-defineExpose({ focus: (options?: FocusOptions) => element.value?.focus(options) });
+const element = shallowRef<HTMLElement | null>(null);
+function setElement(value: unknown): void { element.value = value as HTMLElement | null; }
+defineExpose({ element, focus: (options?: FocusOptions) => element.value?.focus(options) });
 </script>
 
 <template>
-  <component :is="href ? 'a' : 'button'" ref="element" :href="href" :type="href ? undefined : 'button'" class="docs-button" :class="`docs-button--${variant}`"><slot /></component>
+  <Primitive :as="as" :as-child="asChild" :element-ref="setElement" :type="as === 'button' && !asChild ? 'button' : undefined" class="docs-button" :class="`docs-button--${variant}`"><slot /></Primitive>
 </template>
 
 <style scoped>

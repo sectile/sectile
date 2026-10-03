@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import DocsRouteLink from './DocsRouteLink.vue';
 import { computed, ref } from 'vue';
 import { componentPath, components, type ExampleDefinition } from '../examples/catalog.js';
-import { routeHref } from '../router.js';
 import { runtimeFor } from '../examples/runtime.js';
 import CodeBlock from './CodeBlock.vue';
 import DocsButton from './DocsButton.vue';
+import DocsPreview from './DocsPreview.vue';
+import DocsPageHeader from './DocsPageHeader.vue';
 
 const props = defineProps<{ example: ExampleDefinition; embedded?: boolean }>();
 const runtime = computed(() => runtimeFor(props.example));
@@ -13,11 +15,9 @@ const accessibilityComponent = computed(() => components.find(component => compo
 </script>
 
 <template>
-  <h2 v-if="embedded" :id="`${example.id}-title`" class="docs-section-heading">{{ example.title }}</h2>
-  <h1 v-else>{{ example.title }}</h1>
-  <p class="docs-page__lede">{{ example.description }}</p>
-  <p v-if="!embedded && example.host === 'vue' && accessibilityComponent"><a :href="`${routeHref(componentPath(example.subject))}#accessibility-${accessibilityComponent.slug}`">Keyboard interaction and accessibility</a></p>
-  <p v-else-if="!embedded && example.host === 'vue' && example.area !== 'components'"><a :href="routeHref('/vue/' + example.area) + '#accessibility'">Keyboard interaction and accessibility</a></p>
+  <DocsPageHeader :title="example.title" :description="example.description" :level="embedded ? 2 : 1" :heading-id="embedded ? `${example.id}-title` : undefined" />
+  <p v-if="!embedded && example.host === 'vue' && accessibilityComponent"><DocsRouteLink :to="`${componentPath(example.subject)}#accessibility-${accessibilityComponent.slug}`">Keyboard interaction and accessibility</DocsRouteLink></p>
+  <p v-else-if="!embedded && example.host === 'vue' && example.area !== 'components'"><DocsRouteLink :to="'/vue/' + example.area + '#accessibility'">Keyboard interaction and accessibility</DocsRouteLink></p>
   <section class="docs-example-detail" :aria-labelledby="`${example.id}-preview`">
     <div class="docs-example-detail__heading">
       <component :is="embedded ? 'h3' : 'h2'" :id="`${example.id}-preview`">Preview</component>
@@ -25,11 +25,7 @@ const accessibilityComponent = computed(() => components.find(component => compo
         <DocsButton variant="quiet" @click="generation++">Reset example</DocsButton>
       </div>
     </div>
-    <div class="docs-preview" :class="`docs-preview--${example.fixture}`">
-      <div class="docs-preview-layout">
-        <component :is="runtime.preview" :key="`${example.id}-${generation}`" />
-      </div>
-    </div>
+    <DocsPreview :fixture="example.fixture"><component :is="runtime.preview" :key="`${example.id}-${generation}`" /></DocsPreview>
     <div class="docs-code-stack">
       <CodeBlock v-for="section in runtime.code" :key="`${example.id}:${section.path}`" :label="section.label" :source="section.source" :language="section.language" />
     </div>

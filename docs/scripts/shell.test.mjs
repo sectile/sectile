@@ -72,7 +72,14 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   const preview = await read('src/styles/preview.css');
   assert.match(preview, /\[data-highlighted\]/u);
   assert.doesNotMatch(preview, /\[data-highlighted="true"\]/u, 'highlight is a presence attribute, not a string boolean');
-  const styleSources = [tokens, shell, preview, await read('src/styles/accessibility.css'), await read('src/styles/base.css'), ...await componentStyles()];
+  for (const file of ['src/App.vue', ...(await readdir(new URL('../src/components/', import.meta.url))).filter(file => file.endsWith('.vue')).map(file => `src/components/${file}`)]) {
+    assert.doesNotMatch(await read(file), /<(?:button|a|details|summary)\b/u, `${file}: documentation controls compose shared Sectile-backed UI`);
+  }
+  assert.match(await read('src/components/DocsButton.vue'), /from '@sectile\/vue\/primitive'/u);
+  assert.match(await read('src/components/DocsLink.vue'), /from '@sectile\/vue\/primitive'/u);
+  assert.match(await read('src/components/DocsDisclosure.vue'), /from '@sectile\/vue\/disclosure'/u);
+  assert.doesNotMatch(shell, /\.docs-(?:button|sidebar|breadcrumb|example-card|disclosure)\b/u, 'shared UI styles belong to their components, not the page shell');
+  const styleSources = [tokens, shell, preview, await read('src/styles/base.css'), ...await componentStyles()];
   const declarations = new Set(styleSources.flatMap(source => [...source.matchAll(/(--docs-[\w-]+)\s*:/gu)].map(([, name]) => name)));
   for (const source of styleSources) {
     for (const [, name] of source.matchAll(/var\((--docs-[\w-]+)/gu)) {
@@ -183,10 +190,10 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
       h(CodeBlock, { source: short, language: 'ts', label: 'Template' }),
       h(CodeBlock, { source: long, language: 'ts', label: 'Data' }),
     ]) }));
-    const disclosures = [...mixed.matchAll(/<details\b([^>]*)>/gu)];
+    const disclosures = [...mixed.matchAll(/<div\b([^>]*class="[^"]*\bdocs-code-disclosure\b[^"]*"[^>]*)>/gu)];
     assert.equal(disclosures.length, 2);
-    assert.match(disclosures[0][1], /\bopen\b/u);
-    assert.doesNotMatch(disclosures[1][1], /\bopen\b/u);
+    assert.match(disclosures[0][1], /data-state="open"/u);
+    assert.match(disclosures[1][1], /data-state="closed"/u);
     assert.ok(mixed.includes('Hide code · 1 line'));
     assert.ok(mixed.includes('Show code · 19 lines'));
 
@@ -205,6 +212,9 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
       .replaceAll('"../code-disclosure.js"', JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href));
       for (const [, quote, dependency] of clientCode.matchAll(/from (["'])(\.\/[^"']+\.vue)\1/gu)) {
         clientCode = clientCode.replaceAll(`${quote}${dependency}${quote}`, JSON.stringify(await clientModule(dependency.slice(2))));
+      }
+      for (const [, quote, dependency] of clientCode.matchAll(/from (["'])(@sectile\/vue\/[^"']+)\1/gu)) {
+        clientCode = clientCode.replaceAll(`${quote}${dependency}${quote}`, JSON.stringify(import.meta.resolve(dependency)));
       }
       const url = `data:text/javascript;base64,${Buffer.from(clientCode).toString('base64')}`;
       clientModules.set(file, url);
@@ -233,6 +243,10 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     });
     const root = node('root');
     const find = (parent, type) => parent.type === type ? parent : parent.children.map(child => find(child, type)).find(Boolean);
+    const findWhere = (parent, predicate) => predicate(parent) ? parent : parent.children.map(child => findWhere(child, predicate)).find(Boolean);
+    const copyButton = () => findWhere(root, node => String(node.props.class ?? '').split(/\s/u).includes('docs-copy-button'));
+    const disclosure = () => findWhere(root, node => String(node.props.class ?? '').split(/\s/u).includes('docs-code-disclosure'));
+    const disclosureTrigger = () => findWhere(root, node => node.type === 'button' && node.props['aria-expanded'] !== undefined);
     const text = parent => (parent.type === '#comment' ? '' : parent.text) + parent.children.map(text).join('');
     const waitFor = async predicate => {
       const deadline = Date.now() + 10_000;
@@ -261,39 +275,39 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { async writeText(value) { copied = value; } } } });
     let copyPropagationStopped = false;
     const copyEvent = { stopPropagation() { copyPropagationStopped = true; } };
-    await find(root, 'button').props.onClick(copyEvent);
+    await copyButton().props.onClick(copyEvent);
     await nextTick();
     assert.equal(copied, '.new { color: red; }');
-    assert.equal(copyPropagationStopped, true, 'copy is independent of the summary click');
-    assert.equal(text(find(root, 'button')), 'Copied');
+    assert.equal(copyPropagationStopped, true, 'copy is independent of the disclosure action');
+    assert.equal(text(copyButton()), 'Copied');
     assert.equal(find(root, 'p'), undefined, 'successful copy feedback stays in the button');
     navigator.clipboard.writeText = async () => { throw new Error('Permission denied'); };
-    await find(root, 'button').props.onClick(copyEvent);
+    await copyButton().props.onClick(copyEvent);
     await nextTick();
     assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
-    assert.equal(text(find(root, 'button')), 'Copy failed');
+    assert.equal(text(copyButton()), 'Copy failed');
 
     props.value = { source: long, language: 'ts' };
     identity.value++;
     await nextTick();
-    assert.equal(find(root, 'details').props.open, false, 'client agrees with SSR for long source');
+    assert.equal(disclosure().props['data-state'], 'closed', 'client agrees with SSR for long source');
     assert.equal(find(find(root, 'code'), 'span'), undefined, 'closed source remains plain');
     navigator.clipboard.writeText = async value => { copied = value; };
-    await find(root, 'button').props.onClick(copyEvent);
+    await copyButton().props.onClick(copyEvent);
     assert.equal(copied, long, 'header copy includes all collapsed lines');
-    find(root, 'details').props.onToggle({ currentTarget: { open: true } });
+    disclosureTrigger().props.onClick({ defaultPrevented: false });
     await waitFor(() => find(find(root, 'code'), 'span'));
-    assert.equal(find(root, 'details').props.open, true);
+    assert.equal(disclosure().props['data-state'], 'open');
     assert.equal(text(find(root, 'code')), long);
-    find(root, 'details').props.onToggle({ currentTarget: { open: false } });
+    disclosureTrigger().props.onClick({ defaultPrevented: false });
     await nextTick();
     props.value = { ...props.value, source: short };
     await nextTick();
-    assert.equal(find(root, 'details').props.open, false, 'reader choice persists through source updates');
+    assert.equal(disclosure().props['data-state'], 'closed', 'reader choice persists through source updates');
     assert.equal(find(find(root, 'code'), 'span'), undefined);
     identity.value++;
     await nextTick();
-    assert.equal(find(root, 'details').props.open, true, 'new source identity receives its automatic initial state');
+    assert.equal(disclosure().props['data-state'], 'open', 'new source identity receives its automatic initial state');
     await waitFor(() => find(find(root, 'code'), 'span'));
     assert.equal(text(find(root, 'code')), short);
     props.value = { source: 'const late = 1;', language: 'ts', active: true };
@@ -311,26 +325,26 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
       source: copySource.value, onCopied: () => outcomes.push('copied'), onError: error => outcomes.push(error),
     }) });
     mounted.mount(root);
-    assert.equal(text(find(root, 'button')), 'Copy code', 'copy defaults need no caller-authored feedback');
+    assert.equal(text(copyButton()), 'Copy code', 'copy defaults need no caller-authored feedback');
     navigator.clipboard.writeText = async value => { copied = value; };
-    await find(root, 'button').props.onClick(copyEvent);
+    await copyButton().props.onClick(copyEvent);
     await nextTick();
     assert.equal(copied, 'original');
-    assert.equal(text(find(root, 'button')), 'Copied');
+    assert.equal(text(copyButton()), 'Copied');
     copySource.value = 'updated';
     await nextTick();
-    assert.equal(text(find(root, 'button')), 'Copy code', 'new source resets the default feedback');
+    assert.equal(text(copyButton()), 'Copy code', 'new source resets the default feedback');
     let resolveCopy;
     navigator.clipboard.writeText = () => new Promise(resolve => { resolveCopy = resolve; });
-    const pendingCopy = find(root, 'button').props.onClick(copyEvent);
+    const pendingCopy = copyButton().props.onClick(copyEvent);
     copySource.value = 'replacement';
     await nextTick();
     resolveCopy();
     await pendingCopy;
     await nextTick();
-    assert.equal(text(find(root, 'button')), 'Copy code', 'stale success cannot label a new source as copied');
+    assert.equal(text(copyButton()), 'Copy code', 'stale success cannot label a new source as copied');
     assert.deepEqual(outcomes, ['copied']);
-    const pendingUnmountCopy = find(root, 'button').props.onClick(copyEvent);
+    const pendingUnmountCopy = copyButton().props.onClick(copyEvent);
     mounted.unmount();
     mounted = undefined;
     const copyUnmountMutations = mutations;
@@ -339,6 +353,23 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     await nextTick();
     assert.equal(mutations, copyUnmountMutations);
     assert.deepEqual(outcomes, ['copied'], 'unmounted copy emits no completion');
+
+    const { default: ClientDisclosure } = await import(await clientModule('DocsDisclosure.vue'));
+    mounted = host.createApp({ render: () => h(ClientDisclosure, {}, {
+      label: () => 'Disclosure witness', default: () => h('p', 'Retained content'),
+    }) });
+    mounted.mount(root);
+    assert.equal(disclosureTrigger().props['aria-expanded'], 'false');
+    const targetID = disclosureTrigger().props['aria-controls'];
+    assert.ok(findWhere(root, node => node.props.id === targetID));
+    disclosureTrigger().props.onClick({ defaultPrevented: false });
+    await nextTick();
+    assert.equal(disclosureTrigger().props['aria-expanded'], 'true', 'uncontrolled disclosure delegates changes to Sectile');
+    assert.equal(findWhere(root, node => node.props.id === targetID).props['aria-hidden'] ?? undefined, undefined);
+    disclosureTrigger().props.onClick({ defaultPrevented: false });
+    await nextTick();
+    assert.equal(disclosureTrigger().props['aria-expanded'], 'false');
+    assert.equal(findWhere(root, node => node.props.id === targetID).props['aria-hidden'], 'true');
   } finally {
     mounted?.unmount();
     if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
@@ -412,7 +443,7 @@ test('runtime modules are resolved from catalog paths instead of a second exampl
 
 test('preview is primary and example files use independent automatic code blocks', async () => {
   const app = await read('src/components/ExamplePage.vue');
-  const previewIndex = app.indexOf('class="docs-preview"');
+  const previewIndex = app.indexOf('<DocsPreview');
   const codeIndex = app.indexOf('class="docs-code-stack"');
 
   assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
@@ -671,7 +702,8 @@ test('every shipped route renders and all internal page links resolve', async ()
         assert.ok(pageIDs.has(`accessibility-${component.slug}`), route.path);
         assert.ok(html.includes('Focus behavior') && html.includes('Application responsibilities'), route.path);
         for (const [keys, action] of reference.keyboard) {
-          assert.ok(html.includes(`<kbd>${keys}</kbd>`), `${route.path}: ${keys}`);
+          const renderedKeys = [...html.matchAll(/<kbd\b[^>]*>([\s\S]*?)<\/kbd>/gu)].map(([, content]) => content.replace(/<!--[\s\S]*?-->/gu, ''));
+          assert.ok(renderedKeys.includes(keys), `${route.path}: ${keys}`);
           const escapedAction = action.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
           assert.ok(html.includes(escapedAction), `${route.path}: ${action}`);
         }
@@ -687,7 +719,7 @@ test('every shipped route renders and all internal page links resolve', async ()
       }
       if (route.kind === 'example') {
         assert.match(html, /class="docs-preview/u);
-        assert.match(html, /<details class="docs-code-disclosure"[^>]*>/u);
+        assert.match(html, /class="[^"]*\bdocs-code-disclosure\b/u);
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('class="docs-code-stack"'));
         const initialStates = {
           'vue-tabular-sortable-data-grid': [/Sortable project members/u, /Search members/u, /evaluates the query/u],
@@ -787,7 +819,7 @@ test('every shipped route renders and all internal page links resolve', async ()
       } else if (route.kind === 'component') {
         const subjectExamples = examples.filter((example) => example.host === route.host && example.subject === route.subject);
         assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, subjectExamples.length, route.path);
-        assert.equal([...html.matchAll(/<details class="docs-code-disclosure"[^>]*>/gu)].length, subjectExamples.reduce((count, example) => count + example.code.length, 0), route.path);
+        assert.equal([...html.matchAll(/<div\b[^>]*class="[^"]*\bdocs-code-disclosure\b[^"]*"[^>]*>/gu)].length, subjectExamples.reduce((count, example) => count + example.code.length, 0), route.path);
         assert.equal(countButtons(html, 'Reset example'), subjectExamples.length, route.path);
         for (const example of subjectExamples) assert.ok(html.includes(`id="${example.id}-preview"`));
         const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id);
