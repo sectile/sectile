@@ -13,7 +13,7 @@ import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIn
 import { createDenseTrackGridLayout, trackGridLayoutStrategy, type GridTrackMeasurement, type TrackGridLayoutState, type TrackGridMutation } from '@sectile/virtual/track-grid-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
-import { createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
+import { createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualGridProps<Value = unknown, ID extends StableID = StableID>
   extends VirtualCollectionBaseProps<Value, ID> {
@@ -249,6 +249,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
+      style: virtualCollectionRootStyle(attrs),
       ref: root,
       defaultState: activeState.value,
       strategy: trackGridLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,

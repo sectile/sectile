@@ -15,7 +15,7 @@ import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/ex
 import { createMasonryLayout, masonryLayoutStrategy, type MasonryLayoutState, type MasonryMeasurement, type MasonryMutation, type MasonryPlacement, type MasonryPlacementPolicy } from '@sectile/virtual/masonry-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
-import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
+import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualMasonryProps<Value = unknown, ID extends StableID = StableID>
   extends VirtualCollectionBaseProps<Value, ID> {
@@ -265,6 +265,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
+      style: virtualCollectionRootStyle(attrs),
       ref: root,
       defaultState: activeState.value,
       strategy: masonryLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,

@@ -19,6 +19,7 @@ import {
   prepareVirtualCollection,
   renderHighLevelItems,
   updatePreparedVirtualCollection,
+  virtualCollectionRootStyle,
   type PreparedVirtualCollection,
   type VirtualCollectionBaseProps,
   type VirtualCollectionExpose,
@@ -378,9 +379,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         measure: measure as unknown as VirtualizerRootProps['measure'],
       }),
       as: props.as,
-      style: attrs['scrollport'] === undefined || attrs['scrollport'] === 'root'
-        ? [{ overflow: 'auto' }, attrs['style']]
-        : attrs['style'],
+      style: virtualCollectionRootStyle(attrs),
       'data-virtual-layout': 'virtual-list',
       'data-phase': phase(),
       onStateChange: (value: object) => {

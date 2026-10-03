@@ -41,6 +41,14 @@ import {
   type VirtualizerScrollportTarget,
 } from './virtual-core.js';
 
+const rootScrollportStyle = Object.freeze({ overflow: 'auto' });
+
+export function virtualCollectionRootStyle(attrs: Readonly<Record<string, unknown>>): unknown {
+  return attrs['scrollport'] === undefined || attrs['scrollport'] === 'root'
+    ? [rootScrollportStyle, attrs['style']]
+    : attrs['style'];
+}
+
 export type VirtualCollectionIDResolver<
   Value,
   ID extends StableID = StableID,

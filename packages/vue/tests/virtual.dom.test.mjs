@@ -38,6 +38,7 @@ Object.assign(globalThis, {
 });
 
 const { createApp, effectScope, h, nextTick, ref, shallowRef } = await import('vue');
+const { renderToString } = await import('@vue/server-renderer');
 const { VirtualGrid } = await import('../.verification-dist/virtual/virtual-grid.js');
 const { VirtualList } = await import('../.verification-dist/virtual-list.js');
 const { VirtualMasonry } = await import('../.verification-dist/virtual/virtual-masonry.js');
@@ -125,7 +126,7 @@ test('VirtualList public expose preserves scrollport and surface refs', async ()
   }
 });
 
-test('high-level virtual collections forward physical scrollport targets without nested List scrolling', async () => {
+test('high-level virtual collections forward physical scrollport targets without nested scrolling', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
   Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get() { return 80; } });
@@ -187,7 +188,7 @@ test('high-level virtual collections forward physical scrollport targets without
     for (const exposed of [list, grid, masonry, spatial]) {
       assert.equal(exposed.value.scrollport.value, document);
     }
-    assert.equal(roots[0].style.overflow, '');
+    for (const root of roots) assert.equal(root.style.overflow, '');
     assert.equal(roots[0].style.minHeight, '1px');
 
     target.value = external;
@@ -195,7 +196,7 @@ test('high-level virtual collections forward physical scrollport targets without
     for (const exposed of [list, grid, masonry, spatial]) {
       assert.equal(exposed.value.scrollport.value, external);
     }
-    assert.equal(roots[0].style.overflow, '');
+    for (const root of roots) assert.equal(root.style.overflow, '');
 
     target.value = null;
     await settle();
@@ -212,7 +213,7 @@ test('high-level virtual collections forward physical scrollport targets without
       assert.equal(host.querySelectorAll('[data-virtual-layout][data-part="root"]')[index], roots[index]);
       assert.equal(roots[index].querySelector('[data-part="surface"]'), surfaces[index]);
     }
-    assert.equal(roots[0].style.overflow, 'auto');
+    for (const root of roots) assert.equal(root.style.overflow, 'auto');
     assert.equal(roots[0].style.minHeight, '1px');
   } finally {
     app.unmount();
@@ -222,6 +223,35 @@ test('high-level virtual collections forward physical scrollport targets without
     else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
     if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
     else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
+test('high-level virtual collections share SSR scrollport defaults and caller style precedence', async () => {
+  const components = [VirtualList, VirtualGrid, VirtualMasonry, VirtualSpatial];
+  const targets = [undefined, 'root', 'document', document, document.createElement('div'), null];
+  const styles = [undefined, { overflow: 'hidden', height: '100px' },
+    'overflow: hidden; height: 100px', [{ overflow: 'scroll' }, { overflow: 'hidden', height: '100px' }]];
+  for (const component of components) {
+    for (const target of targets) {
+      for (const style of styles) {
+        const html = await renderToString(h(component, {
+          items: [{ id: 'item' }], getID: (item) => item.id,
+          sizePolicy: { kind: 'fixed', extent: 20 }, lanePolicy: { kind: 'fixed', count: 1 },
+          initialViewport: { x: 0, y: 0, width: 120, height: 80 },
+          getRect: () => ({ x: 0, y: 0, width: 20, height: 20 }),
+          ...(component === VirtualSpatial ? { sizeOwnership: 'declared' } : {}),
+          ...(target === undefined ? {} : { scrollport: target }), style,
+        }));
+        const host = document.createElement('div');
+        host.innerHTML = html;
+        const root = host.querySelector('[data-virtual-layout][data-part="root"]');
+        const expected = style === undefined
+          ? target === undefined || target === 'root' ? 'auto' : ''
+          : 'hidden';
+        assert.equal(root.style.overflow, expected, `${component.name}: ${String(target)}`);
+        assert.equal(root.style.height, style === undefined ? '' : '100px');
+      }
+    }
   }
 });
 
