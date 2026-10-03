@@ -491,7 +491,6 @@
 .docs-example-detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--docs-space-4); font-size: var(--docs-font-size-code); }
 .docs-example-detail__actions button { min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: 0; border-radius: var(--docs-control-radius); background: transparent; color: var(--docs-text-muted); }
 .docs-example-detail__actions button:hover { background: var(--docs-bg-muted); color: var(--docs-text); }
-.docs-example-detail__actions a { color: var(--docs-accent); }
 
 .docs-example-detail__heading {
   display: flex;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { componentPath, components, examplePath, type ExampleDefinition } from '../examples/catalog.js';
-import { handleRouteClick, routeHref } from '../router.js';
+import { componentPath, components, type ExampleDefinition } from '../examples/catalog.js';
+import { routeHref } from '../router.js';
 import { runtimeFor } from '../examples/runtime.js';
 import CodeBlock from './CodeBlock.vue';
 
@@ -27,7 +27,6 @@ function toggleCode(event: Event): void {
       <component :is="embedded ? 'h3' : 'h2'" :id="`${example.id}-preview`">Preview</component>
       <div class="docs-example-detail__actions">
         <button type="button" @click="generation++">Reset example</button>
-        <a v-if="embedded" :href="routeHref(examplePath(example))" @click="handleRouteClick($event, examplePath(example))">Open separately</a>
       </div>
     </div>
     <div class="docs-preview" :class="`docs-preview--${example.fixture}`">
