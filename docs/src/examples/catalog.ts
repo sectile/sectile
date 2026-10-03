@@ -2283,6 +2283,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/chart/projected-svg/Preview.vue' }], related: [],
   },
   {
+    id: 'vue-chart-view-controls', host: 'vue', area: 'chart', subject: 'Chart',
+    slug: 'view-controls', title: 'Moving through delivery history',
+    description: 'Pan and zoom one axis with bounded view controls, inspect the visible range and reset to the initial window. An ordinary wheel keeps native scrolling.', focus: 'Axis view bounds and navigation controls',
+    kind: 'behavior', fixture: 'chart', tags: ['ChartAxisView', 'pan', 'zoom', 'reset'], sourceOwner: 'vue',
+    previewPath: './vue/chart/view-controls/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/chart/view-controls/Preview.vue' }], related: [],
+  },
+  {
     id: 'vue-form-async-availability', host: 'vue', area: 'form', subject: 'Form',
     slug: 'async-availability', title: 'Canceling an outdated availability check',
     description: 'Validate an email asynchronously, show pending feedback and cancel outdated work through the supplied AbortSignal. A local delay simulates a response without network access.', focus: 'Async validation cancellation and cleanup',

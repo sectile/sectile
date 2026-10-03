@@ -202,6 +202,28 @@ test('every shipped route renders and all internal page links resolve', async ()
       assert.equal(getEventListeners(completed.signal, 'abort').length, 0);
     }));
     const { useChart } = await server.ssrLoadModule('@sectile/vue/chart');
+    const history = useChart({
+      definition: {
+        coordinate: { kind: 'cartesian', axes: [
+          { id: 'day', orientation: 'x', scale: 'linear', field: 'day', domain: { kind: 'numeric', minimum: 1, maximum: 10 } },
+          { id: 'count', orientation: 'y', scale: 'linear', field: 'count', domain: { kind: 'numeric', minimum: 0, maximum: 30 } },
+        ] },
+        layers: [{ id: 'deliveries', kind: 'line', data: [{ id: 'first', day: 1, count: 12 }, { id: 'last', day: 10, count: 20 }], xAxis: 'day', yAxis: 'count' }],
+      },
+      viewCapabilities: [{ axisID: 'day', initial: { kind: 'continuous', minimum: 1, maximum: 5 }, minimumSpan: 1 }],
+    });
+    try {
+      const visible = () => history.snapshot.value.state.view.axes[0].visible;
+      assert.deepEqual(visible(), { kind: 'continuous', minimum: 1, maximum: 5 });
+      assert.equal(history.dispatch({ type: 'pan-axis-view', axisID: 'day', fraction: 0.5, phase: 'settled' }).ok, true);
+      assert.deepEqual(visible(), { kind: 'continuous', minimum: 3, maximum: 7 });
+      assert.equal(history.dispatch({ type: 'zoom-axis-view', axisID: 'day', factor: 100, anchor: 0.5, phase: 'settled' }).ok, true);
+      assert.ok(visible().maximum - visible().minimum >= 1);
+      assert.equal(history.dispatch({ type: 'pan-axis-view', axisID: 'day', fraction: 100, phase: 'settled' }).ok, true);
+      assert.ok(visible().maximum <= 10);
+      assert.equal(history.dispatch({ type: 'reset-axis-view', axisID: 'day', to: 'initial', phase: 'settled' }).ok, true);
+      assert.deepEqual(visible(), { kind: 'continuous', minimum: 1, maximum: 5 });
+    } finally { history.dispose(); }
     for (const [kind, batchType] of [['line', 'polyline'], ['scatter', 'point'], ['bar', 'rectangle'], ['heatmap', 'cell'], ['pie', 'arc'], ['donut', 'arc']]) {
       const radial = kind === 'pie' || kind === 'donut';
       const data = [{ id: 'mon', day: 1, count: 12 }, { id: 'tue', day: 2, count: 18 }];
@@ -359,6 +381,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-virtual-spatial-rectangles': [/Parcel 1/u, /surface-local rectangles/u],
           'vue-virtual-core-composition': [/Delivery 1/u, /Delivery 150/u, /outside the item domain/u],
           'vue-chart-projected-svg': [/Weekday deliveries/u, /<polyline/u, /Wednesday/u, /color tokens/u],
+          'vue-chart-view-controls': [/Earlier/u, /Zoom in/u, /Reset range/u, /Control\+wheel/u],
           'vue-components-grid-two-dimensional-selection': [/Selected slot: A1/u, /data-part="cell"/u],
           'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /data-expanded/u],
           'vue-components-feed-window-request': [/3 updates · Revision 0/u, /Load newer updates/u],
