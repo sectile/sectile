@@ -2283,6 +2283,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/chart/projected-svg/Preview.vue' }], related: [],
   },
   {
+    id: 'vue-form-async-availability', host: 'vue', area: 'form', subject: 'Form',
+    slug: 'async-availability', title: 'Canceling an outdated availability check',
+    description: 'Validate an email asynchronously, show pending feedback and cancel outdated work through the supplied AbortSignal. A local delay simulates a response without network access.', focus: 'Async validation cancellation and cleanup',
+    kind: 'behavior', fixture: 'form', tags: ['validate', 'AbortSignal', 'reset'], sourceOwner: 'vue',
+    previewPath: './vue/form/async-availability/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/form/async-availability/Preview.vue' }, { label: 'TypeScript · async validator', language: 'ts', path: './vue/form/async-availability/example.ts' }], related: [],
+  },
+  {
     id: 'vue-components-checkbox-default-state', host: 'vue', area: 'components',
     subject: 'Checkbox', slug: 'checkbox/default-state', title: 'Component-owned state',
     description: 'Start checked with defaultValue. The component owns later updates, and its slot exposes the current value without an application ref.', focus: 'Default value and state slot',

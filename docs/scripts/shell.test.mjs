@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
+import { getEventListeners } from 'node:events';
 import { fileURLToPath } from 'node:url';
 import { createSSRApp, nextTick, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
@@ -184,6 +185,22 @@ test('every shipped route renders and all internal page links resolve', async ()
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const { validateEmailAvailability } = await server.ssrLoadModule('/src/examples/vue/form/async-availability/example.ts');
+    const asyncContext = signal => ({ trigger: 'input', intent: 'interaction', changedFieldId: 'email', signal });
+    const canceled = new AbortController();
+    const pending = validateEmailAvailability({ email: 'reserved@example.com' }, asyncContext(canceled.signal));
+    assert.equal(getEventListeners(canceled.signal, 'abort').length, 1);
+    const rejection = assert.rejects(pending, { name: 'AbortError' });
+    canceled.abort();
+    await rejection;
+    assert.equal(getEventListeners(canceled.signal, 'abort').length, 0);
+    await assert.rejects(validateEmailAvailability({ email: 'user@example.com' }, asyncContext(canceled.signal)), { name: 'AbortError' });
+    await Promise.all(['reserved@example.com', 'user@example.com'].map(async email => {
+      const completed = new AbortController();
+      const result = await validateEmailAvailability({ email }, asyncContext(completed.signal));
+      assert.equal(result.issues.length, email.startsWith('reserved') ? 1 : 0);
+      assert.equal(getEventListeners(completed.signal, 'abort').length, 0);
+    }));
     const { useChart } = await server.ssrLoadModule('@sectile/vue/chart');
     for (const [kind, batchType] of [['line', 'polyline'], ['scatter', 'point'], ['bar', 'rectangle'], ['heatmap', 'cell'], ['pie', 'arc'], ['donut', 'arc']]) {
       const radial = kind === 'pie' || kind === 'donut';
@@ -364,6 +381,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-temporal-time-field-native-time': [/Time: 09:30/u, /Collection time/u],
           'vue-temporal-date-time-field-local-date-time': [/Appointment: 2026-10-03T09:30/u],
           'vue-temporal-date-range-field-travel-dates': [/Stay: 2026-10-03 – 2026-10-07/u, /Arrival/u, /Departure/u],
+          'vue-form-async-availability': [/Available notification email/u, /Validation: idle/u, /reserved@example.com/u, /600ms/u],
           'vue-temporal-time-range-field-collection-window': [/Window: 09:00 – 12:00/u],
           'vue-components-select-disabled-options': [/Delivery: Standard/u, /aria-disabled="true"/u],
           'vue-components-combobox-search-results': [/role="combobox"/u, /Member: none/u],
