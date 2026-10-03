@@ -18,6 +18,7 @@ import {
 } from '../src/examples/catalog.ts';
 import { routes } from '../src/routes.ts';
 import { highlightCode } from '../src/code-highlighting.ts';
+import { componentAccessibility, domainAccessibility } from '../src/accessibility.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 
@@ -229,6 +230,21 @@ test('the example catalog rejects host mixing and duplicate focused routes', () 
 
   const unfocused = { ...vueExample, id: 'unfocused-example', slug: 'checkbox/unfocused', focus: '   ' };
   assert.ok(validateExampleCatalog([unfocused]).some((issue) => issue.code === 'empty-focus'));
+});
+
+test('accessibility reference covers every documented Vue component and each domain family', () => {
+  assert.deepEqual(Object.keys(componentAccessibility).sort(), components.map(component => component.subject).sort());
+  const entries = [...Object.values(componentAccessibility), ...Object.values(domainAccessibility).flat()];
+  for (const entry of entries) {
+    assert.ok(entry.semantics.length > 0);
+    assert.ok(entry.focus.trim());
+    assert.ok(entry.authoring.length > 0);
+    assert.equal(new Set(entry.keyboard.map(([keys]) => keys)).size, entry.keyboard.length, 'key rows are unambiguous');
+    for (const [keys, action] of entry.keyboard) { assert.ok(keys.trim()); assert.ok(action.trim()); }
+  }
+  assert.deepEqual(Object.keys(domainAccessibility).sort(), areas.filter(area => area.id !== 'components').map(area => area.id).sort());
+  for (const entries of Object.values(domainAccessibility)) assert.equal(new Set(entries.map(entry => entry.id)).size, entries.length);
+  assert.ok(routes.some(route => route.path === '/vue/guides/accessibility' && route.host === 'vue'));
 });
 
 test('behavior example sources stay inside their host and omit presentation styling', async () => {
@@ -499,19 +515,46 @@ test('every shipped route renders and all internal page links resolve', async ()
       table.dispose();
     }
     const paths = new Set(routes.map((route) => route.path));
+    const renderedIDs = new Map();
+    const crossPageAnchors = [];
     for (const route of routes) {
       currentPath.value = route.path;
       const html = await renderToString(createSSRApp(App));
       assert.match(html, /<h1(?:\s[^>]*)?>[^<]/u, route.path);
       assert.ok(!html.includes('Page not found'), route.path);
       const pageIDs = new Set([...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id));
+      renderedIDs.set(route.path, pageIDs);
       for (const [, target] of html.matchAll(/href="#([^"]+)"/gu)) {
         assert.ok(pageIDs.has(target), `${route.path}: unresolved section ${target}`);
       }
-      for (const [, href] of html.matchAll(/href="([^"#]+)"/gu)) {
+      for (const [, href] of html.matchAll(/href="([^"]+)"/gu)) {
+        if (href.startsWith('#')) continue;
+        if (href.startsWith('https://')) { assert.doesNotThrow(() => new URL(href)); continue; }
         assert.ok(href.startsWith('/sectile/'), `${route.path}: ${href}`);
-        const path = href.slice('/sectile'.length).replace(/\/$/u, '') || '/';
+        const [pathname, fragment] = href.split('#');
+        const path = pathname.slice('/sectile'.length).replace(/\/$/u, '') || '/';
         assert.ok(paths.has(path), `${route.path}: unresolved link ${href}`);
+        if (fragment) crossPageAnchors.push([route.path, path, fragment]);
+      }
+      if (route.kind === 'component') {
+        const component = components.find(component => component.subject === route.subject);
+        const reference = componentAccessibility[route.subject];
+        assert.ok(pageIDs.has(`accessibility-${component.slug}`), route.path);
+        assert.ok(html.includes('Focus behavior') && html.includes('Application responsibilities'), route.path);
+        for (const [keys, action] of reference.keyboard) {
+          assert.ok(html.includes(`<kbd>${keys}</kbd>`), `${route.path}: ${keys}`);
+          const escapedAction = action.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+          assert.ok(html.includes(escapedAction), `${route.path}: ${action}`);
+        }
+        if (!reference.keyboard.length) assert.ok(html.includes('no custom keyboard commands'), route.path);
+      }
+      if (route.kind === 'area' && route.host === 'vue' && route.area !== 'components') {
+        assert.ok(pageIDs.has('accessibility'));
+        for (const entry of domainAccessibility[route.area]) assert.ok(pageIDs.has(`accessibility-${entry.id}`), entry.title);
+      }
+      if (route.guide === 'accessibility') {
+        for (const id of ['names', 'keyboard', 'feedback', 'motion', 'composition', 'testing', 'component-index']) assert.ok(pageIDs.has(id), id);
+        assert.ok(html.includes('accessibility certification'));
       }
       if (route.kind === 'example') {
         assert.match(html, /class="docs-preview/u);
@@ -632,6 +675,9 @@ test('every shipped route renders and all internal page links resolve', async ()
         }
       }
       if (route.host === 'dom') assert.doesNotMatch(html, /Vue documentation/u);
+    }
+    for (const [source, target, fragment] of crossPageAnchors) {
+      assert.ok(renderedIDs.get(target)?.has(fragment), `${source}: unresolved ${target}#${fragment}`);
     }
     currentPath.value = '/missing';
     assert.match(await renderToString(createSSRApp(App)), /Page not found/u);

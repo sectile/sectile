@@ -6,6 +6,9 @@ import CodeBlock from './components/CodeBlock.vue';
 import ExampleGallery from './components/ExampleGallery.vue';
 import ExamplePage from './components/ExamplePage.vue';
 import GuidePage from './components/GuidePage.vue';
+import AccessibilityReference from './components/AccessibilityReference.vue';
+import { componentAccessibility, domainAccessibility } from './accessibility.js';
+import DomainAccessibility from './components/DomainAccessibility.vue';
 
 const menuOpen = ref(false);
 const menuButton = ref<HTMLButtonElement>();
@@ -111,6 +114,7 @@ function closeMenu(event: KeyboardEvent): void {
             </template>
             <template v-else-if="currentRoute?.kind === 'component' && currentRoute.subject">
               <h1>{{ currentRoute.subject }}</h1><p class="docs-page__lede">{{ activeComponent?.description }}</p>
+              <p><a :href="`#accessibility-${activeComponent?.slug}`">Keyboard interaction and accessibility</a></p>
               <nav v-if="subjectExamples.length > 1" class="docs-example-jumps" aria-label="Examples on this page">
                 <a v-for="example in subjectExamples" :key="example.id" :href="`#${example.id}-title`">{{ example.title }}</a>
               </nav>
@@ -126,9 +130,12 @@ function closeMenu(event: KeyboardEvent): void {
                 <h2>Interaction</h2>
                 <p v-for="paragraph in activeComponent.interaction" :key="paragraph">{{ paragraph }}</p>
               </section>
+              <AccessibilityReference v-if="activeComponent && componentAccessibility[activeComponent.subject]" :id="`accessibility-${activeComponent.slug}`" :reference="componentAccessibility[activeComponent.subject]!" />
+              <p><a :href="routeHref('/vue/guides/accessibility')" @click="handleRouteClick($event, '/vue/guides/accessibility')">Accessible names, focus, feedback, motion and testing</a></p>
             </template>
             <template v-else-if="currentRoute?.kind === 'area' && activeArea">
               <h1>{{ activeArea.label }}</h1><p class="docs-page__lede">{{ activeArea.description }}</p>
+              <p v-if="activeHost.id === 'vue' && activeArea.id !== 'components'"><a href="#accessibility">Keyboard interaction and accessibility</a></p>
               <template v-if="activeArea.id !== 'components' && activeHost.id === 'vue'"><p class="docs-install-note">This integration also needs its domain package.</p><CodeBlock label="Terminal · pnpm" language="bash" :source="`pnpm add @sectile/vue @sectile/${activeArea.id}`" /></template>
               <template v-if="areaExamples.length && activeHost.id === 'vue' && activeArea.id !== 'components'">
                 <nav v-if="areaExamples.length > 1" class="docs-example-jumps" aria-label="Examples on this page"><a v-for="example in areaExamples" :key="example.id" :href="`#${example.id}-title`">{{ example.title }}</a></nav>
@@ -136,6 +143,7 @@ function closeMenu(event: KeyboardEvent): void {
               </template>
               <ExampleGallery v-else-if="areaExamples.length" :examples="areaExamples" :component-index="activeHost.id === 'vue' && activeArea.id === 'components'" />
               <div v-else class="docs-empty-state"><h2>Examples are not documented yet</h2><p>This package area has no runnable {{ activeHost.label }} examples on this site yet. This is a documentation gap, not a statement about package availability.</p><a :href="routeHref(areaPath(activeHost.id, 'components'))" @click="handleRouteClick($event, areaPath(activeHost.id, 'components'))">Browse available component examples</a></div>
+              <DomainAccessibility v-if="activeHost.id === 'vue' && activeArea.id in domainAccessibility" :area="activeArea.id as keyof typeof domainAccessibility" />
             </template>
             <ExamplePage v-else-if="currentRoute?.kind === 'example' && activeExample" :example="activeExample" />
             <template v-else><h1>Page not found</h1><p class="docs-page__lede">This address is not part of the documentation. The overview links to the available guides and examples.</p><a class="docs-next-link" :href="routeHref('/')" @click="handleRouteClick($event, '/')">Return to the overview</a></template>

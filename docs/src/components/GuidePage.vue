@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import CodeBlock from './CodeBlock.vue';
 import { ref } from 'vue';
+import AccessibilityGuide from './AccessibilityGuide.vue';
 import { handleRouteClick, routeHref } from '../router.js';
 import tokens from '../styles/tokens.css?raw';
 
-defineProps<{ guide: 'getting-started' | 'styling' | 'state' | 'design-system' }>();
+defineProps<{ guide: 'getting-started' | 'styling' | 'state' | 'design-system' | 'accessibility' }>();
 
 const colorRoles = [
   ['bg', 'Reading surface', 'Page and control backgrounds'],
@@ -109,6 +110,7 @@ function toggleTokens(event: Event): void {
       <details class="docs-code-disclosure" @toggle="toggleTokens"><summary>Token stylesheet</summary><CodeBlock label="CSS · documentation tokens" language="css" :source="tokens" :active="tokensOpen" /></details>
     </section>
   </template>
+  <AccessibilityGuide v-else-if="guide === 'accessibility'" />
   <template v-else>
     <h1>State ownership</h1>
     <p class="docs-page__lede">A component can manage its own state, or reflect state managed by your application. Choose the owner when the component mounts.</p>
