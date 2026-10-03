@@ -26,10 +26,12 @@ const checked = ref<CheckboxValue>(false);
   gap: 12px;
   padding: 8px 12px;
   border: 0;
-  border-radius: var(--docs-control-radius, 7px);
+  border-radius: var(--docs-control-radius, 9999px);
   background: transparent;
-  color: var(--docs-text, #3c3c43);
+  color: var(--docs-text, #171717);
   font: inherit;
+  font-size: var(--docs-font-size-label, 14px);
+  line-height: 1.5;
   cursor: pointer;
 }
 .styled-checkbox__box {
@@ -39,8 +41,8 @@ const checked = ref<CheckboxValue>(false);
   height: var(--docs-checkbox-size, 20px);
   flex: none;
   place-items: center;
-  border: 1px solid var(--docs-text-muted, #67676c);
-  border-radius: var(--docs-small-radius, 4px);
+  border: 1px solid var(--docs-checkbox-border, #737373);
+  border-radius: var(--docs-small-radius, 6px);
   background: var(--docs-bg, white);
   color: var(--docs-on-accent, white);
 }
@@ -54,20 +56,20 @@ const checked = ref<CheckboxValue>(false);
 }
 .styled-checkbox[data-state="checked"] .styled-checkbox__box,
 .styled-checkbox[data-state="indeterminate"] .styled-checkbox__box {
-  border-color: var(--docs-accent, #4659d4);
-  background: var(--docs-accent, #4659d4);
+  border-color: var(--docs-accent, #000000);
+  background: var(--docs-accent, #000000);
 }
 .styled-checkbox:focus-visible {
-  outline: 2px solid var(--docs-accent, #4659d4);
+  outline: 2px solid var(--docs-focus, #171717);
   outline-offset: 3px;
 }
 .styled-checkbox:disabled {
-  color: var(--docs-disabled-text, #67676c);
+  color: var(--docs-disabled-text, #666666);
   cursor: not-allowed;
 }
 .styled-checkbox:disabled .styled-checkbox__box {
-  border-color: var(--docs-disabled-border, #67676c);
-  background: var(--docs-disabled-bg, #eeeeef);
-  color: var(--docs-disabled-text, #67676c);
+  border-color: var(--docs-disabled-border, #737373);
+  background: var(--docs-disabled-bg, #f5f5f5);
+  color: var(--docs-disabled-text, #666666);
 }
 </style>

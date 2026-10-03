@@ -1,43 +1,124 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-02T20:50:24Z",
+  "generatedAt": "2026-10-03T05:16:42.004Z",
   "title": "Design System: Sectile Documentation",
   "extensions": {
     "colorMeta": {
       "accent": {
         "role": "primary",
-        "displayName": "Sectile Violet"
+        "displayName": "Black Action",
+        "tonalRamp": [
+          "#171717",
+          "#262626",
+          "#404040",
+          "#666666",
+          "#8a8a8a",
+          "#b3b3b3",
+          "#e5e5e5",
+          "#fafafa"
+        ]
       },
-      "accent-hover": { "role": "primary", "displayName": "Deep Action Violet" },
-      "accent-soft": { "role": "primary", "displayName": "Violet Wash" },
-      "paper": { "role": "neutral", "displayName": "Paper" },
-      "paper-muted": { "role": "neutral", "displayName": "Muted Paper" },
-      "ink": { "role": "neutral", "displayName": "Ink" },
-      "ink-muted": { "role": "neutral", "displayName": "Muted Ink" },
-      "code-background": { "role": "neutral", "displayName": "Code Background" },
-      "error": { "role": "feedback", "displayName": "Validation Error" },
-      "success": { "role": "feedback", "displayName": "Completed Action" },
-      "warning": { "role": "feedback", "displayName": "Attention Required" },
-      "disabled-text": { "role": "neutral", "displayName": "Unavailable Text" },
-      "disabled-background": { "role": "neutral", "displayName": "Unavailable Surface" }
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "Action Hover"
+      },
+      "accent-soft": {
+        "role": "neutral",
+        "displayName": "Selection Wash"
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "White Paper"
+      },
+      "paper-muted": {
+        "role": "neutral",
+        "displayName": "Muted Paper"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Near-Black Ink"
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Supporting Ink"
+      },
+      "code-background": {
+        "role": "neutral",
+        "displayName": "Light Source"
+      },
+      "error": {
+        "role": "feedback",
+        "displayName": "Validation Error"
+      },
+      "success": {
+        "role": "feedback",
+        "displayName": "Completed Action"
+      },
+      "warning": {
+        "role": "feedback",
+        "displayName": "Attention Required"
+      },
+      "disabled-text": {
+        "role": "neutral",
+        "displayName": "Unavailable Text"
+      },
+      "disabled-background": {
+        "role": "neutral",
+        "displayName": "Unavailable Surface"
+      }
     },
     "typographyMeta": {
       "display": {
         "displayName": "Overview Title",
-        "purpose": "Overview heading, with a smaller mobile variant."
+        "purpose": "Rounded system heading with a responsive mobile size."
       },
-      "headline": { "displayName": "Page Title", "purpose": "Guide, component, and example headings." },
-      "code": { "displayName": "Source", "purpose": "Scrollable source text; mobile size is 12px." }
+      "headline": {
+        "displayName": "Page Title",
+        "purpose": "Guide, component, and example headings."
+      },
+      "title": {
+        "displayName": "Section Heading",
+        "purpose": "Rounded system headings for reading sections."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Local system sans-serif prose."
+      },
+      "code": {
+        "displayName": "Source",
+        "purpose": "Scrollable monospace source; mobile size is 12px."
+      }
     },
     "shadows": [],
     "motion": [
-      { "name": "source-reveal", "value": "160ms cubic-bezier(.16,1,.3,1)", "purpose": "Disclosure content clips from inset(0 0 12%) to inset(0), only with prefers-reduced-motion: no-preference." },
-      { "name": "presence-example", "value": "600ms ease-out", "purpose": "Disclosure opacity and translation demonstrate retained exit and interrupted reopening; disabled for reduced motion." }
+      {
+        "name": "source-reveal",
+        "value": "160ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Source disclosure reveal, only when reduced motion is not requested."
+      },
+      {
+        "name": "presence-example",
+        "value": "600ms ease-out",
+        "purpose": "Observable opacity and translation for presence examples; disabled for reduced motion."
+      }
     ],
     "breakpoints": [
-      { "name": "compact-desktop", "value": "1000px" },
-      { "name": "mobile-navigation", "value": "760px" },
-      { "name": "single-column-gallery", "value": "520px" }
+      {
+        "name": "compact-desktop",
+        "value": "1000px"
+      },
+      {
+        "name": "mobile-navigation",
+        "value": "760px"
+      },
+      {
+        "name": "single-column-gallery",
+        "value": "520px"
+      },
+      {
+        "name": "single-column-accessibility-index",
+        "value": "480px"
+      }
     ]
   },
   "components": [
@@ -45,79 +126,103 @@
       "name": "Primary Reading Action",
       "kind": "button",
       "refersTo": "button-primary",
-      "description": "The overview's getting-started link.",
+      "description": "Black pill for the overview getting-started link.",
       "html": "<a class=\"ds-action\" href=\"#getting-started\">Get started with Vue</a>",
-      "css": ".ds-action{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:8px 16px;border-radius:var(--docs-control-radius);background:var(--docs-accent);color:var(--docs-bg);font-family:var(--docs-font-sans);font-size:14px;font-weight:600;text-decoration:none}.ds-action:hover{background:var(--docs-accent-hover)}.ds-action:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+      "css": ".ds-action{display:inline-flex;min-height:var(--docs-control-height,44px);align-items:center;justify-content:center;padding:8px 16px;border-radius:var(--docs-control-radius,9999px);background:var(--docs-accent,#000);color:var(--docs-on-accent,#fff);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;font-weight:600;text-decoration:none}.ds-action:hover{background:var(--docs-accent-hover,#262626)}.ds-action:active{filter:brightness(.94)}.ds-action:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}"
     },
     {
       "name": "Secondary Preview Control",
       "kind": "button",
       "refersTo": "button-secondary",
-      "description": "Paper control used by the dialog trigger and secondary form actions.",
+      "description": "White pill for secondary preview actions.",
       "html": "<button class=\"ds-secondary\" type=\"button\">Open settings</button>",
-      "css": ".ds-secondary{min-height:44px;padding:8px 16px;border:1px solid var(--docs-control-border);border-radius:var(--docs-control-radius);background:var(--docs-bg);color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;line-height:1.65;cursor:pointer}.ds-secondary:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+      "css": ".ds-secondary{min-height:var(--docs-control-height,44px);padding:8px 16px;border:1px solid var(--docs-control-border,#8a8a8a);border-radius:var(--docs-control-radius,9999px);background:var(--docs-bg,#fff);color:var(--docs-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;line-height:1.5;cursor:pointer}.ds-secondary:hover{background:var(--docs-bg-muted,#fafafa)}.ds-secondary:active{filter:brightness(.94)}.ds-secondary:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-secondary:disabled{border-color:var(--docs-disabled-border,#737373);background:var(--docs-disabled-bg,#f5f5f5);color:var(--docs-disabled-text,#666);cursor:not-allowed}"
     },
     {
       "name": "Current Sidebar Link",
       "kind": "nav",
       "refersTo": "navigation-link-current",
-      "description": "Violet wash indicates the current documentation page.",
+      "description": "Neutral wash identifies the current documentation page.",
       "html": "<nav aria-label=\"Documentation\"><a class=\"ds-nav\" href=\"#overview\" aria-current=\"page\">Overview</a></nav>",
-      "css": ".ds-nav{display:flex;min-height:36px;align-items:center;padding:8px 12px;border-radius:var(--docs-small-radius);color:var(--docs-text-muted);font-family:var(--docs-font-sans);font-size:14px;line-height:1.65;text-decoration:none}.ds-nav:hover{background:var(--docs-bg-muted);color:var(--docs-text)}.ds-nav[aria-current=page]{background:var(--docs-accent-soft);color:var(--docs-accent);font-weight:600}.ds-nav:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}@media(max-width:760px){.ds-nav{min-height:44px}}"
+      "css": ".ds-nav{display:flex;min-height:36px;align-items:center;padding:8px 12px;border-radius:var(--docs-item-radius,8px);color:var(--docs-text-muted,#666);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;line-height:1.6;text-decoration:none}.ds-nav:hover{background:var(--docs-bg-muted,#fafafa);color:var(--docs-text,#171717)}.ds-nav[aria-current=page]{background:var(--docs-accent-soft,#eee);color:var(--docs-accent,#000);font-weight:600}.ds-nav:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}@media(max-width:760px){.ds-nav{min-height:44px}}"
     },
     {
       "name": "Example Card",
       "kind": "card",
       "refersTo": "example-card",
-      "description": "Static gallery link with a representative thumbnail.",
+      "description": "Static gallery link with a concentric thumbnail and aligned metadata.",
       "html": "<a class=\"ds-card\" href=\"#checkbox\"><div class=\"ds-thumbnail\"><span class=\"ds-check\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"m3 8 3 3 7-7\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg></span>Notifications</div><div class=\"ds-card-body\"><h3>Controlled state</h3><p>Connect checked state to your application.</p><span>Behavior example</span></div></a>",
-      "css": ".ds-card{display:grid;grid-template-rows:auto 1fr;min-width:0;padding:var(--docs-surface-inset);overflow:hidden;border:1px solid var(--docs-border);border-radius:var(--docs-radius);color:var(--docs-text);font-family:var(--docs-font-sans);line-height:1.65;text-decoration:none}.ds-card:hover{border-color:var(--docs-control-border)}.ds-card:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-thumbnail{display:flex;min-height:168px;align-items:center;justify-content:center;gap:12px;padding:24px;border-radius:var(--docs-inner-radius);background:var(--docs-bg-muted);font-size:12px}.ds-check{display:grid;width:20px;height:20px;place-items:center;border-radius:var(--docs-small-radius);background:var(--docs-accent);color:var(--docs-bg)}.ds-card-body{display:flex;flex-direction:column;align-items:start;padding:16px}.ds-card-body h3{margin:0 0 8px;font-size:17px;font-weight:650;letter-spacing:-.015em;line-height:1.4}.ds-card-body p{margin:0 0 16px;color:var(--docs-text-muted);font-size:14px;line-height:1.6}.ds-card-body>span{margin-top:auto;color:var(--docs-text-muted);font-size:12px}"
+      "css": ".ds-card{display:grid;grid-template-rows:auto 1fr;min-width:0;padding:var(--docs-surface-inset,8px);overflow:hidden;border:1px solid var(--docs-border,#e5e5e5);border-radius:var(--docs-radius,12px);color:var(--docs-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);line-height:1.6;text-decoration:none}.ds-card:hover{border-color:var(--docs-control-border,#8a8a8a)}.ds-card:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-thumbnail{display:flex;min-height:168px;align-items:center;justify-content:center;gap:12px;padding:24px;border-radius:var(--docs-inner-radius,3px);background:var(--docs-bg-muted,#fafafa);font-size:12px}.ds-check{display:grid;box-sizing:border-box;width:20px;height:20px;place-items:center;border:1px solid var(--docs-accent,#000);border-radius:var(--docs-small-radius,6px);background:var(--docs-accent,#000);color:var(--docs-on-accent,#fff)}.ds-check svg{display:block}.ds-card-body{display:flex;flex-direction:column;align-items:start;padding:16px}.ds-card-body h3{margin:0 0 8px;font-size:18px;font-weight:550;line-height:1.4}.ds-card-body p{margin:0 0 16px;color:var(--docs-text-muted,#666);font-size:14px;line-height:1.6}.ds-card-body>span{margin-top:auto;color:var(--docs-text-muted,#666);font-size:12px}"
     },
     {
       "name": "Example Form Field",
       "kind": "input",
       "refersTo": "field",
-      "description": "Native field styled by the documentation preview.",
+      "description": "Single-line native field with a pill boundary.",
       "html": "<label class=\"ds-field\">Email address<input type=\"email\" placeholder=\"you@example.com\" /></label>",
-      "css": ".ds-field{display:grid;gap:8px;color:var(--docs-text);font-family:var(--docs-font-sans);font-size:14px;font-weight:600;line-height:1.65}.ds-field input{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--docs-control-border);border-radius:var(--docs-control-radius);background:var(--docs-bg);color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;line-height:1.65;caret-color:var(--docs-accent)}.ds-field input:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}"
+      "css": ".ds-field{display:grid;gap:8px;color:var(--docs-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;font-weight:600;line-height:1.6}.ds-field input{width:100%;min-height:44px;padding:8px 12px;border:1px solid var(--docs-control-border,#8a8a8a);border-radius:var(--docs-field-radius,9999px);background:var(--docs-bg,#fff);color:var(--docs-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;line-height:1.5;caret-color:var(--docs-accent,#000)}.ds-field input:hover{border-color:var(--docs-text-muted,#666)}.ds-field input::placeholder{color:var(--docs-text-muted,#666);opacity:1}.ds-field input:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-field input:focus-visible{border-color:var(--docs-focus,#171717)}.ds-field input:disabled{border-color:var(--docs-disabled-border,#737373);background:var(--docs-disabled-bg,#f5f5f5);color:var(--docs-disabled-text,#666)}"
+    },
+    {
+      "name": "Tag Pill",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Neutral tag with a separate removal action.",
+      "html": "<span class=\"ds-chip\">TypeScript<button type=\"button\" aria-label=\"Remove TypeScript\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"none\" aria-hidden=\"true\"><path d=\"m4 4 8 8M12 4l-8 8\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\"/></svg></button></span>",
+      "css": ".ds-chip{display:inline-flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--docs-control-radius,9999px);background:var(--docs-accent-soft,#eee);color:var(--docs-accent,#000);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;line-height:1.5}.ds-chip button{min-height:44px;padding:8px 12px;border:1px solid var(--docs-control-border,#8a8a8a);border-radius:var(--docs-control-radius,9999px);background:var(--docs-bg,#fff);color:var(--docs-text,#171717);font:inherit;cursor:pointer}.ds-chip button:hover{background:var(--docs-bg-muted,#fafafa)}.ds-chip button:active{filter:brightness(.94)}.ds-chip button:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}"
     },
     {
       "name": "Source Block",
       "kind": "custom",
       "refersTo": "code-block",
-      "description": "Dark source surface with visible copy control; this panel specimen is visual only.",
+      "description": "Light shared source surface; specimen syntax and copy control are visual only.",
       "html": "<div class=\"ds-source\"><div class=\"ds-source-header\"><span>Install in your Vue application</span><button type=\"button\">Copy code</button></div><pre tabindex=\"0\" aria-label=\"Installation command\"><code>pnpm add @sectile/vue</code></pre></div>",
-      "css": ".ds-source{min-width:0;overflow:hidden;border-radius:var(--docs-radius);background:var(--docs-code-bg);color:var(--docs-code-text);font-family:var(--docs-font-sans);line-height:1.65}.ds-source-header{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:12px;padding:8px 24px;border-bottom:1px solid var(--docs-code-border);color:var(--docs-code-muted);font-size:12px}.ds-source-header button{min-height:36px;padding:4px 8px;border:1px solid transparent;border-radius:var(--docs-small-radius);background:transparent;color:var(--docs-code-text);font-family:var(--docs-font-sans);font-size:12px;line-height:1.65;cursor:pointer}.ds-source-header button:hover{border-color:var(--docs-code-control-border)}.ds-source-header button:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-source pre{max-height:560px;margin:0;overflow:auto;padding:24px;font-family:var(--docs-font-mono);font-size:13px;line-height:1.75;tab-size:2;scrollbar-color:var(--docs-code-control-border) transparent}.ds-source pre:focus-visible{outline:2px solid var(--docs-focus);outline-offset:-3px}.ds-source code{font:inherit}@media(max-width:760px){.ds-source pre{padding:16px;font-size:12px}}"
+      "css": ".ds-source{min-width:0;overflow:hidden;border:1px solid var(--docs-code-border,#e5e5e5);border-radius:var(--docs-radius,12px);background:var(--docs-code-bg,#fafafa);color:var(--docs-code-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);line-height:1.6}.ds-source-header{display:flex;min-height:44px;align-items:center;justify-content:space-between;gap:12px;padding:8px 24px;border-bottom:1px solid var(--docs-code-border,#e5e5e5);color:var(--docs-code-muted,#666);font-size:12px}.ds-source-header button{min-height:44px;padding:4px 8px;border:1px solid transparent;border-radius:var(--docs-control-radius,9999px);background:transparent;color:var(--docs-code-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:12px;line-height:1.6;cursor:pointer}.ds-source-header button:hover{border-color:var(--docs-code-control-border,#8a8a8a)}.ds-source-header button:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-source pre{max-height:560px;margin:0;overflow:auto;padding:24px;font-family:var(--docs-font-mono,monospace);font-size:13px;line-height:1.75;tab-size:2;scrollbar-color:var(--docs-code-control-border,#8a8a8a) transparent}.ds-source pre:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-source pre:focus-visible{outline-offset:-3px}.ds-source code{font:inherit}@media(max-width:760px){.ds-source pre{padding:16px;font-size:12px}}"
     },
     {
       "name": "Switch Setting",
       "kind": "custom",
       "refersTo": "switch-track",
-      "description": "A checked setting whose track inset and thumb travel are calculated from shared geometry.",
+      "description": "Checked setting with explicit track inset and thumb travel.",
       "html": "<button class=\"ds-switch\" type=\"button\" role=\"switch\" aria-checked=\"true\"><span class=\"ds-switch-track\"><i></i></span>Email notifications</button>",
-      "css": ".ds-switch{display:inline-flex;min-height:var(--docs-control-height);align-items:center;gap:var(--docs-space-3);padding:var(--docs-space-2) var(--docs-space-3);border:0;border-radius:var(--docs-control-radius);background:transparent;color:var(--docs-text);font-family:var(--docs-font-sans);font-size:16px;cursor:pointer}.ds-switch-track{display:inline-flex;box-sizing:border-box;width:var(--docs-switch-width);height:var(--docs-switch-height);align-items:center;padding:var(--docs-switch-inset);border:var(--docs-border-width) solid var(--docs-checkbox-border);border-radius:calc(var(--docs-switch-height) / 2);background:var(--docs-control-border)}.ds-switch-track i{width:var(--docs-switch-thumb);height:var(--docs-switch-thumb);flex:none;border-radius:50%;background:var(--docs-bg)}.ds-switch[aria-checked=true] .ds-switch-track{border-color:var(--docs-accent);background:var(--docs-accent)}.ds-switch[aria-checked=true] i{transform:translateX(var(--docs-switch-travel))}.ds-switch:focus-visible{outline:2px solid var(--docs-focus);outline-offset:3px}.ds-switch:disabled{opacity:.5;cursor:not-allowed}"
+      "css": ".ds-switch{display:inline-flex;min-height:44px;align-items:center;gap:12px;padding:8px 12px;border:0;border-radius:var(--docs-control-radius,9999px);background:transparent;color:var(--docs-text,#171717);font-family:var(--docs-font-sans,system-ui,sans-serif);font-size:14px;line-height:1.5;cursor:pointer}.ds-switch-track{display:inline-flex;box-sizing:border-box;width:44px;height:28px;align-items:center;padding:3px;border:1px solid var(--docs-checkbox-border,#737373);border-radius:14px;background:var(--docs-control-border,#8a8a8a)}.ds-switch-track i{width:20px;height:20px;flex:none;border-radius:50%;background:var(--docs-bg,#fff)}.ds-switch[aria-checked=true] .ds-switch-track{border-color:var(--docs-accent,#000);background:var(--docs-accent,#000)}.ds-switch[aria-checked=true] i{transform:translateX(16px)}.ds-switch:hover{background:var(--docs-bg-muted,#fafafa)}.ds-switch:focus-visible{outline:2px solid var(--docs-focus,#171717);outline-offset:3px}.ds-switch:disabled{color:var(--docs-disabled-text,#666);cursor:not-allowed}.ds-switch:disabled .ds-switch-track{border-color:var(--docs-disabled-border,#737373);background:var(--docs-disabled-bg,#f5f5f5)}.ds-switch:disabled i{background:var(--docs-disabled-text,#666)}"
     }
   ],
   "narrative": {
     "northStar": "The Inspectable Workbench",
-    "overview": "This is the documentation's reading expression of Sectile's established white, ink, and violet world. Open paper carries explanations; reading links, static example galleries, runnable previews, and source blocks make behavior inspectable. The mood is a clean Read surface.\n\nThis contract belongs to the private Vue/Vite documentation package. Its reading shell, geometry, preview styling, and source components extend the root design system locally. The library's headless components leave application presentation with the consumer. Root `DESIGN.md` remains the authority for the broader brand and landing surface.",
+    "overview": "Open white paper, near-black copy, rounded system headings, and compact controls keep interaction behavior easy to inspect. Reading links, static galleries, runnable previews, and light source blocks share a quiet neutral frame.\n\nThis private contract belongs to the Vue/Vite documentation package. It governs the reading shell and documentation-owned examples; application presentation remains with consumers of Sectile's headless components. Root `DESIGN.md` governs the broader product identity.",
     "keyCharacteristics": [
-      "White reading canvas with ink copy and quiet rules.",
-      "Restrained violet for actions, navigation selection, and focus.",
-      "Sans-serif explanation with monospace code and live values.",
-      "Flat previews and source blocks with perimeter-defined geometry.",
+      "White canvas, near-black text, and black primary actions.",
+      "Neutral selection surfaces with explicit keyboard focus.",
+      "Rounded system headings, system body text, and monospace source.",
+      "Flat bordered panels with geometry derived from shared tokens.",
       "Distinct Vue and DOM navigation contexts."
     ],
     "rules": [
-      { "name": "The Violet Means Action Rule", "body": "Use violet for links, actions, selected navigation, checked state, and visible keyboard focus.", "section": "colors" },
-      { "name": "The Code Is Mono Rule", "body": "Keep code and emitted values in monospace, and explanatory copy in the sans-serif reading voice.", "section": "typography" },
-      { "name": "The Paper Before Panels Rule", "body": "Use open paper and reading rows for guidance; bounded containers hold examples and source.", "section": "elevation" },
-      { "name": "The Concentric Corners Rule", "body": "Derive a flush inset surface from its actual outer radius, border, and inset. Keep independent control geometry a separate role.", "section": "shapes" }
+      {
+        "name": "The Neutral Action Rule",
+        "body": "Use black for primary action and checked state, neutral wash for selection, and semantic colors for feedback.",
+        "section": "colors"
+      },
+      {
+        "name": "The Code Is Mono Rule",
+        "body": "Keep code and emitted values in monospace, and explanatory copy in the sans-serif reading voice.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Before Panels Rule",
+        "body": "Use open paper and reading rows for guidance; bounded containers hold examples and source.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Concentric Corners Rule",
+        "body": "Derive a flush inset surface from its actual outer radius, border, and inset. Keep independent control geometry a separate role.",
+        "section": "shapes"
+      }
     ],
     "dos": [
       "Do keep this contract scoped to the documentation reading shell and examples.",
-      "Do preserve paper, ink, restrained violet, and explicit keyboard focus.",
-      "Do use reading links for guidance and bounded previews for runnable behavior.",
+      "Do preserve white paper, near-black copy, neutral selection, and explicit keyboard focus.",
+      "Do derive nested corners from their perimeter and inset.",
       "Do identify whether preview styling is supplied by the docs or shown source."
     ],
     "donts": [

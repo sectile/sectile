@@ -1,52 +1,64 @@
 ---
 name: Sectile Documentation
-description: A clean reading surface for headless interaction behavior.
+description: A neutral reading surface for inspectable interaction behavior.
 colors:
-  accent: "#4659d4"
-  accent-hover: "#3c4db8"
-  accent-soft: "#eef0fd"
+  accent: "#000000"
+  accent-hover: "#262626"
+  accent-soft: "#eeeeee"
   paper: "#ffffff"
-  paper-muted: "#f6f6f7"
-  ink: "#3c3c43"
-  ink-muted: "#67676c"
-  rule: "#e2e2e3"
-  control-border: "#8b8b90"
-  checkbox-border: "#67676c"
-  code-background: "#101827"
-  code-text: "#edf2ff"
-  code-muted: "#a9b5cc"
-  code-rule: "#293852"
-  code-control-border: "#52617a"
+  paper-muted: "#fafafa"
+  ink: "#171717"
+  ink-muted: "#666666"
+  rule: "#e5e5e5"
+  control-border: "#8a8a8a"
+  checkbox-border: "#737373"
+  focus: "#171717"
+  code-background: "#fafafa"
+  code-text: "#171717"
+  code-muted: "#666666"
+  code-rule: "#e5e5e5"
+  code-control-border: "#8a8a8a"
+  code-keyword: "#67459c"
+  code-string: "#356346"
+  code-constant: "#855518"
+  code-function: "#285b83"
+  code-tag: "#286473"
+  code-attribute: "#815176"
+  code-punctuation: "#525252"
   error: "#b42332"
   error-soft: "#fff0f1"
   success: "#157347"
   success-soft: "#edf8f1"
   warning: "#795500"
   warning-soft: "#fff7df"
-  disabled-text: "#67676c"
-  disabled-background: "#eeeeef"
+  on-accent: "#ffffff"
+  disabled-text: "#666666"
+  disabled-background: "#f5f5f5"
+  disabled-border: "#737373"
+  overlay: "rgb(0 0 0 / 32%)"
 typography:
   display:
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(2.4rem, 4.3vw, 3.5rem)"
-    fontWeight: 720
-    lineHeight: 1.08
-    letterSpacing: "-0.035em"
+    fontFamily: 'ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontSize: "clamp(1.75rem, 3.5vw, 2.25rem)"
+    fontWeight: 550
+    lineHeight: 1.2
+    letterSpacing: "-0.015em"
   headline:
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
-    fontSize: "clamp(2rem, 3vw, 2.75rem)"
-    fontWeight: 720
-    lineHeight: 1.15
-    letterSpacing: "-0.035em"
+    fontFamily: 'ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontSize: "clamp(1.75rem, 3vw, 2.25rem)"
+    fontWeight: 550
+    lineHeight: 1.2
+    letterSpacing: "-0.015em"
   title:
-    fontSize: "23px"
-    fontWeight: 650
-    lineHeight: 1.3
-    letterSpacing: "-0.025em"
+    fontFamily: 'ui-rounded, "SF Pro Rounded", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontSize: "24px"
+    fontWeight: 600
+    lineHeight: 1.33
+    letterSpacing: "0"
   body:
-    fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+    fontFamily: 'ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
     fontSize: "16px"
-    lineHeight: 1.65
+    lineHeight: 1.6
   lede:
     fontSize: "18px"
     lineHeight: 1.7
@@ -58,12 +70,12 @@ typography:
     fontSize: "13px"
     lineHeight: 1.75
 rounded:
-  inline: "4px"
-  navigation: "4px"
-  control: "7px"
-  inner: "7px"
-  surface: "16px"
-  dialog: "16px"
+  small: "6px"
+  item: "8px"
+  control: "9999px"
+  field: "9999px"
+  inner: "3px"
+  surface: "12px"
   switch-track: "14px"
   switch-thumb: "10px"
 spacing:
@@ -78,10 +90,11 @@ spacing:
 components:
   button-primary:
     backgroundColor: "{colors.accent}"
-    textColor: "{colors.paper}"
+    textColor: "{colors.on-accent}"
     typography: "{typography.label}"
     rounded: "{rounded.control}"
     padding: "8px 16px"
+    height: "44px"
   button-primary-hover:
     backgroundColor: "{colors.accent-hover}"
   button-secondary:
@@ -89,9 +102,10 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     padding: "8px 16px"
+    height: "44px"
   navigation-link:
     textColor: "{colors.ink-muted}"
-    rounded: "{rounded.navigation}"
+    rounded: "{rounded.item}"
     padding: "8px 12px"
   navigation-link-current:
     backgroundColor: "{colors.accent-soft}"
@@ -99,15 +113,22 @@ components:
   example-card:
     textColor: "{colors.ink}"
     rounded: "{rounded.surface}"
+    padding: "8px"
   preview:
-    backgroundColor: "{colors.paper-muted}"
+    backgroundColor: "{colors.paper}"
     rounded: "{rounded.surface}"
     padding: "32px"
   field:
     backgroundColor: "{colors.paper}"
     textColor: "{colors.ink}"
-    rounded: "{rounded.control}"
+    rounded: "{rounded.field}"
     padding: "8px 12px"
+    height: "44px"
+  chip:
+    backgroundColor: "{colors.accent-soft}"
+    textColor: "{colors.accent}"
+    rounded: "{rounded.control}"
+    padding: "4px 8px"
   switch-track:
     backgroundColor: "{colors.control-border}"
     rounded: "{rounded.switch-track}"
@@ -130,212 +151,78 @@ components:
 
 **Creative North Star: "The Inspectable Workbench"**
 
-This is the documentation's reading expression of Sectile's established white,
-ink, and violet world. Open paper carries explanations; reading links, static
-example galleries, runnable previews, and source blocks make behavior inspectable.
-The mood is a clean Read surface.
+Open white paper, near-black copy, rounded system headings, and compact controls keep interaction behavior easy to inspect. Reading links, static galleries, runnable previews, and light source blocks share a quiet neutral frame.
 
-This contract belongs to the private Vue/Vite documentation package. Its reading
-shell, geometry, preview styling, and source components extend the root design
-system locally. The library's headless components leave application presentation
-with the consumer. Root `DESIGN.md` remains the authority for the broader brand
-and landing surface.
+This private contract belongs to the Vue/Vite documentation package. It governs the reading shell and documentation-owned examples; application presentation remains with consumers of Sectile's headless components. Root `DESIGN.md` governs the broader product identity.
 
 **Key Characteristics:**
 
-- White reading canvas with ink copy and quiet rules.
-- Restrained violet for actions, navigation selection, and focus.
-- Sans-serif explanation with monospace code and live values.
-- Flat previews and source blocks with perimeter-defined geometry.
+- White canvas, near-black text, and black primary actions.
+- Neutral selection surfaces with explicit keyboard focus.
+- Rounded system headings, system body text, and monospace source.
+- Flat bordered panels with geometry derived from shared tokens.
 - Distinct Vue and DOM navigation contexts.
 
 ## Colors
 
-The documentation applies the existing paper, ink, and violet family to a light
-reading shell. Dark source blocks provide a local code contrast surface.
-
 ### Primary
 
-- **Sectile Violet:** Links, primary actions, checked controls, and focus outlines.
-- **Deep Action Violet:** Primary reading-action hover.
-- **Violet Wash:** The current sidebar page.
+Black anchors primary actions, checked controls, and the current navigation context. Action hover deepens the neutral surface; selected rows and pressed choices use the soft neutral wash. On-accent text remains white.
 
 ### Neutral
 
-- **Paper / Muted Paper:** Reading canvas, example previews, thumbnails, and inline code.
-- **Ink / Muted Ink:** Headings and body copy, then navigation and supporting text.
-- **Rule / Control Border:** Reading divisions, container perimeters, and input edges.
-- **Code Background / Code Text / Code Muted:** Source surface, source text, and metadata.
-- **Code Rule / Code Control Border:** Source-header separation and copy-control hover.
+Paper is the reading canvas and live-preview surface; muted paper supports thumbnails, inline code, and source blocks. Ink carries headings and body copy; muted ink carries supporting text. Rule defines panel and header boundaries, while control and checkbox borders preserve stronger interactive edges. Focus uses the shared ink outline. Text selection uses a transparent neutral mix of the accent.
 
-Error red identifies form validation messages. It is feedback, not an additional
-decorative accent.
+Error, success, and warning foreground/surface pairs belong to semantic feedback. Disabled text, surface, and border have explicit roles. The overlay token belongs to modal examples. Code keyword, string, constant, function, tag, attribute, and punctuation colors distinguish syntax inside the light source surface.
 
-**The Violet Means Action Rule.** Use violet for links, actions, selected navigation,
-checked state, and visible keyboard focus.
-
-Feedback has explicit foreground/surface pairs: error #b42332/#fff0f1,
-success #157347/#edf8f1, warning #795500/#fff7df. These are reserved for feedback,
-not arbitrary category decoration. Disabled foreground and border use #67676c
-on #eeeeef; controls retain readable labels instead of fading the whole element.
-Selected text uses violet on violet wash. On-accent text uses white.
+**The Neutral Action Rule.** Use black for primary action and checked state, neutral wash for selection, and semantic colors for feedback.
 
 ## Typography
 
-**Display and Body Font:** The declared Inter stack, with system sans-serif fallbacks.
-**Code Font:** SFMono-Regular, with Consolas and Liberation Mono fallbacks.
+Display and page headings use the rounded system stack; body and labels use the system sans-serif stack. Fonts resolve locally through platform fallbacks. Source, inline API names, and emitted values use the monospace stack.
 
-The overview title is larger than ordinary page titles. Section headings and
-body leading keep the reading hierarchy compact. Frontmatter records the desktop
-roles; stylesheets define responsive variants. Naming Inter in the stack does not
-establish that a downloaded font is available.
+The frontmatter records overview, page, section, body, lede, label, and source roles. Captions use 12px. Paragraphs stay within 70ch; the reading column supplies the wider layout bound. Mobile overview type uses `clamp(1.75rem, 6vw, 2.25rem)`, ledes use the body size, and source uses the caption size.
 
-Monospace distinguishes source, inline API names, and emitted example values.
-Navigation and explanation use the sans-serif stack. Paragraphs are limited to
-70ch within the reading column.
-
-**The Code Is Mono Rule.** Keep code and emitted values in monospace, and explanatory
-copy in the sans-serif reading voice.
-
-Repeated caption/code/label/body/section sizes are 12/13/14/16/23px tokens.
-Body leading is 1.65. Focus has shared 2px width and 3px offset tokens. The
-Documentation styles guide renders the live semantic colors and the same token
-source used by the site, with its nested-radius specimen.
+**The Code Is Mono Rule.** Keep code and emitted values in monospace, and explanatory copy in the sans-serif reading voice.
 
 ## Layout
 
-The sticky header is 56px high. Desktop uses a 256px sidebar and a flexible main
-area; the centered reading column is at most 760px wide with 48px page gutters.
-Page padding is equal on all four sides at each breakpoint. Prose sections use
-the larger spacing steps; navigation and controls use the smaller steps. Margin,
-padding, and gap decisions consume the shared spacing scale.
+The sticky header is 56px high. Desktop pairs a 256px sidebar with a flexible main area and a centered 720px reading column. Page gutters are 48px, contracting to 32px with a 232px sidebar at 1000px and to 24px at 760px. At the mobile boundary, navigation becomes a fixed menu beneath the header and sidebar targets use the 44px control minimum.
 
-At 1000px and below the rail contracts to 232px and page padding to 32px. At 760px
-and below, a menu button opens the fixed navigation below the header; page
-padding becomes 24px, and sidebar links
-have a 44px minimum height. Overview display type becomes
-`clamp(2.3rem, 8vw, 3rem)` and ledes become 16px.
-
-Example galleries use two columns with 24px gaps, and one column below 520px.
-Card bodies stretch to align their trailing metadata when descriptions have
-different lengths. Small screens also stack overview actions and preview
-headings. Code scrolls within its container; source text is not squeezed to fit.
+Galleries use two columns with 24px gaps and become one column at 520px. Reading rows stack at 760px; overview actions and preview headings stack at 520px. Preview padding is 32px, reducing to 24px on mobile, with a 240px minimum height. Source scrolls inside its container.
 
 ## Elevation & Depth
 
-The reading shell uses no shadows. Quiet shell borders, muted preview
-backgrounds, and the dark source surface
-distinguish regions. Prose transitions and reading links use spacing rather than
-repeated separator lines. The dialog
-example overlays a translucent scrim and a centered paper surface; this belongs
-to the demonstrated interaction.
+The shell uses flat surfaces without shadows. White space, thin perimeters, and muted thumbnail/source surfaces separate regions. Dialog examples use the translucent scrim and a centered white panel. Motion belongs to interaction state: source disclosure reveals over 160ms; presence examples expose a 600ms transition. Both honor reduced motion.
 
-**The Paper Before Panels Rule.** Use open paper and reading rows for guidance;
-bounded containers hold examples and source.
+**The Paper Before Panels Rule.** Use open paper and reading rows for guidance; bounded containers hold examples and source.
 
 ## Shapes
 
-Gallery cards use an outer radius of 16px, a 1px border, and an equal 8px inset.
-Their thumbnail radius is computed as max(0, outer radius − border − inset),
-yielding 7px. This equation describes concentric surfaces, not every control
-placed somewhere inside a larger preview. Independent controls use the control
-radius; checkbox squares and inline code use the small radius.
+Panels and tab content use the surface radius (12px); buttons and single-line fields use pills; repeated items and multiline fields use the item radius (8px); checkbox squares and inline source use the small radius (6px). Controls have a 44px minimum height. Component height entries describe this minimum, not a fixed content limit.
 
-The switch track is 44px wide and 28px high with a 1px border and a 20px thumb.
-Its equal inset is (28 − 2 × 1 − 20) / 2 = 3px, and thumb travel is
-44 − 2 × 1 − 2 × 3 − 20 = 16px. Circular corners use half the element height:
-14px outside and 10px inside, also equal to 14 − 1 − 3.
+Gallery and inset menu geometry uses a 1px border and 8px inset: the inner radius is max(0, 12 − 1 − 8), yielding 3px. The 44 × 28px switch has a 20px circular thumb, 3px inset, and 16px travel. Its outer/inner circular radii are 14px and 10px.
 
-**The Concentric Corners Rule.** Derive a flush inset surface from its actual outer
-radius, border, and inset. Keep independent control geometry a separate role.
+**The Concentric Corners Rule.** Derive a flush inset surface from its actual outer radius, border, and inset. Keep independent control geometry a separate role.
 
 ## Components
 
-### Buttons and fields
+Buttons use black with white text for primary actions and white with a control border for secondary actions. Inputs share the pill silhouette; textareas use the item radius. Keyboard focus uses a 2px ink outline with a 3px offset. Disabled styling preserves explicit text and boundary colors.
 
-The overview reading action is violet with paper text and a 44px minimum height.
-Secondary preview controls and form fields use paper, ink, and a control border,
-with a 44px minimum height. Form submission uses the violet treatment; field
-messages use error red. Visible keyboard focus uses a two-pixel violet outline
-with a three-pixel offset.
+Current sidebar links use neutral wash and black text; hover uses muted paper and ink. Environment navigation adds a black underline. Tags use neutral pill surfaces. Menus and popovers use white panels with inset items; selected and pressed choices use neutral wash.
 
-### Navigation
+Gallery cards contain static representative thumbnails with calculated inner corners and aligned metadata. Component pages pair focused runnable previews with initially collapsed source. Preview notes identify the styling owner; reset remounts the local preview. Checkbox rows leave the perimeter on the 20px square and center a block SVG indicator.
 
-Environment links use an underline and violet text for the current context.
-Sidebar links change from muted ink to ink on a muted-paper hover; the current
-page uses violet wash and violet text. Nested component links indent within their
-package group. The mobile menu exposes expanded state, closes on route changes
-or Escape, and returns focus to its trigger on Escape.
-
-Component child routes are expanded within the Components area. Other guides
-retain the same area navigation without showing every component child.
-
-### Reading links and galleries
-
-Reading links use open rows with a short title and explanation, stacking on
-small screens. Package example cards combine an inert representative thumbnail and a
-title/description, an equal inset, and a calculated thumbnail corner; hover
-strengthens the perimeter. A gallery does not mount live
-interaction controls.
-
-Component pages display their focused examples inline with matching headings,
-live previews and collapsed source. A reset control restores each example by
-remounting only that preview; its dedicated route remains available for sharing.
-Readers can compare behaviors without returning through a gallery.
-The Vue Components index groups focused variants into one entry per component.
-Local example links jump to the selected behavior without navigating away.
-
-### Preview and source
-
-Detail pages show a muted-paper live preview followed by a native disclosure,
-initially closed, containing the executed source. Preview notes distinguish
-documentation-owned presentation from source that includes its own styling.
-The preview uses a 240px minimum height and equal 32px padding; below 760px
-padding becomes 24px. A checkbox label row has no outer perimeter; its persistent
-20px square carries the control boundary.
-
-Checkbox squares use border-box sizing in both fixtures and copyable styling.
-Indicators center a block SVG with unit line height; inline baselines do not
-determine checkmark placement. Thumbnails use the same 20px outer square and
-14px icon with a 1px border. Preview layout is applied to a documentation-owned
-wrapper rather than the component root.
-
-Source blocks have a dark header, visible copy control, and focusable scrolling
-code region capped at 560px high. Copy feedback reports success or a selection
-fallback. Code text becomes 12px with 16px padding below 760px. Source disclosure
-uses a 160ms reveal only when reduced motion is not requested.
-
-The disclosure presence example uses a deliberately observable 600ms opacity
-and translation transition. Its status reflects the content element's actual
-hidden and inert attributes rather than an application timer. Closing, reopening
-during exit, completing exit, and reduced motion are separate inspection cases.
-The example's attribute observer is disconnected when the example unmounts.
-
-Switches, toggle buttons, toggle groups, radio groups, tabs, and popovers share
-the control height, spacing, border, and focus roles. Group rows wrap and align
-their controls at the center. Pressed choices and active tabs use violet wash;
-disabled controls are subdued. Tabs keep explanatory panel text in the sans-serif
-voice. Popover content uses the surface radius and equal padding; positioning is
-owned by the interaction rather than a fixed documentation offset.
-
-Text inputs and textareas use the same 44px minimum height, 1px control border,
-7px corner and 8px/12px padding as form inputs. Accordion headings use the shared
-button geometry and open spacing between panels, without an extra outer card.
+Source blocks use the shared light Shiki palette, a thin boundary, a 44px copy control, and focusable scrolling code capped at 560px. Mobile source uses 16px padding and 12px text. Copy and highlighting failures retain readable source and status feedback. Sidecar specimens describe appearance; their markup does not implement the library's interaction semantics.
 
 ## Do's and Don'ts
 
-### Do:
+- Do keep this contract scoped to the documentation reading shell and examples.
+- Do preserve white paper, near-black copy, neutral selection, and explicit keyboard focus.
+- Do derive nested corners from their perimeter and inset.
+- Do identify whether preview styling is supplied by the docs or shown source.
+- Don't prescribe application styling through the headless library's public contract.
 
-- **Do** keep this contract scoped to the documentation reading shell and examples.
-- **Do** preserve paper, ink, restrained violet, and explicit keyboard focus.
-- **Do** use reading links for guidance and bounded previews for runnable behavior.
-- **Do** identify whether preview styling is supplied by the docs or shown source.
-
-### Don't:
-
-- **Don't** prescribe application styling through the headless library's public contract.
-
-<!-- Source extraction: src/styles/{tokens,base,shell}.css, App.vue, CodeBlock.vue,
-ExampleGallery.vue, ExamplePage.vue, and the state-styling Checkbox fixture.
-Rendered visual verification: Pending; Browser Plugin startup failed with EOF.
-Dark documentation mode is not established by the local dark code surface. -->
+<!-- Source-only extraction: src/styles/{tokens,base,shell}.css, components/CodeBlock.vue,
+and examples/vue/components/checkbox/state-styling/Preview.vue.
+Rendered visual acceptance remains unverified; this contract records source evidence. -->

@@ -58,7 +58,7 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
 
   assert.match(tokens, /--docs-header-height: 56px/u);
   assert.match(tokens, /--docs-sidebar-width: 256px/u);
-  assert.match(tokens, /--docs-reading-width: 760px/u);
+  assert.match(tokens, /--docs-reading-width: 720px/u);
   assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
   assert.doesNotMatch(shell, /--vp-/u);
   assert.match(shell, /\[data-highlighted\]/u);
@@ -96,6 +96,22 @@ test('documentation palette maintains readable text and identifiable control edg
     const ratio = (levels[0] + 0.05) / (levels[1] + 0.05);
     assert.ok(ratio >= minimum, `${foreground} on ${background}: ${ratio.toFixed(2)} < ${minimum}`);
   }
+});
+
+test('copyable styling uses the shared palette and preserves distinct control and panel geometry', async () => {
+  const tokens = await read('src/styles/tokens.css');
+  const values = Object.fromEntries([...tokens.matchAll(/(--docs-[\w-]+):\s*([^;]+);/gu)].map(([, name, value]) => [name, value.trim()]));
+  for (const example of examples.filter(example => example.kind === 'styling')) {
+    for (const section of example.code) {
+      const source = await read(`src/examples/${section.path.slice(2)}`);
+      for (const [, name, fallback] of source.matchAll(/var\((--docs-[\w-]+),\s*(#[\da-f]{6}|\d+px)\)/gu)) {
+        assert.equal(fallback, values[name], `${example.id}: ${name} fallback matches its shared token`);
+      }
+    }
+  }
+  const shell = await read('src/styles/shell.css');
+  assert.match(shell, /\[data-example-text-fields\] textarea \{ border-radius: var\(--docs-item-radius\)/u);
+  assert.match(tokens, /--docs-inner-radius: max\(0px, calc\(var\(--docs-radius\) - var\(--docs-border-width\) - var\(--docs-surface-inset\)\)\)/u);
 });
 
 test('Shiki highlights each documented language without changing source text or inventing colors', async () => {
