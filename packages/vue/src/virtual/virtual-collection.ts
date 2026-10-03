@@ -42,12 +42,15 @@ import {
   type VirtualizerScrollportTarget,
 } from './virtual-core.js';
 
-const rootScrollportStyle = Object.freeze({ overflow: 'auto' });
+const rootScrollportStyle = { overflow: 'auto' } as const;
 
-export function virtualCollectionRootStyle(attrs: Readonly<Record<string, unknown>>): unknown {
-  return attrs['scrollport'] === undefined || attrs['scrollport'] === 'root'
-    ? [rootScrollportStyle, attrs['style']]
-    : attrs['style'];
+export function virtualCollectionRootStyle({
+  scrollport = 'root',
+  style,
+}: Readonly<Record<string, unknown>>): unknown {
+  return scrollport === 'root'
+    ? style == null ? rootScrollportStyle : [rootScrollportStyle, style]
+    : style;
 }
 
 export type VirtualCollectionIDResolver<
@@ -195,34 +198,31 @@ const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
   }>,
   setup(props, { slots }) {
     const surface = useVirtualizerSurfaceRegistration('VirtualCollectionProjection');
-    const registrations = new Map<StableID, () => void>();
-    const elements = new Map<StableID, HTMLElement>();
     const refs = new Map<StableID, (value: unknown) => void>();
 
     const itemRef = (id: StableID): ((value: unknown) => void) => {
       const existing = refs.get(id);
       if (existing !== undefined) return existing;
+      let mounted: HTMLElement | null = null;
+      let unregister: (() => void) | undefined;
       const callback = (value: unknown): void => {
         const element = asHTMLElement(value);
-        if (element !== null && elements.get(id) === element) return;
-        registrations.get(id)?.();
-        registrations.delete(id);
-        elements.delete(id);
+        if (element !== null && mounted === element) return;
+        unregister?.();
+        unregister = undefined;
+        mounted = element;
         if (element === null) {
           if (refs.get(id) === callback) refs.delete(id);
           return;
         }
-        elements.set(id, element);
-        registrations.set(id, surface.registerItem(element, id));
+        unregister = surface.registerItem(element, id);
       };
       refs.set(id, callback);
       return callback;
     };
 
     onBeforeUnmount(() => {
-      for (const unregister of registrations.values()) unregister();
-      registrations.clear();
-      elements.clear();
+      for (const callback of refs.values()) callback(null);
       refs.clear();
     });
 
