@@ -1178,6 +1178,9 @@
 }
 
 .docs-code-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex: none;
   width: calc(var(--docs-space-8) + var(--docs-space-6));
   height: var(--docs-code-header-content-height);

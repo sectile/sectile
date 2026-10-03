@@ -247,11 +247,13 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     await nextTick();
     assert.equal(copied, '.new { color: red; }');
     assert.equal(copyPropagationStopped, true, 'copy is independent of the summary click');
-    assert.ok(text(root).includes('Copied'));
+    assert.equal(text(find(root, 'button')), 'Copied');
+    assert.equal(find(root, 'p'), undefined, 'successful copy feedback stays in the button');
     navigator.clipboard.writeText = async () => { throw new Error('Permission denied'); };
     await find(root, 'button').props.onClick(copyEvent);
     await nextTick();
     assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
+    assert.equal(text(find(root, 'button')), 'Copy code');
 
     props.value = { source: long, language: 'ts' };
     identity.value++;

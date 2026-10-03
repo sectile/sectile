@@ -217,6 +217,8 @@ Source blocks use the shared light Shiki palette and a thin boundary. One fixed 
 
 ## Do's and Don'ts
 
+Successful copy changes the centered button label to "Copied" without adding a row or changing its dimensions. Copy failures retain a separate recovery message. The button label announces successful copying through a polite live region.
+
 - Do keep this contract scoped to the documentation reading shell and examples.
 - Do preserve white paper, near-black copy, neutral selection, and explicit keyboard focus.
 - Do derive nested corners from their perimeter and inset.

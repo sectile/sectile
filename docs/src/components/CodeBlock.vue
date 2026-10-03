@@ -53,11 +53,11 @@ async function copy(): Promise<void> {
       <summary>
         <svg class="docs-code-chevron" width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="m4 2 4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5" /></svg>
         <span class="docs-code-heading"><span class="docs-code-label" :title="label ?? 'Code'">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></span>
-        <button class="docs-code-copy" type="button" @click.stop="copy">Copy code</button>
+        <button class="docs-code-copy" type="button" @click.stop="copy"><span aria-live="polite" aria-atomic="true">{{ message === 'Copied' ? 'Copied' : 'Copy code' }}</span></button>
       </summary>
       <pre tabindex="0" :aria-label="label ?? 'Code'" :data-language="language"><code><template v-if="tokens"><span v-for="(token, index) in tokens" :key="index" :style="{ color: token.color }">{{ token.content }}</span></template><template v-else>{{ source }}</template></code></pre>
     </details>
     <p v-if="highlightingFailed" class="docs-code-message" role="status">Syntax highlighting unavailable. The source is still readable and can be copied.</p>
-    <p v-if="message" class="docs-code-message" role="status">{{ message }}</p>
+    <p v-if="message && message !== 'Copied'" class="docs-code-message" role="status">{{ message }}</p>
   </div>
 </template>
