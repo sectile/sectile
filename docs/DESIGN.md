@@ -4,7 +4,7 @@ description: A neutral reading surface for inspectable interaction behavior.
 colors:
   accent: "#000000"
   accent-hover: "#262626"
-  accent-soft: "#eeeeee"
+  accent-soft: "#f3f3f3"
   paper: "#ffffff"
   paper-muted: "#fafafa"
   ink: "#171717"
@@ -12,7 +12,7 @@ colors:
   rule: "#e5e5e5"
   control-border: "#8a8a8a"
   checkbox-border: "#737373"
-  focus: "#171717"
+  focus: "#737373"
   code-background: "#fafafa"
   code-text: "#171717"
   code-muted: "#666666"
@@ -175,11 +175,11 @@ This private contract belongs to the Vue/Vite documentation package. It governs 
 
 ### Primary
 
-Black anchors primary actions, checked controls, and the current navigation context. Action hover deepens the neutral surface; selected rows and pressed choices use the soft neutral wash. On-accent text remains white.
+Black anchors primary actions and binary checked controls. Hover uses a restrained neutral wash without changing perimeters; selected rows and pressed choices use a light neutral surface and ink, with an underline or an existing indicator identifying selection. Preview choices keep their text weight stable across state changes so their dimensions stay constant. On-accent text remains white for primary actions and binary checked controls.
 
 ### Neutral
 
-Paper is the reading canvas and live-preview surface; muted paper supports thumbnails, inline code, and source blocks. Ink carries headings and body copy; muted ink carries supporting text. Rule defines panel and header boundaries, while control and checkbox borders preserve stronger interactive edges. Focus uses the shared ink outline. Text selection uses a transparent neutral mix of the accent.
+Paper is the reading canvas and live-preview surface; muted paper supports thumbnails, inline code, and source blocks. Ink carries headings and body copy; muted ink carries supporting text. Rule defines panel and header boundaries, while control and checkbox borders preserve stronger interactive edges. Bordered controls use a contrast-checked gray keyboard outline. Borderless supporting actions use a text underline for keyboard focus. Text selection uses a 10% neutral mix of the accent.
 
 Error, success, and warning foreground/surface pairs belong to semantic feedback. Disabled text, surface, and border have explicit roles. The overlay token belongs to modal examples. Code keyword, string, constant, function, tag, attribute, and punctuation colors distinguish syntax inside the light source surface.
 
@@ -215,7 +215,7 @@ Gallery and inset menu geometry uses a 1px border and 8px inset: the inner radiu
 
 ## Components
 
-Buttons use black with white text for primary actions and white with a control border for secondary actions. Inputs share the pill silhouette; textareas use the item radius. Keyboard focus uses a 2px ink outline with a 3px offset. Disabled styling preserves explicit text and boundary colors.
+Buttons use black with white text for primary actions and white with a control border for secondary actions. Quiet supporting actions stay borderless in every state; hover changes the neutral surface and text, and keyboard focus underlines the label. Inputs share the pill silhouette; textareas use the item radius. Other keyboard focus uses a 2px gray outline with a 2px offset. Disabled styling preserves explicit text and boundary colors.
 
 Current sidebar links use neutral wash and black text; hover uses muted paper and ink. Environment navigation adds a black underline. Tags use neutral pill surfaces. Menus and popovers use white panels with inset items; selected and pressed choices use neutral wash.
 

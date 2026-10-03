@@ -19,7 +19,7 @@ const descriptions: Record<string, string> = { Standard: 'Delivered within three
 .crossfade-demo__controls, .crossfade-demo__controls [data-part="indicator-group"] { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--docs-space-2, 8px); }
 .crossfade-demo__controls { margin-top: var(--docs-space-4, 16px); }
 .crossfade-demo__controls button { min-height: var(--docs-control-height, 44px); padding: 8px 12px; border: 1px solid var(--docs-control-border, #8a8a8a); border-radius: var(--docs-control-radius, 9999px); background: var(--docs-bg, #ffffff); color: inherit; font: inherit; font-size: var(--docs-font-size-label, 14px); line-height: 1.5; }
-.crossfade-demo__controls [data-state="active"] { border-color: var(--docs-accent, #000000); background: var(--docs-accent-soft, #eeeeee); color: var(--docs-accent, #000000); }
+.crossfade-demo__controls [data-state="active"] { background: var(--docs-accent-soft, #f3f3f3); color: var(--docs-text, #171717); text-decoration: underline; text-underline-offset: 3px; }
 .crossfade-demo output { display: block; margin-top: var(--docs-space-4, 16px); }
 @media (prefers-reduced-motion: reduce) { .crossfade-demo__slide { transition: none; } }
 </style>

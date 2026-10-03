@@ -29,7 +29,7 @@ const description = computed(() => props.componentIndex ? components.find(entry 
 }
 
 .docs-example-card:hover {
-  border-color: var(--docs-control-border);
+  background: var(--docs-bg-muted);
 }
 
 .docs-example-card__thumbnail {

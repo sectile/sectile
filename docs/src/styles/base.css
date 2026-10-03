@@ -67,5 +67,5 @@ button:disabled {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--docs-accent) 18%, transparent);
+  background: color-mix(in srgb, var(--docs-accent) 10%, transparent);
 }

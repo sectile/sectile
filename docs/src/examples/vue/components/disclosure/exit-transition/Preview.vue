@@ -49,7 +49,7 @@ onBeforeUnmount(() => { observer?.disconnect(); observer = undefined; });
   line-height: 1.5;
   cursor: pointer;
 }
-.presence-demo__trigger:focus-visible { outline: 2px solid var(--docs-focus, #171717); outline-offset: 3px; }
+.presence-demo__trigger:focus-visible { outline: var(--docs-focus-width, 2px) solid var(--docs-focus, #737373); outline-offset: var(--docs-focus-offset, 2px); }
 .presence-demo__stage { min-height: 176px; padding-top: 16px; }
 .presence-demo__panel {
   padding: 24px;

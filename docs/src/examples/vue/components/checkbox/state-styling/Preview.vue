@@ -60,8 +60,8 @@ const checked = ref<CheckboxValue>(false);
   background: var(--docs-accent, #000000);
 }
 .styled-checkbox:focus-visible {
-  outline: 2px solid var(--docs-focus, #171717);
-  outline-offset: 3px;
+  outline: var(--docs-focus-width, 2px) solid var(--docs-focus, #737373);
+  outline-offset: var(--docs-focus-offset, 2px);
 }
 .styled-checkbox:disabled {
   color: var(--docs-disabled-text, #666666);

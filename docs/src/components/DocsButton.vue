@@ -36,7 +36,7 @@ defineExpose({ element, focus: (options?: FocusOptions) => element.value?.focus(
   text-decoration: none;
   white-space: nowrap;
 }
-.docs-button:hover:not(:disabled) { background: var(--docs-bg-muted); }
+.docs-button:hover:not(:disabled) { background: var(--docs-hover-bg); }
 .docs-button--primary {
   border-color: transparent;
   background: var(--docs-accent);
@@ -45,6 +45,14 @@ defineExpose({ element, focus: (options?: FocusOptions) => element.value?.focus(
 }
 .docs-button--primary:hover:not(:disabled) { background: var(--docs-accent-hover); }
 .docs-button--quiet { border-color: transparent; background: transparent; color: var(--docs-text-muted); }
-.docs-button--quiet:hover:not(:disabled) { border-color: var(--docs-control-border); color: var(--docs-text); }
+.docs-button--quiet:hover:not(:disabled) { color: var(--docs-text); }
+.docs-button--quiet:focus { outline: none; }
+.docs-button--quiet:focus-visible {
+  color: var(--docs-text);
+  text-decoration: underline;
+  text-decoration-thickness: var(--docs-border-width);
+  text-underline-offset: 3px;
+}
 .docs-button:disabled { background: var(--docs-disabled-bg); color: var(--docs-disabled-text); border-color: var(--docs-disabled-border); }
+.docs-button--quiet:disabled { border-color: transparent; }
 </style>

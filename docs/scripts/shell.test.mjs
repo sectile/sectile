@@ -78,6 +78,10 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.match(await read('src/components/DocsButton.vue'), /from '@sectile\/vue\/primitive'/u);
   assert.match(await read('src/components/DocsLink.vue'), /from '@sectile\/vue\/primitive'/u);
   assert.match(await read('src/components/DocsDisclosure.vue'), /from '@sectile\/vue\/disclosure'/u);
+  const buttonStyles = parse(await read('src/components/DocsButton.vue')).descriptor.styles.map(style => style.content).join('\n');
+  assert.match(buttonStyles, /\.docs-button--quiet\s*\{[^}]*border-color:\s*transparent/u);
+  assert.match(buttonStyles, /\.docs-button--quiet:focus\s*\{[^}]*outline:\s*none/u);
+  assert.match(buttonStyles, /\.docs-button--quiet:focus-visible\s*\{[^}]*text-decoration:\s*underline/u);
   assert.doesNotMatch(shell, /\.docs-(?:button|sidebar|breadcrumb|example-card|disclosure)\b/u, 'shared UI styles belong to their components, not the page shell');
   const styleSources = [tokens, shell, preview, await read('src/styles/base.css'), ...await componentStyles()];
   const declarations = new Set(styleSources.flatMap(source => [...source.matchAll(/(--docs-[\w-]+)\s*:/gu)].map(([, name]) => name)));
@@ -98,6 +102,7 @@ test('documentation palette maintains readable text and identifiable control edg
   };
   for (const [foreground, background, minimum] of [
     ['text', 'bg', 4.5], ['text-muted', 'bg-muted', 4.5],
+    ['text', 'hover-bg', 4.5], ['text-muted', 'hover-bg', 4.5],
     ['bg', 'accent', 4.5], ['bg', 'accent-hover', 4.5],
     ['code-text', 'code-bg', 4.5], ['code-muted', 'code-bg', 4.5],
     ...['keyword', 'string', 'constant', 'function', 'tag', 'attribute', 'punctuation'].map(role => [`code-${role}`, 'code-bg', 4.5]),
