@@ -255,6 +255,76 @@ test('high-level virtual collections share SSR scrollport defaults and caller st
   }
 });
 
+test('high-level virtual host refs accept elements independently of the ambient constructor', async (t) => {
+  const HostElement = globalThis.HTMLElement;
+  const descriptors = Object.fromEntries(['clientHeight', 'clientWidth', 'getBoundingClientRect']
+    .map((key) => [key, Object.getOwnPropertyDescriptor(HostElement.prototype, key)]));
+  Object.defineProperty(HostElement.prototype, 'clientHeight', { configurable: true, get: () => 80 });
+  Object.defineProperty(HostElement.prototype, 'clientWidth', { configurable: true, get: () => 120 });
+  Object.defineProperty(HostElement.prototype, 'getBoundingClientRect', {
+    configurable: true, writable: true, value() {
+      return { x: 0, y: 0, top: 0, left: 0, right: 120, bottom: 35,
+        width: 120, height: 35, toJSON() {} };
+    },
+  });
+  // Emulator windows share constructors; make the mismatch explicit rather than
+  // mistaking a second emulator document for a native cross-realm witness.
+  globalThis.HTMLElement = class AmbientElement extends HostElement {};
+  try {
+    for (const component of [VirtualList, VirtualGrid, VirtualMasonry, VirtualSpatial]) {
+      const policies = component === VirtualSpatial ? ['mounted', 'declared'] : ['fixed', 'estimated', 'measured'];
+      for (const policy of policies) await t.test(`${component.name}: ${policy}`, async () => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        const exposed = ref();
+        const activeBefore = [...FakeResizeObserver.observers].filter((observer) => observer.elements.size > 0).length;
+        const app = createApp({ render: () => h(component, {
+          ref: exposed, items: [{ id: 'item' }], getID: (item) => item.id,
+          sizePolicy: policy === 'measured' ? { kind: policy }
+            : policy === 'estimated' ? { kind: policy, estimate: 20 } : { kind: 'fixed', extent: 20 },
+          lanePolicy: { kind: 'fixed', count: 1 }, sizeOwnership: policy,
+          getRect: () => ({ x: 7, y: 9, width: 20, height: 20 }),
+          initialViewport: { x: 0, y: 0, width: 120, height: 80 }, overscan: 0,
+        }, { item: ({ id }) => id }) });
+        try {
+          app.mount(host);
+          await settle();
+          await settle();
+          assert.equal(exposed.value.phase, 'ready');
+          const item = host.querySelector('[data-part="item"]');
+          assert.ok(item !== null);
+          assert.equal(item instanceof globalThis.HTMLElement, false);
+          const measures = policy === 'measured' || policy === 'estimated' || policy === 'mounted';
+          assert.equal([...FakeResizeObserver.observers].some((observer) => observer.elements.has(item)), measures);
+          item.getBoundingClientRect = () => ({ x: 0, y: 0, top: 0, left: 0,
+            right: 50, bottom: 45, width: 50, height: 45, toJSON() {} });
+          FakeResizeObserver.notify(item);
+          assert.equal(exposed.value.flush().ok, true);
+          await settle();
+          if (component === VirtualSpatial) {
+            const rect = exposed.value.state.items.at(0).rect;
+            assert.deepEqual(rect, { x: 7, y: 9, width: measures ? 50 : 20, height: measures ? 45 : 20 });
+          } else {
+            const extents = component === VirtualGrid ? exposed.value.state.rows : exposed.value.state.extents;
+            assert.deepEqual(extents.extentAt(0), { kind: 'exact', value: measures ? 45 : 20 });
+          }
+        } finally {
+          app.unmount();
+          host.remove();
+          await settle();
+          assert.equal([...FakeResizeObserver.observers].filter((observer) => observer.elements.size > 0).length, activeBefore);
+        }
+      });
+    }
+  } finally {
+    globalThis.HTMLElement = HostElement;
+    for (const [key, descriptor] of Object.entries(descriptors)) {
+      if (descriptor === undefined) delete HostElement.prototype[key];
+      else Object.defineProperty(HostElement.prototype, key, descriptor);
+    }
+  }
+});
+
 test('document page movement reprojects high-level viewports without repairing layout geometry', async () => {
   const heightDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
   const widthDescriptor = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');

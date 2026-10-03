@@ -33,6 +33,7 @@ import {
   type VirtualScrollport,
 } from '@sectile/dom/virtual';
 import {
+  asHTMLElement,
   useVirtualizerSurfaceRegistration,
   virtualizerNotConnected,
   type VirtualizerItemSize,
@@ -202,7 +203,7 @@ const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
       const existing = refs.get(id);
       if (existing !== undefined) return existing;
       const callback = (value: unknown): void => {
-        const element = value instanceof HTMLElement ? value : null;
+        const element = asHTMLElement(value);
         if (element !== null && elements.get(id) === element) return;
         registrations.get(id)?.();
         registrations.delete(id);

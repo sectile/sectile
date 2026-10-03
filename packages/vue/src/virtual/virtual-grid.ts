@@ -12,7 +12,7 @@ import {
 import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { createDenseTrackGridLayout, trackGridLayoutStrategy, type GridTrackMeasurement, type TrackGridLayoutState, type TrackGridMutation } from '@sectile/virtual/track-grid-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { asHTMLElement, VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
 import { createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualGridProps<Value = unknown, ID extends StableID = StableID>
@@ -111,7 +111,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     let bootstrapScheduled = false;
     let disposed = false;
     const bootstrapItemRef = (index: number, value: unknown): void => {
-      const element = value instanceof HTMLElement ? value : null;
+      const element = asHTMLElement(value);
       if (element === null) bootstrapElements.delete(index);
       else {
         bootstrapElements.set(index, element);

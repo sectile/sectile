@@ -14,7 +14,7 @@ import {
 import { createExtentIndex, createUniformExtentIndex } from '@sectile/virtual/extent-index';
 import { createMasonryLayout, masonryLayoutStrategy, type MasonryLayoutState, type MasonryMeasurement, type MasonryMutation, type MasonryPlacement, type MasonryPlacementPolicy } from '@sectile/virtual/masonry-layout';
 import { createAxisMeasurementResolver, type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { asHTMLElement, VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
 import { constrainPreparedVirtualCollection, createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualMasonryProps<Value = unknown, ID extends StableID = StableID>
@@ -114,7 +114,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       && automaticEstimate.value === undefined
       && prepared.value.domain.size > 0;
     const bootstrapItemRef = (index: number, value: unknown): void => {
-      const element = value instanceof HTMLElement ? value : null;
+      const element = asHTMLElement(value);
       if (element === null) bootstrapElements.delete(index);
       else {
         bootstrapElements.set(index, element);

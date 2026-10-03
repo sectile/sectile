@@ -775,7 +775,7 @@ export function useVirtualizerSurfaceRegistration(
   return useVirtualizerSurface(part);
 }
 
-function asHTMLElement(value: unknown): HTMLElement | null {
+export function asHTMLElement(value: unknown): HTMLElement | null {
   return typeof value === 'object' && value !== null && 'offsetHeight' in value
     ? value as HTMLElement
     : null;

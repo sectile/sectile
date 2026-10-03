@@ -12,7 +12,7 @@ import {
 import { createExtentIndex, createUniformExtentIndex, type ExtentIndex } from '@sectile/virtual/extent-index';
 import { createLinearLayout, linearLayoutStrategyFor, setLinearCrossExtent, tryApplyLinearMeasurements, tryApplyLinearPatch, type LinearAxis, type LinearLayoutState, type LinearMeasurement } from '@sectile/virtual/linear-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
-import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerItemSize, type VirtualizerRootExpose, type VirtualizerRootProps, type VirtualizerRootSlotProps } from './virtual-core.js';
+import { asHTMLElement, VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerItemSize, type VirtualizerRootExpose, type VirtualizerRootProps, type VirtualizerRootSlotProps } from './virtual-core.js';
 import {
   constrainPreparedVirtualCollection,
   createVirtualCollectionExpose,
@@ -174,7 +174,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       const existing = bootstrapRefs.get(index);
       if (existing !== undefined) return existing;
       const callback = (value: unknown): void => {
-        const element = value instanceof HTMLElement ? value : null;
+        const element = asHTMLElement(value);
         if (element === null) {
           bootstrapElements.delete(index);
           if (bootstrapRefs.get(index) === callback) bootstrapRefs.delete(index);
