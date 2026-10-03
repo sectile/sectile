@@ -23,7 +23,7 @@ const inputID = useId();
       label="Parcel length"
     >
       <label :for="inputID" data-example-field-label>Parcel length</label>
-      <div data-example-field-row>
+      <div data-example-field-group>
         <QuantityFieldInput :id="inputID" aria-label="Parcel length" placeholder="Enter a length" />
         <QuantityFieldUnitSelect aria-label="Display unit" />
       </div>

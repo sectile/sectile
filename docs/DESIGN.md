@@ -234,13 +234,16 @@ The field is the primary value; a unit or swatch is a supporting control in the 
 | Sibling gap / label gap | `--docs-field-gap` | 8px |
 | Select arrow | icon size; edge inset equals content inset | 16px; 12px |
 | Select trailing reservation | edge inset + icon + sibling gap | 36px |
-| Numeric value / unit allocation | value width + gap + unit width | 200 + 8 + 104 = 312px maximum |
+| Joined value / unit allocation | value width + unit width + 2 × border | 200 + 104 + 2 = 306px maximum |
+| Joined child height | outer height − 2 × border | 42px |
 | Value wrap basis | `--docs-field-value-min-width` | 144px |
 | Color swatch | field-height square; dedicated swatch inset | 44px; 4px |
 
 The outer height determines the child line box, not vice versa. Field recipes use explicit family, size and leading from this contract. Multiline text, data-cell editors and compact toolbar actions retain their own geometry owners. Single-line fields retain the independent pill-radius role; nested panel surfaces use the concentric-radius calculation above.
 
-Compound rows align controls at the center with a shared height and an 8px gap. Their maximum width is content-role-driven, not an instruction to occupy the entire preview. The value can flex; the unit has a reserved width. Below the combined 144px value basis, 8px gap and 104px unit basis, controls wrap in source order. Inputs may shrink within their own line. Labels and explanatory text can wrap without changing the control height.
+Independent supporting controls, such as a color swatch and text editor, use a centered row with an 8px gap and can wrap in source order. Their allocation is value width + gap + swatch width (200 + 8 + 44 = 252px). Labels and explanatory text can wrap without changing control height.
+
+A number and its unit represent one value and use a joined field: one outer perimeter, one fixed-height grid row and no inter-control gap. The input and unit select occupy explicit columns in row 1. Both derive their 42px borderless child height from the 44px outer field and its 1px border. The unit column is capped at 104px or 40% of available inner width; the value uses the remaining space with a zero intrinsic minimum. The group contracts within the preview while keeping both controls on the same row. Its outer perimeter carries keyboard focus; an underline identifies the focused inner control. The input and select retain separate semantics and native keyboard behavior.
 
 Native unit selection retains its select semantics and keyboard behavior. Documentation supplies one SVG arrow, reserves its space, mirrors its placement in RTL and restores the native arrow in forced colors. Its text-leading inset and arrow-trailing inset use the same token. Numeric text uses tabular numerals. Color swatches are an explicit square-control exception, not a competing text-field padding rule.
 

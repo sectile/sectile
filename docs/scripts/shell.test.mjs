@@ -285,7 +285,11 @@ test('shared fields derive equal insets, line boxes and compound allocation from
   assert.equal(content, 18);
   assert.ok(content >= numeric('--docs-field-icon-size'));
   assert.ok(content >= numeric('--docs-field-font-size'));
-  assert.equal(numeric('--docs-field-value-width') + numeric('--docs-field-gap') + numeric('--docs-field-unit-width'), 312);
+  assert.equal(numeric('--docs-field-value-width') + numeric('--docs-field-gap') + height, 252);
+  assert.equal(height - 2 * border, 42);
+  assert.equal(numeric('--docs-field-value-width') + numeric('--docs-field-unit-width') + 2 * border, 306);
+  assert.equal(values['--docs-field-group-content-height'], 'calc(var(--docs-field-height) - 2 * var(--docs-border-width))');
+  assert.equal(values['--docs-field-group-width'], 'calc(var(--docs-field-value-width) + var(--docs-field-unit-width) + 2 * var(--docs-border-width))');
   assert.equal(inset + numeric('--docs-field-icon-size') + numeric('--docs-field-gap'), 36);
   assert.equal(values['--docs-field-content-height'], 'calc(var(--docs-field-height) - 2 * var(--docs-border-width) - 2 * var(--docs-field-inset))');
   assert.equal(values['--docs-field-select-reserve'], 'calc(var(--docs-field-inset) + var(--docs-field-icon-size) + var(--docs-field-gap))');
@@ -299,6 +303,13 @@ test('shared fields derive equal insets, line boxes and compound allocation from
   assert.match(fields, /background-position: right var\(--docs-field-inset\) center/u);
   assert.match(fields, /:dir\(rtl\)[\s\S]*background-position: left var\(--docs-field-inset\) center/u);
   assert.match(fields, /forced-colors: active[\s\S]*appearance: auto/u);
+  const group = /\[data-example-field-group\] \{([^}]+)\}/u.exec(fields)?.[1];
+  assert.ok(group);
+  assert.match(group, /display: grid/u);
+  assert.match(group, /grid-template-columns: minmax\(0, 1fr\) min\(var\(--docs-field-unit-width\), 40%\)/u);
+  assert.match(group, /grid-template-rows: var\(--docs-field-group-content-height\)/u);
+  assert.match(group, /gap: 0/u);
+  assert.match(fields, /\[data-example-field-group\] > \[data-part\] \{\s*grid-row: 1/u);
 });
 
 test('Shiki highlights each documented language without changing source text or inventing colors', async () => {
@@ -970,7 +981,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-temporal-date-time-selection': [/Selected: 2026-10-03T09:00/u, /without a time zone/u],
           'vue-temporal-date-time-range-selection': [/Selected: 2026-10-03T09:00.*2026-10-08T17:00/u, /Range end/u],
           'vue-components-meter-group-storage-budget': [/60 \/ 100/u, /40 units remaining/u, /Documents/u, /Media/u],
-          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u, /data-example-field-row/u],
+          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u, /data-example-field-group/u],
           'vue-components-window-splitter-bounded-panes': [/First pane: 50%/u, /Resize delivery panels/u],
           'vue-virtual-measured-list': [/Delivery 1/u, /Mounted content establishes/u],
           'vue-virtual-responsive-grid': [/Parcel 1/u, /64px tall/u],

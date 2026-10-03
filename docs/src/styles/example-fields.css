@@ -44,11 +44,10 @@
   justify-content: start;
   gap: var(--docs-field-gap);
   inline-size: 100%;
-  max-inline-size: calc(var(--docs-field-value-width) + var(--docs-field-gap) + var(--docs-field-unit-width));
+  max-inline-size: calc(var(--docs-field-value-width) + var(--docs-field-gap) + var(--docs-field-height));
 }
 
 .docs-preview [data-example-field-row] :is(
-  [data-scope="quantity-field"][data-part="input"],
   [data-scope="color-picker"][data-part="text-input"]
 ) {
   flex: 1 1 var(--docs-field-value-min-width);
@@ -57,7 +56,6 @@
 }
 
 .docs-preview [data-scope="quantity-field"][data-part="unit-select"] {
-  flex: 0 0 var(--docs-field-unit-width);
   inline-size: var(--docs-field-unit-width);
   max-inline-size: 100%;
   appearance: none;
@@ -82,4 +80,45 @@
     appearance: auto;
     background-image: none;
   }
+}
+
+/* A value and its unit share one perimeter and one fixed-height grid row. */
+.docs-preview [data-example-field-group] {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) min(var(--docs-field-unit-width), 40%);
+  grid-template-rows: var(--docs-field-group-content-height);
+  gap: 0;
+  inline-size: 100%;
+  max-inline-size: var(--docs-field-group-width);
+  block-size: var(--docs-field-height);
+  padding: 0;
+  overflow: hidden;
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-field-radius);
+  background-color: var(--docs-bg);
+}
+.docs-preview [data-example-field-group] > [data-part] {
+  grid-row: 1;
+  min-inline-size: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  block-size: var(--docs-field-group-content-height);
+  min-block-size: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: transparent;
+  font-variant-numeric: tabular-nums;
+}
+.docs-preview [data-example-field-group] > [data-part="input"] { grid-column: 1; }
+.docs-preview [data-example-field-group] > [data-part="unit-select"] { grid-column: 2; }
+.docs-preview [data-example-field-group]:focus-within { border-color: var(--docs-focus); }
+.docs-preview [data-invalid] [data-example-field-group] { border-color: var(--docs-error); }
+.docs-preview [data-example-field-group]:has(:focus-visible) {
+  outline: var(--docs-focus-width) solid var(--docs-focus);
+  outline-offset: var(--docs-focus-offset);
+}
+.docs-preview [data-example-field-group] > [data-part]:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
