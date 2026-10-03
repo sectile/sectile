@@ -1,0 +1,148 @@
+/* Documentation-owned presentation for structured examples, not feature source. */
+.docs-preview :is([data-example-tree-grid], [data-example-data-grid], [data-example-grid], [data-example-tree-view]) {
+  width: 100%;
+  min-width: 0;
+}
+
+.docs-preview :is([data-scope="tree-view"], [data-scope="grid"])[data-part="root"] {
+  width: 100%;
+}
+
+.docs-preview [data-scope="tree-view"][data-part="item"] {
+  min-width: 0;
+  border-radius: var(--docs-item-radius);
+  font-size: var(--docs-font-size-label);
+}
+.docs-preview [data-example-tree-leaf] {
+  display: flex;
+  align-items: center;
+  gap: var(--docs-space-2);
+  min-height: var(--docs-example-row-height);
+  padding: var(--docs-space-2);
+  padding-inline-start: calc(var(--docs-space-2) + var(--docs-example-icon-size));
+}
+.docs-preview [data-scope="tree-view"][data-part="item"][data-selected] > [data-example-tree-leaf] {
+  background: var(--docs-accent-soft);
+  border-radius: var(--docs-item-radius);
+}
+.docs-preview [data-scope="tree-view"][data-part="group"] {
+  margin-inline-start: var(--docs-example-indent);
+  padding-inline-start: var(--docs-space-2);
+  border-inline-start: var(--docs-border-width) solid var(--docs-border);
+}
+.docs-preview [data-scope="tree-view"][data-part="item"]:focus-visible { outline: none; }
+.docs-preview [data-scope="tree-view"][data-part="item"]:focus-visible > :is([data-example-tree-leaf], [data-part="disclosure"]) { text-decoration: underline; text-underline-offset: 3px; }
+.docs-preview [data-scope="tree-view"][data-part="disclosure"] {
+  display: flex;
+  width: 100%;
+  min-height: var(--docs-example-row-height);
+  align-items: center;
+  gap: var(--docs-space-2);
+  padding: var(--docs-space-2);
+  border: 0;
+  border-radius: var(--docs-item-radius);
+  background: transparent;
+  color: var(--docs-text);
+  text-align: start;
+  font: inherit;
+}
+.docs-preview [data-example-disclosure-icon] {
+  flex: none;
+  width: var(--docs-example-icon-size);
+  height: var(--docs-example-icon-size);
+  transition: transform var(--docs-motion-reveal) var(--docs-ease-out);
+}
+.docs-preview :is([aria-expanded="true"], [data-part="disclosure"][data-state="open"]) > [data-example-disclosure-icon] { transform: rotate(90deg); }
+
+.docs-preview :is([data-example-tree-grid], [data-example-data-grid]) [data-part="root"] {
+  width: 100%;
+  overflow-x: auto;
+}
+.docs-preview :is([data-example-tree-grid] [data-part="row"], [data-example-data-grid] [data-part="header-row"], [data-example-data-grid] [data-part="row"], [data-example-column-headings]) {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 0;
+}
+.docs-preview :is([data-example-column-headings] > span, [data-example-data-grid] [data-part="column-header"]) {
+  display: flex;
+  align-items: center;
+  min-height: var(--docs-example-row-height);
+  padding: var(--docs-space-2);
+  background: var(--docs-bg-muted);
+  color: var(--docs-text-muted);
+  font-size: var(--docs-font-size-label);
+  font-weight: 600;
+  border-bottom: var(--docs-border-width) solid var(--docs-border);
+}
+.docs-preview :is([data-example-tree-grid], [data-example-data-grid]) [data-part="cell"] {
+  display: flex;
+  min-width: 0;
+  min-height: var(--docs-example-row-height);
+  align-items: center;
+  gap: var(--docs-space-2);
+  padding: var(--docs-space-2);
+  border-radius: 0;
+  background: var(--docs-bg);
+  font-size: var(--docs-font-size-label);
+  overflow-wrap: anywhere;
+}
+.docs-preview :is([data-example-tree-grid], [data-example-data-grid]) [data-part="row"] + [data-part="row"] {
+  border-top: var(--docs-border-width) solid var(--docs-border);
+}
+.docs-preview [data-example-tree-grid] [data-part="cell"][data-selected] { background: var(--docs-accent-soft); }
+.docs-preview [data-example-tree-grid] [data-level="2"] [data-column-index="0"] {
+  padding-inline-start: calc(var(--docs-space-2) + var(--docs-example-indent));
+}
+.docs-preview :is([data-example-tree-grid] [data-part="disclosure"], [data-example-data-grid] [data-part="sort-trigger"], [data-example-data-grid] [data-part="row-disclosure"]) {
+  display: inline-flex;
+  min-width: 0;
+  min-height: calc(var(--docs-example-row-height) - 2 * var(--docs-space-2));
+  align-items: center;
+  justify-content: start;
+  gap: var(--docs-space-2);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  text-align: start;
+  font: inherit;
+}
+.docs-preview [data-example-tree-grid] [data-part="editor"] {
+  width: 100%;
+  min-width: 0;
+  min-height: calc(var(--docs-example-row-height) - 2 * var(--docs-space-2));
+  padding: var(--docs-space-1) var(--docs-space-2);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-small-radius);
+  background: var(--docs-bg);
+  color: var(--docs-text);
+  font: inherit;
+}
+.docs-preview [data-example-data-grid] [data-part="filter-control"] {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--docs-control-height);
+  margin-bottom: var(--docs-space-4);
+  padding: var(--docs-space-2) var(--docs-space-3);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-field-radius);
+  background: var(--docs-bg);
+  color: var(--docs-text);
+  font: inherit;
+}
+.docs-preview [data-scope="grid"][data-part="root"] { display: grid; gap: var(--docs-space-2); }
+.docs-preview [data-scope="grid"][data-part="row"] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--docs-space-2); }
+.docs-preview [data-scope="grid"][data-part="cell"] {
+  display: grid;
+  min-height: var(--docs-control-height);
+  place-items: center;
+  padding: var(--docs-space-2);
+  border: var(--docs-border-width) solid var(--docs-border);
+  border-radius: var(--docs-item-radius);
+  font-size: var(--docs-font-size-label);
+}
+.docs-preview [data-example-grid-headings] { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); text-align: center; font-size: var(--docs-font-size-label); color: var(--docs-text-muted); }
+.docs-preview [data-example-sort-icon] { width: var(--docs-example-icon-size); height: var(--docs-example-icon-size); flex: none; color: var(--docs-text-muted); }
+.docs-preview [data-example-data-grid] label { display: block; margin-bottom: var(--docs-space-2); font-size: var(--docs-font-size-label); }
+@media (prefers-reduced-motion: reduce) { .docs-preview [data-example-disclosure-icon] { transition: none; } }

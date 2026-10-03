@@ -253,15 +253,13 @@ test('documentation palette maintains readable text and identifiable control edg
   }
 });
 
-test('copyable styling uses the shared palette and preserves distinct control and panel geometry', async () => {
+test('documentation presentation uses the shared palette and preserves distinct control and panel geometry', async () => {
   const tokens = await read('src/styles/tokens.css');
   const values = Object.fromEntries([...tokens.matchAll(/(--docs-[\w-]+):\s*([^;]+);/gu)].map(([, name, value]) => [name, value.trim()]));
-  for (const example of examples.filter(example => example.kind === 'styling')) {
-    for (const section of example.code) {
-      const source = await read(`src/examples/${section.path.slice(2)}`);
-      for (const [, name, fallback] of source.matchAll(/var\((--docs-[\w-]+),\s*(#[\da-f]{6}|\d+px)\)/gu)) {
-        assert.equal(fallback, values[name], `${example.id}: ${name} fallback matches its shared token`);
-      }
+  for (const path of ['src/styles/example-presence.css']) {
+    const source = await read(path);
+    for (const [, name, fallback] of source.matchAll(/var\((--docs-[\w-]+),\s*(#[\da-f]{6}|\d+px)\)/gu)) {
+      assert.equal(fallback, values[name], `${path}: ${name} fallback matches its shared token`);
     }
   }
   const shell = await read('src/styles/preview.css');
@@ -578,7 +576,7 @@ test('accessibility reference covers every documented Vue component and each dom
   assert.ok(routes.some(route => route.path === '/vue/guides/accessibility' && route.host === 'vue'));
 });
 
-test('behavior example sources stay inside their host and omit presentation styling', async () => {
+test('example sources stay inside their host and presentation belongs to documentation owners', async () => {
   for (const example of examples) {
     assert.equal(example.sourceOwner, example.host);
     assert.match(example.previewPath, new RegExp(`^\\./${example.host}/`, 'u'));
@@ -590,7 +588,9 @@ test('behavior example sources stay inside their host and omit presentation styl
       const source = await read(`src/examples/${section.path.slice(2)}`);
       if (example.host === 'vue') assert.doesNotMatch(source, /@sectile\/dom/u);
       else assert.doesNotMatch(source, /@sectile\/vue|from ['"]vue['"]/u);
-      if (example.kind === 'behavior') assert.doesNotMatch(source, /<style\b|\.css['"]|style\s*=/u);
+      assert.doesNotMatch(source, /<style\b|\.css['"]|style\s*=/u);
+      const { descriptor } = parse(source);
+      if (section.language === 'vue') assert.equal(descriptor.styles.length, 0);
     }
   }
 });
@@ -619,6 +619,27 @@ test('preview is primary and example files use independent automatic code blocks
 
   assert.ok(previewIndex >= 0 && codeIndex > previewIndex);
   assert.match(app, /<CodeBlock[^>]*section\.path[^>]*\/>/u);
+});
+
+test('preview fixtures own explicit canvas roles and retain example transitions outside feature source', async () => {
+  const preview = await read('src/components/DocsPreview.vue');
+  const styles = await read('src/styles/preview.css');
+  const data = await read('src/styles/example-data.css');
+  const presence = await read('src/styles/example-presence.css');
+  const tokens = await read('src/styles/tokens.css');
+  assert.match(preview, /grid-template-columns:\s*minmax\(0, 1fr\)/u);
+  assert.match(preview, /width:\s*100%;\s*min-width:\s*0;\s*max-width:\s*var\(--docs-preview-width\)/u);
+  for (const fixture of ['control', 'surface', 'form']) {
+    assert.match(tokens, new RegExp(`--docs-preview-${fixture}-width:`, 'u'));
+  }
+  assert.match(styles, /@import ['"]\.\/example-data\.css['"]/u);
+  assert.match(styles, /@import ['"]\.\/example-presence\.css['"]/u);
+  assert.match(data, /\[data-part="disclosure"\]\[data-state="open"\]/u);
+  assert.match(data, /\[data-part="sort-trigger"\]/u);
+  for (const recipe of ['presence-demo__panel', 'transition-dialog-demo__content', 'crossfade-demo__slide']) {
+    assert.ok(presence.includes(recipe), recipe);
+  }
+  assert.match(presence, /prefers-reduced-motion:\s*reduce/u);
 });
 
 test('Vue readers have a complete introduction and representative component destinations', () => {
@@ -904,7 +925,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-components-cascade-select-hierarchical-choice': [/Delivery city: Seoul/u, /Korea \/ Seoul/u],
           'vue-components-color-picker-native-and-text': [/Committed color: #4659d4/u, /native-input/u],
           'vue-components-reorder-delivery-sequence': [/Order: Reception → Warehouse → Office/u, /Alt\+ArrowUp/u],
-          'vue-components-tree-grid-editable-parcels': [/Selected cell: a-name/u, /Parcel A/u, /data-expanded/u],
+          'vue-components-tree-grid-editable-parcels': [/Selected cell: Parcel A/u, /data-example-column-headings/u, /aria-label="Parcel: Parcel A"/u, /data-example-disclosure-icon/u, /data-expanded/u],
           'vue-temporal-date-popover': [/Selected: 2026-10-03/u, /Choose date/u],
           'vue-temporal-date-range-popover': [/Selected: 2026-10-03 → 2026-10-08/u, /Range start/u, /Range end/u],
           'vue-temporal-inline-range-calendar': [/Selected: 2026-10-03 → 2026-10-08/u, /data-in-range/u],
@@ -924,8 +945,8 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-virtual-core-composition': [/Delivery 1/u, /Delivery 150/u, /outside the item domain/u],
           'vue-chart-projected-svg': [/Weekday deliveries/u, /<polyline/u, /Wednesday/u, /color tokens/u],
           'vue-chart-view-controls': [/Earlier/u, /Zoom in/u, /Reset range/u, /Control\+wheel/u],
-          'vue-components-grid-two-dimensional-selection': [/Selected slot: A1/u, /data-part="cell"/u],
-          'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /data-expanded/u],
+          'vue-components-grid-two-dimensional-selection': [/Selected slot: Monday 09:00/u, /Monday/u, /data-part="cell"/u],
+          'vue-components-tree-view-expanded-selection': [/Selected: Standard/u, /Home delivery/u, /Collection points/u, /data-example-disclosure-icon/u, /data-expanded/u],
           'vue-components-feed-window-request': [/3 updates · Revision 0/u, /Load newer updates/u],
           'vue-components-menu-nested-actions': [/Invoked: none/u, /Share/u],
           'vue-components-menubar-nested-actions': [/Invoked: none/u, /File/u, /Help/u],
@@ -984,7 +1005,7 @@ test('every shipped route renders and all internal page links resolve', async ()
         };
         for (const state of initialStates[route.exampleId] ?? []) assert.match(preview, state, route.path);
         if (route.exampleId === 'vue-components-disclosure-exit-transition') {
-          assert.match(html, /<output[^>]*aria-live="polite"[^>]*>Open: true · Present<\/output>/u);
+          assert.match(html, /<output[^>]*aria-live="polite"[^>]*>\s*Open: true · Present\s*<\/output>/u);
           assert.match(html, /aria-expanded="true"/u);
         }
       } else if (route.kind === 'component') {

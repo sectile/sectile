@@ -21,6 +21,13 @@
   --docs-item-radius: 8px;
   --docs-small-radius: 6px;
   --docs-control-height: 44px;
+  --docs-preview-control-width: 360px;
+  --docs-preview-surface-width: 480px;
+  --docs-preview-form-width: 440px;
+  --docs-preview-viewport-height: 264px;
+  --docs-example-row-height: 44px;
+  --docs-example-indent: var(--docs-space-5);
+  --docs-example-icon-size: 16px;
   --docs-disclosure-height: 44px;
   --docs-disclosure-inset: var(--docs-space-2);
   --docs-disclosure-content-height: calc(var(--docs-disclosure-height) - 2 * var(--docs-disclosure-inset));

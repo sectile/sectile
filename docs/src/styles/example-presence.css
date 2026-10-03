@@ -1,0 +1,64 @@
+.crossfade-demo { width: min(100%, 440px); color: var(--docs-text, #171717); }
+.crossfade-demo__track { display: grid; min-height: 160px; }
+.crossfade-demo__slide { grid-area: 1 / 1; padding: var(--docs-space-5, 24px); border-radius: var(--docs-radius, 12px); background: var(--docs-bg-muted, #fafafa); opacity: 1; transition: opacity var(--docs-motion-presence, 600ms) var(--docs-ease-out, ease-out); }
+.crossfade-demo__slide[data-state="inactive"] { opacity: 0; }
+.crossfade-demo__slide p { margin: var(--docs-space-2, 8px) 0 0; color: var(--docs-text-muted, #666666); font: inherit; }
+.crossfade-demo__controls, .crossfade-demo__controls [data-part="indicator-group"] { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--docs-space-2, 8px); }
+.crossfade-demo__controls { margin-top: var(--docs-space-4, 16px); }
+.crossfade-demo__controls [data-state="active"] { background: var(--docs-accent-soft, #f3f3f3); color: var(--docs-text, #171717); text-decoration: underline; text-underline-offset: 3px; }
+.crossfade-demo output { display: block; margin-top: var(--docs-space-4, 16px); }
+@media (prefers-reduced-motion: reduce) { .crossfade-demo__slide { transition: none; } }
+
+.transition-dialog-demo__overlay { position: fixed; inset: 0; z-index: 50; background: var(--docs-overlay, rgb(0 0 0 / 32%)); opacity: 1; transition: opacity var(--docs-motion-presence, 600ms) var(--docs-ease-out, ease-out); }
+.transition-dialog-demo__content { position: fixed; top: 50%; left: 50%; z-index: 51; width: min(440px, calc(100vw - 48px)); max-height: calc(100dvh - 48px); overflow: auto; padding: var(--docs-space-6, 32px); border-radius: var(--docs-radius, 12px); background: var(--docs-bg, #ffffff); color: var(--docs-text, #171717); opacity: 1; transform: translate(-50%, -50%); transition: opacity var(--docs-motion-presence, 600ms) var(--docs-ease-out, ease-out), transform var(--docs-motion-presence, 600ms) var(--docs-ease-out, ease-out); }
+.transition-dialog-demo__content [data-part="title"] { margin: 0 0 12px; font-size: var(--docs-font-size-section, 24px); }
+.transition-dialog-demo__content [data-part="description"] { margin: 0 0 24px; color: var(--docs-text-muted, #666666); }
+.transition-dialog-demo__overlay[data-state="closed"] { opacity: 0; }
+.transition-dialog-demo__content[data-state="closed"] { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+.transition-dialog-demo output { display: block; margin-top: var(--docs-space-4, 16px); }
+@media (prefers-reduced-motion: reduce) { .transition-dialog-demo__overlay, .transition-dialog-demo__content { transition: none; } }
+
+.presence-demo { width: min(100%, 360px); color: var(--docs-text, #171717); }
+.presence-demo__trigger,
+.transition-dialog-demo__button,
+.crossfade-demo__controls button {
+  display: inline-flex;
+  min-height: var(--docs-control-height);
+  align-items: center;
+  justify-content: center;
+  gap: var(--docs-space-2);
+  padding: var(--docs-space-2) var(--docs-space-3);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-control-radius);
+  background: var(--docs-bg);
+  color: var(--docs-text);
+  font: inherit;
+  font-size: var(--docs-font-size-label);
+  line-height: 1.5;
+}
+.presence-demo__trigger:focus-visible { outline: var(--docs-focus-width, 2px) solid var(--docs-focus, #737373); outline-offset: var(--docs-focus-offset, 2px); }
+.presence-demo__stage { min-height: 176px; padding-top: 16px; }
+.presence-demo__panel {
+  padding: 24px;
+  border-radius: var(--docs-radius, 12px);
+  background: var(--docs-bg-muted, #fafafa);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--docs-motion-presence, 600ms) ease-out, transform var(--docs-motion-presence, 600ms) ease-out;
+}
+.presence-demo__panel[data-state="closed"] { opacity: 0; transform: translateY(-8px); }
+.presence-demo__panel p {
+  margin: 8px 0 0;
+  color: var(--docs-text-muted, #666666);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.presence-demo__status {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  color: var(--docs-text-muted, #666666);
+}
+@media (prefers-reduced-motion: reduce) {
+  .presence-demo__panel { transition: none; }
+}
