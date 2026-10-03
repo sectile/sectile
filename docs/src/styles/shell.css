@@ -1047,6 +1047,7 @@
 .docs-preview [data-example-chart-svg] :is(th, td) { padding: var(--docs-space-2) var(--docs-space-3); }
 .docs-preview [data-example-chart-svg] caption { text-align: left; font-weight: 600; padding-bottom: var(--docs-space-2); }
 .docs-preview .docs-example-source-error { color: var(--docs-error); }
+.docs-preview [data-example-portal-destination] .docs-example-popover-content { width: 100%; max-width: 320px; }
 .docs-preview [data-example-tabular] { overflow-x: auto; }
 .docs-preview [data-example-tabular] table { width: 100%; border-collapse: collapse; background: var(--docs-bg); text-align: left; font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-tabular] caption { padding: var(--docs-space-3); font-weight: 600; text-align: left; }

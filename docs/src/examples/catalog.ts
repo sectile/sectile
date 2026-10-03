@@ -2275,6 +2275,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/page-and-retry/Preview.vue' }, { label: 'TypeScript · failure simulation', language: 'ts', path: './vue/tabular/page-and-retry/example.ts' }, { label: 'TypeScript · member source', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
   },
   {
+    id: 'vue-components-host-provider-local-portal', host: 'vue', area: 'components', subject: 'HostProvider',
+    slug: 'host-provider/local-portal', title: 'An application-owned portal destination',
+    description: 'Route descendant popup content to an application element through HostProvider. The trigger waits until the template ref is mounted.', focus: 'Inherited portal destination and mounted target',
+    kind: 'behavior', fixture: 'surface', tags: ['portalTarget', 'PopoverPortal', 'template ref'], sourceOwner: 'vue',
+    previewPath: './vue/components/host-provider/local-portal/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/components/host-provider/local-portal/Preview.vue' }], related: [],
+  },
+  {
     id: 'vue-chart-line-series', host: 'vue', area: 'chart', subject: 'Chart',
     slug: 'line-series', title: 'A labeled line series',
     description: 'Map delivery records to two numeric axes and a line layer. Drawing begins after mounting; keyboard navigation uses application-provided record labels.', focus: 'Declarative axes, stable IDs and accessible records',

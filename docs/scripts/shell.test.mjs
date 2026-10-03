@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { getEventListeners } from 'node:events';
 import { fileURLToPath } from 'node:url';
-import { createRenderer, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
+import { createRenderer, createSSRApp, defineComponent, h, nextTick, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createServer } from 'vite';
 import {
@@ -185,6 +185,13 @@ test('every shipped route renders and all internal page links resolve', async ()
   try {
     const { default: App } = await server.ssrLoadModule('/src/App.vue');
     const { currentPath } = await server.ssrLoadModule('/src/router.ts');
+    const { HostProvider } = await server.ssrLoadModule('@sectile/vue/host-provider');
+    const { PopoverPortal } = await server.ssrLoadModule('@sectile/vue/popover');
+    for (const override of [undefined, '#override-destination']) {
+      const context = {};
+      await renderToString(createSSRApp({ render: () => h(HostProvider, { portalTarget: '#application-destination' }, () => h(PopoverPortal, override === undefined ? {} : { to: override }, () => h('p', 'Portal destination witness'))) }), context);
+      assert.match(context.teleports[override ?? '#application-destination'], /Portal destination witness/u);
+    }
     const { validateEmailAvailability } = await server.ssrLoadModule('/src/examples/vue/form/async-availability/example.ts');
     const asyncContext = signal => ({ trigger: 'input', intent: 'interaction', changedFieldId: 'email', signal });
     const canceled = new AbortController();
@@ -390,6 +397,7 @@ test('every shipped route renders and all internal page links resolve', async ()
         const initialStates = {
           'vue-tabular-sortable-data-grid': [/Sortable project members/u, /Search members/u, /evaluates the query/u],
           'vue-tabular-page-and-retry': [/Page 1 of 2/u, /Paged project members/u, /Simulate failed reload/u, /last accepted rows/u],
+          'vue-components-host-provider-local-portal': [/Open local details/u, /Application portal destination/u, /Open: false/u, /Floating positioning is disabled/u],
           'vue-tabular-grouped-data-tree-grid': [/Project members grouped by role/u, /Expansion requests a new source view/u],
           'vue-form-validation-and-server-issues': [/No accepted submission yet/u, /Confirm email/u, /does not contact a server/u],
           'vue-components-primitive-element-adoption': [/Activations: 0/u, /data-example-adopted-button/u],
