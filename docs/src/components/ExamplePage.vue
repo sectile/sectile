@@ -4,6 +4,7 @@ import { componentPath, components, type ExampleDefinition } from '../examples/c
 import { routeHref } from '../router.js';
 import { runtimeFor } from '../examples/runtime.js';
 import CodeBlock from './CodeBlock.vue';
+import DocsButton from './DocsButton.vue';
 
 const props = defineProps<{ example: ExampleDefinition; embedded?: boolean }>();
 const runtime = computed(() => runtimeFor(props.example));
@@ -21,7 +22,7 @@ const accessibilityComponent = computed(() => components.find(component => compo
     <div class="docs-example-detail__heading">
       <component :is="embedded ? 'h3' : 'h2'" :id="`${example.id}-preview`">Preview</component>
       <div class="docs-example-detail__actions">
-        <button type="button" @click="generation++">Reset example</button>
+        <DocsButton variant="quiet" @click="generation++">Reset example</DocsButton>
       </div>
     </div>
     <div class="docs-preview" :class="`docs-preview--${example.fixture}`">
@@ -34,3 +35,43 @@ const accessibilityComponent = computed(() => components.find(component => compo
     </div>
   </section>
 </template>
+
+<style scoped>
+.docs-example-detail {
+  margin-top: var(--docs-space-6);
+}
+.docs-example-detail__heading h3 { margin: 0; font-size: 17px; }
+.docs-example-detail__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--docs-space-4); font-size: var(--docs-font-size-code); }
+.docs-example-detail__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--docs-space-4);
+  margin-bottom: var(--docs-space-4);
+}
+
+.docs-example-detail__heading h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.docs-example-detail__heading > span {
+  color: var(--docs-text-muted);
+  font-size: var(--docs-font-size-code);
+}
+
+@media (max-width: 520px) {
+  .docs-example-detail__heading {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--docs-space-1);
+  }
+}
+
+.docs-code-stack {
+  display: grid;
+  margin-top: var(--docs-space-5);
+  gap: var(--docs-space-4);
+  padding-bottom: var(--docs-space-5);
+}
+</style>

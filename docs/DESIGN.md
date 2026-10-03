@@ -155,6 +155,14 @@ Open white paper, near-black copy, rounded system headings, and compact controls
 
 This private contract belongs to the Vue/Vite documentation package. It governs the reading shell and documentation-owned examples; application presentation remains with consumers of Sectile's headless components. Root `DESIGN.md` governs the broader product identity.
 
+## Style ownership
+
+`tokens.css` owns shared geometry, colors, and typography; `base.css` owns document defaults and focus. `shell.css` owns page and navigation layout. Reusable documentation UI owns scoped styles in its Vue component: `DocsButton`, `CopyButton`, `CodeBlock`, `ExamplePage`, and `ExampleGallery`.
+
+`DocsButton` supplies centered content, native button/link behavior, variants, and sizing through parent-supplied CSS properties. `CopyButton` composes it and owns clipboard feedback, stable width, source-change reset, and stale async completion handling. Callers supply the source rather than implementing feedback again. No feedback timer is needed.
+
+`preview.css` owns shared presentation for headless example descendants, including portaled content; it stays global because those elements are not documentation component parts. `accessibility.css` owns the reference table and disclosure presentation shared by the accessibility pages. These styles do not enter displayed behavior source or the published packages.
+
 **Key Characteristics:**
 
 - White canvas, near-black text, and black primary actions.

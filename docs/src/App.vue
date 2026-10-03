@@ -9,9 +9,10 @@ import GuidePage from './components/GuidePage.vue';
 import AccessibilityReference from './components/AccessibilityReference.vue';
 import { componentAccessibility, domainAccessibility } from './accessibility.js';
 import DomainAccessibility from './components/DomainAccessibility.vue';
+import DocsButton from './components/DocsButton.vue';
 
 const menuOpen = ref(false);
-const menuButton = ref<HTMLButtonElement>();
+const menuButton = ref<InstanceType<typeof DocsButton>>();
 const main = ref<HTMLElement>();
 const activeHost = computed(() => hosts.find((host) => host.id === currentRoute.value?.host) ?? hosts[0]);
 const activeArea = computed(() => areas.find((area) => area.id === currentRoute.value?.area));
@@ -48,7 +49,7 @@ function closeMenu(event: KeyboardEvent): void {
         <a :href="routeHref('/vue')" :aria-current="activeHost.id === 'vue' ? 'location' : undefined" @click="handleRouteClick($event, '/vue')">Vue</a>
         <a :href="routeHref('/dom')" :aria-current="activeHost.id === 'dom' ? 'location' : undefined" @click="handleRouteClick($event, '/dom')">DOM</a>
       </nav>
-      <button ref="menuButton" class="docs-menu-button" type="button" :aria-expanded="menuOpen" aria-controls="docs-navigation" @click="menuOpen = !menuOpen">{{ menuOpen ? 'Close menu' : 'Menu' }}</button>
+      <DocsButton ref="menuButton" class="docs-menu-button" :aria-expanded="menuOpen" aria-controls="docs-navigation" @click="menuOpen = !menuOpen">{{ menuOpen ? 'Close menu' : 'Menu' }}</DocsButton>
     </header>
     <div class="docs-body">
       <aside id="docs-navigation" class="docs-sidebar" :class="{ 'is-open': menuOpen }">
@@ -85,7 +86,7 @@ function closeMenu(event: KeyboardEvent): void {
             <template v-if="currentRoute?.kind === 'home' || (currentRoute?.kind === 'host' && activeHost.id === 'vue')">
               <h1 class="docs-home-title">Interaction without<br class="docs-desktop-break" /> a prescribed look.</h1>
               <p class="docs-page__lede">Sectile is a renderer-neutral interaction system. Its headless Vue components handle state, keyboard input, and focus while your application owns the presentation.</p>
-              <div class="docs-home-actions"><a class="docs-button" :href="routeHref('/vue/getting-started')" @click="handleRouteClick($event, '/vue/getting-started')">Get started with Vue</a><span>Vue 3.5+</span></div>
+              <div class="docs-home-actions"><DocsButton variant="primary" :href="routeHref('/vue/getting-started')" @click="handleRouteClick($event, '/vue/getting-started')">Get started with Vue</DocsButton><span>Vue 3.5+</span></div>
               <CodeBlock label="Install in your Vue application" language="bash" :source="installation" />
               <section class="docs-prose-section">
                 <h2>Behavior and appearance, kept separate</h2>

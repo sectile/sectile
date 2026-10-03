@@ -37,3 +37,136 @@ const count = (example: ExampleDefinition) => props.examples.filter((entry) => e
     </a>
   </div>
 </template>
+
+<style scoped>
+.docs-example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--docs-space-5);
+  margin-top: var(--docs-space-6);
+}
+
+
+.docs-example-card {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-width: 0;
+  padding: var(--docs-surface-inset);
+  overflow: hidden;
+  border: var(--docs-border-width) solid var(--docs-border);
+  border-radius: var(--docs-radius);
+  color: var(--docs-text);
+  text-decoration: none;
+}
+
+.docs-example-card:hover {
+  border-color: var(--docs-control-border);
+}
+
+.docs-example-card__thumbnail {
+  display: grid;
+  min-height: 168px;
+  place-items: center;
+  padding: var(--docs-space-5);
+  min-width: 0;
+  border-radius: var(--docs-inner-radius);
+  background: var(--docs-bg-muted);
+  font-size: var(--docs-font-size-caption);
+}
+
+.docs-example-card__body {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  padding: var(--docs-space-4);
+}
+
+.docs-example-card__body h3 {
+  margin: 0 0 var(--docs-space-2);
+}
+
+.docs-example-card__body p {
+  margin: 0 0 var(--docs-space-4);
+  color: var(--docs-text-muted);
+  font-size: var(--docs-font-size-label);
+  line-height: 1.6;
+}
+
+.docs-example-card__type {
+  margin-top: auto;
+  color: var(--docs-text-muted);
+  font-size: var(--docs-font-size-caption);
+}
+
+.docs-thumbnail-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--docs-space-3);
+}
+
+.docs-thumbnail-checkbox > span {
+  display: grid;
+  width: var(--docs-checkbox-size);
+  height: var(--docs-checkbox-size);
+  flex: none;
+  place-items: center;
+  border: var(--docs-border-width) solid var(--docs-accent);
+  border-radius: var(--docs-small-radius);
+  background: var(--docs-accent);
+  color: var(--docs-on-accent);
+}
+
+.docs-thumbnail-checkbox svg { display: block; }
+
+.docs-thumbnail-dialog {
+  display: grid;
+  width: 220px;
+  max-width: 100%;
+  gap: var(--docs-space-1);
+  padding: var(--docs-space-4);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-radius);
+  background: var(--docs-bg);
+}
+
+.docs-thumbnail-dialog span {
+  color: var(--docs-text-muted);
+  font-size: 11px;
+}
+
+.docs-thumbnail-dialog i {
+  justify-self: start;
+  margin-top: var(--docs-space-2);
+  font-size: 11px;
+  font-style: normal;
+}
+
+.docs-thumbnail-form {
+  display: grid;
+  width: 210px;
+  max-width: 100%;
+  gap: var(--docs-space-2);
+}
+
+.docs-thumbnail-form i {
+  padding: var(--docs-space-2) var(--docs-space-3);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-field-radius);
+  background: var(--docs-bg);
+  color: var(--docs-text-muted);
+  font-style: normal;
+}
+
+.docs-thumbnail-form strong {
+  justify-self: start;
+  padding: var(--docs-space-2) var(--docs-space-3);
+  border-radius: var(--docs-control-radius);
+  background: var(--docs-accent);
+  color: var(--docs-on-accent);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+@media (max-width: 760px) { .docs-example-grid { gap: var(--docs-space-5); } }
+@media (max-width: 520px) { .docs-example-grid { grid-template-columns: 1fr; } }
+</style>

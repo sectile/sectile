@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import test from 'node:test';
 import { getEventListeners } from 'node:events';
 import { fileURLToPath } from 'node:url';
@@ -22,6 +22,13 @@ import { componentAccessibility, domainAccessibility } from '../src/accessibilit
 import { codePresentation } from '../src/code-disclosure.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
+const countButtons = (html, label) => [...html.matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/gu)]
+  .filter(([, content]) => content.replace(/<!--[\s\S]*?-->|<[^>]*>/gu, '').trim() === label).length;
+const componentStyles = async () => {
+  const files = await readdir(new URL('../src/components/', import.meta.url));
+  return Promise.all(files.filter(file => file.endsWith('.vue')).map(async file =>
+    parse(await read(`src/components/${file}`)).descriptor.styles.map(style => style.content).join('\n')));
+};
 
 test('the active documentation package is a Vue and Vite shell', async () => {
   const packageJSON = JSON.parse(await read('package.json'));
@@ -62,9 +69,10 @@ test('the design shell keeps fixed navigation geometry in tokens', async () => {
   assert.match(tokens, /--docs-reading-width: 720px/u);
   assert.match(shell, /grid-template-columns: var\(--docs-sidebar-width\) minmax\(0, 1fr\)/u);
   assert.doesNotMatch(shell, /--vp-/u);
-  assert.match(shell, /\[data-highlighted\]/u);
-  assert.doesNotMatch(shell, /\[data-highlighted="true"\]/u, 'highlight is a presence attribute, not a string boolean');
-  const styleSources = [tokens, shell, await read('src/styles/base.css')];
+  const preview = await read('src/styles/preview.css');
+  assert.match(preview, /\[data-highlighted\]/u);
+  assert.doesNotMatch(preview, /\[data-highlighted="true"\]/u, 'highlight is a presence attribute, not a string boolean');
+  const styleSources = [tokens, shell, preview, await read('src/styles/accessibility.css'), await read('src/styles/base.css'), ...await componentStyles()];
   const declarations = new Set(styleSources.flatMap(source => [...source.matchAll(/(--docs-[\w-]+)\s*:/gu)].map(([, name]) => name)));
   for (const source of styleSources) {
     for (const [, name] of source.matchAll(/var\((--docs-[\w-]+)/gu)) {
@@ -110,7 +118,7 @@ test('copyable styling uses the shared palette and preserves distinct control an
       }
     }
   }
-  const shell = await read('src/styles/shell.css');
+  const shell = await read('src/styles/preview.css');
   assert.match(shell, /\[data-example-text-fields\] textarea \{ border-radius: var\(--docs-item-radius\)/u);
   assert.match(tokens, /--docs-inner-radius: max\(0px, calc\(var\(--docs-radius\) - var\(--docs-border-width\) - var\(--docs-surface-inset\)\)\)/u);
 });
@@ -184,15 +192,25 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
 
     // Compile the same SFC for the client renderer. Vite's SSR module includes
     // SSR-only setup instrumentation and cannot stand in for client mounting.
-    const { descriptor } = parse(await read('src/components/CodeBlock.vue'));
-    const compiled = compileScript(descriptor, { id: 'docs-code-block-test', inlineTemplate: true });
-    const { code } = await transformWithEsbuild(compiled.content, 'CodeBlock.ts', { loader: 'ts' });
-    const clientCode = code.replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve('vue'))}`)
+    const clientModules = new Map();
+    async function clientModule(file) {
+      if (clientModules.has(file)) return clientModules.get(file);
+      const { descriptor } = parse(await read(`src/components/${file}`));
+      const compiled = compileScript(descriptor, { id: `docs-${file}-test`, inlineTemplate: true });
+      const { code } = await transformWithEsbuild(compiled.content, `${file}.ts`, { loader: 'ts' });
+      let clientCode = code.replaceAll('from "vue"', `from ${JSON.stringify(import.meta.resolve('vue'))}`)
       .replaceAll("'../code-highlighting.js'", JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
       .replaceAll('"../code-highlighting.js"', JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
       .replaceAll("'../code-disclosure.js'", JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href))
       .replaceAll('"../code-disclosure.js"', JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href));
-    const { default: ClientCodeBlock } = await import(`data:text/javascript;base64,${Buffer.from(clientCode).toString('base64')}`);
+      for (const [, quote, dependency] of clientCode.matchAll(/from (["'])(\.\/[^"']+\.vue)\1/gu)) {
+        clientCode = clientCode.replaceAll(`${quote}${dependency}${quote}`, JSON.stringify(await clientModule(dependency.slice(2))));
+      }
+      const url = `data:text/javascript;base64,${Buffer.from(clientCode).toString('base64')}`;
+      clientModules.set(file, url);
+      return url;
+    }
+    const { default: ClientCodeBlock } = await import(await clientModule('CodeBlock.vue'));
 
     // A non-DOM Vue host exercises the component, not native browser behavior.
     const node = (type, text = '') => ({ type, text, children: [], props: {}, parent: null });
@@ -253,7 +271,7 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     await find(root, 'button').props.onClick(copyEvent);
     await nextTick();
     assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
-    assert.equal(text(find(root, 'button')), 'Copy code');
+    assert.equal(text(find(root, 'button')), 'Copy failed');
 
     props.value = { source: long, language: 'ts' };
     identity.value++;
@@ -285,6 +303,42 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     const afterUnmount = mutations;
     await new Promise(resolve => setTimeout(resolve, 20));
     assert.equal(mutations, afterUnmount, 'pending highlight does not render after unmount');
+
+    const { default: ClientCopyButton } = await import(await clientModule('CopyButton.vue'));
+    const copySource = shallowRef('original');
+    const outcomes = [];
+    mounted = host.createApp({ render: () => h(ClientCopyButton, {
+      source: copySource.value, onCopied: () => outcomes.push('copied'), onError: error => outcomes.push(error),
+    }) });
+    mounted.mount(root);
+    assert.equal(text(find(root, 'button')), 'Copy code', 'copy defaults need no caller-authored feedback');
+    navigator.clipboard.writeText = async value => { copied = value; };
+    await find(root, 'button').props.onClick(copyEvent);
+    await nextTick();
+    assert.equal(copied, 'original');
+    assert.equal(text(find(root, 'button')), 'Copied');
+    copySource.value = 'updated';
+    await nextTick();
+    assert.equal(text(find(root, 'button')), 'Copy code', 'new source resets the default feedback');
+    let resolveCopy;
+    navigator.clipboard.writeText = () => new Promise(resolve => { resolveCopy = resolve; });
+    const pendingCopy = find(root, 'button').props.onClick(copyEvent);
+    copySource.value = 'replacement';
+    await nextTick();
+    resolveCopy();
+    await pendingCopy;
+    await nextTick();
+    assert.equal(text(find(root, 'button')), 'Copy code', 'stale success cannot label a new source as copied');
+    assert.deepEqual(outcomes, ['copied']);
+    const pendingUnmountCopy = find(root, 'button').props.onClick(copyEvent);
+    mounted.unmount();
+    mounted = undefined;
+    const copyUnmountMutations = mutations;
+    resolveCopy();
+    await pendingUnmountCopy;
+    await nextTick();
+    assert.equal(mutations, copyUnmountMutations);
+    assert.deepEqual(outcomes, ['copied'], 'unmounted copy emits no completion');
   } finally {
     mounted?.unmount();
     if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
@@ -341,7 +395,7 @@ test('behavior example sources stay inside their host and omit presentation styl
 
 test('vue checkbox preview keeps a persistent visual box around the conditional indicator', async () => {
   const preview = await read('src/examples/vue/components/checkbox/controlled-state/Preview.vue');
-  const shell = await read('src/styles/shell.css');
+  const shell = await read('src/styles/preview.css');
   const boxIndex = preview.indexOf('data-example-checkbox-box');
   const indicatorIndex = preview.indexOf('<CheckboxIndicator>');
 
@@ -734,14 +788,14 @@ test('every shipped route renders and all internal page links resolve', async ()
         const subjectExamples = examples.filter((example) => example.host === route.host && example.subject === route.subject);
         assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, subjectExamples.length, route.path);
         assert.equal([...html.matchAll(/<details class="docs-code-disclosure"[^>]*>/gu)].length, subjectExamples.reduce((count, example) => count + example.code.length, 0), route.path);
-        assert.equal([...html.matchAll(/>Reset example<\/button>/gu)].length, subjectExamples.length, route.path);
+        assert.equal(countButtons(html, 'Reset example'), subjectExamples.length, route.path);
         for (const example of subjectExamples) assert.ok(html.includes(`id="${example.id}-preview"`));
         const ids = [...html.matchAll(/\sid="([^"]+)"/gu)].map(([, id]) => id);
         assert.equal(new Set(ids).size, ids.length, `${route.path}: unique element IDs`);
       } else if (route.kind === 'area' && route.host === 'vue' && route.area !== 'components') {
         const domainExamples = examples.filter((example) => example.host === 'vue' && example.area === route.area);
         assert.equal([...html.matchAll(/class="[^"]*\bdocs-preview(?:\s|")/gu)].length, domainExamples.length, route.path);
-        assert.equal([...html.matchAll(/>Reset example<\/button>/gu)].length, domainExamples.length, route.path);
+        assert.equal(countButtons(html, 'Reset example'), domainExamples.length, route.path);
       } else {
         assert.doesNotMatch(html, /class="docs-preview/u, 'Galleries do not mount live previews');
         if (route.path === '/vue/components') {
