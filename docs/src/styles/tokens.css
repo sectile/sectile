@@ -33,6 +33,7 @@
   --docs-switch-inset: calc((var(--docs-switch-height) - 2 * var(--docs-border-width) - var(--docs-switch-thumb)) / 2);
   --docs-switch-travel: calc(var(--docs-switch-width) - 2 * var(--docs-border-width) - 2 * var(--docs-switch-inset) - var(--docs-switch-thumb));
   --docs-reading-width: 720px;
+  --docs-toc-width: 200px;
   --docs-font-size-caption: 12px;
   --docs-font-size-code: 13px;
   --docs-font-size-label: 14px;

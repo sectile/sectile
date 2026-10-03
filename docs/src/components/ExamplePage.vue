@@ -20,7 +20,7 @@ const accessibilityComponent = computed(() => components.find(component => compo
   <p v-else-if="!embedded && example.host === 'vue' && example.area !== 'components'"><DocsRouteLink :to="'/vue/' + example.area + '#accessibility'">Keyboard interaction and accessibility</DocsRouteLink></p>
   <section class="docs-example-detail" :aria-labelledby="`${example.id}-preview`">
     <div class="docs-example-detail__heading">
-      <component :is="embedded ? 'h3' : 'h2'" :id="`${example.id}-preview`">Preview</component>
+      <component :is="embedded ? 'h3' : 'h2'" :id="`${example.id}-preview`" :data-docs-toc-exclude="embedded ? '' : undefined">Preview</component>
       <div class="docs-example-detail__actions">
         <DocsButton variant="quiet" @click="generation++">Reset example</DocsButton>
       </div>

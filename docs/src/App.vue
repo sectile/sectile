@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import DocsPageHeader from './components/DocsPageHeader.vue';
+import DocsPageLayout from './components/DocsPageLayout.vue';
 import DocsSection from './components/DocsSection.vue';
 import DocsRouteLink from './components/DocsRouteLink.vue';
 import { computed, nextTick, ref, watch, watchEffect } from 'vue';
@@ -60,8 +61,7 @@ function closeMenu(event: KeyboardEvent): void {
     <div class="docs-body">
       <DocsSidebar :active-host="activeHost" :menu-open="menuOpen" />
       <main id="docs-content" ref="main" class="docs-main" tabindex="-1">
-        <article class="docs-page">
-          <div class="docs-page__inner">
+        <DocsPageLayout :key="currentPath">
             <DocsBreadcrumbs v-if="currentRoute && currentRoute.kind !== 'home'" :items="breadcrumbs" />
             <template v-if="currentRoute?.kind === 'home' || (currentRoute?.kind === 'host' && activeHost.id === 'vue')">
               <h1 class="docs-home-title">Interaction without<br class="docs-desktop-break" /> a prescribed look.</h1>
@@ -114,8 +114,7 @@ function closeMenu(event: KeyboardEvent): void {
             <ExamplePage v-else-if="currentRoute?.kind === 'example' && activeExample" :example="activeExample" />
             <template v-else><DocsPageHeader title="Page not found" description="This address is not part of the documentation. The overview links to the available guides and examples." /><DocsRouteLink class="docs-next-link" :to="'/'">Return to the overview</DocsRouteLink></template>
             <footer class="docs-page-footer">Sectile · {{ activeHost.label }} documentation</footer>
-          </div>
-        </article>
+        </DocsPageLayout>
       </main>
     </div>
   </DisclosureRoot>

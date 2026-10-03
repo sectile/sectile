@@ -9,7 +9,7 @@ const description = computed(() => props.componentIndex ? components.find(entry 
 </script>
 
 <template>
-<DocsRouteLink class="docs-example-card" :to="destination">
+<DocsRouteLink class="docs-example-card" data-docs-toc-exclude :to="destination">
       <div class="docs-example-card__thumbnail" aria-hidden="true"><DocsExampleThumbnail :example="example" /></div>
       <div class="docs-example-card__body"><h3>{{ componentIndex ? example.subject : example.title }}</h3><p>{{ description }}</p><span class="docs-example-card__type">{{ componentIndex ? `${count} ${count === 1 ? 'example' : 'examples'}` : example.kind === 'styling' ? 'Styling example' : 'Behavior example' }}</span></div>
     </DocsRouteLink>

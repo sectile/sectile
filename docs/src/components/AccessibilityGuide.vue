@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import DocsAnchorNav from './DocsAnchorNav.vue';
-const topics = [{"to":"#names","label":"Names and descriptions"},{"to":"#keyboard","label":"Keyboard and focus"},{"to":"#feedback","label":"Validation and feedback"},{"to":"#motion","label":"Presentation and motion"},{"to":"#composition","label":"Composition and Presence"},{"to":"#testing","label":"Testing"},{"to":"#component-index","label":"Component reference"}];
 import DocsPageHeader from './DocsPageHeader.vue';
 import DocsSection from './DocsSection.vue';
 import DocsRouteLink from './DocsRouteLink.vue';
@@ -32,7 +30,6 @@ const focusExample = `.control:focus-visible {
 
 <template>
   <DocsPageHeader title="Accessibility" description="Sectile projects interaction roles, state and focus behavior. Your application supplies names, instructions, presentation and a usable complete workflow." />
-  <DocsAnchorNav :items="topics" label="Accessibility topics" />
   <DocsSection id="names">
     <h2>Name the control, describe the task</h2>
     <p>An accessible name identifies a control; a description explains how to use it. Prefer a visible label connected to a native input. Use <code>aria-labelledby</code> when existing text names a compound control, or <code>aria-label</code> for a control with no suitable visible text, such as an icon-only button.</p>

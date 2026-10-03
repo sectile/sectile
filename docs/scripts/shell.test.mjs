@@ -20,6 +20,7 @@ import { routes } from '../src/routes.ts';
 import { highlightCode } from '../src/code-highlighting.ts';
 import { componentAccessibility, domainAccessibility } from '../src/accessibility.ts';
 import { codePresentation } from '../src/code-disclosure.ts';
+import { collectOutline, connectOutline, outlineIndex } from '../src/page-outline.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const countButtons = (html, label) => [...html.matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/gu)]
@@ -29,6 +30,95 @@ const componentStyles = async () => {
   return Promise.all(files.filter(file => file.endsWith('.vue')).map(async file =>
     parse(await read(`src/components/${file}`)).descriptor.styles.map(style => style.content).join('\n')));
 };
+
+test('page outline derives stable heading anchors and owns bounded scroll resources', () => {
+  const headings = [
+    { tagName: 'H2', textContent: 'Usage', id: '', top: 100 },
+    { tagName: 'H3', textContent: 'Size', id: 'existing-size', top: 250 },
+    { tagName: 'H2', textContent: 'Usage', id: '', top: 500 },
+    { tagName: 'H2', textContent: 'Preview internals', id: '', top: 600, excluded: true },
+    { tagName: 'H2', textContent: '한글 제목', id: '', top: 700 },
+  ];
+  let reads = 0;
+  let queries = 0;
+  let observer;
+  let nextFrame = 1;
+  const frames = new Map();
+  const listeners = new Map();
+  const view = {
+    scrollY: 0,
+    getComputedStyle: () => ({ getPropertyValue: () => '56px' }),
+    addEventListener: (name, handler) => listeners.set(name, handler),
+    removeEventListener: (name, handler) => { assert.equal(listeners.get(name), handler); listeners.delete(name); },
+    requestAnimationFrame: callback => { const id = nextFrame++; frames.set(id, callback); return id; },
+    cancelAnimationFrame: id => frames.delete(id),
+    ResizeObserver: class {
+      targets = new Set();
+      constructor(callback) { this.callback = callback; observer = this; }
+      observe(target) { this.targets.add(target); }
+      disconnect() { this.targets.clear(); }
+    },
+  };
+  headings.forEach(heading => {
+    heading.closest = () => heading.excluded ? {} : null;
+    heading.getBoundingClientRect = () => { reads++; return { top: heading.top - view.scrollY }; };
+  });
+  const root = {
+    querySelectorAll: () => { queries++; return headings; },
+    ownerDocument: { defaultView: view, getElementById: id => headings.find(heading => heading.id === id) },
+    parentElement: {},
+  };
+  const first = collectOutline(root).entries;
+  assert.deepEqual(first.map(entry => [entry.id, entry.depth]), [['section-usage', 0], ['existing-size', 1], ['section-usage-2', 0], ['section-한글-제목', 0]]);
+  assert.deepEqual(collectOutline(root).entries, first, 'recollection preserves generated anchors');
+  assert.equal(outlineIndex([], 100), -1);
+  assert.equal(outlineIndex([100, 100, 250], 100), 1);
+  assert.equal(outlineIndex([100, 250], 99), -1);
+  assert.equal(outlineIndex([100, 250], 900), 1);
+  let indexedReads = 0;
+  const positions = Array.from({ length: 4096 }, (_, index) => index * 10);
+  positions.forEach((value, index) => Object.defineProperty(positions, index, { get: () => { indexedReads++; return value; } }));
+  assert.equal(outlineIndex(positions, 20001), 2000);
+  assert.ok(indexedReads <= 13, 'scroll lookup has a logarithmic read bound');
+  for (let iteration = 0; iteration < 3; iteration++) {
+    let published;
+    const active = [];
+    const dispose = connectOutline(root, entries => { published = entries; }, id => active.push(id));
+    assert.deepEqual(published, first);
+    assert.equal(listeners.size, 2);
+    assert.equal(observer.targets.size, 2);
+    const before = { reads, queries };
+    view.scrollY = 460;
+    listeners.get('scroll')();
+    listeners.get('scroll')();
+    assert.equal(frames.size, 1);
+    const flush = () => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback()); };
+    flush();
+    assert.equal(active.at(-1), 'section-usage-2');
+    assert.deepEqual({ reads, queries }, before, 'ordinary scroll neither measures nor recollects headings');
+    headings[2].top = 900;
+    headings[4].top = 1100;
+    observer.callback();
+    flush();
+    assert.equal(reads, before.reads + first.length);
+    assert.equal(active.at(-1), 'existing-size', 'layout changes refresh the offset cache');
+    listeners.get('scroll')();
+    const staleFrame = [...frames.values()][0];
+    const staleResize = observer.callback;
+    const count = active.length;
+    dispose();
+    dispose();
+    staleFrame();
+    staleResize();
+    assert.equal(active.length, count);
+    assert.equal(listeners.size, 0);
+    assert.equal(observer.targets.size, 0);
+    assert.equal(frames.size, 0);
+    headings[2].top = 500;
+    headings[4].top = 700;
+    view.scrollY = 0;
+  }
+});
 
 test('the active documentation package is a Vue and Vite shell', async () => {
   const packageJSON = JSON.parse(await read('package.json'));
@@ -214,7 +304,9 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
       .replaceAll("'../code-highlighting.js'", JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
       .replaceAll('"../code-highlighting.js"', JSON.stringify(new URL('../src/code-highlighting.ts', import.meta.url).href))
       .replaceAll("'../code-disclosure.js'", JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href))
-      .replaceAll('"../code-disclosure.js"', JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href));
+      .replaceAll('"../code-disclosure.js"', JSON.stringify(new URL('../src/code-disclosure.ts', import.meta.url).href))
+      .replaceAll("'../page-outline.js'", JSON.stringify(new URL('../src/page-outline.ts', import.meta.url).href))
+      .replaceAll('"../page-outline.js"', JSON.stringify(new URL('../src/page-outline.ts', import.meta.url).href));
       for (const [, quote, dependency] of clientCode.matchAll(/from (["'])(\.\/[^"']+\.vue)\1/gu)) {
         clientCode = clientCode.replaceAll(`${quote}${dependency}${quote}`, JSON.stringify(await clientModule(dependency.slice(2))));
       }
@@ -375,6 +467,25 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     await nextTick();
     assert.equal(disclosureTrigger().props['aria-expanded'], 'false');
     assert.equal(findWhere(root, node => node.props.id === targetID).props['aria-hidden'], 'true');
+    mounted.unmount();
+    const { default: ClientOutline } = await import(await clientModule('DocsTableOfContents.vue'));
+    const content = shallowRef(null);
+    const outlineListeners = new Map();
+    const outlineView = { scrollY: 0, getComputedStyle: () => ({ getPropertyValue: () => '56px' }), addEventListener: (name, handler) => outlineListeners.set(name, handler), removeEventListener: name => outlineListeners.delete(name) };
+    const heading = { id: 'public-section', tagName: 'H2', textContent: 'Public section', closest: () => null, getBoundingClientRect: () => ({ top: 100 }) };
+    mounted = host.createApp({ render: () => h(ClientOutline, { content: content.value }) });
+    mounted.mount(root);
+    assert.equal(find(root, 'nav'), undefined);
+    content.value = { querySelectorAll: () => [heading], ownerDocument: { defaultView: outlineView, getElementById: () => heading } };
+    await nextTick();
+    assert.equal(find(root, 'nav').props['aria-label'], 'On this page');
+    assert.equal(find(root, 'a').props.href, '#public-section');
+    assert.equal(find(root, 'a').props['aria-current'], 'location');
+    assert.equal(outlineListeners.size, 2);
+    content.value = null;
+    await nextTick();
+    assert.equal(find(root, 'nav'), undefined);
+    assert.equal(outlineListeners.size, 0, 'component replacement disposes the previous page connection');
   } finally {
     mounted?.unmount();
     if (navigatorDescriptor) Object.defineProperty(globalThis, 'navigator', navigatorDescriptor);
