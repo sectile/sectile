@@ -15,7 +15,7 @@ pnpm add vue @sectile/vue @sectile/virtual
 
 ## root가 직접 스크롤하는 목록
 
-`scrollport`를 생략하면 기본값인 root 모드를 사용합니다. `VirtualList`는 이 모드에서 root에 `overflow: auto`를 적용하므로, 실제 viewport가 생기도록 높이 같은 크기만 정하면 됩니다.
+`scrollport`를 생략하거나 `'root'`로 지정하면 컴포넌트 안에서 스크롤합니다. `VirtualList`, `VirtualGrid`, `VirtualMasonry`, `VirtualSpatial` 모두 이 모드에서 root에 `overflow: auto`를 적용합니다. 스크롤 영역의 높이와 너비는 애플리케이션에서 정해야 합니다. 직접 지정한 `style`이 기본 스타일보다 우선하며, Sectile은 스크롤 영역의 크기나 시각적 스타일을 정하지 않습니다.
 
 ```vue
 <script setup lang="ts">
@@ -67,7 +67,7 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 </VirtualMasonry>
 ```
 
-위 예제의 `viewportInsets.top`은 페이지 위쪽을 64px 가리는 고정 또는 sticky 헤더를 나타냅니다. Sectile은 CSS를 조사해 가려진 영역을 자동으로 찾지 않습니다. Document 모드에서는 `VirtualList`도 root에 기본 `overflow: auto`를 넣지 않습니다.
+위 예제의 `viewportInsets.top`은 페이지 위쪽을 64px 가리는 고정 또는 sticky 헤더를 나타냅니다. Sectile은 CSS를 조사해 가려진 영역을 자동으로 찾지 않습니다. 네 컴포넌트 모두 문서·외부 요소·명시적인 `null` 모드에서는 root에 기본 overflow 스타일을 적용하지 않습니다.
 
 선택한 문서 자체의 브라우저 realm을 사용하므로 iframe이 소유한 `Document`도 같은 낮은 수준 계약으로 처리할 수 있습니다.
 
@@ -146,6 +146,8 @@ Document 스크롤은 layout viewport를 기준으로 합니다. `Window`는 별
 ## 낮은 수준 구성 요소
 
 직접 만든 layout strategy, 병합 셀, 별도 측정 규칙, 수동 mutation이 필요하면 `@sectile/vue/virtual/core`를 사용합니다.
+
+`VirtualizerRoot`의 스크롤 영역 스타일은 애플리케이션에서 정합니다. Root 모드에서는 스크롤 영역의 크기와 `overflow: auto`를 직접 지정해야 합니다.
 
 - `VirtualizerRoot`: 선택한 물리 scrollport를 해석하고 연결
 - `VirtualizerHeader`: 선택적인 앞쪽 frame region 렌더링

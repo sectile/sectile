@@ -15,7 +15,7 @@ pnpm add vue @sectile/vue @sectile/virtual
 
 ## List with root-owned scrolling
 
-Omit `scrollport` for the default root-owned mode. `VirtualList` supplies its root with `overflow: auto`; give that root a bounded size so it has a scrollable viewport.
+Omit `scrollport` or set it to `'root'` for root-owned scrolling. `VirtualList`, `VirtualGrid`, `VirtualMasonry`, and `VirtualSpatial` supply `overflow: auto` in this mode. Give the root a bounded size to establish its viewport. Your `style` overrides take precedence; Sectile does not supply viewport dimensions or visual styling.
 
 ```vue
 <script setup lang="ts">
@@ -67,7 +67,7 @@ Set `scrollport="document"` when the collection should participate in ordinary p
 </VirtualMasonry>
 ```
 
-Here `viewportInsets.top` accounts for a 64 px fixed or sticky page header. Sectile does not discover that occlusion from CSS. In document mode, `VirtualList` also stops injecting its default nested `overflow: auto` style.
+Here `viewportInsets.top` accounts for a 64 px fixed or sticky page header. Sectile does not discover that occlusion from CSS. None of the four components inject root overflow in document, external-element, or explicit `null` mode.
 
 The selected document's own browser realm is used. Page-level virtualization therefore works with an iframe-owned `Document` through the same low-level host contract.
 
@@ -146,6 +146,8 @@ Document scrolling uses the layout viewport. `Window` is not a parallel target t
 ## Low-level building blocks
 
 Use `@sectile/vue/virtual/core` when you need a custom layout strategy, merged cells, custom measurements, or manual mutations.
+
+Unlike the high-level components, `VirtualizerRoot` leaves scroll-container styling to you. In root mode, supply both a bounded viewport size and `overflow: auto`.
 
 - `VirtualizerRoot`: resolve and connect the selected physical scrollport
 - `VirtualizerHeader`: render an optional leading frame region
