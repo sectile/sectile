@@ -20,7 +20,7 @@ import { routes } from '../src/routes.ts';
 import { highlightCode } from '../src/code-highlighting.ts';
 import { componentAccessibility, domainAccessibility } from '../src/accessibility.ts';
 import { codePresentation } from '../src/code-disclosure.ts';
-import { collectOutline, connectOutline, outlineIndex } from '../src/page-outline.ts';
+import { collectOutline, connectOutline, outlineIndex, outlineWindow, outlineRailOffset, outlineRailPath } from '../src/page-outline.ts';
 
 const read = (path) => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 const countButtons = (html, label) => [...html.matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/gu)]
@@ -42,11 +42,13 @@ test('page outline derives stable heading anchors and owns bounded scroll resour
   let reads = 0;
   let queries = 0;
   let observer;
+  let mutations;
   let nextFrame = 1;
   const frames = new Map();
   const listeners = new Map();
   const view = {
     scrollY: 0,
+    innerHeight: 800,
     getComputedStyle: () => ({ getPropertyValue: () => '56px' }),
     addEventListener: (name, handler) => listeners.set(name, handler),
     removeEventListener: (name, handler) => { assert.equal(listeners.get(name), handler); listeners.delete(name); },
@@ -58,12 +60,19 @@ test('page outline derives stable heading anchors and owns bounded scroll resour
       observe(target) { this.targets.add(target); }
       disconnect() { this.targets.clear(); }
     },
+    MutationObserver: class {
+      targets = new Set();
+      constructor(callback) { this.callback = callback; mutations = this; }
+      observe(target) { this.targets.add(target); }
+      disconnect() { this.targets.clear(); }
+    },
   };
   headings.forEach(heading => {
     heading.closest = () => heading.excluded ? {} : null;
     heading.getBoundingClientRect = () => { reads++; return { top: heading.top - view.scrollY }; };
   });
   const root = {
+    getBoundingClientRect: () => { reads++; return { bottom: 1600 - view.scrollY }; },
     querySelectorAll: () => { queries++; return headings; },
     ownerDocument: { defaultView: view, getElementById: id => headings.find(heading => heading.id === id) },
     parentElement: {},
@@ -86,7 +95,8 @@ test('page outline derives stable heading anchors and owns bounded scroll resour
     const dispose = connectOutline(root, entries => { published = entries; }, id => active.push(id));
     assert.deepEqual(published, first);
     assert.equal(listeners.size, 2);
-    assert.equal(observer.targets.size, 2);
+    assert.equal(observer.targets.size, first.length + 2);
+    assert.equal(mutations.targets.size, 1);
     const before = { reads, queries };
     view.scrollY = 460;
     listeners.get('scroll')();
@@ -94,30 +104,64 @@ test('page outline derives stable heading anchors and owns bounded scroll resour
     assert.equal(frames.size, 1);
     const flush = () => { const pending = [...frames.values()]; frames.clear(); pending.forEach(callback => callback()); };
     flush();
-    assert.equal(active.at(-1), 'section-usage-2');
+    assert.deepEqual([active.at(-1).first, active.at(-1).last], [2, 3]);
     assert.deepEqual({ reads, queries }, before, 'ordinary scroll neither measures nor recollects headings');
     headings[2].top = 900;
     headings[4].top = 1100;
     observer.callback();
     flush();
-    assert.equal(reads, before.reads + first.length);
-    assert.equal(active.at(-1), 'existing-size', 'layout changes refresh the offset cache');
+    assert.equal(reads, before.reads + first.length + 1);
+    assert.deepEqual([active.at(-1).first, active.at(-1).last], [1, 3], 'layout changes refresh the offset cache');
+    headings[1].top = 600;
+    mutations.callback();
+    flush();
+    assert.equal(active.at(-1).first, 0, 'internal heading movement refreshes with unchanged article size');
     listeners.get('scroll')();
     const staleFrame = [...frames.values()][0];
     const staleResize = observer.callback;
+    const staleMutation = mutations.callback;
     const count = active.length;
     dispose();
     dispose();
     staleFrame();
     staleResize();
+    staleMutation();
     assert.equal(active.length, count);
     assert.equal(listeners.size, 0);
     assert.equal(observer.targets.size, 0);
+    assert.equal(mutations.targets.size, 0);
     assert.equal(frames.size, 0);
     headings[2].top = 500;
+    headings[1].top = 250;
     headings[4].top = 700;
     view.scrollY = 0;
   }
+});
+
+test('outline projects the full viewport continuously through nested row geometry and the article end', () => {
+  const positions = [100, 350, 550, 750, 950];
+  // Finite document: scrollY=400 is the bottom of a 1200px page in an 800px viewport.
+  const bottom = outlineWindow(positions, 1100, 480, 1200);
+  assert.deepEqual([bottom.first, bottom.last, bottom.end], [1, 4, 5]);
+  assert.equal(bottom.start, 1.65);
+  const moved = outlineWindow(positions, 1100, 481, 1201);
+  assert.ok(moved.start > bottom.start && moved.start < 1.66, 'the rail edge follows sub-row scroll progress');
+  assert.deepEqual(outlineWindow(positions, 1100, 0, 99), { start: 0, end: 0, first: -1, last: -1 });
+  assert.deepEqual(outlineWindow(positions, 1100, 1100, 1600), { start: 5, end: 5, first: -1, last: -1 });
+  assert.deepEqual(outlineWindow([], 0, 0, 800), { start: 0, end: 0, first: -1, last: -1 });
+  assert.deepEqual(outlineWindow([100, 100, 200], 300, 100, 200), { start: 1, end: 2, first: 1, last: 1 });
+  const boundaries = [0, 32, 64, 116, 148, 180]; // wrapped labels have real measured heights
+  assert.equal(outlineRailOffset(boundaries, bottom.start), 52.8);
+  assert.equal(outlineRailOffset(boundaries, bottom.end), 180);
+  assert.equal(outlineRailOffset(boundaries, 2.5), 90);
+  assert.equal(outlineRailOffset([], 1), 0);
+  const entries = [0, 1, 1, 0, 0].map((depth, index) => ({ id: String(index), label: String(index), depth }));
+  assert.equal(outlineRailPath(entries, boundaries, 12), 'M 1 0 L 1 26 L 13 38 L 13 110 L 1 122 L 1 180');
+  let reads = 0;
+  const large = Array.from({ length: 4096 }, (_, index) => index * 10);
+  large.forEach((value, index) => Object.defineProperty(large, index, { get: () => { reads++; return value; } }));
+  assert.deepEqual([outlineWindow(large, 40960, 20001, 20801).first, outlineWindow(large, 40960, 20001, 20801).last], [2000, 2080]);
+  assert.ok(reads <= 72, 'two viewport queries have logarithmic coordinate-read bounds');
 });
 
 test('the active documentation package is a Vue and Vite shell', async () => {
@@ -471,16 +515,27 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     const { default: ClientOutline } = await import(await clientModule('DocsTableOfContents.vue'));
     const content = shallowRef(null);
     const outlineListeners = new Map();
-    const outlineView = { scrollY: 0, getComputedStyle: () => ({ getPropertyValue: () => '56px' }), addEventListener: (name, handler) => outlineListeners.set(name, handler), removeEventListener: name => outlineListeners.delete(name) };
-    const heading = { id: 'public-section', tagName: 'H2', textContent: 'Public section', closest: () => null, getBoundingClientRect: () => ({ top: 100 }) };
+    let outlineFrame;
+    const outlineView = { scrollY: 0, innerHeight: 800, getComputedStyle: () => ({ getPropertyValue: () => '56px' }), addEventListener: (name, handler) => outlineListeners.set(name, handler), removeEventListener: name => outlineListeners.delete(name), requestAnimationFrame: callback => { outlineFrame = callback; return 1; }, cancelAnimationFrame: () => { outlineFrame = undefined; } };
+    const outlineHeadings = [100, 350, 700].map((top, index) => ({ id: index ? `public-child-${index}` : 'public-section', tagName: index ? 'H3' : 'H2', textContent: `Public section ${index}`, closest: () => null, getBoundingClientRect: () => ({ top: top - outlineView.scrollY }) }));
     mounted = host.createApp({ render: () => h(ClientOutline, { content: content.value }) });
     mounted.mount(root);
     assert.equal(find(root, 'nav'), undefined);
-    content.value = { querySelectorAll: () => [heading], ownerDocument: { defaultView: outlineView, getElementById: () => heading } };
+    content.value = { getBoundingClientRect: () => ({ bottom: 1100 - outlineView.scrollY }), querySelectorAll: () => outlineHeadings, ownerDocument: { defaultView: outlineView, getElementById: id => outlineHeadings.find(heading => heading.id === id) } };
     await nextTick();
     assert.equal(find(root, 'nav').props['aria-label'], 'On this page');
     assert.equal(find(root, 'a').props.href, '#public-section');
     assert.equal(find(root, 'a').props['aria-current'], 'location');
+    assert.equal(find(root, 'a').props['data-visible'], true);
+    const outlineLinks = () => find(root, 'ul').children.flatMap(child => child.type === 'li' ? [find(child, 'a')] : []);
+    assert.equal(outlineLinks().filter(link => link.props['data-visible']).length, 3, 'all intersecting sections are highlighted together');
+    assert.equal(outlineLinks().filter(link => link.props['aria-current']).length, 1, 'accessible location stays singular');
+    outlineView.scrollY = 400;
+    outlineListeners.get('scroll')();
+    outlineFrame();
+    await nextTick();
+    assert.deepEqual(outlineLinks().map(link => Boolean(link.props['data-visible'])), [false, true, true]);
+    assert.equal(outlineLinks()[1].props['aria-current'], 'location');
     assert.equal(outlineListeners.size, 2);
     content.value = null;
     await nextTick();
