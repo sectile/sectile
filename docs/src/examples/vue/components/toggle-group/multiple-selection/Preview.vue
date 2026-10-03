@@ -8,9 +8,19 @@ const selected = ref<readonly string[]>(['bold']);
 
 <template>
   <div>
-    <ToggleGroupRoot v-model="selected" :items="formats" multiple label="Text formatting" :disabled-items="['code']">
-      <ToggleGroupItem v-for="format in formats" :key="format" :value="format">{{ format }}</ToggleGroupItem>
+    <ToggleGroupRoot
+      v-model="selected"
+      :items="formats"
+      multiple
+      label="Text formatting"
+      :disabled-items="['code']"
+    >
+      <ToggleGroupItem v-for="format in formats" :key="format" :value="format">
+        {{ format }}
+      </ToggleGroupItem>
     </ToggleGroupRoot>
-    <output aria-live="polite">Selected: {{ selected.length ? selected.join(', ') : 'none' }}</output>
+    <output aria-live="polite">
+      Selected: {{ selected.length ? selected.join(', ') : 'none' }}
+    </output>
   </div>
 </template>

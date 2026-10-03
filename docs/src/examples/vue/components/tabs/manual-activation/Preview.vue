@@ -8,9 +8,16 @@ const selected = ref('Overview');
 
 <template>
   <div>
-    <TabsRoot v-model="selected" :items="sections" :disabled-items="['Billing']" activation-mode="manual">
+    <TabsRoot
+      v-model="selected"
+      :items="sections"
+      :disabled-items="['Billing']"
+      activation-mode="manual"
+    >
       <TabsList label="Project sections">
-        <TabsTrigger v-for="section in sections" :key="section" :value="section">{{ section }}</TabsTrigger>
+        <TabsTrigger v-for="section in sections" :key="section" :value="section">
+          {{ section }}
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="Overview"><p>Project settings and delivery preferences.</p></TabsContent>
       <TabsContent value="Activity"><p>Recent changes to this project.</p></TabsContent>

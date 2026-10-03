@@ -9,7 +9,13 @@ const options = [
 
 <template>
   <div>
-    <SwitchRoot v-for="option in options" :key="option.label" :default-value="true" :readonly="option.readonly" :disabled="option.disabled">
+    <SwitchRoot
+      v-for="option in options"
+      :key="option.label"
+      :default-value="true"
+      :readonly="option.readonly"
+      :disabled="option.disabled"
+    >
       <span data-example-switch-track aria-hidden="true"><SwitchThumb /></span>
       <span>{{ option.label }}</span>
     </SwitchRoot>

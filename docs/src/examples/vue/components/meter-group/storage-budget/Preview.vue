@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { MeterGroupIndicator, MeterGroupItem, MeterGroupItemLabel, MeterGroupItemValue, MeterGroupList, MeterGroupRoot, MeterGroupSegment, MeterGroupTrack, MeterGroupValueText } from '@sectile/vue/meter-group';
+import {
+  MeterGroupIndicator,
+  MeterGroupItem,
+  MeterGroupItemLabel,
+  MeterGroupItemValue,
+  MeterGroupList,
+  MeterGroupRoot,
+  MeterGroupSegment,
+  MeterGroupTrack,
+  MeterGroupValueText,
+} from '@sectile/vue/meter-group';
 
 const items = ref([
   { id: 'documents', label: 'Documents', value: 24 },
   { id: 'media', label: 'Media', value: 36 },
 ]);
 function toggleMedia() {
-  items.value = items.value.map(item => item.id === 'media'
-    ? { ...item, value: item.value === 36 ? 48 : 36 }
-    : item);
+  items.value = items.value.map((item) =>
+    item.id === 'media' ? { ...item, value: item.value === 36 ? 48 : 36 } : item,
+  );
 }
 </script>
 
@@ -24,10 +34,15 @@ function toggleMedia() {
       <MeterGroupValueText />
       <MeterGroupList>
         <MeterGroupItem v-for="segment in meter.segments" :id="segment.id" :key="segment.id">
-          <MeterGroupItemLabel />: <MeterGroupItemValue />
+          <MeterGroupItemLabel />
+          :
+          <MeterGroupItemValue />
         </MeterGroupItem>
       </MeterGroupList>
-      <p>{{ meter.remaining }} units remaining. Labels identify the segments without relying on color.</p>
+      <p>
+        {{ meter.remaining }} units remaining. Labels identify the segments without relying on
+        color.
+      </p>
     </MeterGroupRoot>
     <button type="button" @click="toggleMedia">Change media usage</button>
   </div>

@@ -11,8 +11,21 @@ const checked = ref<CheckboxValue>('indeterminate');
       <span data-example-checkbox-box aria-hidden="true">
         <CheckboxIndicator v-slot="state">
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-            <path v-if="state.isIndeterminate" d="M3 8h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            <path v-else d="m3 8 3 3 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              v-if="state.isIndeterminate"
+              d="M3 8h10"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <path
+              v-else
+              d="m3 8 3 3 7-7"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </CheckboxIndicator>
       </span>

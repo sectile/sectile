@@ -7,7 +7,10 @@ const name = ref('Ada');
 
 <template>
   <div data-example-text-fields>
-    <label>Display name<TextField v-model.lazy="name" autocomplete="off" /></label>
+    <label>
+      Display name
+      <TextField v-model.lazy="name" autocomplete="off" />
+    </label>
     <output aria-live="polite">Committed name: {{ name }}</output>
   </div>
 </template>

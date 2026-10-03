@@ -7,7 +7,10 @@ const notes = ref('Leave the parcel at reception.');
 
 <template>
   <div data-example-text-fields>
-    <label>Delivery notes<TextField v-model="notes" multiline :rows="3" placeholder="Add delivery instructions" /></label>
+    <label>
+      Delivery notes
+      <TextField v-model="notes" multiline :rows="3" placeholder="Add delivery instructions" />
+    </label>
     <output aria-live="polite">Value: {{ notes }}</output>
   </div>
 </template>

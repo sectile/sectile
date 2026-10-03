@@ -24,7 +24,13 @@ function submit(event: FormSubmitEvent): void {
     <FormRoot :on-submit="submit" @reset="submitted = ''">
       <FormField name="email">
         <FormLabel>Email address</FormLabel>
-        <input type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
+        <input
+          type="email"
+          name="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
         <FormDescription>Used for deployment notifications.</FormDescription>
         <FormMessage />
       </FormField>
@@ -33,6 +39,8 @@ function submit(event: FormSubmitEvent): void {
         <FormReset>Reset</FormReset>
       </div>
     </FormRoot>
-    <p class="docs-example-form-result" role="status">{{ submitted ? `Submitted email: ${submitted}` : 'No submission yet.' }}</p>
+    <p class="docs-example-form-result" role="status">
+      {{ submitted ? `Submitted email: ${submitted}` : 'No submission yet.' }}
+    </p>
   </div>
 </template>

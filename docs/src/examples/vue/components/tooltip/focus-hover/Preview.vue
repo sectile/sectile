@@ -3,5 +3,18 @@ import { TooltipContent, TooltipPortal, TooltipRoot, TooltipTrigger } from '@sec
 </script>
 
 <template>
-  <div><TooltipRoot><TooltipTrigger>Archive message</TooltipTrigger><TooltipPortal><TooltipContent class="docs-example-tooltip-content">Moves a message out of your inbox.</TooltipContent></TooltipPortal></TooltipRoot><p>Hover over the button or focus it with the keyboard. The tooltip contains supplementary text, not interactive controls.</p></div>
+  <div>
+    <TooltipRoot>
+      <TooltipTrigger>Archive message</TooltipTrigger>
+      <TooltipPortal>
+        <TooltipContent class="docs-example-tooltip-content">
+          Moves a message out of your inbox.
+        </TooltipContent>
+      </TooltipPortal>
+    </TooltipRoot>
+    <p>
+      Hover over the button or focus it with the keyboard. The tooltip contains supplementary text,
+      not interactive controls.
+    </p>
+  </div>
 </template>

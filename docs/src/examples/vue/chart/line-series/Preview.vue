@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { shallowRef } from 'vue';
-import { ChartCartesian, ChartLine, ChartNavigation, ChartPlot, ChartRenderer, ChartRoot, ChartXAxis, ChartYAxis } from '@sectile/vue/chart';
+import {
+  ChartCartesian,
+  ChartLine,
+  ChartNavigation,
+  ChartPlot,
+  ChartRenderer,
+  ChartRoot,
+  ChartXAxis,
+  ChartYAxis,
+} from '@sectile/vue/chart';
 
 const deliveries = shallowRef([
   { id: 'mon', day: 1, count: 12 },
@@ -13,11 +22,25 @@ const deliveries = shallowRef([
 
 <template>
   <div data-example-chart>
-    <ChartRoot :dom="{ accessibilityLabel: 'Weekday deliveries', getAccessibleDatumLabel: id => { const row = deliveries.find(point => point.id === id); return row ? `Day ${row.day}: ${row.count} deliveries` : String(id); } }">
+    <ChartRoot
+      :dom="{
+        accessibilityLabel: 'Weekday deliveries',
+        getAccessibleDatumLabel: (id) => {
+          const row = deliveries.find((point) => point.id === id);
+          return row ? `Day ${row.day}: ${row.count} deliveries` : String(id);
+        },
+      }"
+    >
       <ChartCartesian>
         <ChartXAxis id="day" field="day" label="Weekday" />
         <ChartYAxis id="count" field="count" label="Deliveries" />
-        <ChartLine id="deliveries" :data="deliveries" x-axis="day" y-axis="count" label="Deliveries" />
+        <ChartLine
+          id="deliveries"
+          :data="deliveries"
+          x-axis="day"
+          y-axis="count"
+          label="Deliveries"
+        />
         <ChartNavigation keyboard />
       </ChartCartesian>
       <ChartPlot><ChartRenderer /></ChartPlot>

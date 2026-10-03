@@ -8,8 +8,15 @@ const selected = ref<readonly string[]>(['Left']);
 
 <template>
   <div>
-    <ToggleGroupRoot v-model="selected" :items="alignments" :deselectable="false" label="Text alignment">
-      <ToggleGroupItem v-for="alignment in alignments" :key="alignment" :value="alignment">{{ alignment }}</ToggleGroupItem>
+    <ToggleGroupRoot
+      v-model="selected"
+      :items="alignments"
+      :deselectable="false"
+      label="Text alignment"
+    >
+      <ToggleGroupItem v-for="alignment in alignments" :key="alignment" :value="alignment">
+        {{ alignment }}
+      </ToggleGroupItem>
     </ToggleGroupRoot>
     <output aria-live="polite">Alignment: {{ selected[0] }}</output>
   </div>

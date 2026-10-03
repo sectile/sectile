@@ -8,7 +8,13 @@ const delivery = ref('Standard');
 
 <template>
   <div>
-    <RadioGroupRoot v-model="delivery" :items="options" :disabled-items="['Overnight']" orientation="vertical" aria-label="Delivery speed">
+    <RadioGroupRoot
+      v-model="delivery"
+      :items="options"
+      :disabled-items="['Overnight']"
+      orientation="vertical"
+      aria-label="Delivery speed"
+    >
       <RadioGroupItem v-for="option in options" :key="option" :value="option">
         <span data-example-radio-box aria-hidden="true"><RadioGroupIndicator /></span>
         {{ option }}
