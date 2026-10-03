@@ -241,12 +241,15 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     assert.equal(text(find(root, 'code')), props.value.source.trim());
     let copied;
     Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { clipboard: { async writeText(value) { copied = value; } } } });
-    await find(root, 'button').props.onClick();
+    let copyPropagationStopped = false;
+    const copyEvent = { stopPropagation() { copyPropagationStopped = true; } };
+    await find(root, 'button').props.onClick(copyEvent);
     await nextTick();
     assert.equal(copied, '.new { color: red; }');
+    assert.equal(copyPropagationStopped, true, 'copy is independent of the summary click');
     assert.ok(text(root).includes('Copied'));
     navigator.clipboard.writeText = async () => { throw new Error('Permission denied'); };
-    await find(root, 'button').props.onClick();
+    await find(root, 'button').props.onClick(copyEvent);
     await nextTick();
     assert.ok(text(root).includes('Copy unavailable. Select the code to copy it.'));
 
@@ -256,8 +259,8 @@ test('CodeBlock keeps SSR safe, uses automatic disclosure, highlights on demand,
     assert.equal(find(root, 'details').props.open, false, 'client agrees with SSR for long source');
     assert.equal(find(find(root, 'code'), 'span'), undefined, 'closed source remains plain');
     navigator.clipboard.writeText = async value => { copied = value; };
-    await find(root, 'button').props.onClick();
-    assert.equal(copied, long, 'copy outside the disclosure includes all collapsed lines');
+    await find(root, 'button').props.onClick(copyEvent);
+    assert.equal(copied, long, 'header copy includes all collapsed lines');
     find(root, 'details').props.onToggle({ currentTarget: { open: true } });
     await waitFor(() => find(find(root, 'code'), 'span'));
     assert.equal(find(root, 'details').props.open, true);
