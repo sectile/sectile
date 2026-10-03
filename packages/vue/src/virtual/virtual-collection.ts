@@ -194,7 +194,7 @@ const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
     size: { type: String as PropType<VirtualizerItemSize>, required: true },
   },
   slots: Object as SlotsType<{
-    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeChild;
+    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeArrayChildren;
   }>,
   setup(props, { slots }) {
     const surface = useVirtualizerSurfaceRegistration('VirtualCollectionProjection');
@@ -253,7 +253,7 @@ const VirtualCollectionProjectionRuntime = /* @__PURE__ */ defineComponent({
           'data-part': 'item',
           'data-index': placement.index,
           'data-visible': placement.visible ? '' : undefined,
-        }, normalizeChildren(rendered)));
+        }, rendered));
       }
       return children;
     };
@@ -286,7 +286,7 @@ const VirtualCollectionBootstrapProjectionRuntime = /* @__PURE__ */ defineCompon
     },
   },
   slots: Object as SlotsType<{
-    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeChild;
+    default: (props: VirtualCollectionItemSlotProps<unknown, StableID>) => VNodeArrayChildren;
   }>,
   setup(props, { slots }) {
     const refs = new Map<number, (value: unknown) => void>();
@@ -330,12 +330,12 @@ const VirtualCollectionBootstrapProjectionRuntime = /* @__PURE__ */ defineCompon
           'data-part': 'item',
           'data-index': index,
           'data-bootstrap': '',
-        }, normalizeChildren(slots['default']?.({
+        }, slots['default']?.({
           value,
           id,
           index,
           placement,
-        }))));
+        })));
       }
       return children;
     };
@@ -436,9 +436,4 @@ function itemSizing(size: VirtualizerItemSize): VirtualItemStyleOptions {
     width: size === 'width' || size === 'both',
     height: size === 'height' || size === 'both',
   });
-}
-
-function normalizeChildren(rendered: VNodeChild | undefined): VNodeArrayChildren {
-  if (rendered === undefined || rendered === null) return [];
-  return Array.isArray(rendered) ? rendered : [rendered];
 }
