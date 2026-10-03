@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, useId } from 'vue';
 import {
   createStandardQuantityPolicies,
   QuantityFieldInput,
@@ -10,6 +10,7 @@ import {
 const policies = createStandardQuantityPolicies('metre', 'metric');
 const quantity = ref<{ value: string; unit: string } | null>({ value: '1.5', unit: 'metre' });
 const displayUnit = ref('centimetre');
+const inputID = useId();
 </script>
 
 <template>
@@ -21,8 +22,9 @@ const displayUnit = ref('centimetre');
       :policies="policies"
       label="Parcel length"
     >
-      <div data-example-control-row>
-        <QuantityFieldInput aria-label="Parcel length" placeholder="Enter a length" />
+      <label :for="inputID" data-example-field-label>Parcel length</label>
+      <div data-example-field-row>
+        <QuantityFieldInput :id="inputID" aria-label="Parcel length" placeholder="Enter a length" />
         <QuantityFieldUnitSelect aria-label="Display unit" />
       </div>
       <p v-if="field.invalid" role="alert">Enter a compatible length expression.</p>

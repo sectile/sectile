@@ -18,7 +18,7 @@ const color = ref('#4659d4');
       :allow-alpha="false"
       label="Delivery label color"
     >
-      <div data-example-control-row>
+      <div data-example-field-row>
         <ColorPickerNativeInput type="color" :value="color" aria-label="Choose label color" />
         <ColorPickerTextInput :value="picker.text" aria-label="Label color text" />
       </div>

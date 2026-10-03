@@ -267,6 +267,40 @@ test('documentation presentation uses the shared palette and preserves distinct 
   assert.match(tokens, /--docs-inner-radius: max\(0px, calc\(var\(--docs-radius\) - var\(--docs-border-width\) - var\(--docs-surface-inset\)\)\)/u);
 });
 
+test('shared fields derive equal insets, line boxes and compound allocation from tokens', async () => {
+  const tokens = await read('src/styles/tokens.css');
+  const values = Object.fromEntries([...tokens.matchAll(/(--docs-[\w-]+):\s*([^;]+);/gu)].map(([, name, value]) => [name, value.trim()]));
+  const numeric = (name) => {
+    const value = values[name];
+    const reference = /^var\((--docs-[\w-]+)\)$/u.exec(value);
+    if (reference) return numeric(reference[1]);
+    assert.match(value, /^\d+px$/u, name);
+    return Number.parseFloat(value);
+  };
+  const height = numeric('--docs-field-height');
+  const inset = numeric('--docs-field-inset');
+  const border = numeric('--docs-border-width');
+  const content = height - 2 * border - 2 * inset;
+  assert.equal(height, 44);
+  assert.equal(content, 18);
+  assert.ok(content >= numeric('--docs-field-icon-size'));
+  assert.ok(content >= numeric('--docs-field-font-size'));
+  assert.equal(numeric('--docs-field-value-width') + numeric('--docs-field-gap') + numeric('--docs-field-unit-width'), 312);
+  assert.equal(inset + numeric('--docs-field-icon-size') + numeric('--docs-field-gap'), 36);
+  assert.equal(values['--docs-field-content-height'], 'calc(var(--docs-field-height) - 2 * var(--docs-border-width) - 2 * var(--docs-field-inset))');
+  assert.equal(values['--docs-field-select-reserve'], 'calc(var(--docs-field-inset) + var(--docs-field-icon-size) + var(--docs-field-gap))');
+  const fields = await read('src/styles/example-fields.css');
+  const styles = await read('src/styles/preview.css');
+  assert.match(styles, /@import ['"]\.\/example-fields\.css['"]/u);
+  assert.match(fields, /block-size: var\(--docs-field-height\)/u);
+  assert.match(fields, /padding: var\(--docs-field-inset\)/u);
+  assert.match(fields, /line-height: var\(--docs-field-content-height\)/u);
+  assert.match(fields, /padding-inline-end: var\(--docs-field-select-reserve\)/u);
+  assert.match(fields, /background-position: right var\(--docs-field-inset\) center/u);
+  assert.match(fields, /:dir\(rtl\)[\s\S]*background-position: left var\(--docs-field-inset\) center/u);
+  assert.match(fields, /forced-colors: active[\s\S]*appearance: auto/u);
+});
+
 test('Shiki highlights each documented language without changing source text or inventing colors', async () => {
   const palette = await read('src/styles/tokens.css');
   const samples = [
@@ -936,7 +970,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-temporal-date-time-selection': [/Selected: 2026-10-03T09:00/u, /without a time zone/u],
           'vue-temporal-date-time-range-selection': [/Selected: 2026-10-03T09:00.*2026-10-08T17:00/u, /Range end/u],
           'vue-components-meter-group-storage-budget': [/60 \/ 100/u, /40 units remaining/u, /Documents/u, /Media/u],
-          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u],
+          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u, /data-example-field-row/u],
           'vue-components-window-splitter-bounded-panes': [/First pane: 50%/u, /Resize delivery panels/u],
           'vue-virtual-measured-list': [/Delivery 1/u, /Mounted content establishes/u],
           'vue-virtual-responsive-grid': [/Parcel 1/u, /64px tall/u],
@@ -1004,6 +1038,12 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-components-popover-positioned-dismissal': [/aria-expanded="false"/u, /Open: false/u],
         };
         for (const state of initialStates[route.exampleId] ?? []) assert.match(preview, state, route.path);
+        if (route.exampleId === 'vue-components-quantity-field-unit-conversion') {
+          const label = /<label[^>]*for="([^"]+)"[^>]*>Parcel length<\/label>/u.exec(preview);
+          assert.ok(label, 'quantity specimen has a visible label');
+          const inputs = [...preview.matchAll(/<input\b[^>]*>/gu)].map(([element]) => element);
+          assert.ok(inputs.some(element => element.includes(`id="${label[1]}"`) && element.includes('aria-label="Parcel length"')), 'label targets the quantity input');
+        }
         if (route.exampleId === 'vue-components-disclosure-exit-transition') {
           assert.match(html, /<output[^>]*aria-live="polite"[^>]*>\s*Open: true · Present\s*<\/output>/u);
           assert.match(html, /aria-expanded="true"/u);

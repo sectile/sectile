@@ -1,5 +1,6 @@
 @import './example-data.css';
 @import './example-presence.css';
+@import './example-fields.css';
 
 .docs-preview-layout > div {
   display: grid;
@@ -87,11 +88,11 @@
 .docs-preview [data-scope="multi-thumb-slider"][data-part="thumb"] { position: absolute; left: var(--sectile-thumb-percentage); top: 50%; display: block; width: var(--docs-slider-thumb); height: var(--docs-slider-thumb); transform: translate(-50%, -50%); border: var(--docs-border-width) solid var(--docs-accent); border-radius: 50%; background: var(--docs-bg); }
 .docs-preview [data-example-temporal-field] { width: min(100%, 400px); }
 .docs-preview [data-example-temporal-field] label { display: grid; min-width: 0; gap: var(--docs-space-2); font-size: var(--docs-font-size-label); }
-.docs-preview [data-example-temporal-field] input { width: 100%; min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview [data-example-temporal-field] input { width: 100%; }
 .docs-preview [data-example-temporal-field] [data-example-control-row] > label { flex: 1 1 160px; }
 
 .docs-preview :is([data-scope="select"], [data-scope="combobox"], [data-scope="editable"])[data-part="root"] { position: relative; width: min(100%, 360px); }
-.docs-preview :is([data-scope="select"][data-part="trigger"], [data-scope="combobox"][data-part="input"], [data-scope="tags-input"][data-part="input"], [data-scope="editable"][data-part="input"]) { width: 100%; min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); font-size: var(--docs-font-size-label); }
+.docs-preview :is([data-scope="select"][data-part="trigger"], [data-scope="combobox"][data-part="input"], [data-scope="tags-input"][data-part="input"], [data-scope="editable"][data-part="input"]) { width: 100%; }
 .docs-preview :is([data-scope="select"], [data-scope="combobox"])[data-part="content"] { z-index: 2; width: max-content; min-width: 180px; max-width: min(360px, calc(100vw - 48px)); padding: var(--docs-surface-inset); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-radius); background: var(--docs-bg); }
 .docs-preview [data-scope="listbox"][data-part="root"] { display: grid; width: min(100%, 280px); gap: var(--docs-space-1); }
 .docs-preview :is([data-scope="select"], [data-scope="combobox"], [data-scope="listbox"])[data-part="item"] { display: flex; min-height: var(--docs-control-height); align-items: center; padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid transparent; border-radius: var(--docs-inner-radius); background: var(--docs-bg); color: var(--docs-text); text-align: left; font-size: var(--docs-font-size-label); }
@@ -106,7 +107,7 @@
 .docs-preview [data-scope="pin-input"][data-part="root"] { display: grid; gap: var(--docs-space-4); justify-items: center; }
 .docs-preview [data-scope="editable"][data-part="area"] { min-height: var(--docs-control-height); margin-bottom: var(--docs-space-4); }
 .docs-preview [data-scope="editable"][data-part="preview"] { display: flex; min-height: var(--docs-control-height); align-items: center; justify-content: center; }
-.docs-preview--control :is([data-scope="number-field"], [data-scope="spin-button"][data-part="input"]) { width: min(100%, 180px); min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); background: var(--docs-bg); color: var(--docs-text); }
+.docs-preview--control :is([data-scope="number-field"], [data-scope="spin-button"][data-part="input"]) { width: min(100%, var(--docs-field-value-width)); }
 .docs-preview--control label:has([data-scope="number-field"]) { display: grid; gap: var(--docs-space-2); font-size: var(--docs-font-size-label); }
 
 .docs-preview [data-example-range] { width: min(100%, 360px); }
@@ -149,8 +150,10 @@
 .docs-preview [data-example-text-fields] label { display: grid; gap: var(--docs-space-2); align-items: stretch; }
 
 .docs-preview [data-example-text-fields] input,
-.docs-preview [data-example-text-fields] textarea,
 .docs-preview--form input {
+  width: 100%;
+}
+.docs-preview [data-example-text-fields] textarea {
   width: 100%;
   min-height: var(--docs-control-height);
   padding: var(--docs-space-2) var(--docs-space-3);
@@ -439,7 +442,6 @@
 .docs-preview [data-example-picker] [role="gridcell"] { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-1); border: 0; border-radius: var(--docs-inner-radius); color: var(--docs-text); background: transparent; font: inherit; font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-picker] [data-in-range] { background: var(--docs-accent-soft); color: var(--docs-accent); }
 .docs-preview [data-example-picker] [role="gridcell"][aria-disabled="true"] { background: var(--docs-disabled-bg); color: var(--docs-disabled-text); }
-.docs-preview [data-example-picker] :is(input, [data-part="trigger"]) { min-width: 0; min-height: var(--docs-control-height); padding: var(--docs-space-2) var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-control-radius); color: var(--docs-text); background: var(--docs-bg); font: inherit; font-size: var(--docs-font-size-label); }
 .docs-preview [data-example-picker] input { width: 100%; flex: 1 1 180px; }
 .docs-preview [data-example-picker-inputs] { display: grid; gap: var(--docs-space-2); margin-bottom: var(--docs-space-2); }
 .docs-preview [data-example-picker] output { display: block; margin-top: var(--docs-space-4); }
@@ -471,19 +473,6 @@
 
 .docs-preview [data-example-cascade] [data-part="content"] { margin-top: var(--docs-space-3); }
 
-.docs-preview [data-scope="color-picker"] :is([data-part="native-input"], [data-part="text-input"]),
-.docs-preview [data-scope="quantity-field"] :is([data-part="input"], [data-part="unit-select"]) {
-  min-width: 0;
-  min-height: var(--docs-control-height);
-  padding: var(--docs-space-2) var(--docs-space-3);
-  border: var(--docs-border-width) solid var(--docs-control-border);
-  border-radius: var(--docs-control-radius);
-  color: var(--docs-text);
-  background: var(--docs-bg);
-  font: inherit;
-}
-.docs-preview [data-scope="color-picker"] [data-part="native-input"] { width: var(--docs-control-height); padding: var(--docs-space-1); }
-.docs-preview [data-scope="color-picker"] [data-part="text-input"] { flex: 1 1 160px; }
 .docs-preview [data-scope="color-picker"] [data-part="value-text"] { display: block; margin-top: var(--docs-space-3); font-family: var(--docs-font-mono); font-size: var(--docs-font-size-code); }
 .docs-preview [data-example-reorder] [data-part="root"] { display: grid; gap: var(--docs-space-2); }
 .docs-preview [data-example-reorder] [data-part="item"] { display: flex; gap: var(--docs-space-3); align-items: center; min-height: var(--docs-control-height); padding: var(--docs-space-3); border: var(--docs-border-width) solid var(--docs-control-border); border-radius: var(--docs-item-radius); background: var(--docs-bg); touch-action: none; cursor: grab; }
@@ -494,7 +483,6 @@
 .docs-preview [data-example-meter-group] [data-part="list"] { display: flex; flex-wrap: wrap; gap: var(--docs-space-4); padding: 0; margin-block: var(--docs-space-3); list-style: none; font-size: var(--docs-font-size-label); }
 
 
-.docs-preview [data-scope="quantity-field"] [data-part="input"] { flex: 1 1 160px; }
 .docs-preview [data-scope="quantity-field"][data-invalid] [data-part="input"] { border-color: var(--docs-error); }
 .docs-preview [data-example-window-splitter] [data-part="root"] { display: flex; align-items: stretch; min-height: 160px; }
 .docs-preview [data-example-window-splitter] [data-part="pane"] { min-width: 0; padding: var(--docs-space-4); background: var(--docs-bg); border-radius: var(--docs-item-radius); overflow-wrap: anywhere; }

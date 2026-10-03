@@ -163,6 +163,8 @@ This private contract belongs to the Vue/Vite documentation package. It governs 
 
 `preview.css` owns common presentation for headless example descendants and imports `example-data.css` for structured trees/grids and `example-presence.css` for retained transition surfaces, including portaled content. Their example-owned hooks stay global because portals leave the preview ancestor. Static thumbnails and preview frames own their component styles. Document structure and static prose retain appropriate HTML semantics; data-source-driven DataTable behavior is not assigned to a plain reference table. All displayed example files contain behavior and composition; documentation presentation stays outside those files and the published packages. Executed and displayed feature code retain one source owner.
 
+`example-fields.css`, imported by `preview.css`, owns single-line field geometry and compound field rows. Text, numeric, choice, temporal, quantity and color-text specimens share that owner; the caller supplies composition, label associations and semantic state. This distinct presentation boundary replaces repeated field declarations rather than creating a stylesheet per example.
+
 **Key Characteristics:**
 
 - White canvas, near-black text, and black primary actions.
@@ -218,6 +220,31 @@ Panels and tab content use the surface radius (12px); buttons and single-line fi
 Gallery and inset menu geometry uses a 1px border and 8px inset: the inner radius is max(0, 12 − 1 − 8), yielding 3px. The 44 × 28px switch has a 20px circular thumb, 3px inset, and 16px travel. Its outer/inner circular radii are 14px and 10px.
 
 **The Concentric Corners Rule.** Derive a flush inset surface from its actual outer radius, border, and inset. Keep independent control geometry a separate role.
+
+## Field and compound-control contract
+
+The field is the primary value; a unit or swatch is a supporting control in the same row. The field label precedes the row, remains visible, and names the input through its actual ID. Supporting controls keep their own accessible names. Outcome text follows the specimen, rather than occupying its control row.
+
+| Role | Token / relationship | Default |
+| --- | --- | --- |
+| Single-line outer height | `--docs-field-height` from control height | 44px, border-box |
+| Border and equal content inset | border width, `--docs-field-inset` | 1px, 12px on each side |
+| Text line box | height − 2 × border − 2 × inset | 18px |
+| Type | field font size from label size, system sans, weight 400 | 14px |
+| Sibling gap / label gap | `--docs-field-gap` | 8px |
+| Select arrow | icon size; edge inset equals content inset | 16px; 12px |
+| Select trailing reservation | edge inset + icon + sibling gap | 36px |
+| Numeric value / unit allocation | value width + gap + unit width | 200 + 8 + 104 = 312px maximum |
+| Value wrap basis | `--docs-field-value-min-width` | 144px |
+| Color swatch | field-height square; dedicated swatch inset | 44px; 4px |
+
+The outer height determines the child line box, not vice versa. Field recipes use explicit family, size and leading from this contract. Multiline text, data-cell editors and compact toolbar actions retain their own geometry owners. Single-line fields retain the independent pill-radius role; nested panel surfaces use the concentric-radius calculation above.
+
+Compound rows align controls at the center with a shared height and an 8px gap. Their maximum width is content-role-driven, not an instruction to occupy the entire preview. The value can flex; the unit has a reserved width. Below the combined 144px value basis, 8px gap and 104px unit basis, controls wrap in source order. Inputs may shrink within their own line. Labels and explanatory text can wrap without changing the control height.
+
+Native unit selection retains its select semantics and keyboard behavior. Documentation supplies one SVG arrow, reserves its space, mirrors its placement in RTL and restores the native arrow in forced colors. Its text-leading inset and arrow-trailing inset use the same token. Numeric text uses tabular numerals. Color swatches are an explicit square-control exception, not a competing text-field padding rule.
+
+Acceptance checks cover the token arithmetic, shared style ownership and rendered label/input association. Browser acceptance additionally checks long expressions and unit labels, narrow rows, RTL, forced colors, focus and baseline alignment. Static checks do not certify those rendered states.
 
 ## Components
 

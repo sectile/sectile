@@ -1,0 +1,85 @@
+/* One documentation owner for single-line field geometry and compound rows. */
+.docs-preview :is(
+  [data-example-text-fields] input,
+  .docs-preview--form input,
+  [data-scope="number-field"],
+  [data-scope="spin-button"][data-part="input"],
+  [data-scope="select"][data-part="trigger"],
+  [data-scope="combobox"][data-part="input"],
+  [data-scope="tags-input"][data-part="input"],
+  [data-scope="editable"][data-part="input"],
+  [data-example-temporal-field] input,
+  [data-example-picker] input,
+  [data-example-picker] [data-part="trigger"],
+  [data-scope="color-picker"] [data-part="native-input"],
+  [data-scope="color-picker"] [data-part="text-input"],
+  [data-scope="quantity-field"] [data-part="input"],
+  [data-scope="quantity-field"] [data-part="unit-select"]
+) {
+  box-sizing: border-box;
+  min-inline-size: 0;
+  block-size: var(--docs-field-height);
+  min-block-size: var(--docs-field-height);
+  padding: var(--docs-field-inset);
+  border: var(--docs-border-width) solid var(--docs-control-border);
+  border-radius: var(--docs-field-radius);
+  background-color: var(--docs-bg);
+  color: var(--docs-text);
+  font-family: var(--docs-font-sans);
+  font-size: var(--docs-field-font-size);
+  font-weight: 400;
+  line-height: var(--docs-field-content-height);
+}
+
+.docs-preview [data-example-field-label] {
+  display: block;
+  margin-block-end: var(--docs-field-gap);
+  font-size: var(--docs-font-size-label);
+}
+
+.docs-preview [data-example-field-row] {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: start;
+  gap: var(--docs-field-gap);
+  inline-size: 100%;
+  max-inline-size: calc(var(--docs-field-value-width) + var(--docs-field-gap) + var(--docs-field-unit-width));
+}
+
+.docs-preview [data-example-field-row] :is(
+  [data-scope="quantity-field"][data-part="input"],
+  [data-scope="color-picker"][data-part="text-input"]
+) {
+  flex: 1 1 var(--docs-field-value-min-width);
+  inline-size: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.docs-preview [data-scope="quantity-field"][data-part="unit-select"] {
+  flex: 0 0 var(--docs-field-unit-width);
+  inline-size: var(--docs-field-unit-width);
+  max-inline-size: 100%;
+  appearance: none;
+  padding-inline-end: var(--docs-field-select-reserve);
+  background-image: var(--docs-field-select-icon);
+  background-repeat: no-repeat;
+  background-size: var(--docs-field-icon-size) var(--docs-field-icon-size);
+  background-position: right var(--docs-field-inset) center;
+}
+.docs-preview [data-scope="quantity-field"][data-part="unit-select"]:dir(rtl) {
+  background-position: left var(--docs-field-inset) center;
+}
+
+.docs-preview [data-scope="color-picker"][data-part="native-input"] {
+  flex: 0 0 var(--docs-field-height);
+  inline-size: var(--docs-field-height);
+  padding: var(--docs-field-swatch-inset);
+}
+
+@media (forced-colors: active) {
+  .docs-preview [data-scope="quantity-field"][data-part="unit-select"] {
+    appearance: auto;
+    background-image: none;
+  }
+}
