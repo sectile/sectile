@@ -49,14 +49,11 @@ async function copy(): Promise<void> {
 
 <template>
   <div class="docs-code-section">
-    <div class="docs-code-section__header">
-      <span>{{ label ?? 'Code' }}</span>
-      <button type="button" @click="copy">Copy code</button>
-    </div>
     <details class="docs-code-disclosure" :open="codeOpen" @toggle="toggleCode">
-      <summary>{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</summary>
+      <summary><span class="docs-code-label">{{ label ?? 'Code' }}</span><span class="docs-code-disclosure__hint">{{ codeOpen ? 'Hide code' : 'Show code' }} · {{ presentation.lineCount }} {{ presentation.lineCount === 1 ? 'line' : 'lines' }}</span></summary>
       <pre tabindex="0" :aria-label="label ?? 'Code'" :data-language="language"><code><template v-if="tokens"><span v-for="(token, index) in tokens" :key="index" :style="{ color: token.color }">{{ token.content }}</span></template><template v-else>{{ source }}</template></code></pre>
     </details>
+    <button class="docs-code-copy" type="button" @click="copy">Copy code</button>
     <p v-if="highlightingFailed" class="docs-code-message" role="status">Syntax highlighting unavailable. The source is still readable and can be copied.</p>
     <p v-if="message" class="docs-code-message" role="status">{{ message }}</p>
   </div>
