@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { getEventListeners } from 'node:events';
 import { fileURLToPath } from 'node:url';
-import { createSSRApp, nextTick, shallowRef } from 'vue';
+import { createRenderer, createSSRApp, defineComponent, nextTick, shallowRef } from 'vue';
 import { renderToString } from 'vue/server-renderer';
 import { createServer } from 'vite';
 import {
@@ -278,6 +278,41 @@ test('every shipped route renders and all internal page links resolve', async ()
     const { createTabularQuery } = await server.ssrLoadModule('@sectile/tabular/query');
     const { useDataGrid } = await server.ssrLoadModule('@sectile/vue/data-grid');
     const { useDataTreeGrid } = await server.ssrLoadModule('@sectile/vue/data-tree-grid');
+    const { createRecoverableMemberSource } = await server.ssrLoadModule('/src/examples/vue/tabular/page-and-retry/example.ts');
+    const recoverable = createRecoverableMemberSource();
+    const pagedAccess = { kind: 'page', page: 1, itemsPerPage: 2, visibleRowCount: null, pagination: null };
+    // A non-DOM Vue host exercises the composable's real mounted source
+    // lifecycle, not the grid's native browser rendering or input behavior.
+    const host = createRenderer({ createElement: () => ({}), createText: () => ({}), createComment: () => ({}), insert() {}, remove() {}, setText() {}, setElementText() {}, parentNode: () => null, nextSibling: () => null, patchProp() {} });
+    let paged;
+    const mounted = host.createApp(defineComponent({ setup() {
+      paged = useDataGrid({ source: recoverable.source, defaultAccessState: pagedAccess, initialView: createMemberInitialView(recoverable.source, undefined, pagedAccess) });
+      return () => null;
+    } }));
+    mounted.mount({});
+    const settleSource = () => new Promise(resolve => setImmediate(resolve));
+    try {
+      assert.deepEqual(paged.getProjection().rows.map(row => row.rowID), ['ada', 'grace']);
+      paged.reload();
+      await settleSource();
+      assert.equal(paged.status.value, 'success');
+      const moved = paged.dispatch({ type: 'set-access', accessState: { ...paged.snapshot.value.tabular.state.accessState, page: 2, pagination: { page: 2, itemsPerPage: 2 } } });
+      assert.equal(moved.ok, true, JSON.stringify(moved));
+      await settleSource();
+      assert.equal(paged.status.value, 'success');
+      assert.deepEqual(paged.getProjection().rows.map(row => row.rowID), ['linus']);
+      recoverable.failNextRequest();
+      paged.reload();
+      await settleSource();
+      assert.equal(paged.status.value, 'error');
+      assert.match(paged.error.value.message, /simulated member request failed/u);
+      assert.deepEqual(paged.getProjection().rows.map(row => row.rowID), ['linus']);
+      paged.reload();
+      await settleSource();
+      assert.equal(paged.status.value, 'success');
+      assert.equal(paged.error.value, null);
+      assert.deepEqual(paged.getProjection().rows.map(row => row.rowID), ['linus']);
+    } finally { mounted.unmount(); }
     for (const grouped of [false, true]) {
       const source = createMemberSource();
       const profile = grouped
@@ -354,6 +389,7 @@ test('every shipped route renders and all internal page links resolve', async ()
         const preview = html.slice(html.indexOf('class="docs-preview'), html.indexOf('<details class="docs-code-disclosure">'));
         const initialStates = {
           'vue-tabular-sortable-data-grid': [/Sortable project members/u, /Search members/u, /evaluates the query/u],
+          'vue-tabular-page-and-retry': [/Page 1 of 2/u, /Paged project members/u, /Simulate failed reload/u, /last accepted rows/u],
           'vue-tabular-grouped-data-tree-grid': [/Project members grouped by role/u, /Expansion requests a new source view/u],
           'vue-form-validation-and-server-issues': [/No accepted submission yet/u, /Confirm email/u, /does not contact a server/u],
           'vue-components-primitive-element-adoption': [/Activations: 0/u, /data-example-adopted-button/u],

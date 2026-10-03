@@ -1,6 +1,6 @@
 import type { DataTableSourceResolver } from '@sectile/vue/data-table';
 import { createClientTabularSource } from '@sectile/tabular/source';
-import type { DataGridSourceResolver, DataGridViewResponse } from '@sectile/vue/data-grid';
+import type { DataGridAccessState, DataGridSourceResolver, DataGridViewResponse } from '@sectile/vue/data-grid';
 import { createDataTreeGrid } from '@sectile/tabular/data-tree-grid';
 import { createTabularQuery } from '@sectile/tabular/query';
 
@@ -53,8 +53,8 @@ export function createMemberSource() {
 // Preload this small, local data set through the public request contract. This
 // supplies the schema before sort/group descriptors are constructed and gives
 // SSR and hydration the same initial view. No network work runs during SSR.
-export function createMemberInitialView(source: ReturnType<typeof createMemberSource>, query = createTabularQuery()) {
-  const controller = createDataTreeGrid({ columns: [{ id: 'name' }, { id: 'role' }], initialValues: { query } });
+export function createMemberInitialView(source: ReturnType<typeof createMemberSource>, query = createTabularQuery(), accessState?: DataGridAccessState) {
+  const controller = createDataTreeGrid({ columns: [{ id: 'name' }, { id: 'role' }], initialValues: { query, ...(accessState === undefined ? {} : { accessState }) } });
   try {
     let request = controller.getSnapshot().tabular.state.requestState.pendingRequest;
     if (request === null) {

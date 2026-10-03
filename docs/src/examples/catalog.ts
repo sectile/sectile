@@ -2267,6 +2267,14 @@ export const examples: readonly ExampleDefinition[] = [
     code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/local-source/Preview.vue' }, { label: 'TypeScript · source resolver', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
   },
   {
+    id: 'vue-tabular-page-and-retry', host: 'vue', area: 'tabular', subject: 'DataGrid',
+    slug: 'page-and-retry', title: 'Paging and recovering a failed request',
+    description: 'Move through a small member list, retain accepted rows after a failed reload and retry the current page.', focus: 'Paged source access and error recovery',
+    kind: 'behavior', fixture: 'table', tags: ['accessState', 'reload', 'error'], sourceOwner: 'vue',
+    previewPath: './vue/tabular/page-and-retry/Preview.vue',
+    code: [{ label: 'Vue', language: 'vue', path: './vue/tabular/page-and-retry/Preview.vue' }, { label: 'TypeScript · failure simulation', language: 'ts', path: './vue/tabular/page-and-retry/example.ts' }, { label: 'TypeScript · member source', language: 'ts', path: './vue/tabular/local-source/example.ts' }], related: [],
+  },
+  {
     id: 'vue-chart-line-series', host: 'vue', area: 'chart', subject: 'Chart',
     slug: 'line-series', title: 'A labeled line series',
     description: 'Map delivery records to two numeric axes and a line layer. Drawing begins after mounting; keyboard navigation uses application-provided record labels.', focus: 'Declarative axes, stable IDs and accessible records',
