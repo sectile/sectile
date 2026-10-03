@@ -29,7 +29,6 @@ const accessibilityComponent = computed(() => components.find(component => compo
         <component :is="runtime.preview" :key="`${example.id}-${generation}`" />
       </div>
     </div>
-    <p class="docs-preview-note">{{ example.kind === 'styling' ? 'The source includes the styling used in this preview.' : 'Preview styling is supplied by the documentation. The source below focuses on behavior.' }}</p>
     <div class="docs-code-stack">
       <CodeBlock v-for="section in runtime.code" :key="`${example.id}:${section.path}`" :label="section.label" :source="section.source" :language="section.language" />
     </div>

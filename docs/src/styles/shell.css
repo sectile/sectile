@@ -525,12 +525,6 @@
   max-width: 100%;
 }
 
-.docs-preview-note {
-  margin: var(--docs-space-3) 0 var(--docs-space-5);
-  color: var(--docs-text-muted);
-  font-size: var(--docs-font-size-caption);
-}
-
 .docs-preview-layout {
   min-width: 0;
   max-width: 100%;

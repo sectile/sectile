@@ -30,7 +30,6 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
       <h2>Your first component</h2>
       <p>A checkbox combines a root that manages its checked state with an indicator that appears when selected. With <code>v-model</code>, that state lives in your application.</p>
       <a class="docs-next-link" :href="routeHref('/vue/components/checkbox/controlled-state')" @click="handleRouteClick($event, '/vue/components/checkbox/controlled-state')"><strong>Try a controlled checkbox</strong><span>Interactive preview and the complete Vue source</span></a>
-      <p>The behavior example omits presentation CSS. Add your own classes, or follow the styling example to build a visible checkbox control.</p>
     </section>
     <section id="next-steps" class="docs-prose-section">
       <h2>Make it your own</h2>
@@ -41,6 +40,10 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
   <template v-else-if="guide === 'styling'">
     <h1>Styling</h1>
     <p class="docs-page__lede">Sectile components are unstyled. Classes and state attributes connect interaction behavior to your application's visual system.</p>
+    <section class="docs-prose-section">
+      <h2>Example styling</h2>
+      <p>Behavior examples use shared preview styles that are not included in their source or the published packages. Styling examples include their own CSS. Your application owns colors, spacing, layout, and motion.</p>
+    </section>
     <section class="docs-prose-section">
       <h2>Style the part that renders</h2>
       <p>Pass a class to the component part that owns the element you want to style. For a checkbox, the root owns the interactive surface, while the indicator represents its selected state.</p>
@@ -55,7 +58,6 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
     <section class="docs-prose-section">
       <h2>Style portaled content</h2>
       <p>A dialog portal moves content outside the trigger's DOM ancestry. Apply a class directly to <code>DialogOverlay</code> and <code>DialogContent</code>; a selector that depends on the trigger's parent will not reach them.</p>
-      <p>The documentation's neutral preview styles are not part of the published package. Your application owns colors, spacing, layout, and motion.</p>
     </section>
   </template>
   <AccessibilityGuide v-else-if="guide === 'accessibility'" />
