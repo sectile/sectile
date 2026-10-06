@@ -96,8 +96,13 @@ test('release retries prepare tagged artifacts and load the complete current pub
   assert.equal(workflow.match(/git restore --source="\$RELEASE_TOOLING_REF"/gu).length, 2);
   assert.ok(preparation.includes('ref: ${{ inputs.tag }}'));
   assert.match(workflow, /run: pnpm release:check/u);
-  assert.match(workflow, /run: pnpm --filter @sectile\/docs build/u);
-  assert.match(workflow, /path: docs\/dist/u);
+  assert.equal(workflow.includes('@sectile/docs'), false, 'docs remain local-only');
+  assert.equal(workflow.includes('docs/dist'), false);
+  assert.equal(workflow.includes('pages: write'), false);
+  assert.equal(workflow.includes('actions/configure-pages@'), false);
+  assert.equal(workflow.includes('actions/upload-pages-artifact@'), false);
+  assert.equal(workflow.includes('actions/deploy-pages@'), false);
+  assert.equal(workflow.includes('deploy-docs:'), false);
   assert.equal(preparation.includes('@sectile/docs^... build'), false);
   assert.equal(preparation.includes('scripts/virtual-benchmark/run.mjs docs'), false);
   assert.equal(workflow.includes('docs/.vitepress/dist'), false);
