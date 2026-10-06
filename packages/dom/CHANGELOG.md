@@ -1,5 +1,18 @@
 # @sectile/dom
 
+## 0.18.3
+
+### Changes
+
+- fix(dom): preserve reset effects during replacement validation (46849b95)
+- fix(dom): preserve scroll during popup focus transitions (5d6d2cfb)
+- perf(dom): share construction and positioned popup ownership (5e74216e)
+- fix(dom): fence virtual publications and resolve quirks viewports (0872bb0a)
+- fix(dom): fence form callbacks and restore owned summaries (c2eb09a7)
+- fix(dom): retain pinch pointer ownership through capture loss (f26dbb7a)
+- perf(dom): share native text event dispatch without changing editing (c1fd254a)
+- fix(virtual): stabilize native document anchor settlement (42f04351)
+
 ## 0.18.2
 
 ### Changes

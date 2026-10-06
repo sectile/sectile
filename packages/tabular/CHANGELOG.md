@@ -1,5 +1,12 @@
 # @sectile/tabular
 
+## 0.16.3
+
+### Changes
+
+- chore(verification): record final packed consumer evidence (1435fafd)
+- fix(tabular): fence client requests and refresh profile evidence (d3f4e3b6)
+
 ## 0.16.2
 
 ### Changes

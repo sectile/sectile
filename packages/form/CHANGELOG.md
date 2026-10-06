@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.14.10
+
+### Changes
+
+- fix(form): bound path capture and retain submission failures (5e72bbfb)
+
 ## 0.14.9
 
 ### Changes

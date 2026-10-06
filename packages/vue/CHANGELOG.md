@@ -1,5 +1,21 @@
 # @sectile/vue
 
+## 0.18.3
+
+### Changes
+
+- chore(verification): refresh virtual declaration fingerprints (03533c90)
+- perf(vue): reuse normalized virtual slot children (7701d3f1)
+- perf(vue): let virtual refs own their registration cleanup (c468190b)
+- fix(vue): recognize virtual host refs across element realms (f3a24625)
+- fix(vue): unify virtual collection root scrollport styles (c7efd7b9)
+- fix(vue): cancel superseded tabular source work before invocation (e6891d56)
+- perf(vue): preserve picker types while improving tree shaking (a85b69ff)
+- perf(vue): share native field and range connection lifecycles (c280a940)
+- perf(vue): capture form callbacks and reuse metadata aliases (64cc151e)
+- fix(virtual): stabilize native document anchor settlement (42f04351)
+- test(vue): add copyable manual IME evidence (30afa96f)
+
 ## 0.18.2
 
 ### Changes

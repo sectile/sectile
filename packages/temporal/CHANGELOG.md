@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.14.10
+
+### Changes
+
+- fix(temporal): canonicalize policies and preserve safe time arithmetic (593b954b)
+
 ## 0.14.9
 
 ### Changes

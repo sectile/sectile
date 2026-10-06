@@ -1,5 +1,14 @@
 # @sectile/core
 
+## 0.14.8
+
+### Changes
+
+- fix(core): preserve range preflight rejection order (7ae54676)
+- fix(core): capture metric query coordinates once (40fe58ea)
+- fix(core): canonicalize move patches before validation (1da76e41)
+- fix(core): retain accepted range construction inputs (8f9575f2)
+
 ## 0.14.7
 
 ### Changes

@@ -1,5 +1,13 @@
 # @sectile/chart
 
+## 0.15.7
+
+### Changes
+
+- fix(chart): retain accepted hit query coordinates (0ce28e20)
+- fix(chart): reject nonfinite packed Float32 geometry (c2172e78)
+- fix(chart): capture projection inputs before cache lookup (152fb824)
+
 ## 0.15.6
 
 ### Changes

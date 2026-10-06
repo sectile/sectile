@@ -1,5 +1,11 @@
 # @sectile/virtual
 
+## 0.15.6
+
+### Changes
+
+- fix(virtual): capture caller collections without retaining projections (993781c0)
+
 ## 0.15.5
 
 ### Changes
