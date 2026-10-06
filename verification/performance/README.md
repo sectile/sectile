@@ -212,6 +212,36 @@ before warm-cache access (`d3f4e3b686d2b0b10344a1f7e56e13b7c51379c1`). This
 comparison does not revert those protections or claim a completed repair.
 Package publication was not dispatched because performance certification failed.
 
+### Maintainer release decision — 2026-10-06
+
+- Record ID / Work ID / Run ID: package-release-20261006-acceptance / package-release-20261006 / 20261006-publication
+- Actor / role: Codex / release operator under direct maintainer instruction
+- Inspected source and approved default-branch policy commit: `ef067f4e3ecc71b5148c73c7a832aa5ad434c197`
+- Record schema: sectile-records/v1 checkpoint; independent review: N/A (direct maintainer release request, no independent approval claimed)
+
+The maintainer accepted the measured costs above and explicitly requested
+publication of the existing Sectile packages. This is a release-specific
+acceptance of the six reproduced performance failures, not a passing
+certification, repaired runtime, new baseline, or relaxed comparison ceiling.
+Preserve the input-capture correctness protections and existing thresholds.
+Chart allocation remains the principal measured cost; the allocation lane
+does not establish a retained-memory leak. Browser and manual IME checks were
+not run; the maintainer owns browser validation.
+
+Deterministic release verification completed in local run
+`2026-10-06T07-17-21-347Z-75`; the failed public-signature check was subsequently
+repaired and passed in `2026-10-06T07-28-40-565Z-76`. Performance certification
+remains Failed as recorded above. Those local verification records are not
+registry publication evidence. Runtime source is unchanged since the measured
+candidate; subsequent commits preserve evidence only.
+
+Publication is Pending at this checkpoint. The root release command will
+produce the package versions, source commit and tags; GitHub Actions will pack,
+publish through OIDC and compare registry SHA-512 integrity against the packed
+artifacts. Public documentation remains local-only. This release does not
+include new theme or Vue UI packages. Confirm the completed Actions run and
+registry artifacts before reporting released status.
+
 The local candidate report has SHA-256
 `f4e686fddb32fb4b11ad88735346282be2e1a7ea1a5bdd11cbf61464e382bb21`;
 the canonical comparison has SHA-256
