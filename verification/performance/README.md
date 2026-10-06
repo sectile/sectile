@@ -140,9 +140,41 @@ calibration, and retained run artifacts with one isolated process, without
 selecting or comparing an authoritative baseline. It cannot produce work-item
 evidence or replace a baseline.
 
+## Node 24.21 tagged-source certification reference
+
+The full-catalog reference for Node v24.21.0 and the current workload-file
+fingerprint is environment partition
+`b750109d2af09bf9d48a818e9fc7e6534a834b39ecf72af72ed6175a2dcbd323`.
+It measures production builds of `release-2026-09-21.1`, source commit
+`b14ae98749ee7845f3530e18d0f1fbd2c2ec124b`, not the release candidate.
+Dependencies were installed from that tag's frozen lockfile. Product source,
+package manifests and build tooling remained tagged; this is tagged-source
+evidence, not an independently verified npm-artifact measurement.
+
+The isolated reference used `scripts/performance/run.mjs` and `provenance.mjs`
+from `03533c90a61d61f9bb42c4c9405d7a31fa067b53`. Those are the only runner
+files changed since the tag. Workload definitions, schema, measurement,
+statistics and GC protocols are identical; the runner overlay replaces
+schema-only fingerprinting with workload-file fingerprinting and checks that
+definitions stay unchanged during measurement. The preserved overlay has
+SHA-256 `49f993189b3e41262fb02a15abc96b3ea787dce24a3fe345a37fb1d9cfdb824b`.
+
+Recorded on 2026-10-06, the reference uses ten isolated processes, five batches
+per process, `--expose-gc`, no `NODE_OPTIONS`, and all 234 metrics. The workload
+fingerprint is
+`cbf7f5d3252d241a095fd4a7bfb110b51151413cc00dd1b2b546064c0a2e3223`.
+The selector file is
+`all-owners__all-types__all-domains__all-scales__all-evidence.json`, SHA-256
+`446d183e873136611bd63b866cf245502980e3d8bcf9c36849d92daf7966a5cc`,
+and build fingerprint
+`ed1d1681af88b247e2c89d333f2849badb22116297bbcba6b17765b4e5bcde99`.
+Run `2026-10-06T07-34-32-819Z-39-866a66b0` was promoted unchanged through
+`performance:promote`. Existing partitions and comparison ceilings remain
+intact.
+
 ## Schema 7 published certification reference
 
-The active full certification reference for schema 7 is environment partition
+The preserved published-artifact reference for schema 7 is environment partition
 `f6e20f816693ec2b0bbdb67eacb8e90b20ce625ee6bd98fa11833f2b73949b52`.
 It was recorded on 2026-09-13 from the exact latest independently published npm
 artifacts listed below, not from the release candidate. Every package tag is an
