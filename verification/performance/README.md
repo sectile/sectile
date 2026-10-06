@@ -172,6 +172,54 @@ Run `2026-10-06T07-34-32-819Z-39-866a66b0` was promoted unchanged through
 `performance:promote`. Existing partitions and comparison ceilings remain
 intact.
 
+### Candidate comparison on 2026-10-06
+
+The candidate runtime is
+`03533c90a61d61f9bb42c4c9405d7a31fa067b53`. Commit
+`900ab99652fd7f1070bf9a05b5fa6f984d9cb864` adds only the reference and its
+documentation; runtime artifacts stayed unchanged during measurement.
+`pnpm verify:release -- --unit performance-certification` completed ten
+processes in run `2026-10-06T07-44-00-989Z-123-067b9fb9` and **failed** with
+six regressions, reproducing the six findings from the retained earlier
+candidate report. Runtime, hardware, worker flags, workload keys and protocol
+metadata match the reference. Calibration is valid; the existing timing band
+is 5% and the allocation band is 10%.
+
+The generated [comparison](release-2026-10-06-comparison.json) uses the
+production comparison kernel and preserves all 233 non-calibration metrics
+and nine package footprints. Ratios below are candidate/reference; a ratio
+above one means greater measured cost.
+
+| Workload | Timing median ratio | Allocation peak-delta median ratio | Failed lane |
+|---|---|---|---|
+| Chart cached projection, 10k | 1.351 | 8.494 | Timing and allocation |
+| Chart cached projection, 100k | 0.873 | 8.947 | Allocation |
+| Chart cached projection, 1m | 0.912 | 7.811 | Allocation |
+| Core indexed forward, 2d/1k | 1.046 | 1.238 | Allocation |
+| Core nearest, 32d/1k | 0.081 | 2.386 | Allocation |
+| Tabular warm resolve, 1k | 1.449 | Below comparison floor | Timing |
+
+All package footprints are within the existing ceiling; the largest increase
+is Chart at 1.25%. Core nearest 32d is substantially faster despite its
+allocation regression. Allocation evidence measures repeated-operation heap
+peak deltas, not retained leaks or per-call total allocated bytes.
+
+Static contributors are the correctness changes that capture Chart projection
+input before cache lookup (`152fb8243fe0d668516be194a5fed6d61dbfa84d`), capture
+Core metric coordinates in an operation-local array
+(`40fe58ea984dfebc3fe37e204d335f88203b2866`), and normalize Tabular requests
+before warm-cache access (`d3f4e3b686d2b0b10344a1f7e56e13b7c51379c1`). This
+comparison does not revert those protections or claim a completed repair.
+Package publication was not dispatched because performance certification failed.
+
+The local candidate report has SHA-256
+`f4e686fddb32fb4b11ad88735346282be2e1a7ea1a5bdd11cbf61464e382bb21`;
+the canonical comparison has SHA-256
+`af2e7fcdeb6bc2fd3861770fc23c1bf35e898a469f1a7fd21a513e343a2df8aa`.
+Raw worker reports and the instrumented reference worktree remain local under
+`.tasks` and `.tmp`; the reference, generated comparison and source identities
+are preserved in this repository. No native-browser or IME result is claimed.
+
 ## Schema 7 published certification reference
 
 The preserved published-artifact reference for schema 7 is environment partition
