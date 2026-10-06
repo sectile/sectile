@@ -23,6 +23,40 @@ export function registryPublicationRetryDelay(attempt) {
   return Math.min(registryPublicationInitialDelayMs * (2 ** Math.min(attempt, 4)), registryPublicationMaximumDelayMs);
 }
 
+export async function publishRegistryArtifacts(artifacts, operations) {
+  const pending = [];
+  const failures = [];
+  // Keep uploads ordered, but do not serialize registry processing delays.
+  for (const artifact of artifacts) {
+    try {
+      const metadata = await operations.read(artifact);
+      if (metadata !== undefined) {
+        await operations.verify(artifact, metadata);
+        operations.onVerified?.(artifact, true);
+      } else {
+        await operations.publish(artifact);
+        pending.push(artifact);
+      }
+    } catch (error) {
+      failures.push(error);
+      break;
+    }
+  }
+  // Drain every submitted artifact before cleanup, including after an upload failure.
+  const results = await Promise.allSettled(pending.map(async (artifact) => {
+    const { name, version } = artifact.manifest;
+    const metadata = await waitForRegistryArtifact(
+      () => operations.read(artifact), `${name}@${version}`, operations.polling,
+    );
+    await operations.verify(artifact, metadata);
+    operations.onVerified?.(artifact, false);
+  }));
+  for (const result of results) {
+    if (result.status === 'rejected') failures.push(result.reason);
+  }
+  if (failures.length > 0) throw new AggregateError(failures, 'package publication or registry verification failed');
+}
+
 export async function waitForRegistryArtifact(read, specifier, options = {}) {
   assert.equal(typeof read, 'function', 'registry artifact reader must be a function');
   assert.equal(typeof specifier === 'string' && specifier !== '', true, 'registry artifact specifier must be non-empty');

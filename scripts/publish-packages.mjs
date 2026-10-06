@@ -8,8 +8,8 @@ import {
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
 import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
-import { assertRegistryArtifact, waitForRegistryArtifact } from './lib/npm-registry-artifact.mjs';
-import { execFileSyncPortable, spawnSyncPortable } from '../tools/tooling/portable-process.mjs';
+import { assertRegistryArtifact, publishRegistryArtifacts } from './lib/npm-registry-artifact.mjs';
+import { execFilePortable, execFileSyncPortable, spawnSyncPortable } from '../tools/tooling/portable-process.mjs';
 import { resolveExpectedReleaseTag } from './lib/release.mjs';
 import {
   isReleaseSetTag,
@@ -75,19 +75,17 @@ function assertSupportedNpm() {
   assert.equal(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), true, `npm 11.5.1 or newer is required for trusted publishing; found ${version}`);
 }
 
-function registryMetadata(specifier, environment) {
-  const result = spawnSyncPortable('npm', [
-    'view', specifier, 'name', 'version', 'dist.integrity', '--json', '--prefer-online', '--registry', registry,
-  ], {
-    cwd: root,
-    encoding: 'utf8',
-    env: environment,
-  });
-  if (result.status === 0) return JSON.parse(result.stdout);
-
-  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-  if (/\bE404\b|404 Not Found/i.test(output)) return undefined;
-  throw new Error(`failed to query ${specifier}:\n${output.trim()}`);
+async function registryMetadata(specifier, environment) {
+  try {
+    const result = await execFilePortable('npm', [
+      'view', specifier, 'name', 'version', 'dist.integrity', '--json', '--prefer-online', '--registry', registry,
+    ], { cwd: root, encoding: 'utf8', env: environment });
+    return JSON.parse(result.stdout);
+  } catch (error) {
+    const output = `${error.stdout ?? ''}\n${error.stderr ?? ''}`;
+    if (/\bE404\b|404 Not Found/i.test(output)) return undefined;
+    throw new Error(`failed to query ${specifier}:\n${output.trim() || error.message}`, { cause: error });
+  }
 }
 
 assertSupportedNpm();
@@ -156,9 +154,12 @@ try {
     ...process.env,
     npm_config_cache: join(packRoot, 'npm-cache'),
   };
-  const unregistered = packOnly || validateOnly
-    ? []
-    : packed.filter(({ manifest }) => registryMetadata(manifest.name, npmEnvironment) === undefined);
+  const unregistered = [];
+  if (!packOnly && !validateOnly) {
+    for (const artifact of packed) {
+      if (await registryMetadata(artifact.manifest.name, npmEnvironment) === undefined) unregistered.push(artifact);
+    }
+  }
 
   if (packOnly) {
     console.log(`validated ${packed.length} package tarballs`);
@@ -176,16 +177,17 @@ try {
       [],
       'unregistered packages require local `pnpm publish:packages -- --bootstrap-only` before release publication',
     );
-    for (const { manifest, tarball } of packed) {
-      const published = registryMetadata(`${manifest.name}@${manifest.version}`, npmEnvironment);
-      if (published !== undefined) {
-        await assertPublishedArtifact(published, manifest, tarball);
-        console.log(`skipped ${manifest.name}@${manifest.version}; already published`);
-        continue;
-      }
-      await publishTarball(tarball, npmEnvironment);
-      await waitForPublishedArtifact(manifest, tarball, npmEnvironment);
-    }
+    await publishRegistryArtifacts(packed, {
+      read: ({ manifest }) => registryMetadata(`${manifest.name}@${manifest.version}`, npmEnvironment),
+      publish: async ({ manifest, tarball }) => {
+        await publishTarball(tarball, npmEnvironment);
+        console.log(`submitted ${manifest.name}@${manifest.version}; registry verification queued`);
+      },
+      verify: ({ manifest, tarball }, metadata) => assertPublishedArtifact(metadata, manifest, tarball),
+      onVerified: ({ manifest }, existing) => console.log(existing
+        ? `skipped ${manifest.name}@${manifest.version}; already published and verified`
+        : `verified ${manifest.name}@${manifest.version}; registry artifact matches`),
+    });
   }
 } finally {
   if (temporaryPackRoot !== undefined) {
@@ -209,12 +211,6 @@ function dependencyClosure(packageGraph, targets) {
 
 async function assertPublishedArtifact(published, manifest, tarball) {
   assertRegistryArtifact(published, manifest, await readFile(tarball));
-}
-
-async function waitForPublishedArtifact(manifest, tarball, environment) {
-  const specifier = `${manifest.name}@${manifest.version}`;
-  const published = await waitForRegistryArtifact(() => registryMetadata(specifier, environment), specifier);
-  await assertPublishedArtifact(published, manifest, tarball);
 }
 
 async function publishTarball(tarball, environment) {
