@@ -242,6 +242,45 @@ artifacts. Public documentation remains local-only. This release does not
 include new theme or Vue UI packages. Confirm the completed Actions run and
 registry artifacts before reporting released status.
 
+### Published-artifact verification — v1
+
+- Record ID / Work ID / Run ID: package-release-20261006-published / package-release-20261006 / 20261006-publication
+- Verifier / role: Codex / Verifier and release operator (no independent review claimed)
+- Verified at: 2026-10-06T08:41:18Z
+- Phase: Published artifact
+- Source full SHA: `c8cf39be109bebe08c30b9adf05cbe143b3c6925`
+- Template version / approved policy commit: sectile-records/v1 / `ef067f4e3ecc71b5148c73c7a832aa5ad434c197`
+- Accepted criteria: the release-specific maintainer decision above; publish existing packages and keep public documentation local-only.
+- Environment: WSL Linux, Node v24.21.0; clean source snapshot.
+
+[Release Actions run 37435427292](https://github.com/sectile/sectile/actions/runs/37435427292)
+completed successfully. The [GitHub release](https://github.com/sectile/sectile/releases/tag/release-2026-10-06.1)
+was published at 2026-10-06T08:40:22Z. Its eight tarballs were downloaded from
+`npm-packages-release-2026-10-06.1` (artifact SHA-256
+`67d402b7d5b06de5376ae0ae2761276a43e47634df4457fb1a2e5345968ba66f`,
+Actions retention: seven days). A direct registry read and the production
+`assertRegistryArtifact` helper confirmed each package name, version and
+SHA-512 against the actual tarball bytes. Every npm `latest` tag matched.
+
+| Package | Version | Verified registry integrity |
+|---|---|---|
+| @sectile/core | 0.14.8 | `sha512-2oSFyD1YU4QDd0PI5SmOQ7bragltPpsQmevIB8wZj7uk4fbxrOtq6y6/M8PwuK6fKBq/UtkJyMEmPWs192uwtQ==` |
+| @sectile/chart | 0.15.7 | `sha512-3RaZ846eIBzzWmKfsDKTDjzWAzYK2tXcMmIifSySJ/mX1mnoHWhzfaVBJjWojy3/bsbkf2iUF+xznCKtFr9o4A==` |
+| @sectile/form | 0.14.10 | `sha512-NGvNiZBwMpcat3tu7+ctz/gaPwnm4k1PCrYxW7HQlm7gi7b5I18nZMrx+3ncl7lC4i33j3VcOpjSD1UakgylWA==` |
+| @sectile/temporal | 0.14.10 | `sha512-J1ZG9gCdtDWFA+vhg+hSr81S3KSIZ2usMF1yeS3CeKMlXafJAVE1K9xD+ChEI6Z1WqEQc1vu0da6joPf/0Vb8w==` |
+| @sectile/virtual | 0.15.6 | `sha512-5MZtMaU0YX2cwE8npk3kOKHPBlfefKm2jkPK2CCpXLyXWvAAYMMrHk4d7XVe7WChKVhCdKfNAgPQAqt1kKnIRA==` |
+| @sectile/tabular | 0.16.3 | `sha512-FrQXN05A2IVQZ19el/gHMR1jKdRZob39CE+CHNXcw7Zx7yhj/rMSWPFm6sGUDo0+10AR3xT4/sjWJAh2rSPsdg==` |
+| @sectile/dom | 0.18.3 | `sha512-vKesHOfOYx/h/OeOiKqqod/t0Mj8YEhwQVJJs6GXfYpW5AHvupTgJmNtZcObyooHOwjhi/y6F9A8+CB1t0d5mw==` |
+| @sectile/vue | 0.18.3 | `sha512-GncoW4JZ4VKk38ZlD+fHGHh78xROinR7a+pQ4RZQoXu8lhgfibmzBj/GiU9G/P0zqicCYWHzdemWmB41zvKu+w==` |
+
+GitHub Pages API readback returned HTTP 404. Terminal was unchanged and was
+not republished. Publication and registry verification: Passed. Statistical
+performance certification: Failed, accepted for this release only. Browser
+and manual IME validation: Not run. Conclusion: the requested package release
+is published and verified; performance remediation is not claimed. Local
+tarball copies remain under `.tmp/release-artifacts-20261006` as supplemental
+evidence; exact registry identities above survive Actions artifact expiry.
+
 The local candidate report has SHA-256
 `f4e686fddb32fb4b11ad88735346282be2e1a7ea1a5bdd11cbf61464e382bb21`;
 the canonical comparison has SHA-256
