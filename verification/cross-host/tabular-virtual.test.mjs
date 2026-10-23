@@ -12,7 +12,7 @@ const rows = [
   { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
   { kind: 'leaf', id: 'r2', cells: { name: 'Beta', score: 2 } },
 ];
-const fakeDocument = { defaultView: null };
+const fakeDocument = { defaultView: null, get activeElement() { return focused; } };
 
 class FakeElement {
   attributes = new Map();
@@ -25,6 +25,7 @@ class FakeElement {
   clientWidth = 100;
   clientHeight = 30;
   ownerDocument = fakeDocument;
+  get parentNode() { return this.parent; }
   style = { setProperty() {}, removeProperty() {} };
   append(element) { element.parent = this; this.children.push(element); }
   setAttribute(name, value) { this.attributes.set(name, String(value)); }
@@ -134,6 +135,7 @@ test('TAB-VIW-02: off-window reveal uses adapter locator then registration compl
   const first = new FakeElement();
   root.append(first);
   assert.equal(connection.registerCell(first, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
+  first.focus();
   connection.handleEvent({ type: 'focus-cell', cell: { rowID: 'r1', columnID: 'name' } });
   timeline = [];
   connection.handleEvent({ type: 'move-cell', direction: 'down' });

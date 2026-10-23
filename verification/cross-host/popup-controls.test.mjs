@@ -71,5 +71,6 @@ class FakeElement {
   setAttribute(name, value) { this.attributes.set(name, value); }
   removeAttribute(name) { this.attributes.delete(name); }
   querySelectorAll() { return []; }
+  contains(target) { return target === this; }
   focus() {}
 }
