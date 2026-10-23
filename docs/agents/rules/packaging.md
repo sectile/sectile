@@ -24,6 +24,8 @@ consumer fixtures with the implementation. Close runs two-bundler evidence,
 raw/gzip/brotli impact, tarball and installed footprint, isolated import/install
 coverage, declaration coverage, and source-map checks.
 
-Do not increase bundle or install ceilings to follow the current output. Record
-the old ceiling, delta, contributors, and approved replacement as a separate
-decision after implementation stabilizes.
+Do not increase bundle or install ceilings merely to follow the current output.
+After implementation and validation stabilize, a ceiling may be adjusted without
+separate approval when evidence justifies the increase. Record the old ceiling,
+measured delta, contributors, alternatives considered, and replacement as a
+separate decision.
