@@ -4,6 +4,7 @@
 
 ### Changes
 
+- perf(chart): reuse validated projection captures and results (8c2b057ca)
 - feat(packages): integrate headless improvements independently of styled UI (240190bf4)
 
 ## 0.15.7

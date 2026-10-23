@@ -4,6 +4,8 @@
 
 ### Changes
 
+- perf(core): preserve the packed query conversion boundary (d6c2e0f59)
+- perf(core): avoid transient nearest-query search objects (ea1b4a62f)
 - fix(core): restore layout checks for transfer and tree-select (a7e40363d)
 - feat(packages): integrate headless improvements independently of styled UI (240190bf4)
 

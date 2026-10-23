@@ -4,6 +4,7 @@
 
 ### Changes
 
+- perf(tabular): reuse the current immutable row window (5ad5420e3)
 - test(tabular): finalize release evidence and measured footprint budget (366ca9451)
 - test(tabular): refresh qualified group evidence before release (1660c1224)
 - chore(verification): qualify existing packages without styled UI (83e35073f)
