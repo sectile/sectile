@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "1680c9e623a645b5d254688deaa0cd91edc3e9b569eb3c4446c300eb8e071235",
+  "fingerprint": "9ab005cfe40cca464a674732b6b71543ecea3f8c4bf67b833162d9a5aaa3345a",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -447,7 +447,7 @@
     },
     {
       "path": "dist/form/contracts.d.ts",
-      "sha256": "b76e633658ade4fe3e8cc870ca791b80c7d4b7fd9e912186c60e05a354b87a27"
+      "sha256": "66d0f8842d09473a4773a7d310bc23e636ddd2f7f7a94d70514322db8d56b791"
     },
     {
       "path": "dist/form/control.d.ts",

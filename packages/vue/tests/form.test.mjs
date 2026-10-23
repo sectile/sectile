@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, defineComponent, Fragment, h } from 'vue';
-import { Window } from 'happy-dom';
+import { createTestWindow } from './happy-dom.mjs';
 import { SelectRoot, SelectTrigger, SelectValue } from '../.verification-dist/select.js';
 import {
   FormDescription,
@@ -33,7 +33,7 @@ test('Select fields have native label targets and inherited submission names bef
         })],
     })),
   }) }));
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     browser.document.body.innerHTML = html;
     const labels = [...browser.document.querySelectorAll('label')];
@@ -69,7 +69,7 @@ test('Sectile composite fields declare SSR group labels and native submission na
   ];
   for (const [entry, exported, props, expected] of cases) {
     const Control = (await import(`../.verification-dist/${entry}.js`))[exported];
-    const browser = new Window();
+    const browser = createTestWindow();
     try {
       const html = await renderToString(createSSRApp({ render: () => h(FormRoot, {}, () => h(FormField, { name: 'choice' }, () => [
         h(FormLabel, {}, () => 'Choice'), h('section', {}, [h(Fragment, {}, [h(Control, props)])]),
@@ -113,7 +113,7 @@ test('a nested FormField owns its own declarative semantics and explicit IDs rem
     h(FormLabel, {}, () => 'Outer'), h('input', { id: 'outer-control', name: 'outer' }),
     h(FormField, { id: 'inner', name: 'inner' }, () => [h(FormLabel, {}, () => 'Inner'), h(RadioGroupRoot, { items: ['a'], defaultValue: 'a' })]),
   ])) }));
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     browser.document.body.innerHTML = html;
     assert.equal(browser.document.querySelector('#outer-label').control?.id, 'outer-control');
@@ -145,7 +145,7 @@ test('native control owners inherit SSR names and form association while preserv
     metadata => h(SpinButtonRoot, { defaultValue: 5 }, () => h(SpinButtonInput, metadata)),
     metadata => h(EditableRoot, { defaultValue: 'hello', defaultEditing: true }, () => h(EditableInput, metadata)),
   ];
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     for (const control of controls) for (const explicit of [false, true]) {
       browser.document.body.innerHTML = await renderToString(createSSRApp({ render: () => h(FormRoot, {}, () => h(FormField, {
@@ -167,7 +167,7 @@ test('explicit nested fields establish fresh ownership inside a composite contro
     h(CheckboxGroupRoot, { items: ['a'], defaultValue: ['a'] }, () => h(FormField, { id: 'inner', name: 'inner' }, () => [
       h(FormLabel, {}, () => 'Inner'), h(TextField, { defaultValue: 'hello' }),
     ])))) }));
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     browser.document.body.innerHTML = html;
     assert.deepEqual([...new browser.FormData(browser.document.querySelector('form'))], [['inner', 'hello']]);
@@ -187,7 +187,7 @@ test('native parts retain explicit interaction overrides from their Sectile owne
     [EditableRoot, EditableInput, { defaultEditing: true }],
     [QuantityFieldRoot, QuantityFieldInput, { policies: createStandardQuantityPolicies('metre') }],
   ];
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     for (const [Root, Input, props] of cases) {
       browser.document.body.innerHTML = await renderToString(createSSRApp({ render: () => h(FormRoot, {}, () => h(FormField, {
@@ -206,7 +206,7 @@ test('TreeSelect and Transfer project field submission identity into initial nat
   const { TransferRoot, TransferList } = await import('../.verification-dist/transfer.js');
   const tree = [{ id: 'a', parentID: null }];
   const transfer = [{ id: 'left', parentID: null }, { id: 'right', parentID: null }, { id: 'a', parentID: 'right' }];
-  const browser = new Window();
+  const browser = createTestWindow();
   try {
     browser.document.body.innerHTML = await renderToString(createSSRApp({ render: () => h(FormRoot, {}, () => [
       h(FormField, { name: 'tree' }, () => [h(FormLabel, {}, () => 'Tree'), h(TreeSelectRoot, { nodes: tree, defaultValue: ['a'], position: false }, () => h(TreeSelectInput))]),
