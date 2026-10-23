@@ -1600,7 +1600,7 @@
       "detector": "derived-index-construction",
       "category": "discarded-canonical-index",
       "path": "packages/core/src/structures/metric-index.ts",
-      "line": 455,
+      "line": 457,
       "evidence": "new Set(axisOrder.slice(",
       "rule": "core-residual-reviewed",
       "classification": "result-proportional",

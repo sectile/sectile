@@ -196,7 +196,8 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     const query = this.#validateVector(target, 'target');
     if (this.size === 0) return null;
     const kd = this.#kd;
-    return kd === null ? this.#packedNearest(query) : this.#kdNearest(kd, query, null);
+    const match = kd === null ? this.#packedNearest(query) : this.#kdNearest(kd, query, null);
+    return match === null ? null : this.#publicMatch(match);
   }
 
   public withinRadius(target: readonly number[], radius: number): readonly MetricMatch<ID>[] {
@@ -208,7 +209,7 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     const squaredRadius = radius * radius;
     const kd = this.#kd;
     const matches = kd === null ? this.#packedRadius(query, squaredRadius) : this.#kdRadius(kd, query, squaredRadius);
-    return Object.freeze(matches.map((match) => this.#publicMatch(match.index, match.squaredDistance)));
+    return Object.freeze(matches.map((match) => this.#publicMatch(match)));
   }
 
   public forwardNearest(origin: readonly number[], direction: readonly number[]): MetricMatch<ID> | null {
@@ -216,12 +217,13 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     const normalizedDirection = this.#normalizeDirection(direction);
     if (this.size === 0) return null;
     const kd = this.#kd;
-    return kd === null
+    const match = kd === null
       ? this.#packedNearest(query, normalizedDirection)
       : this.#kdNearest(kd, query, normalizedDirection);
+    return match === null ? null : this.#publicMatch(match);
   }
 
-  #packedNearest(target: readonly number[], direction: readonly number[] | null = null): MetricMatch<ID> | null {
+  #packedNearest(target: readonly number[], direction: readonly number[] | null = null): InternalMatch | null {
     let bestIndex = -1;
     let bestSquaredDistance = Number.POSITIVE_INFINITY;
     for (let index = 0; index < this.size; index += 1) {
@@ -232,7 +234,7 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
         bestSquaredDistance = squaredDistance;
       }
     }
-    return bestIndex < 0 ? null : this.#publicMatch(bestIndex, bestSquaredDistance);
+    return bestIndex < 0 ? null : { index: bestIndex, squaredDistance: bestSquaredDistance };
   }
 
   #packedRadius(target: readonly number[], squaredRadius: number): InternalMatch[] {
@@ -255,7 +257,7 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     return matches;
   }
 
-  #kdNearest(kd: KDIndex, target: readonly number[], direction: readonly number[] | null): MetricMatch<ID> | null {
+  #kdNearest(kd: KDIndex, target: readonly number[], direction: readonly number[] | null): InternalMatch | null {
     // Input getters have already completed. Traversal only reads private
     // coordinates and captured vectors, so no caller can reenter this state.
     this.#bestIndex = -1;
@@ -265,7 +267,7 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     this.#visitNearest(kd, target, direction, kd.root);
     return this.#aborted
       ? this.#packedNearest(target, direction)
-      : this.#bestIndex < 0 ? null : this.#publicMatch(this.#bestIndex, this.#bestD2);
+      : this.#bestIndex < 0 ? null : { index: this.#bestIndex, squaredDistance: this.#bestD2 };
   }
 
   #visitNearest(kd: KDIndex, target: readonly number[], direction: readonly number[] | null, node: number): void {
@@ -374,8 +376,8 @@ class PackedMetricIndex<ID extends StableID> implements MetricIndex<ID> {
     return checked;
   }
 
-  #publicMatch(index: number, squaredDistance: number): MetricMatch<ID> {
-    return Object.freeze({ id: this.ids[index] as ID, squaredDistance });
+  #publicMatch(match: InternalMatch): MetricMatch<ID> {
+    return Object.freeze({ id: this.ids[match.index] as ID, squaredDistance: match.squaredDistance });
   }
 }
 
