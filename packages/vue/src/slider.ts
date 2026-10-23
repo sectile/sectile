@@ -63,7 +63,7 @@ const partProps = {
   asChild: { type: Boolean, default: false },
 };
 
-export const SliderRoot = defineComponent({
+export const SliderRoot = /* @__PURE__ */ defineComponent({
   name: 'SectileSliderRoot',
   inheritAttrs: false,
   props: {
@@ -103,9 +103,8 @@ export const SliderRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       return result.value;
     };
-    const controller = shallowRef(createController(String(
-      controlled ? props.modelValue : props.defaultValue,
-    )));
+    const initialValue = String(controlled ? props.modelValue : props.defaultValue);
+    const controller = shallowRef(createController(initialValue));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rootElement = shallowRef<HTMLElement>();
     const track = shallowRef<HTMLElement>();
@@ -113,19 +112,22 @@ export const SliderRoot = defineComponent({
     const submission = shallowRef<HTMLInputElement>();
     const connection = shallowRef<SliderConnection>();
     const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
-    watch(() => props.modelValue, (value) => {
-      if (!controlled || value === undefined) return;
-      const tick = controller.value.range.tickOf(String(value));
+    watch([() => props.min, () => props.max, () => props.step, () => props.pageStep,
+      () => props.disabled, () => props.readonly, () => props.modelValue], (next, previous) => {
+      if (next[0] !== previous[0] || next[1] !== previous[1] || next[2] !== previous[2] || next[3] !== previous[3]
+        || next[4] !== previous[4] || next[5] !== previous[5]) {
+        const current = controlled ? String(props.modelValue) : controller.value.range.valueAt(snapshot.value.state.tick) as string;
+        controller.value = createController(current);
+        snapshot.value = controller.value.getSnapshot();
+        return;
+      }
+      if (!controlled || props.modelValue === undefined) return;
+      const tick = controller.value.range.tickOf(String(props.modelValue));
       if (tick === null) throw new TypeError('Slider modelValue must be an exact value in the configured range.');
       const synced = controller.value.syncControlledValues({ value: tick });
       if (!synced.ok) throw new TypeError(synced.error.message);
       snapshot.value = synced.value;
       connection.value?.refreshAttributes();
-    });
-    watch([() => props.disabled, () => props.readonly], () => {
-      const current = controller.value.range.valueAt(snapshot.value.state.tick) as string;
-      controller.value = createController(current);
-      snapshot.value = controller.value.getSnapshot();
     });
     const value = computed(() => controller.value.range.valueAt(snapshot.value.state.tick) as string);
     const state = computed<SliderSlotProps>(() => ({
@@ -139,6 +141,13 @@ export const SliderRoot = defineComponent({
     const label = computed(() => props.label);
     const formatValue = computed(() => props.formatValue);
     const part = usePartContract('slider', 'root');
+    let mounted = false, resetScheduled = false;
+    onMounted(() => { mounted = true; });
+    onBeforeUnmount(() => {
+      mounted = false; resetScheduled = false;
+      connection.value?.disconnect(); connection.value = undefined;
+      rootElement.value = undefined; track.value = undefined; thumb.value = undefined; submission.value = undefined;
+    });
     const participation = useCompositeFormControl({
       root: () => rootElement.value ?? null,
       focusTarget: () => thumb.value ?? null,
@@ -146,6 +155,16 @@ export const SliderRoot = defineComponent({
         element: () => submission.value ?? null,
         capabilities: hiddenInputSubmissionCapabilities,
       }],
+      reset: () => {
+        if (controlled || resetScheduled) return;
+        resetScheduled = true;
+        queueMicrotask(() => {
+          resetScheduled = false;
+          if (!mounted) return;
+          controller.value = createController(initialValue);
+          snapshot.value = controller.value.getSnapshot();
+        });
+      },
     });
     provide<SliderContext>(sliderKey, { controller, state, orientation, role, root: rootElement, track, thumb, connection, label, formatValue, partContract: part, refresh });
     return (): VNodeChild => {
@@ -174,7 +193,7 @@ export const SliderRoot = defineComponent({
 
 export type SliderValueChangeHandler = (value: string) => void;
 
-export const SliderTrack = defineComponent({
+export const SliderTrack = /* @__PURE__ */ defineComponent({
   name: 'SectileSliderTrack', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
@@ -188,7 +207,7 @@ export const SliderTrack = defineComponent({
   },
 });
 
-export const SliderRange = defineComponent({
+export const SliderRange = /* @__PURE__ */ defineComponent({
   name: 'SectileSliderRange', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
@@ -203,17 +222,23 @@ export const SliderRange = defineComponent({
   },
 });
 
-export const SliderThumb = defineComponent({
+export const SliderThumb = /* @__PURE__ */ defineComponent({
   name: 'SectileSliderThumb', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useSlider('SliderThumb');
     const part = { scope: root.partContract.scope, part: root.partContract.parts['thumb'] ?? 'thumb' };
     const element = shallowRef<HTMLElement>();
+    let mounted = false, owned: SliderConnection | undefined;
+    const disconnect = (): void => {
+      owned?.disconnect();
+      if (root.connection.value === owned) root.connection.value = undefined;
+      owned = undefined;
+    };
     const connect = (): void => {
-      if (element.value === undefined) throw new TypeError('SliderThumb did not render an HTMLElement.');
-      root.connection.value?.disconnect();
-      root.connection.value = connectSlider({
+      disconnect();
+      if (!mounted || element.value === undefined) return;
+      owned = connectSlider({
         controller: root.controller.value,
         root: element.value,
         track: root.track.value ?? root.root.value ?? element.value,
@@ -227,13 +252,15 @@ export const SliderThumb = defineComponent({
         ...(root.formatValue.value === undefined ? {} : { formatValue: root.formatValue.value }),
         onUpdate: root.refresh,
       });
+      root.connection.value = owned;
     };
-    onMounted(connect);
+    onMounted(() => { mounted = true; connect(); });
     onBeforeUnmount(() => {
-      root.connection.value?.disconnect();
-      root.connection.value = undefined;
+      mounted = false; disconnect();
+      if (root.thumb.value === element.value) root.thumb.value = undefined;
+      element.value = undefined;
     });
-    watch(root.controller, connect);
+    watch([root.controller, root.track, root.root, root.orientation, root.role, root.label, root.formatValue, element], connect, { flush: 'post' });
     const attributes = computed(() => getSliderAttributes(root.controller.value, {
       scope: part.scope,
       part: part.part,

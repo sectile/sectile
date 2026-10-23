@@ -101,6 +101,8 @@ export interface VirtualizerConnection<
     measurements: readonly Measurement[],
   ): DOMVirtualResult<VirtualLayoutMutation<State>>;
   mutate(mutation: Mutation): DOMVirtualResult<VirtualLayoutMutation<State>>;
+  /** Returns the accepted physical point. Measured targets retain alignment until
+   * independent scrolling, state replacement, target removal, or disconnection. */
   scrollTo(
     id: ID,
     alignment?: VirtualScrollAlignment,

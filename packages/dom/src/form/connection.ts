@@ -104,6 +104,7 @@ export function tryCreateForm<
   const participants = new Map<ID, FormParticipant<ID>>();
   const participantBaselines = new Map<ID, unknown>();
   const participantValues = new Map<ID, unknown>();
+  let preparingParticipants = false;
   for (const participant of options.participants ?? []) {
     const replacing = participants.has(participant.id);
     const currentValue = readFormParticipantValue(participant);
@@ -144,8 +145,12 @@ export function tryCreateForm<
   let state = initial.value;
   let revision = 0;
   let active = true;
+  let observing = true;
+  let suspending = false;
+  let observationGeneration = 0;
   let recoveringFocus = false;
   let invalidBatchPending = false;
+  let invalidBatchGeneration = 0;
   let validationSequence = 0;
   let validationController: AbortController | null = null;
   let nativeResume: { readonly token: number; readonly submitter: HTMLElement | null } | null = null;
@@ -460,7 +465,7 @@ export function tryCreateForm<
     const ordered = [...invalid.slice(start), ...invalid.slice(0, start)];
     for (const candidate of ordered) {
       const participant = participants.get(candidate.id);
-      if (participant === undefined) continue;
+      if (participant === undefined || participant.active === false) continue;
       if (participant.focus !== undefined) {
         if (participant.focus() !== false) return true;
         continue;
@@ -489,6 +494,7 @@ export function tryCreateForm<
   const execute = (commands: readonly FormCommand<ID>[]): void => {
     let focused = false;
     for (const command of commands) {
+      if (!observing && command.type !== 'reset-field') continue;
       if (command.type === 'focus-field') {
         recoveringFocus = true;
         try {
@@ -647,10 +653,19 @@ export function tryCreateForm<
     event: SubmitEvent | null = null,
     submitter: HTMLElement | null = null,
   ): void => {
+    if (!active || !observing) return;
+    if (preparingParticipants) { event?.preventDefault(); return; }
     if (state.submission.status === 'submitting') {
       event?.preventDefault();
       return;
     }
+    try { prepareParticipants(); }
+    catch (error) {
+      event?.preventDefault();
+      if (active) transition({ type: 'validation-invalidated' }, true);
+      throw error;
+    }
+    if (!active || !observing) { event?.preventDefault(); return; }
     const retired = detachPendingValidationForTopologyChange();
     const sequence = validationSequence;
     retired?.abort();
@@ -664,7 +679,14 @@ export function tryCreateForm<
     if (!active || sequence !== validationSequence) return;
     const generation = state.validation.generation;
 
-    const formData = createNativeFormData(options.form, submitter);
+    let formData: FormData;
+    try { formData = createNativeFormData(options.form, submitter); }
+    catch (error) {
+      event?.preventDefault();
+      if (active && sequence === validationSequence) transition({ type: 'validation-invalidated' }, true);
+      throw error;
+    }
+    if (!active || !observing || sequence !== validationSequence) { event?.preventDefault(); return; }
     const values = tryCreateFormValues(
       [...formData.entries()].map(([path, value]) => ({ path, value })),
     );
@@ -836,12 +858,15 @@ export function tryCreateForm<
     if (intent !== null) runValidation(trigger, intent, participant?.id ?? null);
   };
   const onValueInteraction = (event: Event): void => {
+    if (!active || !observing) return;
     if (handledParticipantEvents.has(event)) return;
     handledParticipantEvents.add(event);
     const participant = participantFor(event.target);
+    if (participant?.active === false) return;
     if (participant === undefined) return;
+    const generation = observationGeneration;
     const updateValue = (): void => {
-      if (!active || participants.get(participant.id) !== participant) return;
+      if (!active || !observing || participant.active === false || generation !== observationGeneration || participants.get(participant.id) !== participant) return;
       const previous = participantValues.get(participant.id);
       const current = readValue(participant);
       if (valuesEqual(participant, current, previous)) return;
@@ -861,53 +886,74 @@ export function tryCreateForm<
     else queueMicrotask(updateValue);
   };
   const onBlur = (event: Event): void => {
+    if (!active || !observing) return;
     if (recoveringFocus || handledParticipantEvents.has(event)) return;
     handledParticipantEvents.add(event);
     const participant = participantFor(event.target);
+    if (participant?.active === false) return;
     if (participant !== undefined) updateParticipant(participant, { touched: true });
     invalidateAfterInteraction('blur', participant);
   };
   const onInvalid = (event: Event): void => {
+    if (!active || !observing) return;
     if (handledParticipantEvents.has(event)) return;
     handledParticipantEvents.add(event);
     const participant = participantFor(event.target);
+    if (participant?.active === false) return;
     if (participant !== undefined) updateParticipant(participant, { touched: true });
     if (invalidBatchPending) return;
     invalidBatchPending = true;
-    queueMicrotask(submitInvalidBatch);
+    const generation = observationGeneration;
+    const batchGeneration = invalidBatchGeneration;
+    queueMicrotask(() => { if (generation === observationGeneration && batchGeneration === invalidBatchGeneration) submitInvalidBatch(); });
   };
-  const onSubmit = (event: Event): void => submit(event as SubmitEvent);
-  const onReset = (): void => {
+  const onSubmit = (event: Event): void => { if (active && observing) submit(event as SubmitEvent); };
+  const prepareParticipants = (): void => {
+    if (preparingParticipants) throw new TypeError('Form preparation cannot recursively serialize the same form.');
+    preparingParticipants = true;
+    try {
+      for (const participant of [...participants.values()]) {
+        if (participants.get(participant.id) === participant) participant.prepareSubmission?.();
+      }
+    } finally { preparingParticipants = false; }
+  };
+  const prepareFormData = (submitter: HTMLElement | null): FormData => {
+    prepareParticipants();
+    return createNativeFormData(options.form, submitter);
+  };
+  const reset = (): void => {
+    if (!active) return;
     nativeResume = null;
     pendingReinitializations.clear();
     const commands = transition('reset', true);
     if (!active) return;
     if (commands !== null) execute(commands);
     resetHandler?.();
-    queueMicrotask(captureAllCurrentValues);
+    const generation = observationGeneration;
+    queueMicrotask(() => { if (generation === observationGeneration) captureAllCurrentValues(); });
   };
+  const onReset = (): void => { if (active && observing) reset(); };
 
-  options.form.addEventListener('input', onValueInteraction);
-  options.form.addEventListener('change', onValueInteraction);
-  options.form.addEventListener('blur', onBlur, true);
-  options.form.addEventListener('invalid', onInvalid, true);
-  options.form.addEventListener('submit', onSubmit);
-  options.form.addEventListener('reset', onReset);
+  const bindForm = (): void => {
+    options.form.addEventListener('input', onValueInteraction);
+    options.form.addEventListener('change', onValueInteraction);
+    options.form.addEventListener('blur', onBlur, true);
+    options.form.addEventListener('invalid', onInvalid, true);
+    options.form.addEventListener('submit', onSubmit);
+    options.form.addEventListener('reset', onReset);
+  };
+  bindForm();
 
   const observeParticipant = (participant: FormParticipant<ID>): void => {
     participantObservers.get(participant.id)?.();
+    participantObservers.delete(participant.id);
+    if (!active || !observing) return;
     const targets = participantTargets(participant);
     for (const target of targets) participantTargetOwners.set(target, participant);
-    const externalTargets = targets.filter((target) => !options.form.contains(target));
+    const externalTargets = participant.active === false ? [] : targets.filter((target) => !options.form.contains(target));
     const roots = externalTargets.filter((target) => !externalTargets.some(
       (candidate) => candidate !== target && candidate.contains(target),
     ));
-    for (const target of roots) {
-      target.addEventListener('input', onValueInteraction);
-      target.addEventListener('change', onValueInteraction);
-      target.addEventListener('blur', onBlur, true);
-      target.addEventListener('invalid', onInvalid, true);
-    }
     participantObservers.set(participant.id, () => {
       for (const target of roots) {
         target.removeEventListener('input', onValueInteraction);
@@ -919,9 +965,16 @@ export function tryCreateForm<
         if (participantTargetOwners.get(target) === participant) participantTargetOwners.delete(target);
       }
     });
+    for (const target of roots) {
+      target.addEventListener('input', onValueInteraction);
+      target.addEventListener('change', onValueInteraction);
+      target.addEventListener('blur', onBlur, true);
+      target.addEventListener('invalid', onInvalid, true);
+    }
   };
 
   const registerParticipant = (participant: FormParticipant<ID>): (() => void) => {
+    if (!active) return () => {};
     const replacing = participants.has(participant.id);
     participantObservers.get(participant.id)?.();
     participants.set(participant.id, participant);
@@ -1022,36 +1075,90 @@ export function tryCreateForm<
     };
   };
 
+  const stopObservation = (): void => {
+    observing = false; observationGeneration += 1;
+    invalidBatchPending = false; nativeResume = null;
+    options.form.removeEventListener('input', onValueInteraction);
+    options.form.removeEventListener('change', onValueInteraction);
+    options.form.removeEventListener('blur', onBlur, true);
+    options.form.removeEventListener('invalid', onInvalid, true);
+    options.form.removeEventListener('submit', onSubmit);
+    options.form.removeEventListener('reset', onReset);
+    for (const disconnect of participantObservers.values()) disconnect();
+    participantObservers.clear();
+  };
+  const suspend = (): void => {
+    if (!active || !observing) return;
+    suspending = true;
+    try {
+      stopObservation();
+      if (state.validation.status === 'validating') transition({ type: 'validation-invalidated' }, true);
+      else detachPendingValidationForTopologyChange()?.abort();
+    } finally { suspending = false; }
+  };
   const connection: FormConnection<ID, Input, Output> = {
     get state() { return state; },
+    getActive: () => active && observing,
+    suspend,
+    resume: () => {
+      if (!active || observing || suspending) return;
+      observing = true;
+      try {
+        bindForm();
+        for (const participant of participants.values()) observeParticipant(participant);
+      } catch (error) {
+        try { suspend(); } catch { /* Preserve the initiating resumption failure. */ }
+        throw error;
+      }
+    },
     getSnapshot: snapshot,
-    getFormData: (submitter = null) => createNativeFormData(options.form, submitter),
+    getFormData: (submitter = null) => prepareFormData(submitter),
     reconfigure,
     registerParticipant,
-    refreshParticipant: (id) => {
+    refreshParticipantActivity: (id) => {
+      if (!active) return false;
       const participant = participants.get(id);
       if (participant === undefined) return false;
-      observeParticipant(participant);
-      const currentField = field(id);
-      const name = readParticipantName(participant);
-      if (currentField?.name !== name) {
-        transition({ type: 'set-field-meta', id, meta: { name } });
+      invalidBatchGeneration += 1;
+      invalidBatchPending = false;
+      try { observeParticipant(participant); }
+      catch (error) {
+        try { participantObservers.get(id)?.(); } finally { participantObservers.delete(id); }
+        throw error;
+      }
+      if (state.validation.status === 'validating') transition({ type: 'validation-invalidated' }, true);
+      return true;
+    },
+    refreshParticipant: (id, scope = 'all') => {
+      if (!active || scope !== 'all' && scope !== 'value' && scope !== 'baseline') return false;
+      const participant = participants.get(id);
+      if (participant === undefined) return false;
+      if (scope === 'all') {
+        observeParticipant(participant);
+        const currentField = field(id);
+        const name = readParticipantName(participant);
+        if (currentField?.name !== name) transition({ type: 'set-field-meta', id, meta: { name } });
       }
       const previous = participantValues.get(id);
       const current = captureParticipant(participant);
+      if (scope === 'baseline') participantBaselines.set(id, current);
       const baseline = participantBaselines.get(id);
       const valueChanged = !valuesEqual(participant, current, previous);
-      if (valueChanged) {
+      if (valueChanged || scope === 'baseline') {
         updateParticipant(participant, { dirty: !valuesEqual(participant, current, baseline) });
       }
-      reorderParticipants(participants, state, transition);
+      if (scope === 'all') reorderParticipants(participants, state, transition);
       if (!valueChanged) return true;
       const previousIntent = state.validation.status === 'invalid'
         ? state.validation.intent
         : null;
-      const sequence = validationSequence + 1;
-      transition({ type: 'field-value-changed', id }, true);
-      if (sequence === validationSequence && previousIntent !== null) runValidation('input', previousIntent, id);
+      const interaction = scope === 'value' && !preparingParticipants;
+      const sequence = validationSequence + (interaction ? 0 : 1);
+      transition({ type: 'field-value-changed', id }, !interaction);
+      if (!preparingParticipants && sequence === validationSequence) {
+        if (interaction) invalidateAfterInteraction('input', participant, previousIntent);
+        else if (previousIntent !== null) runValidation('input', previousIntent, id);
+      }
       return true;
     },
     getField: (id) => getFormField(state, id),
@@ -1087,30 +1194,23 @@ export function tryCreateForm<
       return true;
     },
     reinitialize,
-    reset: () => options.form.reset(),
+    reset: () => { if (!active) return; const observed = observing; options.form.reset(); if (!observed) reset(); },
     subscribeForm,
     subscribeField,
     destroy: () => {
       if (!active) return;
       active = false;
+      stopObservation();
       pendingNotifications.length = 0;
       detachPendingValidationForTopologyChange()?.abort();
       releaseSummary();
       nativeResume = null;
-      options.form.removeEventListener('input', onValueInteraction);
-      options.form.removeEventListener('change', onValueInteraction);
-      options.form.removeEventListener('blur', onBlur, true);
-      options.form.removeEventListener('invalid', onInvalid, true);
-      options.form.removeEventListener('submit', onSubmit);
-      options.form.removeEventListener('reset', onReset);
       for (const subscription of formSubscribers) subscription.active = false;
       formSubscribers.clear();
       for (const channel of fieldSubscribers.values()) {
         for (const subscription of channel) subscription.active = false;
       }
       fieldSubscribers.clear();
-      for (const disconnect of participantObservers.values()) disconnect();
-      participantObservers.clear();
       participants.clear();
       participantBaselines.clear();
       participantValues.clear();

@@ -1,6 +1,76 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, setColorCoordinate, tryCreateColorPickerState } from '../../.verification-dist/color-picker.js';
+import { applyColorPickerEvent, createColorPickerState, formatColorValue, getColorAreaValue, getColorCoordinates, parseColorValue, reconcileColorPickerState, setColorCoordinate, tryCreateColorPickerState } from '../../.verification-dist/color-picker.js';
+
+test('color area events reuse the fully admitted external coordinates', () => {
+  const base = createColorPickerState({ value: '#33669980' });
+  const tracked = () => {
+    const reads = { x: 0, y: 0, hue: 0 };
+    const area = Object.freeze({
+      get x() { reads.x++; return base.area.x; },
+      get y() { reads.y++; return base.area.y; },
+      get hue() { reads.hue++; return base.area.hue; },
+    });
+    return { state: Object.freeze({ ...base, area }), reads };
+  };
+  for (const event of [{ type: 'set-area', x: 0.75, y: 0.5 }, { type: 'set-hue', value: 120 },
+    ...['hue', 'saturation', 'value'].map(coordinate => ({ type: 'set-coordinate', format: 'hsv', coordinate, value: 50 }))]) {
+    const boundary = tracked(); assert.equal(tryCreateColorPickerState(boundary.state).ok, true);
+    const transition = tracked(); assert.equal(applyColorPickerEvent(transition.state, event).ok, true);
+    assert.deepEqual(transition.reads, boundary.reads, event.type + ' must not re-admit external area after boundary validation');
+  }
+});
+
+test('color picker retains hue and saturation through achromatic area edits', () => {
+  let state = createColorPickerState({ value: '#000000' });
+  const hue = applyColorPickerEvent(state, { type: 'set-hue', value: 120 }).value;
+  assert.deepEqual(hue.commands, []); state = hue.state;
+  assert.equal(getColorAreaValue(state.value, state.area).value.hue, 120);
+  state = applyColorPickerEvent(state, { type: 'set-area', x: 1, y: 1 }).value.state;
+  assert.equal(formatColorValue(state.value).value, '#00ff00');
+  state = applyColorPickerEvent(state, { type: 'set-area', x: 0.75, y: 0 }).value.state;
+  assert.equal(formatColorValue(state.value).value, '#000000');
+  assert.deepEqual(getColorAreaValue(state.value, state.area).value, { x: 0.75, y: 0, hue: 120, alpha: 1 });
+  state = applyColorPickerEvent(state, { type: 'set-coordinate', format: 'hsv', coordinate: 'value', value: 100 }).value.state;
+  assert.equal(formatColorValue(state.value).value, '#40ff40');
+  state = applyColorPickerEvent(state, { type: 'set-area', x: 0, y: 0.5 }).value.state;
+  state = applyColorPickerEvent(state, { type: 'set-hue', value: 240 }).value.state;
+  state = applyColorPickerEvent(state, { type: 'set-area', x: 1, y: 1 }).value.state;
+  assert.equal(formatColorValue(state.value).value, '#0000ff');
+});
+
+test('color picker preserves exact pointer coordinates and hue endpoint through non-RGB edits', () => {
+  let state = createColorPickerState({ value: '#ff0000' });
+  state = applyColorPickerEvent(state, { type: 'set-hue', value: 360 }).value.state;
+  state = applyColorPickerEvent(state, { type: 'set-area', x: 0.333333, y: 0.456789 }).value.state;
+  for (const event of [{ type: 'set-alpha', value: 0.5 }, { type: 'input', text: 'unfinished' }, 'cancel', { type: 'set-format', format: 'hsv' }])
+    state = applyColorPickerEvent(state, event).value.state;
+  const area = getColorAreaValue(state.value, state.area).value;
+  assert.deepEqual(area, { x: 0.333333, y: 0.456789, hue: 360, alpha: 128 / 255 });
+  assert.equal(getColorCoordinates(state.value, 'hsv', state.area).value[0].value, 360);
+  state = applyColorPickerEvent(state, { type: 'set-color', value: '#0000ff' }).value.state;
+  assert.equal(getColorAreaValue(state.value, state.area).value.hue, 240);
+});
+
+test('color picker owner reconciliation preserves accepted selection and discards rejected or unrelated proposals', () => {
+  let previous = createColorPickerState({ value: '#000000' });
+  previous = applyColorPickerEvent(previous, { type: 'set-hue', value: 120 }).value.state;
+  const proposal = applyColorPickerEvent(previous, { type: 'set-area', x: 0.333333, y: 0.456789 }).value.state;
+  const rejected = reconcileColorPickerState(previous, { value: '#000000', draft: 'draft' }, {}, proposal).value;
+  assert.equal(rejected.area.hue, 120); assert.equal(rejected.area.y, 0);
+  const accepted = reconcileColorPickerState(previous, { value: proposal.value }, {}, proposal).value;
+  assert.deepEqual(accepted.area, proposal.area);
+  const unrelated = reconcileColorPickerState(previous, { value: '#0000ff' }, {}, proposal).value;
+  assert.equal(unrelated.area.hue, 240);
+});
+
+test('color picker rejects forged area selection without changing RGB8 storage', () => {
+  assert.equal(tryCreateColorPickerState({ value: '#ff0000', area: { x: 1, y: 1, hue: 120 } }).error.code, 'color-coordinate-invalid');
+  for (const area of [{ x: NaN, y: 0, hue: 0 }, { x: 0, y: 0, hue: 361 }, { x: 0, y: -1, hue: 0 }])
+    assert.equal(tryCreateColorPickerState({ value: '#000000', area }).error.code, 'color-area-out-of-range');
+  const legacy = { value: { red: 0, green: 0, blue: 0, alpha: 255 }, draft: null, format: 'hex', channel: 'red' };
+  assert.equal(applyColorPickerEvent(legacy, { type: 'set-hue', value: 120 }).value.state.area.hue, 120);
+});
 
 test('color picker parses compact and full hexadecimal colors exactly', () => {
   assert.deepEqual(parseColorValue('#0af').value, { red: 0, green: 170, blue: 255, alpha: 255 });

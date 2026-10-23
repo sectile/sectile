@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
+import { FormRoot, FormField } from '../.verification-dist/form.js';
 import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../.verification-dist/temporal/calendar.js';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../.verification-dist/temporal/date-picker.js';
 import { DateRangePickerCell, DateRangePickerContent, DateRangePickerEndInput, DateRangePickerGrid, DateRangePickerRoot, DateRangePickerStartInput, DateRangePickerTrigger } from '../.verification-dist/temporal/date-range-picker.js';
@@ -15,6 +16,43 @@ import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, Y
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
+
+test('readonly picker SSR projects inherited native constraints without another submitted value', async () => {
+  const html = await render(() => h(FormRoot, {}, { default: () => h(FormField, { name: 'delivery', form: 'schedule', required: true }, {
+    default: () => h(MonthPickerRoot, {}, { default: () => h(MonthPickerInput) }),
+  }) }));
+  const select = html.match(/<select\b[^>]*>/u)?.[0];
+  assert.ok(select);
+  assert.match(select, /\brequired(?:[\s=>])/u);
+  assert.match(select, /\bform="schedule"/u);
+  assert.doesNotMatch(select, /\bname=/u);
+  assert.match(html, /<option value(?:="")? selected>/u);
+  assert.match(html, /<input\b(?=[^>]*name="delivery")(?=[^>]*form="schedule")[^>]*>/u);
+});
+
+test('all picker SSR roots project only the requested view and honor week-start policies', async () => {
+  const seed = { year: 2026, month: 10, day: 14 };
+  for (const [Root, Content, wrappedDatePolicies] of [
+    [CalendarRoot, CalendarContent, false], [RangeCalendarRoot, RangeCalendarContent, false], [DatePickerRoot, DatePickerContent, false], [DateRangePickerRoot, DateRangePickerContent, false],
+    [DateTimePickerRoot, DateTimePickerContent, true], [DateTimeRangePickerRoot, DateTimeRangePickerContent, true], [MonthPickerRoot, MonthPickerContent, false], [MonthRangePickerRoot, MonthRangePickerContent, false],
+    [YearPickerRoot, YearPickerContent, false], [YearRangePickerRoot, YearRangePickerContent, false],
+  ]) for (const weekStartsOn of [1, 7]) for (const view of ['week', 'month', 'year']) {
+    let projection;
+    const calendar = { weekStartsOn };
+    await render(() => h(Root, { referenceDate: seed, defaultHighlightedValue: seed, defaultView: view,
+      policies: wrappedDatePolicies ? { date: calendar } : calendar,
+    }, { default: state => { projection = state; return h(Content, {}, { default: content => {
+      assert.equal(content.presentation, undefined); assert.equal(Object.isFrozen(content), true);
+      assert.deepEqual(content.value, state.value); assert.equal(content.dates, state.dates); assert.equal(content.months, state.months);
+      return h('output', content.viewMode);
+    } }); } }));
+    assert.equal(projection.viewMode, view);
+    assert.equal(projection.dates.flat().length, view === 'week' ? 7 : view === 'month' ? 42 : 0, Root.name + ':' + view);
+    assert.equal(projection.months.flat().length, view === 'year' ? 12 : 0, Root.name + ':' + view);
+    if (view === 'week') assert.deepEqual(projection.dates[0][0], { year: 2026, month: 10, day: weekStartsOn === 1 ? 12 : 11 });
+    if (view === 'month') assert.deepEqual(projection.dates[0][0], { year: 2026, month: 9, day: weekStartsOn === 1 ? 28 : 27 });
+  }
+});
 
 test('Vue calendar exposes a persistent native grid', async () => {
   const html = await render(() => h(CalendarRoot, { defaultValue: date }, {

@@ -1,9 +1,18 @@
 import {
+  applyTextEvent,
   createTextEditingState,
   tryCreateTextEditingState,
   type TextEditingState,
   type TextEvent,
 } from '@sectile/core/text';
+import { unwrap } from '@sectile/core/result';
+
+/** A transferred field owns its recorded text, not the former native IME session. */
+export function detachedFieldState<State extends { readonly inputState: TextEditingState }>(state: State): State {
+  if (state.inputState.composition === null) return state;
+  const inputState = unwrap(applyTextEvent(state.inputState, { type: 'composition-commit' })).state;
+  return Object.freeze({ ...state, inputState });
+}
 
 interface SelectionElement {
   readonly selectionStart: number | null;

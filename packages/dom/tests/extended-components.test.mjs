@@ -123,10 +123,26 @@ test('DOM toggle group projects pressed buttons and toggles single values', () =
   const bold = new FakeElement();
   group.setItemAttributes(bold, { id: 'bold' });
   assert.equal(root.attributes.get('role'), 'group');
+  assert.equal(root.attributes.get('aria-orientation'), undefined);
+  assert.equal(root.attributes.get('data-orientation'), 'horizontal');
   assert.equal(bold.attributes.get('aria-pressed'), 'true');
   assert.equal(bold.attributes.get('aria-selected'), undefined);
   group.handleEvent({ type: 'press', id: 'bold' });
   assert.deepEqual(group.getSnapshot().state.selection.selected, []);
+  group.disconnect(); assert.equal(root.attributes.get('data-orientation'), undefined);
+
+  const readOnlyRoot = new FakeElement();
+  const readOnly = createToggleGroup({ root: readOnlyRoot, items: ['bold', 'italic'], defaultValue: ['bold'], readOnly: true, orientation: 'vertical' });
+  try {
+    assert.equal(readOnlyRoot.attributes.get('aria-readonly'), undefined);
+    assert.equal(readOnlyRoot.attributes.get('data-readonly'), '');
+    assert.equal(readOnlyRoot.attributes.get('data-orientation'), 'vertical');
+    assert.equal(readOnly.handleEvent({ type: 'press', id: 'bold' }), false);
+    assert.deepEqual(readOnly.getSnapshot().state.selection.selected, ['bold']);
+    assert.equal(readOnly.handleEvent({ type: 'focus', id: 'bold' }), true);
+    assert.equal(readOnly.handleEvent('next'), true);
+    assert.equal(readOnly.getSnapshot().state.cursor.current, 'italic');
+  } finally { readOnly.disconnect(); }
 });
 
 test('DOM pagination owns item projection, delegated clicks, and boundary availability', () => {
@@ -226,6 +242,51 @@ test('DOM rating and structured input facades expose complete state transitions'
   assert.deepEqual(tags.getSnapshot().state.tags, ['terminal']);
 });
 
+test('DOM PIN input preserves caller cell names and releases only its generated labels', () => {
+  const inputs = [new FakeElement(), new FakeElement()];
+  inputs[0].setAttribute('aria-label', '인증 코드 첫 번째 자리');
+  const first = createPinInput({ root: new FakeElement(), inputs, label: 'Code' });
+  assert.equal(inputs[0].getAttribute('aria-label'), '인증 코드 첫 번째 자리');
+  assert.equal(inputs[1].getAttribute('aria-label'), 'Code digit 2 of 2');
+  first.disconnect(); first.disconnect();
+  assert.ok(inputs.every(input => [...input.listeners.values()].every(listeners => listeners.size === 0)));
+  assert.equal(inputs[0].getAttribute('aria-label'), '인증 코드 첫 번째 자리');
+  assert.equal(inputs[1].getAttribute('aria-label'), null);
+  const second = createPinInput({ root: new FakeElement(), inputs, label: 'New code' });
+  assert.equal(inputs[1].getAttribute('aria-label'), 'New code digit 2 of 2');
+  inputs[1].setAttribute('aria-label', '호출자가 변경한 이름'); second.disconnect();
+  assert.ok(inputs.every(input => [...input.listeners.values()].every(listeners => listeners.size === 0)));
+  assert.equal(inputs[1].getAttribute('aria-label'), '호출자가 변경한 이름');
+});
+
+test('DOM tags input projects current localized removal names with the default fallback', () => {
+  const root = new FakeElement(), input = new FakeElement(), button = new FakeElement();
+  const calls = [], tags = createTagsInput({ root, input, defaultValue: ['서울', '부산'], removeLabel: (value, index) => {
+    calls.push([value, index]); return index === 0 ? `${value} 삭제` : undefined;
+  } });
+  tags.setTagAttributes(button, 0); assert.equal(button.getAttribute('aria-label'), '서울 삭제');
+  tags.setTagAttributes(button, 1); assert.equal(button.getAttribute('aria-label'), 'Remove 부산');
+  tags.handleEvent({ type: 'remove', index: 0 }); tags.setTagAttributes(button, 0);
+  assert.equal(button.getAttribute('aria-label'), '부산 삭제'); assert.deepEqual(calls, [['서울', 0], ['부산', 1], ['부산', 0]]);
+  tags.disconnect(); assert.ok([...input.listeners.values(), ...root.listeners.values()].every(listeners => listeners.size === 0));
+});
+
+for (const readOnly of [false, true]) test(`DOM tags native input focus synchronizes once without scheduling or retaining listeners (${readOnly})`, async () => {
+  const root = new FakeElement(), input = new FakeElement(); let updates = 0, focuses = 0;
+  input.focus = () => { focuses++; };
+  const tags = createTagsInput({ root, input, defaultValue: ['one', 'two'], readOnly, onUpdate: () => { updates++; } });
+  assert.equal(input.listeners.get('focus').size, 1); const saved = [...input.listeners.get('focus')][0];
+  tags.handleEvent({ type: 'focus-tag', index: 0 }); await Promise.resolve(); const before = tags.getSnapshot().revision;
+  input.emit('focus', {}); await Promise.resolve();
+  assert.equal(tags.getSnapshot().state.current, null); assert.deepEqual(tags.getSnapshot().state.tags, ['one', 'two']);
+  assert.equal(tags.getSnapshot().revision, before + 1); assert.equal(focuses, 0, 'native focus does not schedule a second focus effect');
+  const current = tags.getSnapshot().revision, publications = updates; input.emit('focus', {});
+  assert.equal(tags.getSnapshot().revision, current); assert.equal(updates, publications, 'duplicate focus does no canonical work');
+  tags.disconnect(); tags.disconnect();
+  assert.ok([...input.listeners.values(), ...root.listeners.values()].every(listeners => listeners.size === 0));
+  saved(); await Promise.resolve(); assert.equal(updates, publications); assert.equal(focuses, 0);
+});
+
 test('DOM controlled PIN input keeps its active cell while values synchronize', () => {
   const inputs = Array.from({ length: 6 }, () => new FakeElement());
   let value = '';
@@ -309,6 +370,53 @@ test('DOM editable owns native edit, commit, cancel, and focus handoff', () => {
   input.emit('keydown', { key: 'Escape', preventDefault() {} });
   assert.equal(editable.getSnapshot().state.value, 'Beta');
   editable.disconnect();
+});
+
+test('DOM editable synchronizes native bindings without replacing its semantic snapshot', () => {
+  const root = new FakeElement(), preview = new FakeElement(), first = new FakeElement(), replacement = new FakeElement();
+  let additions = 0, valueReads = 0, replacementValue = ''; const values = [];
+  Object.defineProperty(replacement, 'value', { get() { valueReads++; return replacementValue; }, set(value) { replacementValue = value; } });
+  for (const node of [preview, first, replacement]) {
+    const add = node.addEventListener.bind(node);
+    node.addEventListener = (...args) => { additions++; add(...args); };
+  }
+  const connection = createEditable({ root, preview, input: first, defaultValue: 'Accepted', onValueChange: value => values.push(value) });
+  preview.emit('click', {}); first.value = 'Draft'; first.emit('input', {});
+  const snapshot = connection.getSnapshot();
+  const options = { root, preview, input: replacement, policies: { allowEmpty: false } };
+  const rebound = connection.syncOptions(options);
+  assert.equal(rebound.ok, true); assert.equal(rebound.value, snapshot); assert.equal(connection.getSnapshot(), snapshot);
+  assert.equal(replacement.value, 'Draft'); assert.equal(replacement.hidden, false);
+  assert.ok([...first.listeners.values()].every(listeners => listeners.size === 0));
+  assert.equal(connection.syncOptions({ ...options, name: 'note' }).ok, true);
+  assert.equal(connection.syncOptions(options).ok, true);
+  assert.equal(replacement.name, 'note', 'omitted metadata leaves the native attribute with its existing owner');
+  const acquired = additions, reads = valueReads;
+  assert.equal(connection.syncOptions(options).ok, true); assert.equal(additions, acquired); assert.equal(valueReads, reads);
+  assert.equal(connection.syncOptions({ ...options, disabled: 'invalid' }).ok, false); assert.equal(additions, acquired);
+  first.value = 'Detached'; first.emit('input', {}); assert.equal(connection.getSnapshot(), snapshot);
+  const callerOptions = { ...options }; assert.equal(connection.syncOptions(callerOptions).ok, true);
+  callerOptions.input = first;
+  replacement.value = ''; replacement.emit('input', {}); assert.equal(connection.handleEvent('commit'), false);
+  replacement.value = 'New value'; replacement.emit('input', {}); assert.equal(connection.handleEvent('commit'), true);
+  assert.deepEqual(values, ['New value']);
+  connection.disconnect(); connection.disconnect();
+  assert.ok([preview, first, replacement].every(node => [...node.listeners.values()].every(listeners => listeners.size === 0)));
+  assert.equal(connection.syncOptions(options).error.code, 'connection-destroyed'); assert.equal(additions, acquired);
+});
+
+test('live DOM editable releases its retired native input binding', { skip: typeof globalThis.gc !== 'function' }, async () => {
+  const create = () => {
+    const root = new FakeElement(), preview = new FakeElement(), retired = new FakeElement(), input = new FakeElement();
+    const connection = createEditable({ root, preview, input: retired, defaultValue: 'Text' });
+    const weak = new WeakRef(retired); assert.equal(connection.syncOptions({ root, preview, input, unrelated: retired }).ok, true);
+    return { connection, input, weak };
+  };
+  const retained = create();
+  for (let index = 0; index < 12; index++) { await new Promise(resolve => setImmediate(resolve)); globalThis.gc(); }
+  assert.equal(retained.weak.deref(), undefined);
+  assert.equal(retained.connection.getSnapshot().state.value, 'Text'); retained.connection.disconnect();
+  assert.ok([...retained.input.listeners.values()].every(listeners => listeners.size === 0));
 });
 
 test('DOM editable keeps native composition text and commit keys under browser ownership', () => {

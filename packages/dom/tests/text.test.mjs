@@ -1,15 +1,202 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { Window } from 'happy-dom';
 import { unwrap } from '@sectile/core/result';
 import { createTextEditingState } from '@sectile/core/text';
-import { deriveNativeReplacement } from '../.verification-dist/text/element-binding.js';
-import { createText, createTextController, createTextState, toTextEvent } from '../.verification-dist/text.js';
+import { DOMTextElementBinding, deriveNativeReplacement } from '../.verification-dist/text/element-binding.js';
+import { createText, createTextController, createTextState, toTextEvent, writeClipboardText, observeTextInk } from '../.verification-dist/text.js';
+
+test('text ink measures changed labels, freezes native editing and releases font/blur callbacks', () => {
+  const window = new Window(), document = window.document, element = document.createElement('input');
+  element.style.font = '14px Arial'; document.body.append(element);
+  const fonts = new window.EventTarget(); Object.defineProperty(document, 'fonts', { value: fonts });
+  let fontListeners = 0, blurListeners = 0;
+  for (const [owner, type, count] of [[fonts, 'loadingdone', delta => { fontListeners += delta; }],
+    [element, 'blur', delta => { blurListeners += delta; }]]) {
+    for (const [method, delta] of [['addEventListener', 1], ['removeEventListener', -1]]) {
+      const original = owner[method].bind(owner);
+      owner[method] = (name, listener, options) => { if (name === type) count(delta); return original(name, listener, options); };
+    }
+  }
+  const original = document.createElement.bind(document), samples = [], results = [];
+  let canvases = 0, value = 'Ada';
+  document.createElement = (...args) => {
+    const node = original(...args);
+    if (args[0] === 'canvas') { canvases++; node.getContext = () => ({ measureText(text) {
+      samples.push(text); return { actualBoundingBoxAscent: 10, actualBoundingBoxDescent: text === 'Ada' ? 0 : 3,
+        fontBoundingBoxAscent: 12, fontBoundingBoxDescent: 4 };
+    } }); }
+    return node;
+  };
+  const connection = observeTextInk({ element, text: () => value, freezeWhileEditing: true, onChange: metrics => results.push(metrics) });
+  assert.deepEqual(results[0], { ascent: 10, descent: 0, fontAscent: 12, fontDescent: 4 });
+  connection.refresh(); assert.deepEqual(samples, ['Ada']);
+  element.focus(); value = 'body'; connection.refresh();
+  element.dispatchEvent(new window.Event('input')); assert.deepEqual(samples, ['Ada']);
+  element.blur(); assert.deepEqual(samples, ['Ada', 'body']); assert.equal(results.at(-1).descent, 3);
+  value = 'x'.repeat(10000); connection.refresh(); assert.equal(samples.at(-1), 'Hg');
+  fonts.dispatchEvent(new window.Event('loadingdone')); assert.equal(samples.length, 4);
+  assert.equal(canvases, 1);
+  assert.deepEqual([fontListeners, blurListeners], [1, 1]);
+  connection.disconnect(); connection.disconnect(); const count = results.length;
+  assert.deepEqual([fontListeners, blurListeners], [0, 0]);
+  value = 'new'; element.dispatchEvent(new window.Event('blur')); fonts.dispatchEvent(new window.Event('loadingdone')); connection.refresh();
+  assert.equal(results.length, count); assert.equal(samples.length, 4);
+  window.happyDOM.abort();
+});
+
+test('multiline ink uses the first ascent and last descent rather than measuring a flattened paragraph', () => {
+  const window = new Window(), document = window.document, element = document.createElement('textarea');
+  element.style.font = '14px Arial'; document.body.append(element);
+  const original = document.createElement.bind(document), samples = [], results = [];
+  document.createElement = (...args) => {
+    const node = original(...args);
+    if (args[0] === 'canvas') node.getContext = () => ({ measureText(text) {
+      samples.push(text); return { actualBoundingBoxAscent: text === 'ABC' ? 12 : 8,
+        actualBoundingBoxDescent: text === 'xyz' ? 3 : 0, fontBoundingBoxAscent: 13, fontBoundingBoxDescent: 4 };
+    } });
+    return node;
+  };
+  const connection = observeTextInk({ element, multiline: true, text: () => 'ABC\nxyz', onChange: metrics => results.push(metrics) });
+  assert.deepEqual(samples, ['ABC', 'xyz']); assert.deepEqual(results[0], { ascent: 12, descent: 3, fontAscent: 13, fontDescent: 4 });
+  connection.disconnect(); window.happyDOM.abort();
+});
+
+test('text ink propagates a caller failure once and releases initial subscriptions', () => {
+  const window = new Window(), document = window.document, element = document.createElement('input');
+  element.style.font = '14px Arial'; document.body.append(element);
+  let listeners = 0, calls = 0;
+  Object.defineProperty(document, 'fonts', { value: {
+    addEventListener() { listeners++; }, removeEventListener() { listeners--; },
+  } });
+  const original = document.createElement.bind(document), failure = new Error('Caller failed');
+  document.createElement = (...args) => {
+    const node = original(...args);
+    if (args[0] === 'canvas') node.getContext = () => ({ measureText() {
+      return { actualBoundingBoxAscent: 10, actualBoundingBoxDescent: 3, fontBoundingBoxAscent: 12, fontBoundingBoxDescent: 4 };
+    } });
+    return node;
+  };
+  assert.throws(() => observeTextInk({ element, text: () => 'Ada', onChange() { calls++; throw failure; } }), error => error === failure);
+  assert.equal(calls, 1); assert.equal(listeners, 0);
+  window.happyDOM.abort();
+});
+
+function clipboardHost(writeText) {
+  const document = { nodeType: 9 }, clipboard = { writeText };
+  const view = { document, closed: false, isSecureContext: true, navigator: { clipboard } };
+  document.defaultView = view;
+  return { document, clipboard, view };
+}
+
+test('DOM clipboard invokes its own native writer immediately and waits for completion', async () => {
+  let finish, called = false, value;
+  const host = clipboardHost(function(text) {
+    assert.equal(this, host.clipboard); called = true; value = text;
+    return new Promise(resolve => { finish = resolve; });
+  });
+  const pending = writeClipboardText({ document: host.document, text: '배송\nAddress' });
+  assert.equal(called, true); assert.equal(value, '배송\nAddress');
+  let settled = false; pending.then(() => { settled = true; });
+  await Promise.resolve(); assert.equal(settled, false);
+  finish(); assert.deepEqual(await pending, { ok: true, value: undefined });
+  assert.deepEqual(await writeClipboardText({ document: clipboardHost(text => { assert.equal(text, ''); return Promise.resolve(); }).document, text: '' }), { ok: true, value: undefined });
+});
+
+test('DOM clipboard reports native failure without exposing copied text or an original exception', async () => {
+  for (const write of [() => Promise.reject(new Error('private clipboard text')), () => { throw new Error('private clipboard text'); }, () => undefined]) {
+    const result = await writeClipboardText({ document: clipboardHost(write).document, text: 'private clipboard text' });
+    assert.equal(result.ok, false); assert.equal(result.error.code, 'dom.clipboard-write-failed');
+    assert.equal(result.error.class, 'resource-rejection'); assert.equal(JSON.stringify(result).includes('private clipboard text'), false);
+  }
+  const host = clipboardHost(() => Promise.resolve());
+  Object.defineProperty(host.view.navigator, 'clipboard', { get() { throw new Error('Native access rejected'); } });
+  assert.equal((await writeClipboardText({ document: host.document, text: 'Address' })).error.code, 'dom.clipboard-write-failed');
+});
+
+test('DOM clipboard rejects missing or inactive native capability before invoking a writer', async () => {
+  let calls = 0; const writer = () => { calls++; return Promise.resolve(); };
+  for (const change of [host => { host.document.defaultView = null; }, host => { host.view.closed = true; },
+    host => { host.view.document = { nodeType: 9 }; }, host => { host.view.isSecureContext = false; },
+    host => { host.view.navigator.clipboard = undefined; }, host => { host.clipboard.writeText = undefined; }]) {
+    const host = clipboardHost(writer); change(host);
+    const result = await writeClipboardText({ document: host.document, text: 'Address' });
+    assert.equal(result.ok, false); assert.equal(result.error.code, 'dom.clipboard-unavailable');
+  }
+  for (const options of [undefined, null, {}, { document: { nodeType: 1 }, text: 'Address' }, { document: clipboardHost(writer).document, text: 1 }]) {
+    assert.equal((await writeClipboardText(options)).error.code, 'dom.clipboard-invalid');
+  }
+  assert.equal(calls, 0);
+});
+
+test('DOM clipboard concurrent requests keep independent native outcomes', async () => {
+  const requests = [], host = clipboardHost(text => new Promise((resolve, reject) => requests.push({ text, resolve, reject })));
+  const first = writeClipboardText({ document: host.document, text: 'First' });
+  const second = writeClipboardText({ document: host.document, text: 'Second' });
+  requests[1].resolve(); assert.equal((await second).ok, true);
+  requests[0].reject(new Error('Denied')); assert.equal((await first).error.code, 'dom.clipboard-write-failed');
+  assert.deepEqual(requests.map(request => request.text), ['First', 'Second']);
+});
+
+function pendingClipboardWrite(promise) {
+  const host = clipboardHost(() => promise);
+  return { document: new WeakRef(host.document), writing: writeClipboardText({ document: host.document, text: 'Address' }) };
+}
+
+test('DOM clipboard pending settlement does not retain the borrowed caller document graph', { skip: typeof global.gc !== 'function' }, async () => {
+  const native = Promise.withResolvers(), held = pendingClipboardWrite(native.promise);
+  for (let i = 0; i < 20; i++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
+  assert.equal(held.document.deref(), undefined);
+  native.resolve(); assert.equal((await held.writing).ok, true);
+});
 
 test('DOM text creates a caret-preserving state from a plain string', () => {
   const state = createTextState('한글');
   assert.equal(state.snapshot.text, '한글');
   assert.equal(state.snapshot.selection.anchorCodeUnitOffset, 2);
   assert.equal(state.snapshot.selection.focusCodeUnitOffset, 2);
+});
+
+test('explicit DOM replacements reject native normalization before mutation or proposal and preserve multiline LF', () => {
+  const window = new Window();
+  try {
+    for (const kind of ['text', 'search', 'tel', 'url', 'password', 'textarea']) {
+      const element = window.document.createElement(kind === 'textarea' ? 'textarea' : 'input');
+      if (kind !== 'textarea') element.type = kind;
+      const proposals = [], connection = createText({ element, defaultValue: createTextState('@Ad'), onValueChange: value => proposals.push(value.value.snapshot.text) });
+      try {
+        const before = connection.getSnapshot();
+        for (const text of kind === 'textarea' ? ['@Ada\r', '@Ada\r\n'] : ['@Ada\n', '@Ada\r', '@Ada\r\n']) {
+          assert.equal(connection.handleEvent({ type: 'input', inputType: 'insertReplacementText', text,
+            startCodeUnitOffset: 0, endCodeUnitOffset: 3, selection: selection(text.length) }), false);
+          assert.equal(connection.getSnapshot(), before); assert.equal(element.value, '@Ad'); assert.deepEqual(proposals, []);
+        }
+        const text = kind === 'textarea' ? '@Ada\n' : '@Ada';
+        assert.equal(connection.handleEvent({ type: 'input', inputType: 'insertReplacementText', text,
+          startCodeUnitOffset: 0, endCodeUnitOffset: 3, selection: selection(text.length) }), true);
+        assert.equal(connection.getValue(), text); assert.equal(element.value, text); assert.deepEqual(proposals, [text]);
+      } finally { connection.disconnect(); }
+    }
+  } finally { window.close(); }
+});
+
+test('explicit URL replacements admit exact interior spaces but reject resulting edge whitespace without constructing another value', () => {
+  const window = new Window(), element = window.document.createElement('input'); element.type = 'url';
+  const proposals = [], connection = createText({ element, defaultValue: createTextState('a b'), onValueChange: value => proposals.push(value.value.snapshot.text) });
+  try {
+    const before = connection.getSnapshot();
+    for (const [start, end, text] of [[0, 0, ' '], [3, 3, '\t'], [3, 3, '\f'], [0, 1, ''], [2, 3, '']]) {
+      assert.equal(connection.handleEvent({ type: 'input', inputType: 'insertReplacementText', text,
+        startCodeUnitOffset: start, endCodeUnitOffset: end, selection: selection(start + text.length) }), false);
+      assert.equal(connection.getSnapshot(), before); assert.equal(element.value, 'a b'); assert.deepEqual(proposals, []);
+    }
+    assert.equal(connection.handleEvent({ type: 'input', inputType: 'insertReplacementText', text: ' c ',
+      startCodeUnitOffset: 1, endCodeUnitOffset: 2, selection: selection(4) }), true);
+    assert.equal(element.value, 'a c b'); assert.deepEqual(proposals, ['a c b']);
+    assert.equal(connection.handleEvent({ type: 'input', inputType: 'insertReplacementText', text: '',
+      startCodeUnitOffset: 0, endCodeUnitOffset: 5, selection: selection(0) }), true);
+    assert.equal(element.value, '');
+  } finally { connection.disconnect(); window.close(); }
 });
 
 test('DOM text facade separates semantic edits from native IME ownership', async () => {
@@ -479,6 +666,70 @@ test('disconnect invalidates a pending IME commit and releases native listeners'
   assert.equal(element.listeners.get('compositionend')?.size ?? 0, 0);
 });
 
+test('paused native text releases observation and resumes the last observed IME proposal through its controller', async () => {
+  for (const controlled of [false, true]) for (const ended of [false, true]) {
+    const element = new FakeTextElement();
+    const transitions = [], proposals = [];
+    const initial = createTextEditingState('', selection(0));
+    const controller = unwrap(createTextController({
+      ...(controlled ? { value: initial } : { defaultValue: initial }),
+      onValueChange: ({ value }) => proposals.push(value),
+    }));
+    const binding = new DOMTextElementBinding({ element,
+      getState: () => controller.getSnapshot().state,
+      dispatch: input => { transitions.push(input.type); return controller.handleTextInput(input).ok; },
+    });
+    element.emit('compositionstart', {});
+    element.value = '한'; element.selectionStart = 1; element.selectionEnd = 1;
+    element.emit('input', { inputType: 'insertCompositionText' });
+    if (ended) element.emit('compositionend', {});
+    const beforePause = controller.getSnapshot();
+    binding.suspend(); binding.suspend();
+    for (const listeners of element.listeners.values()) assert.equal(listeners.size, 0);
+    element.value = 'unobserved'; element.emit('input', { inputType: 'insertText' });
+    binding.handleEvent({ type: 'compositionend' });
+    await Promise.resolve();
+    assert.equal(controller.getSnapshot(), beforePause);
+    assert.deepEqual(transitions, ['composition-start', 'composition-update']);
+    binding.resume(); binding.resume();
+    assert.deepEqual(transitions, ['composition-start', 'composition-update', 'composition-commit']);
+    assert.equal(proposals.at(-1).snapshot.text, '한');
+    assert.equal(proposals.at(-1).composition, null);
+    assert.equal(element.value, controlled ? '' : '한');
+    assert.equal(binding.isComposing, false);
+    for (let cycle = 0; cycle < 3; cycle++) { binding.suspend(); binding.resume(); }
+    for (const listeners of element.listeners.values()) assert.equal(listeners.size, 1);
+    binding.disconnect(); binding.resume();
+    for (const listeners of element.listeners.values()) assert.equal(listeners.size, 0);
+  }
+});
+
+test('failed interrupted composition resumption releases observation and can retry', () => {
+  const element = new FakeTextElement();
+  const controller = unwrap(createTextController());
+  const failure = new Error('composition owner failed');
+  let fail = true;
+  const binding = new DOMTextElementBinding({ element,
+    getState: () => controller.getSnapshot().state,
+    dispatch: input => {
+      if (input.type === 'composition-commit' && fail) throw failure;
+      return controller.handleTextInput(input).ok;
+    },
+  });
+  element.emit('compositionstart', {});
+  element.value = '한'; element.selectionStart = 1; element.selectionEnd = 1;
+  element.emit('input', { inputType: 'insertCompositionText' });
+  binding.suspend();
+  assert.throws(() => binding.resume(), error => error === failure);
+  for (const listeners of element.listeners.values()) assert.equal(listeners.size, 0);
+  fail = false;
+  binding.resume();
+  assert.equal(controller.getSnapshot().state.snapshot.text, '한');
+  assert.equal(controller.getSnapshot().state.composition, null);
+  binding.disconnect();
+  for (const listeners of element.listeners.values()) assert.equal(listeners.size, 0);
+});
+
 test('native replacement reconciliation has linear bounded work and exact output', () => {
   const size = 100_000;
   const previous = `${'a'.repeat(size - 2)}😀`;
@@ -490,6 +741,139 @@ test('native replacement reconciliation has linear bounded work and exact output
 
   assert.equal(actual, next);
   assert.ok(replacement.inspectedCodeUnits <= previous.length + next.length + 2);
+});
+
+test('native text selection observes its own control and focused document without duplicate proposals', () => {
+  const element = new FakeTextElement(), document = new FakeTextElement(), transitions = [];
+  element.ownerDocument = document;
+  const connection = createText({ element, defaultValue: createTextState('abcd'), readOnly: true,
+    onTransition: ({ input }) => transitions.push(input.type) });
+  assert.equal(document.listeners.get('selectionchange')?.size ?? 0, 0);
+  document.activeElement = element; element.emit('focus');
+  assert.equal(document.listeners.get('selectionchange').size, 1);
+  element.setSelectionRange(1, 3, 'backward'); element.emit('select');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.direction, 'backward');
+  const revision = connection.getSnapshot().revision;
+  element.emit('selectionchange'); document.emit('selectionchange');
+  assert.equal(connection.getSnapshot().revision, revision);
+  element.setSelectionRange(2, 2); document.emit('selectionchange');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 2);
+  element.setSelectionRange(0, 0); document.emit('selectionchange', { target: new FakeTextElement() });
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 2);
+  document.activeElement = null; document.emit('selectionchange');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 2);
+  element.emit('blur'); assert.equal(document.listeners.get('selectionchange').size, 0);
+  assert.deepEqual(transitions, ['select', 'select']); connection.disconnect();
+  assert.equal([...element.listeners.values()].reduce((sum, listeners) => sum + listeners.size, 0), 0);
+});
+
+test('native selection refuses unobserved text, invalid boundaries and disabled interaction', async () => {
+  const element = new FakeTextElement(), connection = createText({ element, defaultValue: createTextState('a😀b') });
+  element.value = 'unobserved'; element.setSelectionRange(1, 1); element.emit('select');
+  assert.equal(connection.getSnapshot().state.snapshot.text, 'a😀b');
+  assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 4);
+  element.value = 'a😀b'; element.setSelectionRange(2, 2); element.emit('selectionchange');
+  assert.deepEqual(element.selection, [4, 4]);
+  element.emit('compositionstart'); element.value = 'a😀b한'; element.setSelectionRange(5, 5); element.emit('input');
+  const active = connection.getSnapshot(); element.setSelectionRange(0, 0); element.emit('select');
+  assert.equal(connection.getSnapshot(), active);
+  element.setSelectionRange(5, 5); element.emit('compositionend'); await Promise.resolve();
+  const committed = connection.getSnapshot(); element.emit('selectionchange');
+  assert.equal(connection.getSnapshot(), committed); connection.disconnect();
+  for (const options of [{ disabled: true }, {}]) {
+    const input = options.disabled ? new FakeTextElement() : new FakeSelectionlessTextElement();
+    const binding = createText({ element: input, defaultValue: createTextState('abc'), ...options });
+    input.selectionStart = options.disabled ? 1 : null; input.selectionEnd = input.selectionStart; input.emit('select');
+    assert.equal(binding.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 3); binding.disconnect();
+  }
+});
+
+test('native selection owns one focus fallback and releases it across suspend and disconnect', () => {
+  const element = new FakeTextElement(), document = new FakeTextElement(); element.ownerDocument = document;
+  document.activeElement = element;
+  const controller = unwrap(createTextController({ defaultValue: createTextState('abc') }));
+  const binding = new DOMTextElementBinding({ element, observeSelection: true, getState: () => controller.getSnapshot().state,
+    dispatch: input => controller.handleTextInput(input).ok });
+  assert.equal(document.listeners.get('selectionchange').size, 1);
+  const held = [...document.listeners.get('selectionchange')][0];
+  binding.suspend(); assert.equal(document.listeners.get('selectionchange').size, 0);
+  element.setSelectionRange(0, 0); held.handleEvent({ type: 'selectionchange', target: document });
+  assert.equal(controller.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 3);
+  binding.resume(); assert.equal(document.listeners.get('selectionchange').size, 1);
+  assert.equal(element.selectionStart, 3);
+  binding.disconnect(); binding.disconnect(); binding.resume();
+  assert.equal(document.listeners.get('selectionchange').size, 0);
+  assert.equal([...element.listeners.values()].reduce((sum, listeners) => sum + listeners.size, 0), 0);
+});
+
+test('native selection reads native text once only for a changed offset pair', () => {
+  const element = new FakeTextElement(), text = 'a'.repeat(100_000);
+  const connection = createText({ element, defaultValue: createTextState(text) });
+  let reads = 0;
+  Object.defineProperty(element, 'value', { configurable: true, get() { reads++; return text; } });
+  element.setSelectionRange(99_999, 99_999); element.emit('selectionchange');
+  assert.equal(reads, 1); assert.equal(connection.getSnapshot().state.snapshot.selection.focusCodeUnitOffset, 99_999);
+  element.emit('select'); element.emit('selectionchange'); assert.equal(reads, 1); connection.disconnect();
+});
+
+function retiredSelectionBinding() {
+  const element = new FakeTextElement(), document = new FakeTextElement(); element.ownerDocument = document; document.activeElement = element;
+  const connection = createText({ element, defaultValue: createTextState('abc') }), root = new WeakRef(element);
+  connection.disconnect(); document.activeElement = null;
+  return { document, root };
+}
+test('focused selection fallback releases a disconnected control while its document stays held', { skip: typeof global.gc !== 'function' }, async () => {
+  const held = retiredSelectionBinding();
+  for (let turn = 0; turn < 20; turn++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
+  assert.equal(held.root.deref(), undefined); assert.equal(held.document.listeners.get('selectionchange').size, 0);
+});
+
+test('DOM selection inputs preserve navigation and revision authority', () => {
+  const initial = createTextEditingState('a😀b', selection(4));
+  const input = { type: 'select', selection: { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 1 } };
+  assert.deepEqual(toTextEvent(input), input);
+  const controller = unwrap(createTextController({ defaultValue: initial, readOnly: true }));
+  const before = controller.getSnapshot(), selected = controller.handleTextInput(input, before.revision);
+  assert.equal(selected.ok, true);
+  assert.equal(selected.snapshot.state.snapshot.text, initial.snapshot.text);
+  assert.equal(selected.snapshot.state.snapshot.selection.direction, 'backward');
+  const stale = controller.handleTextInput({ type: 'select', selection: selection(0) }, before.revision);
+  assert.equal(stale.ok, false); assert.equal(controller.getSnapshot(), selected.snapshot);
+  const mutation = controller.handleTextInput({ type: 'input', inputType: 'insertText', text: 'x', startCodeUnitOffset: 1, endCodeUnitOffset: 3, selection: selection(2) });
+  assert.equal(mutation.ok, false); assert.equal(mutation.error.code, 'interaction-read-only');
+  const disabled = unwrap(createTextController({ defaultValue: initial, disabled: true }));
+  const denied = disabled.handleTextInput(input);
+  assert.equal(denied.ok, false); assert.equal(denied.error.code, 'interaction-disabled');
+  assert.equal(disabled.getSnapshot().state, initial);
+});
+
+test('controlled DOM selection dispatch is a proposal until the owner accepts or refuses it', () => {
+  const changes = [], initial = createTextEditingState('abc', selection(3));
+  const controller = unwrap(createTextController({ value: initial, onValueChange: change => changes.push(change) }));
+  const requested = { type: 'select', selection: { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 1 } };
+  assert.equal(controller.handleTextInput(requested).ok, true);
+  assert.equal(controller.getSnapshot().state, initial);
+  assert.equal(changes.length, 1); assert.equal(changes[0].value.snapshot.selection.direction, 'backward');
+  unwrap(controller.syncControlledValues({ value: initial }));
+  assert.equal(controller.getSnapshot().state, initial);
+  assert.equal(controller.handleTextInput(requested).ok, true);
+  assert.equal(changes.length, 2); assert.equal(changes[1].previousValue, initial);
+  const accepted = unwrap(controller.syncControlledValues({ value: changes[1].value }));
+  assert.equal(accepted.state, changes[1].value);
+});
+
+test('DOM selection proposals retain the pending IME session until explicit commit', () => {
+  const changes = [], initial = createTextEditingState('ab', selection(2));
+  const controller = unwrap(createTextController({ value: initial, onValueChange: change => changes.push(change) }));
+  assert.equal(controller.handleTextInput({ type: 'composition-start', text: '한', startCodeUnitOffset: 1, endCodeUnitOffset: 2, selection: selection(2) }).ok, true);
+  const active = changes.at(-1).value;
+  assert.equal(controller.handleTextInput({ type: 'select', selection: { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 1 } }).ok, true);
+  const selected = changes.at(-1).value;
+  assert.equal(selected.composition, active.composition); assert.equal(selected.snapshot.text, 'a한');
+  assert.equal(selected.snapshot.selection.direction, 'backward'); assert.equal(controller.getSnapshot().state, initial);
+  assert.equal(controller.handleTextInput({ type: 'composition-commit' }).ok, true);
+  assert.equal(changes.at(-1).value.composition, null);
+  assert.equal(changes.at(-1).value.snapshot, selected.snapshot);
 });
 
 test('DOM beforeinput and composition inputs map to semantic text events', () => {
@@ -666,6 +1050,15 @@ function selection(offset) {
   return { anchorCodeUnitOffset: offset, focusCodeUnitOffset: offset };
 }
 
+test('native text binding rolls back observation when its initial snapshot cannot be rendered', () => {
+  const element = new FakeTextElement();
+  assert.throws(() => new DOMTextElementBinding({
+    element, getState() { throw new Error('snapshot rejected'); }, dispatch() { assert.fail('failed binding dispatched'); },
+  }), /snapshot rejected/u);
+  assert.equal([...element.listeners.values()].reduce((sum, listeners) => sum + listeners.size, 0), 0);
+  element.emit('input'); element.emit('compositionstart');
+});
+
 class FakeTextElement {
   tagName = 'INPUT';
   type = 'text';
@@ -676,6 +1069,10 @@ class FakeTextElement {
   selection = [0, 0];
   selectionWrites = 0;
   listeners = new Map();
+  attributes = new Map();
+
+  setAttribute(name, value) { this.attributes.set(name, value); }
+  removeAttribute(name) { this.attributes.delete(name); }
 
   addEventListener(type, listener) {
     const listeners = this.listeners.get(type) ?? new Set();
@@ -688,7 +1085,7 @@ class FakeTextElement {
   }
 
   emit(type, event = {}) {
-    const dispatched = { ...event, type };
+    const dispatched = { target: this, ...event, type };
     for (const listener of this.listeners.get(type) ?? []) {
       if (typeof listener === 'function') listener.call(this, dispatched);
       else listener.handleEvent(dispatched);
@@ -702,6 +1099,8 @@ class FakeTextElement {
     this.selectionDirection = direction;
     this.selection = [this.selectionStart, this.selectionEnd];
   }
+
+  matches(selector) { return selector === ':focus' && this.ownerDocument?.activeElement === this; }
 }
 
 class FakeSelectionlessTextElement extends FakeTextElement {

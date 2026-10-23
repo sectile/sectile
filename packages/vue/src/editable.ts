@@ -7,7 +7,6 @@ import {
   onBeforeUnmount,
   onMounted,
   provide,
-  ref,
   shallowRef,
   watch,
   type ComputedRef,
@@ -19,6 +18,7 @@ import {
 import {
   createEditable,
   type EditableConnection,
+  type EditableBindingOptions,
   type EditablePolicies,
   type EditableState,
 } from '@sectile/dom/editable';
@@ -52,6 +52,7 @@ export interface EditablePartProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
+export interface EditableInputExpose { readonly element: HTMLInputElement | HTMLTextAreaElement | null }
 
 interface EditableContext {
   readonly slotProps: ComputedRef<EditableRootSlotProps>;
@@ -61,7 +62,8 @@ interface EditableContext {
   readonly editTrigger: ShallowRef<HTMLElement | null>;
   readonly submitTrigger: ShallowRef<HTMLElement | null>;
   readonly cancelTrigger: ShallowRef<HTMLElement | null>;
-  readonly multiline: ReturnType<typeof ref<boolean>>;
+  readonly multiline: ShallowRef<boolean>;
+  setMultiline(value: boolean): void;
   setInputComposing(composing: boolean): void;
   reset(): void;
 }
@@ -101,38 +103,49 @@ export const EditableRoot = defineComponent({
     const editTrigger = shallowRef<HTMLElement | null>(null);
     const submitTrigger = shallowRef<HTMLElement | null>(null);
     const cancelTrigger = shallowRef<HTMLElement | null>(null);
-    const multiline = ref(false);
+    const multiline = shallowRef(false);
     let connection: EditableConnection | null = null;
     let mounted = false;
+    let restoreInputFocus = false;
 
     const refresh = (): void => {
       if (connection !== null) snapshot.value = connection.getSnapshot().state;
     };
     const mount = (): void => {
       if (!mounted || root.value === null || preview.value === null || input.value === null) return;
-      connection?.disconnect();
-      connection = createEditable({
+      const binding: EditableBindingOptions = {
         root: root.value,
         preview: preview.value,
         input: input.value,
         ...(editTrigger.value === null ? {} : { editTrigger: editTrigger.value }),
         ...(submitTrigger.value === null ? {} : { submitTrigger: submitTrigger.value }),
         ...(cancelTrigger.value === null ? {} : { cancelTrigger: cancelTrigger.value }),
-        ...(controlled ? { value: props.modelValue as string } : { defaultValue: snapshot.value.value }),
         disabled: props.disabled,
         readOnly: props.readonly,
         submitOnBlur: props.submitOnBlur,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(props.name === undefined ? {} : { name: props.name }),
         ...(props.label === undefined ? {} : { label: props.label }),
+      };
+      if (connection !== null) {
+        const result = connection.syncOptions(binding);
+        if (!result.ok) throw new TypeError(result.error.message);
+      } else connection = createEditable({ ...binding,
+        ...(controlled ? { value: props.modelValue as string } : { defaultValue: snapshot.value.value }),
         onValueChange: (value: string) => emit('update:modelValue', value),
         onEditingChange: (editing: boolean) => emit('update:editing', editing),
         onUpdate: refresh,
       });
       refresh();
+      if (restoreInputFocus && snapshot.value.editing) input.value.focus();
+      restoreInputFocus = false;
     };
     const reset = (): void => {
       queueMicrotask(() => {
+        if (!mounted) return;
+        mountTask.cancel();
+        connection?.disconnect();
+        connection = null;
         const value = controlled ? props.modelValue as string : initial;
         snapshot.value = { value, draft: value, editing: false };
         mount();
@@ -142,12 +155,19 @@ export const EditableRoot = defineComponent({
     let inputComposing = false;
     let reconnectPending = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let pendingMultiline: boolean | undefined;
     const requestMount = (): void => {
-      if (inputComposing) {
+      if (inputComposing || reconnectTimer !== null) {
         reconnectPending = true;
         return;
       }
       mountTask.schedule();
+    };
+    const setMultiline = (value: boolean): void => {
+      if (inputComposing || reconnectTimer !== null) {
+        pendingMultiline = value;
+        reconnectPending = true;
+      } else multiline.value = value;
     };
     const setInputComposing = (composing: boolean): void => {
       inputComposing = composing;
@@ -156,6 +176,7 @@ export const EditableRoot = defineComponent({
         reconnectTimer = null;
         if (!mounted || inputComposing) return;
         reconnectPending = false;
+        if (pendingMultiline !== undefined) { multiline.value = pendingMultiline; pendingMultiline = undefined; }
         mountTask.schedule();
       }, 0);
     };
@@ -169,6 +190,8 @@ export const EditableRoot = defineComponent({
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
       reconnectPending = false;
+      pendingMultiline = undefined;
+      restoreInputFocus = false;
       mountTask.cancel();
       connection?.disconnect();
       connection = null;
@@ -180,9 +203,13 @@ export const EditableRoot = defineComponent({
       snapshot.value = result.value.state;
     });
     watch(
-      [() => props.disabled, () => props.readonly, () => props.submitOnBlur, () => props.policies],
+      [() => props.disabled, () => props.readonly, () => props.submitOnBlur, () => props.policies, () => props.label, () => props.name],
       requestMount,
     );
+    watch(input, (_next, previous) => {
+      if (previous !== null && previous.ownerDocument.activeElement === previous) restoreInputFocus = true;
+    }, { flush: 'sync' });
+    watch([root, preview, input, editTrigger, submitTrigger, cancelTrigger], requestMount, { flush: 'post' });
 
     const slotProps = computed<EditableRootSlotProps>(() => Object.freeze({
       ...snapshot.value,
@@ -191,7 +218,7 @@ export const EditableRoot = defineComponent({
     }));
     provide<EditableContext>(editableContextKey, {
       slotProps, root, preview, input, editTrigger, submitTrigger, cancelTrigger, multiline,
-      setInputComposing,
+      setInputComposing, setMultiline,
       reset,
     });
 
@@ -242,14 +269,15 @@ export const EditableInput = defineComponent({
     form: { type: String, default: undefined },
     required: { type: Boolean, default: false },
   },
-  setup(props, { attrs }) {
+  setup(props, { attrs, expose }) {
     const context = useEditableContext('EditableInput');
+    expose({ get element() { return context.input.value; } });
     const participation = useNativeInputFormControl(context.input, { reset: context.reset });
     const renderServerValue = typeof window === 'undefined';
-    context.multiline.value = props.multiline;
-    return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(attrs, {
+    watch(() => props.multiline, context.setMultiline, { immediate: true });
+    return (): VNodeChild => h(context.multiline.value ? 'textarea' : 'input', mergeProps(attrs, {
       ref: (element: unknown) => { context.input.value = element as HTMLInputElement | HTMLTextAreaElement | null; },
-      ...(!props.multiline ? { type: props.type } : {}),
+      ...(!context.multiline.value ? { type: props.type } : {}),
       name: props.name,
       form: props.form,
       required: props.required,
@@ -260,6 +288,7 @@ export const EditableInput = defineComponent({
       onCompositionstart: () => context.setInputComposing(true),
       onCompositionend: () => context.setInputComposing(false),
       'data-scope': 'editable', 'data-part': 'input',
+      'data-multiline': context.multiline.value ? 'true' : undefined,
     }, participation.controlProps.value));
   },
 });

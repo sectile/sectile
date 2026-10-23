@@ -5,6 +5,9 @@ export interface DOMTextElementBindingOptions {
   readonly element: TextElement;
   readonly getState: () => TextEditingState;
   readonly dispatch: (input: TextInput) => boolean;
+  readonly observeSelection?: boolean;
+  readonly keydown?: (event: KeyboardEvent) => void;
+  readonly blur?: (event: FocusEvent) => void;
 }
 
 interface ActiveComposition {
@@ -24,28 +27,55 @@ export interface NativeReplacement {
 }
 
 const bindingEvents = ['input', 'search', 'compositionstart', 'compositionend'] as const;
+const selectionEvents = ['select', 'selectionchange', 'focus'] as const;
 
 export class DOMTextElementBinding implements EventListenerObject {
   readonly #element: TextElement;
   readonly #getState: () => TextEditingState;
   readonly #dispatch: (input: TextInput) => boolean;
+  readonly #observeSelection: boolean;
+  readonly #keydown: ((event: KeyboardEvent) => void) | undefined;
+  readonly #blur: ((event: FocusEvent) => void) | undefined;
   #active = true;
+  #disconnected = false;
   #composing = false;
   #compositionEnding = false;
   #composition: ActiveComposition | null = null;
   #compositionGeneration = 0;
   #lastObservedText = '';
+  #lastObservedSelection: TextSelectionInput | null = null;
+  #selectionDocument: Document | null = null;
 
   public constructor(options: DOMTextElementBindingOptions) {
     this.#element = options.element;
     this.#getState = options.getState;
     this.#dispatch = options.dispatch;
-    for (const type of bindingEvents) this.#element.addEventListener(type, this);
-    this.render();
+    this.#observeSelection = options.observeSelection === true;
+    this.#keydown = options.keydown; this.#blur = options.blur;
+    try {
+      this.#bind();
+      this.render();
+    } catch (error) {
+      this.disconnect();
+      throw error;
+    }
   }
 
   public handleEvent(event: Event): void {
+    if (!this.#active) return;
     switch (event.type) {
+      case 'keydown': this.#keydown?.(event as KeyboardEvent); return;
+      case 'blur': this.#releaseDocumentSelection(); this.#blur?.(event as FocusEvent); return;
+      case 'focus':
+        if (this.#observeSelection) { this.#observeDocumentSelection(); this.#reconcileSelection(); }
+        return;
+      case 'select':
+      case 'selectionchange':
+        if (!this.#observeSelection) return;
+        if (event.target !== this.#element
+          && (event.target !== this.#selectionDocument || !this.#element.matches(':focus'))) return;
+        this.#reconcileSelection();
+        return;
       case 'compositionstart': this.#startComposition(); return;
       case 'compositionend': this.#endComposition(); return;
       case 'search':
@@ -60,9 +90,27 @@ export class DOMTextElementBinding implements EventListenerObject {
   public get isComposing(): boolean {
     return this.#composing || this.#compositionEnding;
   }
+  public get isActive(): boolean { return this.#active; }
 
   public handleBeforeInput(_event: InputEvent): boolean {
     return false;
+  }
+
+  /** Exact explicit edits must survive native value normalization before any proposal. */
+  public acceptsReplacement(input: Extract<TextInput, { readonly type: 'input' }>): boolean {
+    const text = input.text, element = this.#element;
+    if (typeof text !== 'string') return false;
+    if (element.localName === 'textarea') return !text.includes('\r');
+    if (element.localName !== 'input') return true;
+    if (text.includes('\r') || text.includes('\n')) return false;
+    if ((element as HTMLInputElement).type !== 'url') return true;
+    const source = this.#getState().snapshot.text, start = input.startCodeUnitOffset, end = input.endCodeUnitOffset;
+    // Core owns invalid ranges; this admission only inspects representable boundaries.
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || end > source.length) return true;
+    if (source.length - (end - start) + text.length === 0) return true;
+    const first = start > 0 ? source.charCodeAt(0) : text.length > 0 ? text.charCodeAt(0) : source.charCodeAt(end);
+    const last = end < source.length ? source.charCodeAt(source.length - 1) : text.length > 0 ? text.charCodeAt(text.length - 1) : source.charCodeAt(start - 1);
+    return !nativeASCIIWhitespace(first) && !nativeASCIIWhitespace(last);
   }
 
   public render(): void {
@@ -70,6 +118,7 @@ export class DOMTextElementBinding implements EventListenerObject {
     const snapshot = this.#getState().snapshot;
     if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
     this.#lastObservedText = this.#element.value;
+    if (this.#observeSelection) this.#lastObservedSelection = snapshot.selection;
     const selection = selectionFromElement(this.#element);
     if (selection === null || sameSelection(selection, snapshot.selection)) return;
     this.#element.setSelectionRange(
@@ -79,11 +128,72 @@ export class DOMTextElementBinding implements EventListenerObject {
     );
   }
 
-  public disconnect(): void {
+  /** Pause native observation without publishing a text or composition transition. */
+  public suspend(): void {
     if (!this.#active) return;
     this.#active = false;
     this.#compositionGeneration += 1;
     for (const type of bindingEvents) this.#element.removeEventListener(type, this);
+    if (this.#observeSelection) for (const type of selectionEvents) this.#element.removeEventListener(type, this);
+    this.#releaseDocumentSelection();
+    if (this.#keydown) this.#element.removeEventListener('keydown', this);
+    if (this.#blur || this.#observeSelection) this.#element.removeEventListener('blur', this);
+  }
+
+  public resume(): void {
+    if (this.#disconnected || this.#active) return;
+    this.#active = true;
+    this.#bind();
+    try {
+      // A detached native IME session cannot be resumed. Settle only the last
+      // observed proposal through Core; never ingest edits made while paused.
+      if (this.#composition !== null) {
+        this.#composing = false;
+        this.#commitComposition();
+      }
+      this.render();
+    } catch (error) {
+      this.suspend();
+      throw error;
+    }
+  }
+
+  public disconnect(): void {
+    if (this.#disconnected) return;
+    this.#disconnected = true;
+    this.suspend();
+  }
+  #bind(): void {
+    for (const type of bindingEvents) this.#element.addEventListener(type, this);
+    if (this.#observeSelection) {
+      for (const type of selectionEvents) this.#element.addEventListener(type, this);
+      if (this.#element.matches?.(':focus')) this.#observeDocumentSelection();
+    }
+    if (this.#keydown) this.#element.addEventListener('keydown', this);
+    if (this.#blur || this.#observeSelection) this.#element.addEventListener('blur', this);
+  }
+
+  #observeDocumentSelection(): void {
+    const document = this.#element.ownerDocument;
+    if (!document || document === this.#selectionDocument) return;
+    this.#releaseDocumentSelection();
+    this.#selectionDocument = document;
+    document.addEventListener('selectionchange', this);
+  }
+
+  #releaseDocumentSelection(): void {
+    this.#selectionDocument?.removeEventListener('selectionchange', this);
+    this.#selectionDocument = null;
+  }
+
+  #reconcileSelection(): void {
+    if (this.isComposing) return;
+    const selection = selectionFromElement(this.#element);
+    if (selection === null || this.#lastObservedSelection !== null && sameSelection(selection, this.#lastObservedSelection)) return;
+    // Offsets from unobserved native edits do not describe the canonical text.
+    if (this.#element.value !== this.#lastObservedText) return;
+    this.#lastObservedSelection = selection;
+    if (!this.#dispatch({ type: 'select', selection })) this.render();
   }
 
   #reconcileNativeInput(inputType: string): void {
@@ -100,7 +210,10 @@ export class DOMTextElementBinding implements EventListenerObject {
       endCodeUnitOffset: replacement.endCodeUnitOffset,
       selection,
     });
-    if (accepted) this.#lastObservedText = this.#element.value;
+    if (accepted) {
+      this.#lastObservedText = this.#element.value;
+      if (this.#observeSelection) this.#lastObservedSelection = selectionFromElement(this.#element);
+    }
     else this.render();
   }
 
@@ -198,9 +311,16 @@ export class DOMTextElementBinding implements EventListenerObject {
       && this.#dispatch({ type: 'composition-commit' });
     this.#composition = null;
     this.#compositionEnding = false;
-    if (accepted) this.#lastObservedText = this.#element.value;
+    if (accepted) {
+      this.#lastObservedText = this.#element.value;
+      if (this.#observeSelection) this.#lastObservedSelection = selectionFromElement(this.#element);
+    }
     else this.render();
   }
+}
+
+function nativeASCIIWhitespace(code: number): boolean {
+  return code === 9 || code === 10 || code === 12 || code === 13 || code === 32;
 }
 
 export function deriveNativeReplacement(previous: string, next: string): NativeReplacement {

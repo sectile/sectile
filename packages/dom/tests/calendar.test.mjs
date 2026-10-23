@@ -3,6 +3,40 @@ import test from 'node:test';
 import { formatDateValue } from '@sectile/temporal/date-field';
 import { createCalendar, toCalendarEvent } from '../.verification-dist/temporal/calendar.js';
 
+test('calendar reconstruction preserves view while explicit controlled highlight takes precedence', () => {
+  let calendar = createCalendar({ root: new FakeElement(), referenceDate: date(2026, 8, 1) });
+  try {
+    calendar.handleEvent('next-month'); calendar.handleEvent({ type: 'set-view-mode', value: 'year' });
+    const state = calendar.getSnapshot().state; calendar.disconnect();
+    calendar = createCalendar({ root: new FakeElement(), defaultState: state });
+    assert.deepEqual(calendar.getSnapshot().state, state); calendar.disconnect();
+    calendar = createCalendar({ root: new FakeElement(), defaultState: state, highlightedValue: date(2027, 2, 1), value: null });
+    assert.deepEqual(calendar.getSnapshot().state.view, { year: 2027, month: 2 });
+    assert.equal(calendar.getSnapshot().state.viewMode, 'year'); assert.equal(calendar.getSnapshot().state.value, null);
+    assert.throws(() => createCalendar({ root: new FakeElement(), defaultState: { ...state, highlighted: date(2026, 13, 1) } }));
+  } finally { calendar.disconnect(); }
+});
+
+test('inline calendar pauses observation without a popup layer and rejects stale focus', async () => {
+  const root = new FakeElement(); let failUpdate = false; const failure = new Error('Calendar projection failed');
+  root.querySelector = () => root;
+  const calendar = createCalendar({ root, referenceDate: date(2026, 1, 1), onUpdate: () => { if (failUpdate) throw failure; } });
+  const listeners = () => [...root.listeners.values()].reduce((sum, values) => sum + values.size, 0);
+  try {
+    calendar.handleEvent('next-day'); const snapshot = calendar.getSnapshot();
+    calendar.suspend(); calendar.resume(); await Promise.resolve(); assert.equal(root.focusCount, 0);
+    for (let cycle = 0; cycle < 3; cycle++) {
+      calendar.suspend(); calendar.suspend(); assert.equal(listeners(), 0); assert.equal(calendar.getActive(), false);
+      assert.equal(calendar.handleKeyboardEvent(keyboardEvent('ArrowRight')), false); calendar.focusCurrent(); assert.equal(root.focusCount, 0); assert.equal(calendar.getSnapshot(), snapshot);
+      calendar.resume(); calendar.resume(); assert.equal(listeners(), 2); assert.equal(calendar.getActive(), true);
+    }
+    failUpdate = true; assert.throws(() => calendar.suspend(), error => error === failure); assert.equal(listeners(), 0);
+    assert.throws(() => calendar.resume(), error => error === failure); assert.equal(listeners(), 0);
+    failUpdate = false; calendar.resume(); failUpdate = true;
+    assert.throws(() => calendar.disconnect(), error => error === failure); calendar.resume(); calendar.refresh(); assert.equal(listeners(), 0); assert.equal(calendar.getActive(), false);
+  } finally { failUpdate = false; calendar.disconnect(); }
+});
+
 test('DOM calendar owns date navigation, selection, and ARIA projection', () => {
   const root = new FakeElement();
   const connection = createCalendar({

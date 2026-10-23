@@ -50,7 +50,13 @@ class DOMPinInputConnection implements PinInputConnection {
     setInteractionAttributes(options.root, options, false, true);
     options.inputs.forEach((input, index) => {
       input.maxLength = 1; input.inputMode = 'numeric'; input.disabled = options.disabled === true; input.readOnly = options.readOnly === true;
-      input.setAttribute('aria-label', `${options.label ?? 'PIN'} digit ${index + 1} of ${options.inputs.length}`);
+      if (input.getAttribute('aria-label') === null) {
+        const generatedLabel = `${options.label ?? 'PIN'} digit ${index + 1} of ${options.inputs.length}`;
+        input.setAttribute('aria-label', generatedLabel);
+        this.#listeners.push(() => {
+          if (input.getAttribute('aria-label') === generatedLabel) input.removeAttribute('aria-label');
+        });
+      }
       let ignoreNextCompositionInput = false;
       const commitNativeValue = (): void => {
         const character = Array.from(input.value).at(-1);

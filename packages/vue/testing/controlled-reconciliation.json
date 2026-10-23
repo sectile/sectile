@@ -12,8 +12,11 @@
     "tests/dynamic-collections.dom.test.mjs",
     "tests/listbox.test.mjs",
     "tests/tree-view.dom.test.mjs",
+    "tests/checkbox-tree.dom.test.mjs",
+    "tests/tree-select.dom.test.mjs",
     "tests/date-pickers.dom.test.mjs",
     "tests/combobox.dom.test.mjs",
+    "tests/form.dom.test.mjs",
     "tests/data-table.test.mjs",
     "tests/data-grid.test.mjs",
     "tests/data-tree-grid.test.mjs"
@@ -24,15 +27,18 @@
   "components": [
     { "id": "accordion", "source": "src/accordion.ts", "models": ["modelValue"] },
     { "id": "carousel", "source": "src/carousel.ts", "models": ["modelValue"] },
+    { "id": "checkbox-tree", "source": "src/checkbox-tree.ts", "models": ["modelValue", "expandedValues", "highlightedValue"] },
     { "id": "combobox", "source": "src/combobox.ts", "models": ["modelValue"] },
     { "id": "grid", "source": "src/grid.ts", "models": ["modelValue", "highlightedValue"], "dependentResets": ["editMode"] },
     { "id": "listbox", "source": "src/listbox.ts", "models": ["modelValue"] },
     { "id": "radio-group", "source": "src/radio-group.ts", "models": ["modelValue"] },
+    { "id": "rating", "source": "src/rating.ts", "models": ["modelValue"] },
     { "id": "select", "source": "src/select.ts", "models": ["modelValue"] },
     { "id": "tabs", "source": "src/tabs.ts", "models": ["modelValue"] },
     { "id": "toggle-group", "source": "src/toggle-group.ts", "models": ["modelValue"] },
     { "id": "toolbar", "source": "src/toolbar.ts", "models": ["modelValue"] },
     { "id": "tree-grid", "source": "src/tree-grid.ts", "models": ["modelValue", "expandedValue", "highlightedValue"], "dependentResets": ["editMode"] },
+    { "id": "tree-select", "source": "src/tree-select.ts", "models": ["modelValue", "expandedValues", "highlightedValue"] },
     { "id": "tree-view", "source": "src/tree-view.ts", "models": ["modelValue", "expandedValues", "highlightedValue"] }
   ]
 }

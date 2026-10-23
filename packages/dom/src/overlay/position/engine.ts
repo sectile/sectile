@@ -2,6 +2,7 @@ import {
   solveAnchoredLayout,
   type AnchoredLayout,
 } from '@sectile/core/anchored-layout';
+import { readViewportRect as viewportRect } from '../../internal/viewport.js';
 import {
   intersectRects,
   type Insets,
@@ -21,11 +22,14 @@ export interface PositionEngineCapabilities {
   readonly positionTryFallbacks: boolean;
   readonly positionVisibility: boolean;
   readonly anchorCenter: boolean;
+  readonly anchorGeometry: boolean;
 }
 
 export interface PositionEngineOptions {
   readonly root: HTMLElement;
   readonly reference: HTMLElement;
+  readonly anchorRect?: Rect | undefined;
+  readonly measureAnchorRect?: (() => Rect | undefined) | undefined;
   readonly arrow?: HTMLElement | undefined;
   readonly side?: RectSide | undefined;
   readonly align?: RectAlign | undefined;
@@ -136,14 +140,22 @@ export function detectPositionEngineCapabilities(view: Window): PositionEngineCa
     positionTryFallbacks: supports('position-try-fallbacks', 'flip-block'),
     positionVisibility: supports('position-visibility', 'anchors-visible'),
     anchorCenter: supports('justify-self', 'anchor-center'),
+    anchorGeometry: supports('width', 'anchor-size(width)')
+      && supports('height', 'anchor-size(height)')
+      && supports('left', 'max(0px, calc(anchor(left) - 8px))')
+      && supports('left', 'max(0px, calc(100vw - anchor(right) - 8px))')
+      && supports('top', 'max(0px, calc(anchor(top) - 8px))')
+      && supports('top', 'max(0px, calc(100vh - anchor(bottom) - 8px))'),
   });
 }
 
 export function selectPositionRoute(options: PositionEngineOptions): PositionRoute {
+  if (options.anchorRect !== undefined || options.measureAnchorRect !== undefined) return 'javascript';
   const view = options.root.ownerDocument.defaultView;
   if (view === null || options.reference.ownerDocument !== options.root.ownerDocument) return 'javascript';
   const capabilities = options.capabilities ?? detectPositionEngineCapabilities(view);
   const complete = capabilities.anchorName
+    && capabilities.anchorGeometry
     && capabilities.positionAnchor
     && capabilities.positionArea
     && ((options.align ?? 'center') !== 'center' || capabilities.anchorCenter)
@@ -164,6 +176,7 @@ export function readPositionSourceRegistryDiagnostics(): PositionSourceRegistryD
 
 export function createPositionEngine(options: PositionEngineOptions): PositionEngineConnection {
   assertOptions(options);
+  if (options.anchorRect !== undefined) options = { ...options, anchorRect: snapshotPositionRect(options.anchorRect) };
   const route = selectPositionRoute(options);
   const view = options.root.ownerDocument.defaultView!;
   const diagnostics: MutableDiagnostics = {
@@ -234,6 +247,10 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
 
   const updateJavaScript = (): void => {
     const measurement = measure(options, clippingAncestors, diagnostics);
+    if (measurement === null) {
+      writeStyle(ownedStyles, options.root, 'visibility', 'hidden', diagnostics);
+      return;
+    }
     const layout = solveAnchoredLayout({
       reference: measurement.reference,
       floating: measurement.floating,
@@ -294,6 +311,15 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
     diagnostics.sourceSubscriptions += 1;
     disposers.push(subscribeSource(view, 'resize', schedule));
     diagnostics.sourceSubscriptions += 1;
+    if (options.measureAnchorRect !== undefined) {
+      disposers.push(subscribeSource(options.reference, 'scroll', schedule));
+      diagnostics.sourceSubscriptions += 1;
+      for (const event of ['input', 'select', 'compositionend'] as const) {
+        options.reference.addEventListener(event, schedule);
+        disposers.push(() => options.reference.removeEventListener(event, schedule));
+        diagnostics.sourceSubscriptions += 1;
+      }
+    }
     const visualViewport = view.visualViewport;
     if (visualViewport != null) {
       disposers.push(subscribeSource(visualViewport, 'scroll', schedule));
@@ -360,6 +386,19 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
 
 function assertOptions(options: PositionEngineOptions): void {
   if (options.root.ownerDocument.defaultView === null) throw new TypeError('Positioning requires an attached DOM document with a Window.');
+  assertPositionOptions(options);
+}
+
+/** Own only the four coordinates, never caller object identity or extra fields. */
+export function snapshotPositionRect(value: Rect | null | undefined): Rect | undefined {
+  if (value == null) return undefined;
+  const { x, y, width, height } = value;
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(width) || !Number.isFinite(height)
+    || width < 0 || height < 0) throw new TypeError('Position anchorRect requires finite coordinates and non-negative finite dimensions.');
+  return Object.freeze({ x, y, width, height });
+}
+
+export function assertPositionOptions(options: Omit<PositionEngineOptions, 'root' | 'reference' | 'anchorRect'>): void {
   if (!Number.isFinite(options.sideOffset ?? 8)) throw new TypeError('Position sideOffset must be finite.');
   if (!Number.isFinite(options.arrowPadding ?? 8) || (options.arrowPadding ?? 8) < 0) throw new TypeError('Position arrowPadding must be a non-negative finite number.');
   assertPadding(options.collisionPadding);
@@ -452,14 +491,32 @@ function overflowValue(value: string): boolean {
   return value === 'auto' || value === 'scroll' || value === 'overlay' || value === 'hidden' || value === 'clip';
 }
 
-function measure(options: PositionEngineOptions, ancestors: readonly Element[], diagnostics: MutableDiagnostics): Measurement {
+function initialStyle(value: string | undefined, initial: string): boolean {
+  return value === undefined || value === '' || value === initial;
+}
+
+// A plain static BODY can be the native offsetParent sentinel without being
+// the absolute containing block. Keep effect/containment bodies on their native path.
+function plainStaticBody(style: CSSStyleDeclaration): boolean {
+  return initialStyle(style.position, 'static') && initialStyle(style.transform, 'none')
+    && initialStyle(style.translate, 'none') && initialStyle(style.rotate, 'none') && initialStyle(style.scale, 'none')
+    && initialStyle(style.perspective, 'none') && initialStyle(style.filter, 'none') && initialStyle(style.backdropFilter, 'none')
+    && initialStyle(style.contain, 'none') && initialStyle(style.willChange, 'auto')
+    && initialStyle(style.contentVisibility, 'visible') && initialStyle(style.containerType, 'normal');
+}
+
+function measure(options: PositionEngineOptions, ancestors: readonly Element[], diagnostics: MutableDiagnostics): Measurement | null {
   const view = options.root.ownerDocument.defaultView!;
-  const referenceRect = rect(options.reference.getBoundingClientRect());
+  const dynamic = options.measureAnchorRect;
+  const referenceRect = dynamic === undefined
+    ? options.anchorRect ?? rect(options.reference.getBoundingClientRect())
+    : snapshotPositionRect(dynamic());
+  if (referenceRect === undefined) return null;
   const floatingRect = rect(options.root.getBoundingClientRect());
   let boundary = options.collisionBoundary !== undefined && options.collisionBoundary !== 'viewport'
     ? rect(options.collisionBoundary.getBoundingClientRect())
     : viewportRect(options.root.ownerDocument, view);
-  diagnostics.measurementReads += 3;
+  diagnostics.measurementReads += options.anchorRect === undefined && dynamic === undefined ? 3 : 2;
   for (const ancestor of ancestors) {
     const clipped = intersectRects(boundary, rect(ancestor.getBoundingClientRect()));
     diagnostics.measurementReads += 1;
@@ -476,14 +533,24 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     const parent = options.root.offsetParent;
     diagnostics.measurementReads += 1;
     if (parent != null) {
-      offsetParent = Object.freeze({
-        rect: rect(parent.getBoundingClientRect()),
-        scrollLeft: parent.scrollLeft,
-        scrollTop: parent.scrollTop,
-        clientLeft: parent.clientLeft,
-        clientTop: parent.clientTop,
-      });
-      diagnostics.measurementReads += 1;
+      let initial = false;
+      if (parent === options.root.ownerDocument.body) {
+        initial = plainStaticBody(view.getComputedStyle(parent));
+        diagnostics.measurementReads += 1;
+      }
+      if (initial) {
+        offsetParent = Object.freeze({
+          rect: Object.freeze({ x: -view.scrollX, y: -view.scrollY, width: 0, height: 0 }),
+          scrollLeft: 0, scrollTop: 0, clientLeft: 0, clientTop: 0,
+        });
+      } else {
+        offsetParent = Object.freeze({
+          rect: rect(parent.getBoundingClientRect()),
+          scrollLeft: parent.scrollLeft, scrollTop: parent.scrollTop,
+          clientLeft: parent.clientLeft, clientTop: parent.clientTop,
+        });
+        diagnostics.measurementReads += 1;
+      }
     }
   }
   return Object.freeze({
@@ -494,13 +561,6 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     offsetParent,
     detached: !options.reference.isConnected || !options.root.isConnected,
   });
-}
-
-function viewportRect(document: Document, view: Window): Rect {
-  const viewport = view.visualViewport;
-  return viewport == null
-    ? Object.freeze({ x: 0, y: 0, width: document.documentElement.clientWidth, height: document.documentElement.clientHeight })
-    : Object.freeze({ x: viewport.offsetLeft, y: viewport.offsetTop, width: viewport.width, height: viewport.height });
 }
 
 function rect(value: DOMRectReadOnly): Rect {

@@ -2,7 +2,9 @@ import { fail, ok } from '../foundation.js';
 import type {
   TabularColumnDefinition,
   TabularColumnID,
+  TabularColumnSchema,
   TabularColumnState,
+  TabularHeaderLayout,
   TabularHeaderNode,
   TabularLimits,
   TabularPinRegion,
@@ -13,6 +15,52 @@ export interface TabularColumnPartitions {
   readonly start: readonly TabularColumnID[];
   readonly center: readonly TabularColumnID[];
   readonly end: readonly TabularColumnID[];
+}
+
+/** Project an accepted schema over canonical one-based visible column indexes. */
+export function projectTabularHeaders(
+  schema: Pick<TabularColumnSchema, 'columns' | 'headers'>,
+  columnIndexes: ReadonlyMap<TabularColumnID, number>,
+): readonly TabularHeaderLayout[] {
+  const source: readonly TabularHeaderNode[] = schema.headers.length
+    ? schema.headers
+    : schema.columns.map((column) => ({
+        kind: 'column' as const,
+        id: column.headerNodeID ?? column.id,
+        columnID: column.id,
+        ...(column.label === undefined ? {} : { label: column.label }),
+      }));
+  const maximumDepth = Math.max(0, ...source.map(headerNodeDepth));
+  const output: TabularHeaderLayout[] = [];
+  type Interval = { readonly start: number; readonly end: number; readonly count: number };
+  const visit = (node: TabularHeaderNode, depth: number): Interval | null => {
+    if (node.kind === 'column') {
+      const index = columnIndexes.get(node.columnID);
+      if (index === undefined) return null;
+      output.push(Object.freeze({ headerNodeID: node.id, columnID: node.columnID, columnIndex: index, colSpan: 1, rowSpan: maximumDepth - depth + 1, depth }));
+      return { start: index, end: index, count: 1 };
+    }
+    let start = Number.MAX_SAFE_INTEGER;
+    let end = -1;
+    let count = 0;
+    for (const child of node.children) {
+      const interval = visit(child, depth + 1);
+      if (interval === null) continue;
+      start = Math.min(start, interval.start);
+      end = Math.max(end, interval.end);
+      count += interval.count;
+    }
+    if (count === 0) return null;
+    const span = end - start + 1;
+    output.push(Object.freeze({ headerNodeID: node.id, columnID: null, columnIndex: start, colSpan: span, rowSpan: 1, depth }));
+    return { start, end, count };
+  };
+  for (const node of source) visit(node, 0);
+  return Object.freeze(output);
+}
+
+function headerNodeDepth(node: TabularHeaderNode): number {
+  return node.kind === 'column' ? 0 : 1 + Math.max(0, ...node.children.map(headerNodeDepth));
 }
 
 const columnDomains = new WeakMap<object, {

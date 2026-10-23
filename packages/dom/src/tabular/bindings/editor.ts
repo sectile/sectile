@@ -27,8 +27,7 @@ export function setEditorAttributes(
   element.setAttribute('data-part', part);
   element.setAttribute('data-row-id', options.cell.rowID);
   element.setAttribute('data-column-id', options.cell.columnID);
-  if (options.label === undefined) element.removeAttribute('aria-label');
-  else element.setAttribute('aria-label', options.label);
+  if (options.label !== undefined) element.setAttribute('aria-label', options.label);
   element.disabled = options.disabled === true;
   if ('readOnly' in element) element.readOnly = options.readOnly === true;
 }

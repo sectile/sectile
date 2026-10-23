@@ -29,13 +29,17 @@ test('DOM cascade list keeps named listbox columns visible and commits a leaf', 
   assert.equal(root.attributes.get('aria-label'), 'Location');
   assert.equal(rootColumn.attributes.get('role'), 'listbox');
   assert.equal(rootColumn.attributes.get('aria-label'), 'Region');
-  assert.equal(asia.attributes.get('aria-expanded'), 'false');
+  assert.equal(asia.attributes.get('role'), 'option');
+  assert.equal(asia.attributes.get('aria-haspopup'), 'listbox');
+  assert.equal(asia.attributes.get('aria-expanded'), undefined);
+  assert.equal(asia.dataset.expanded, undefined);
 
   root.dispatch('click', { target: asia });
   assert.deepEqual(list.getColumns(), [['asia', 'europe'], ['kr', 'jp']]);
   list.setItemAttributes(asia, 'asia');
   list.setItemAttributes(kr, 'kr');
-  assert.equal(asia.attributes.get('aria-expanded'), 'true');
+  assert.equal(asia.attributes.get('aria-expanded'), undefined);
+  assert.equal(asia.dataset.expanded, '');
   root.dispatch('click', { target: kr });
   list.setItemAttributes(seoul, 'seoul');
   root.dispatch('click', { target: seoul });
@@ -77,6 +81,23 @@ test('DOM cascade list keeps controlled values external while retaining branch n
   assert.equal(list.syncControlledValues({ value: 'seoul' }).ok, true);
   assert.equal(list.getSnapshot().state.value, 'seoul');
   list.disconnect();
+});
+
+test('DOM cascade list mirrors physical horizontal keys without changing logical events or selection', () => {
+  const key = (key) => ({ key, altKey: false, ctrlKey: false, metaKey: false, preventDefault() {} });
+  assert.equal(toCascadeListEvent(key('ArrowRight')), 'right');
+  assert.equal(toCascadeListEvent(key('ArrowLeft'), 'rtl'), 'right');
+  assert.equal(toCascadeListEvent(key('ArrowRight'), 'rtl'), 'left');
+  const root = new FakeElement();
+  const list = createCascadeList({ root, nodes, direction: 'rtl', defaultHighlightedValue: 'asia' });
+  try {
+    root.dispatch('keydown', key('ArrowLeft'));
+    assert.equal(list.getSnapshot().state.highlighted, 'kr');
+    root.dispatch('keydown', key('ArrowRight'));
+    assert.equal(list.getSnapshot().state.highlighted, 'asia');
+    assert.equal(list.getSnapshot().state.value, null);
+  } finally { list.disconnect(); }
+  assert.equal([...root.listeners.values()].reduce((n, set) => n + set.size, 0), 0);
 });
 
 class FakeElement {

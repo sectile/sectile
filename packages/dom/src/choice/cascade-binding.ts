@@ -30,10 +30,12 @@ export interface DOMCascadeChoiceBindingOptions<
   readonly scope: 'cascade-list' | 'cascade-select';
   readonly readState: () => DOMCascadeChoiceState<ID>;
   readonly handleEvent: (event: Event) => boolean;
-  readonly toEvent: (event: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey'>) => Event | null;
+  readonly toEvent: (event: KeyboardEvent) => Event | null;
 }
 
 export interface DOMCascadeChoiceBinding<ID extends StableID = StableID> {
+  suspend(): void;
+  resume(): void;
   setColumnAttributes(element: HTMLElement, parentID?: ID | null, label?: string): void;
   setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void;
   focusItem(id: ID): void;
@@ -58,6 +60,8 @@ class DOMCascadeChoiceBindingImplementation<
   readonly #keydown: (event: KeyboardEvent) => void;
   readonly #click: (event: MouseEvent) => void;
   #active = true;
+  #disconnected = false;
+  #focusGeneration = 0;
 
   public constructor(options: DOMCascadeChoiceBindingOptions<ID, Event>) {
     this.#options = options;
@@ -84,8 +88,7 @@ class DOMCascadeChoiceBindingImplementation<
       const id = findDelegatedStableID(event.target, options.surface, this.#idDataKey) as ID | null;
       if (id !== null && !options.disabledItems.has(id)) options.handleEvent({ type: 'select', id } as Event);
     };
-    options.root.addEventListener('keydown', this.#keydown);
-    options.surface.addEventListener('click', this.#click);
+    this.#bind();
   }
 
   public setColumnAttributes(element: HTMLElement, parentID: ID | null = null, label?: string): void {
@@ -113,8 +116,7 @@ class DOMCascadeChoiceBindingImplementation<
     element.setAttribute('role', 'option');
     element.setAttribute('aria-selected', String(selected));
     element.setAttribute('aria-haspopup', branch ? 'listbox' : 'false');
-    if (branch) element.setAttribute('aria-expanded', String(expanded));
-    else element.removeAttribute('aria-expanded');
+    element.removeAttribute('aria-expanded');
     element.tabIndex = unavailable ? -1 : highlighted ? 0 : -1;
     if (unavailable) {
       element.setAttribute('aria-disabled', 'true');
@@ -132,17 +134,33 @@ class DOMCascadeChoiceBindingImplementation<
   }
 
   public focusItem(id: ID): void {
+    if (!this.#active) return;
+    const generation = this.#focusGeneration;
     queueMicrotask(() => {
-      if (!this.#active) return;
+      if (!this.#active || generation !== this.#focusGeneration) return;
       for (const element of this.#options.surface.querySelectorAll<HTMLElement>(this.#itemSelector)) {
         if (element.dataset[this.#idDataKey] === stableIDToken(id)) element.focus();
       }
     });
   }
 
-  public disconnect(): void {
+  public suspend(): void {
+    if (!this.#active) return;
     this.#active = false;
+    this.#focusGeneration++;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     this.#options.surface.removeEventListener('click', this.#click);
+  }
+
+  public resume(): void {
+    if (this.#active || this.#disconnected) return;
+    this.#active = true; this.#bind();
+  }
+
+  public disconnect(): void { this.#disconnected = true; this.suspend(); }
+
+  #bind(): void {
+    this.#options.root.addEventListener('keydown', this.#keydown);
+    this.#options.surface.addEventListener('click', this.#click);
   }
 }

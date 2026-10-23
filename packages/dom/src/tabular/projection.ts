@@ -2,9 +2,9 @@ import type {
   TabularSnapshot,
   TabularView,
   TabularColumnID,
-  TabularHeaderNode,
   TabularHeaderNodeID,
 } from '@sectile/tabular';
+import { projectTabularHeaders } from '@sectile/tabular/model';
 import type {
   TabularHeaderMetrics,
   TabularDOMHeaderReference,
@@ -43,41 +43,7 @@ export function headerMetricsFromColumnIndexes(
   columnIndexes: ReadonlyMap<TabularColumnID, number>,
 ): readonly TabularHeaderMetrics[] {
   const view = currentView(snapshot);
-  const source: readonly TabularHeaderNode[] = view?.columnSchema.headers.length
-    ? view.columnSchema.headers
-    : (view?.columnSchema.columns ?? []).map((column) => ({
-        kind: 'column' as const,
-        id: column.headerNodeID ?? column.id,
-        columnID: column.id,
-        ...(column.label === undefined ? {} : { label: column.label }),
-      }));
-  const maximumDepth = Math.max(0, ...source.map(nodeDepth));
-  const output: TabularHeaderMetrics[] = [];
-  type Interval = { readonly start: number; readonly end: number; readonly count: number };
-  const visit = (node: TabularHeaderNode, depth: number): Interval | null => {
-    if (node.kind === 'column') {
-      const index = columnIndexes.get(node.columnID);
-      if (index === undefined) return null;
-      output.push(Object.freeze({ headerNodeID: node.id, columnID: node.columnID, columnIndex: index, colSpan: 1, rowSpan: maximumDepth - depth + 1, depth }));
-      return { start: index, end: index, count: 1 };
-    }
-    let start = Number.MAX_SAFE_INTEGER;
-    let end = -1;
-    let count = 0;
-    for (const child of node.children) {
-      const interval = visit(child, depth + 1);
-      if (interval === null) continue;
-      start = Math.min(start, interval.start);
-      end = Math.max(end, interval.end);
-      count += interval.count;
-    }
-    if (count === 0) return null;
-    const span = end - start + 1;
-    output.push(Object.freeze({ headerNodeID: node.id, columnID: null, columnIndex: start, colSpan: span, rowSpan: 1, depth }));
-    return { start, end, count };
-  };
-  for (const node of source) visit(node, 0);
-  return Object.freeze(output);
+  return projectTabularHeaders(view?.columnSchema ?? { columns: [], headers: [] }, columnIndexes);
 }
 
 export function resolveHeaderReference(
@@ -97,8 +63,4 @@ export function resolveHeaderReference(
 
 export function headerElementID(headerNodeID: TabularHeaderNodeID): string {
   return `sectile-tabular-header-${stableIDElementToken(headerNodeID)}`;
-}
-
-function nodeDepth(node: TabularHeaderNode): number {
-  return node.kind === 'column' ? 0 : 1 + Math.max(0, ...node.children.map(nodeDepth));
 }

@@ -64,6 +64,7 @@ export type VirtualCollectionItemAttributes<Value> = {
     index: number,
   ): Readonly<Record<string, unknown>>;
 }['bivarianceHack'];
+export type VirtualCollectionPartAttributes = Readonly<Partial<Record<'header' | 'surface' | 'footer', Readonly<Record<string, unknown>>>>>;
 
 export type PreparedVirtualCollection<
   Value = unknown,
@@ -85,6 +86,7 @@ export interface VirtualCollectionBaseProps<
   readonly contentAs?: string;
   readonly itemAs?: string;
   readonly itemAttributes?: VirtualCollectionItemAttributes<Value>;
+  readonly partAttributes?: VirtualCollectionPartAttributes;
 }
 
 export interface VirtualCollectionSizePolicyProps<Value> {

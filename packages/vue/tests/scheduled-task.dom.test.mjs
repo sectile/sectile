@@ -55,3 +55,14 @@ test('Vue scheduled tasks coalesce and a canceled generation can be rescheduled'
     app.unmount();
   }
 });
+test('held retired scheduled task handles release their application callback', { skip: typeof global.gc !== 'function' }, async () => {
+  const retained = retiredTask();
+  for (let turn = 0; turn < 24; turn++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
+  assert.equal(retained.payload.deref(), undefined); retained.task.schedule(); await nextTick();
+});
+function retiredTask() {
+  let task;
+  const payload = { calls: 0 }, Probe = defineComponent({ setup() { task = useNextTickTask(() => { payload.calls++; }); return () => h('div'); } });
+  const app = createApp(Probe); app.mount(document.createElement('div')); app.unmount();
+  return { task, payload: new WeakRef(payload) };
+}

@@ -10,23 +10,24 @@ import { stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
 import { setInteractionAttributes } from './interaction/attributes.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
-import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding, type DOMLayerReparentErrorCode, type DOMLayerPresentationListener, type DOMLayerPresentationSubscription } from './overlay/layer/binding.js';
 import {
   createPosition,
   manualPositionConnection,
   type PositionConnection,
 } from './overlay/position/connection.js';
 import type { PositionOptions } from './position.js';
+import type { LayerHostConnection } from './layer-host.js';
 import { createHiddenBinding, type HiddenBinding } from './interaction/visibility.js';
 
-export interface SelectOptions<ID extends StableID = StableID> extends PositionOptions { readonly root: HTMLElement; readonly trigger: HTMLButtonElement; readonly popup: HTMLElement; readonly items: readonly ID[]; readonly disabledItems?: readonly ID[]; readonly policies?: SelectPolicies<ID>; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly open?: boolean; readonly defaultOpen?: boolean; readonly label?: string; readonly textValue?: (id: ID) => string; readonly typeaheadTimeoutMs?: number; readonly position?: boolean; readonly manageVisibility?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
+export interface SelectOptions<ID extends StableID = StableID> extends PositionOptions { readonly layerHost?: LayerHostConnection | null; readonly root: HTMLElement; readonly trigger: HTMLButtonElement; readonly popup: HTMLElement; readonly items: readonly ID[]; readonly disabledItems?: readonly ID[]; readonly policies?: SelectPolicies<ID>; readonly disabled?: boolean; readonly readOnly?: boolean; readonly value?: ID | null; readonly defaultValue?: ID | null; readonly highlightedValue?: ID | null; readonly defaultHighlightedValue?: ID | null; readonly open?: boolean; readonly defaultOpen?: boolean; readonly label?: string; readonly textValue?: (id: ID) => string; readonly typeaheadTimeoutMs?: number; readonly position?: boolean; readonly manageVisibility?: boolean; readonly onValueChange?: (value: ID | null) => void; readonly onHighlightedValueChange?: (value: ID | null) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void }
 
 export type SelectValueChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onValueChange']>;
 export type SelectHighlightedValueChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onHighlightedValueChange']>;
 export type SelectOpenChangeHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onOpenChange']>;
 export type SelectUpdateHandler<ID extends StableID = StableID> = NonNullable<SelectOptions<ID>['onUpdate']>;
 export type SelectEffect<ID extends StableID = StableID> = { readonly type: 'focus-option'; readonly id: ID } | { readonly type: 'close-popup' };
-export interface SelectConnection<ID extends StableID = StableID> { getSnapshot(): RevisionSnapshot<SelectState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<SelectState<ID>>>; setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void; handleEvent(event: SelectEvent<ID>): boolean; refresh(): void; disconnect(): void }
+export interface SelectConnection<ID extends StableID = StableID> { getActive(): boolean; getLayerOrder(): number | null; subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription; syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode>; suspend(): void; resume(): void; getSnapshot(): RevisionSnapshot<SelectState<ID>>; syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }): Result<RevisionSnapshot<SelectState<ID>>>; setItemAttributes(element: HTMLElement, id: ID, disabled?: boolean): void; handleEvent(event: SelectEvent<ID>): boolean; refresh(): void; disconnect(): void }
 
 export function createSelect<ID extends StableID>(options: SelectOptions<ID>): FacadeConnection<SelectConnection<ID>> {
   return unwrap(tryCreateSelect(options));
@@ -62,28 +63,126 @@ function tryCreateSelectConnection<ID extends StableID>(options: SelectOptions<I
 }
 
 class DOMSelectConnection<ID extends StableID> implements SelectConnection<ID> {
+  #focusGeneration = 0;
+  #pendingFocus: ID | null = null;
+  #focusQueued = false;
   readonly #visibility: HiddenBinding | undefined;
   readonly #options: SelectOptions<ID>; readonly #domain: Sequence<ID>; readonly #runtime: SemanticController<SelectState<ID>, SelectEvent<ID>, SelectEffect<ID>>; readonly #disabled: ReadonlySet<ID>; readonly #controlled: { value: boolean; highlighted: boolean; open: boolean }; readonly #triggerClick: () => void; readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #layer: DOMLayerBinding; readonly #position: PositionConnection; #typeahead = ''; #typeaheadTimer: ReturnType<typeof setTimeout> | undefined; #active = true; #publishedRevision: number;
-  constructor(options: SelectOptions<ID>, domain: Sequence<ID>, runtime: SemanticController<SelectState<ID>, SelectEvent<ID>, SelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) { this.#publishedRevision = runtime.getSnapshot().revision; this.#options = options; this.#visibility = options.manageVisibility === false ? undefined : createHiddenBinding(options.popup); this.#domain = domain; this.#runtime = runtime; this.#disabled = disabled; this.#controlled = controlled; this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.#runtime.getSnapshot().state.open, close: () => { this.handleEvent('close'); } }); this.#position = options.position === false ? manualPositionConnection : createPosition({ root: options.popup, reference: options.trigger, side: options.side, align: options.align, sideOffset: options.sideOffset, collisionPadding: options.collisionPadding, collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, arrowPadding: options.arrowPadding, hideWhenDetached: options.hideWhenDetached, strategy: options.strategy, tracking: options.tracking }); setInteractionAttributes(options.root, options, false, true); options.trigger.disabled = options.disabled === true; options.trigger.setAttribute('aria-haspopup', 'listbox'); options.popup.setAttribute('role', 'listbox'); if (options.label !== undefined) { options.trigger.setAttribute('aria-label', options.label); options.popup.setAttribute('aria-label', options.label); } this.#triggerClick = () => { this.handleEvent('toggle'); }; this.#keydown = (event) => { const isClosedTriggerActivation = event.target === options.trigger && !this.#runtime.getSnapshot().state.open && (event.key === 'Enter' || event.key === ' '); const semantic = isClosedTriggerActivation ? 'open' : toSelectEvent<ID>(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); return; } if (isTypeaheadKey(event)) { const target = this.#typeaheadTarget(event.key); if (target !== null) { event.preventDefault(); this.handleEvent({ type: 'focus', id: target }); } } }; this.#click = (event) => { const id = findDelegatedStableID(event.target, options.popup, 'selectId') as ID | null; if (id !== null && !this.#disabled.has(id)) this.handleEvent({ type: 'select', id }); }; options.trigger.addEventListener('click', this.#triggerClick); options.trigger.addEventListener('keydown', this.#keydown); options.popup.addEventListener('keydown', this.#keydown); options.popup.addEventListener('click', this.#click); this.#render(); }
+  constructor(options: SelectOptions<ID>, domain: Sequence<ID>, runtime: SemanticController<SelectState<ID>, SelectEvent<ID>, SelectEffect<ID>>, disabled: ReadonlySet<ID>, controlled: { value: boolean; highlighted: boolean; open: boolean }) {
+    this.#publishedRevision = runtime.getSnapshot().revision; this.#options = options;
+    this.#visibility = options.manageVisibility === false ? undefined : createHiddenBinding(options.popup);
+    this.#domain = domain; this.#runtime = runtime; this.#disabled = disabled; this.#controlled = controlled;
+    this.#layer = createDOMLayerBinding({ surface: options.popup, owner: options.trigger, dismissOnInteractOutside: true,
+      ...(options.layerHost === undefined ? {} : { layerHost: options.layerHost }),
+      readOpen: () => this.#runtime.getSnapshot().state.open, close: () => { this.handleEvent('close'); },
+      presentation: { suspend: () => { this.#suspendResources(); }, resume: () => { this.#bindNative(); this.#render(); } },
+    });
+    this.#position = options.position === false ? manualPositionConnection : createPosition({ root: options.popup, reference: options.trigger,
+      side: options.side, align: options.align, sideOffset: options.sideOffset, collisionPadding: options.collisionPadding,
+      collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, arrowPadding: options.arrowPadding,
+      hideWhenDetached: options.hideWhenDetached, strategy: options.strategy, tracking: options.tracking });
+    setInteractionAttributes(options.root, options, false, true); options.trigger.disabled = options.disabled === true;
+    options.trigger.setAttribute('aria-haspopup', 'listbox'); options.popup.setAttribute('role', 'listbox');
+    if (options.label !== undefined) { options.trigger.setAttribute('aria-label', options.label); options.popup.setAttribute('aria-label', options.label); }
+    this.#triggerClick = () => { this.handleEvent('toggle'); };
+    this.#keydown = (event) => {
+      const isClosedTriggerActivation = event.target === options.trigger && !this.#runtime.getSnapshot().state.open && (event.key === 'Enter' || event.key === ' ');
+      const semantic = isClosedTriggerActivation ? 'open' : toSelectEvent<ID>(event);
+      if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); return; }
+      if (isTypeaheadKey(event)) { const target = this.#typeaheadTarget(event.key); if (target !== null) { event.preventDefault(); this.handleEvent({ type: 'focus', id: target }); } }
+    };
+    this.#click = (event) => { const id = findDelegatedStableID(event.target, options.popup, 'selectId') as ID | null; if (id !== null && !this.#disabled.has(id)) this.handleEvent({ type: 'select', id }); };
+    this.#bindNative(); this.#render();
+  }
+  getActive(): boolean { return this.#active && this.#layer.getActive(); }
+  getLayerOrder(): number | null { return this.#layer.getLayerOrder(); }
+  subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription { return this.#layer.subscribeLayerPresentation(listener); }
+  syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#layer.syncLayerParent(parent); }
+  suspend(): void { this.#layer.suspend(); }
+  resume(): void { this.#layer.resume(); }
   getSnapshot() { return this.#runtime.getSnapshot(); }
   syncControlledValues(values: { readonly value?: ID | null; readonly highlightedValue?: ID | null; readonly open?: boolean }) { if (this.#controlled.value !== (values.value !== undefined) || this.#controlled.highlighted !== (values.highlightedValue !== undefined) || this.#controlled.open !== (values.open !== undefined)) return { ok: false as const, error: { class: 'construction' as const, code: 'controlled-shape-mismatch' as const, message: 'Controlled select values must preserve their construction-time shape.' } }; const state = this.#runtime.getSnapshot().state; const result = this.#runtime.replace(tryCreateSelectState(this.#domain, { value: this.#controlled.value ? values.value ?? null : state.choice.selection.selected[0] ?? null, current: this.#controlled.highlighted ? values.highlightedValue ?? null : state.choice.cursor.current, open: this.#controlled.open ? values.open ?? false : state.open })); if (result.ok) { this.#render(); this.#publishUpdate(); } return result; }
-  setItemAttributes(element: HTMLElement, id: ID, disabled = false): void { const state = this.#runtime.getSnapshot().state; element.dataset['selectId'] = stableIDToken(id); element.setAttribute('role', 'option'); element.setAttribute('aria-selected', String(state.choice.selection.has(id))); element.tabIndex = state.choice.cursor.current === id ? 0 : -1; if (disabled || this.#disabled.has(id)) element.setAttribute('aria-disabled', 'true'); else element.removeAttribute('aria-disabled'); }
+  setItemAttributes(element: HTMLElement, id: ID, disabled = false): void {
+    const state = this.#runtime.getSnapshot().state;
+    element.dataset['selectId'] = stableIDToken(id); element.setAttribute('role', 'option');
+    element.setAttribute('aria-selected', String(state.choice.selection.has(id)));
+    element.tabIndex = state.choice.cursor.current === id ? 0 : -1;
+    if (disabled || this.#disabled.has(id)) element.setAttribute('aria-disabled', 'true');
+    else element.removeAttribute('aria-disabled');
+    if (this.#pendingFocus === id) this.#scheduleFocus();
+  }
   handleEvent(event: SelectEvent<ID>): boolean { return this.#runtime.handle(event).ok; }
   complete(effects: readonly SelectEffect<ID>[]): void {
     let firstError: unknown; let hasError = false;
     try { this.#render(); } catch (error) { hasError = true; firstError = error; }
     for (const effect of effects) {
       try {
-        if (effect.type === 'focus-option') queueMicrotask(() => { if (!this.#active) return; for (const element of this.#options.popup.querySelectorAll<HTMLElement>('[data-select-id]')) if (element.dataset['selectId'] === stableIDToken(effect.id)) element.focus(); });
-        else this.#options.trigger.focus();
+        if (!this.getActive()) continue;
+        if (effect.type === 'focus-option') {
+          this.#pendingFocus = effect.id;
+          this.#scheduleFocus();
+        } else if (!this.#runtime.getSnapshot().state.open) this.#options.trigger.focus();
       } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
     }
     try { this.#publishUpdate(); } catch (error) { if (!hasError) { hasError = true; firstError = error; } }
     if (hasError) throw firstError;
   }
   refresh(): void { this.#render(); }
-  disconnect(): void { this.#active = false; this.#layer.disconnect(); this.#position.disconnect(); this.#visibility?.disconnect(); if (this.#typeaheadTimer !== undefined) clearTimeout(this.#typeaheadTimer); this.#typeaheadTimer = undefined; this.#typeahead = ''; this.#options.trigger.removeEventListener('click', this.#triggerClick); this.#options.trigger.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('click', this.#click); }
-  #render(): void { const open = this.#runtime.getSnapshot().state.open; this.#options.trigger.setAttribute('aria-expanded', String(open)); this.#visibility?.setHidden(!open); this.#layer.sync(); this.#position.update(); }
+  disconnect(): void {
+    this.#focusGeneration++;
+    this.#pendingFocus = null;
+    this.#focusQueued = false;
+    this.#active = false; let failed = false, failure: unknown;
+    try { this.#layer.disconnect(); } catch (error) { failed = true; failure = error; }
+    try { this.#visibility?.disconnect(); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    if (failed) throw failure;
+  }
+  #bindNative(): void {
+    this.#options.trigger.addEventListener('click', this.#triggerClick); this.#options.trigger.addEventListener('keydown', this.#keydown);
+    this.#options.popup.addEventListener('keydown', this.#keydown); this.#options.popup.addEventListener('click', this.#click);
+  }
+  #suspendResources(): void {
+    this.#focusGeneration++;
+    this.#pendingFocus = null;
+    this.#focusQueued = false;
+    if (this.#typeaheadTimer !== undefined) clearTimeout(this.#typeaheadTimer);
+    this.#typeaheadTimer = undefined; this.#typeahead = '';
+    this.#options.trigger.removeEventListener('click', this.#triggerClick); this.#options.trigger.removeEventListener('keydown', this.#keydown);
+    this.#options.popup.removeEventListener('keydown', this.#keydown); this.#options.popup.removeEventListener('click', this.#click);
+    let failed = false, failure: unknown;
+    try { this.#position.disconnect(); } catch (error) { failed = true; failure = error; }
+    try { if (this.#active) this.#visibility?.setHidden(true); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    try { this.#options.onUpdate?.(); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    if (failed) throw failure;
+  }
+  #render(): void {
+    if (!this.#active) return;
+    const state = this.#runtime.getSnapshot().state;
+    const open = state.open;
+    if (!open || state.choice.cursor.current !== this.#pendingFocus) this.#pendingFocus = null;
+    this.#options.trigger.setAttribute('aria-expanded', String(open)); this.#visibility?.setHidden(!this.getActive() || !open);
+    this.#layer.sync(); if (this.getActive()) this.#position.update();
+  }
+  #scheduleFocus(): void {
+    if (this.#focusQueued || this.#pendingFocus === null || !this.getActive()) return;
+    this.#focusQueued = true;
+    const generation = this.#focusGeneration;
+    queueMicrotask(() => {
+      if (generation !== this.#focusGeneration) return;
+      this.#focusQueued = false;
+      const id = this.#pendingFocus;
+      if (id === null) return;
+      const state = this.#runtime.getSnapshot().state;
+      if (!this.getActive() || !state.open || state.choice.cursor.current !== id) { this.#pendingFocus = null; return; }
+      const token = stableIDToken(id);
+      for (const element of this.#options.popup.querySelectorAll<HTMLElement>('[data-select-id]')) {
+        if (element.dataset['selectId'] !== token) continue;
+        this.#pendingFocus = null;
+        element.focus();
+        break;
+      }
+    });
+  }
   #publishUpdate(): void { const revision = this.#runtime.getSnapshot().revision; if (revision === this.#publishedRevision) return; this.#publishedRevision = revision; this.#options.onUpdate?.(); }
   #typeaheadTarget(key: string): ID | null { if (this.#options.textValue === undefined) return null; if (this.#typeaheadTimer !== undefined) clearTimeout(this.#typeaheadTimer); this.#typeahead += normalizeTypeahead(key); const repeated = [...this.#typeahead].every((character) => character === this.#typeahead[0]); const query = repeated ? this.#typeahead[0] ?? '' : this.#typeahead; this.#typeaheadTimer = setTimeout(() => { this.#typeahead = ''; this.#typeaheadTimer = undefined; }, this.#options.typeaheadTimeoutMs ?? 700); const current = this.#runtime.getSnapshot().state.choice.cursor.current; const start = current === null ? 0 : (this.#domain.indexOf(current) ?? -1) + 1; for (let offset = 0; offset < this.#domain.size; offset += 1) { const id = this.#domain.at((start + offset) % this.#domain.size); if (id === null || this.#disabled.has(id) || this.#options.policies?.eligible?.(id) === false) continue; if (normalizeTypeahead(this.#options.textValue(id)).startsWith(query)) return id; } return null; }
 }

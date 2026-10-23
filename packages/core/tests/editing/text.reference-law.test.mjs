@@ -7,6 +7,7 @@ import {
   commitTextComposition,
   createTextEditingState,
   createTextSnapshot,
+  findTextQuery,
   isTextCodeUnitBoundary,
   isWellFormedPlainText,
   normalizeTextEditingState,
@@ -21,6 +22,7 @@ import {
   createReferenceTextEditingState,
   referenceCancelTextComposition,
   referenceCommitTextComposition,
+  referenceFindTextQuery,
   referenceReplacePlainText,
   referenceStartTextComposition,
   referenceTextCodeUnitBoundaries,
@@ -234,6 +236,90 @@ test('TXT-12: malformed snapshots, surrogate splits, and invalid composition pha
 
   const unchanged = unwrap(replaceTextState(baseline, 1, 3, '😀', baseline.snapshot.selection));
   assert.equal(unchanged, baseline);
+});
+
+test('text queries project bounded trigger ranges against an independent complete-prefix grammar', () => {
+  for (const text of ['', '@', '@Ada', 'Hi @Ada!', 'x@Ada', '@a@b', '##한글', 'a\u00a0🌟😀x', '@abcdef', '🌟😀', 'x\n@a', '@a suffix']) {
+    for (const caret of referenceTextCodeUnitBoundaries(text)) for (const trigger of ['@', '##', '🌟']) {
+      const state = createTextEditingState(text, { anchorCodeUnitOffset: caret, focusCodeUnitOffset: caret });
+      for (const maxQueryCodeUnits of [0, 1, 2, 4, 8]) for (const allowInline of [false, true]) {
+        const options = { trigger, maxQueryCodeUnits, allowInline };
+        assert.deepEqual(unwrap(findTextQuery(state, options)), referenceFindTextQuery(state, options), JSON.stringify({ text, caret, options }));
+      }
+    }
+  }
+  const selected = createTextEditingState('@Ada', { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 4 });
+  const options = { trigger: '@', maxQueryCodeUnits: 16 };
+  assert.equal(unwrap(findTextQuery(selected, options)), null);
+  const active = unwrap(startTextComposition(createTextEditingState('@'), 1, 1, '한', { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 2 }));
+  assert.equal(unwrap(findTextQuery(active, options)), null);
+  for (const invalid of [null, {}, { trigger: '', maxQueryCodeUnits: 2 }, { trigger: '\ud800', maxQueryCodeUnits: 2 },
+    { trigger: '@ ', maxQueryCodeUnits: 2 }, { trigger: '@', maxQueryCodeUnits: -1 }, { trigger: '@', maxQueryCodeUnits: 1.5 }, { trigger: '@', maxQueryCodeUnits: 2, allowInline: 1 }]) {
+    const result = findTextQuery(selected, invalid); assert.equal(result.ok, false); assert.equal(result.error.code, 'invalid-text-query-options');
+  }
+  const forged = { snapshot: { text: '\ud800 @a', selection: { anchorCodeUnitOffset: 4, focusCodeUnitOffset: 4 } }, composition: null };
+  const invalid = findTextQuery(forged, options); assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'ill-formed-text');
+});
+
+test('canonical text query work is bounded by trigger and query ceilings, not source length', t => {
+  const options = { trigger: '@', maxQueryCodeUnits: 16, allowInline: true };
+  for (const size of [32, 100_000]) {
+    const text = 'x'.repeat(size) + '@Ada', state = createTextEditingState(text, endSelection(text));
+    let read = 0, boundaries = 0;
+    const charAt = String.prototype.charAt, charCodeAt = String.prototype.charCodeAt;
+    const characters = t.mock.method(String.prototype, 'charAt', function (index) { if (this.valueOf() === text) read++; return Reflect.apply(charAt, this, [index]); });
+    const codes = t.mock.method(String.prototype, 'charCodeAt', function (index) { if (this.valueOf() === text) boundaries++; return Reflect.apply(charCodeAt, this, [index]); });
+    let query;
+    try { query = unwrap(findTextQuery(state, options)); } finally { characters.mock.restore(); codes.mock.restore(); }
+    assert.equal(query.query, 'Ada'); assert.equal(query.startCodeUnitOffset, size);
+    assert.ok(read <= options.maxQueryCodeUnits + options.trigger.length + 1); assert.ok(boundaries <= 2);
+  }
+});
+
+test('selection-only events preserve text, direction, no-op identity and active composition ownership', () => {
+  const initial = createTextEditingState('a😀b', endSelection('a😀b'));
+  const event = { type: 'select', selection: { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 1 } };
+  const selected = unwrap(applyTextEvent(initial, event));
+  assert.equal(selected.state.snapshot.text, initial.snapshot.text);
+  assert.deepEqual(selected.state.snapshot.selection, {
+    anchorCodeUnitOffset: 3, focusCodeUnitOffset: 1, startCodeUnitOffset: 1, endCodeUnitOffset: 3, direction: 'backward',
+  });
+  assert.deepEqual(selected.commands, []);
+  assert.equal(unwrap(applyTextEvent(selected.state, event)).state, selected.state);
+  const active = unwrap(startTextComposition(selected.state, 1, 3, '한', endSelection('a한b')));
+  const moved = unwrap(applyTextEvent(active, { type: 'select', selection: { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 1 } })).state;
+  assert.equal(moved.snapshot.text, active.snapshot.text);
+  assert.equal(moved.composition, active.composition);
+  assert.equal(unwrap(cancelTextComposition(moved)).snapshot, selected.state.snapshot);
+  assert.equal(unwrap(commitTextComposition(moved)).snapshot, moved.snapshot);
+  for (const selection of [null, { anchorCodeUnitOffset: 2, focusCodeUnitOffset: 3 },
+    { anchorCodeUnitOffset: -1, focusCodeUnitOffset: 0 }, { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 5 },
+    { anchorCodeUnitOffset: 1.5, focusCodeUnitOffset: 0 }]) {
+    const rejected = applyTextEvent(initial, { type: 'select', selection });
+    assert.equal(rejected.ok, false); assert.equal(rejected.error.class, 'transition-rejection');
+    assert.equal(initial.snapshot.text, 'a😀b'); assert.deepEqual(initial.snapshot.selection, createTextSnapshot('a😀b', endSelection('a😀b')).selection);
+  }
+  const forged = { snapshot: { text: '\ud800', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 } }, composition: null };
+  const rejected = applyTextEvent(forged, { type: 'select', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 } });
+  assert.equal(rejected.ok, false); assert.equal(rejected.error.code, 'ill-formed-text');
+});
+
+test('VAL-019: canonical selection checks only two local UTF-16 boundaries regardless of text size', t => {
+  for (const size of [32, 100_000]) {
+    const text = 'a'.repeat(size), state = createTextEditingState(text, endSelection(text));
+    let inspected = 0;
+    const charCodeAt = String.prototype.charCodeAt;
+    const counter = t.mock.method(String.prototype, 'charCodeAt', function (offset) {
+      if (this.valueOf() === text) inspected++;
+      return Reflect.apply(charCodeAt, this, [offset]);
+    });
+    let selected;
+    try { selected = unwrap(applyTextEvent(state, { type: 'select', selection: { anchorCodeUnitOffset: size - 1, focusCodeUnitOffset: size - 2 } })); }
+    finally { counter.mock.restore(); }
+    assert.ok(inspected <= 4, `Selection inspected ${inspected} code units in ${size} retained code units`);
+    assert.equal(selected.state.snapshot.text, text); assert.equal(selected.state.snapshot.selection.anchorCodeUnitOffset, size - 1);
+    assert.equal(selected.state.snapshot.selection.focusCodeUnitOffset, size - 2);
+  }
 });
 
 test('public text events reduce replacement and composition as one atomic state transition', () => {

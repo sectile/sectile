@@ -480,6 +480,56 @@ test('DOM Tabular generic checkbox controls own Space while native controls keep
   table.disconnect();
 });
 
+test('DOM tabular grids preserve query and nested native-control focus ownership', async () => {
+  for (const create of [createDataGrid, createDataTreeGrid]) {
+    const window = new Window(), document = window.document;
+    const root = document.createElement('div'), outside = document.createElement('input'), inside = document.createElement('input');
+    document.body.append(outside, root); root.append(inside);
+    const connection = create({ columns, root });
+    try {
+      assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
+      const cells = ['r1', 'r2'].map(rowID => {
+        const cell = document.createElement('div'); root.append(cell);
+        assert.equal(connection.registerCell(cell, { cell: { rowID, columnID: 'name' } }).ok, true);
+        return cell;
+      });
+      for (const [index, input] of [outside, inside].entries()) {
+        connection.bindFilterControl(input, { scope: 'global', id: 'search', predicate: 'contains' });
+        input.focus(); input.value = `search${index}`;
+        input.dispatchEvent(new window.InputEvent('input', { bubbles: true }));
+        await Promise.resolve();
+        assert.equal(document.activeElement === input, true, 'query dispatch retains the actual input, not the grid cursor');
+        assert.equal(connection.synchronizeView(treeResponse(connection.controller, [
+          { kind: 'leaf', id: 'r1', cells: { name: 'Alpha', score: 1 } },
+          { kind: 'leaf', id: 'r2', cells: { name: 'Beta', score: 2 } },
+        ], index + 2)).ok, true);
+        await Promise.resolve();
+        assert.equal(document.activeElement === input, true, 'accepted source publication retains query focus');
+      }
+      const selection = document.createElement('input'); cells[0].append(selection);
+      connection.bindRowSelectionControl(selection, { rowID: 'r1', name: 'rows', value: 'r1' });
+      selection.focus(); await Promise.resolve();
+      assert.equal(document.activeElement === selection, true, JSON.stringify({
+        criterion: 'cursor publication retains native descendant focus', profile: create === createDataGrid ? 'grid' : 'treegrid',
+        activeTag: document.activeElement?.tagName, activeRole: document.activeElement?.getAttribute('role'),
+        activeIsCell: cells.includes(document.activeElement), connected: selection.isConnected, disabled: selection.disabled,
+      }));
+      const space = new window.KeyboardEvent('keydown', { key: ' ', bubbles: true, cancelable: true });
+      selection.dispatchEvent(space);
+      assert.equal(space.defaultPrevented, false, 'the native checkbox owns its Space activation');
+      selection.click(); await Promise.resolve();
+      assert.equal(document.activeElement === selection, true, 'accepted row selection retains native focus');
+      assert.deepEqual(connection.getProjection().rowSelection, { kind: 'explicit-rows', rowIDs: ['r1'] });
+      assert.equal(connection.handleEvent({ type: 'focus-cell', cell: { rowID: 'r1', columnID: 'name' } }), true);
+      connection.focusCurrent(); await Promise.resolve();
+      assert.equal(document.activeElement === cells[0], true, 'explicit grid focus still takes effect');
+      cells[0].dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+      await Promise.resolve();
+      assert.equal(document.activeElement === cells[1], true, 'owned keyboard navigation still restores its target');
+    } finally { connection.disconnect(); await window.happyDOM.close(); }
+  }
+});
+
 test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears down listeners', async () => {
   const window = new Window();
   const document = window.document;
@@ -1014,6 +1064,16 @@ test('DOM DataTreeGrid projects hierarchy, disclosure, row reveal, and invalid-p
 test('DOM Tabular column sizes preserve controlled ownership and validate host input', () => {
   const window = new Window();
   const root = window.document.createElement('div');
+  window.document.body.append(root);
+  const tracked = new Map(['pointermove', 'pointerup', 'pointercancel'].map(type => [type, new Set()]));
+  const add = window.addEventListener, remove = window.removeEventListener;
+  window.addEventListener = function(type, listener, options) {
+    tracked.get(type)?.add(listener); return add.call(this, type, listener, options);
+  };
+  window.removeEventListener = function(type, listener, options) {
+    tracked.get(type)?.delete(listener); return remove.call(this, type, listener, options);
+  };
+  const listeners = () => [...tracked.values()].reduce((total, entries) => total + entries.size, 0);
   const invalid = tryCreateDataGrid({ columns, root, defaultColumnSizes: { name: 0 } });
   assert.equal(invalid.ok, false);
   assert.equal(invalid.error.code, 'invalid-column-definition');
@@ -1026,7 +1086,8 @@ test('DOM Tabular column sizes preserve controlled ownership and validate host i
     onColumnSizesChange: (state) => proposals.push(state),
   });
   const handle = window.document.createElement('div');
-  connection.bindColumnResizeHandle(handle, { columnID: 'name', minSize: 50, maxSize: 150, step: 12 });
+  root.append(handle);
+  const release = connection.bindColumnResizeHandle(handle, { columnID: 'name', minSize: 50, maxSize: 150, step: 12 });
   assert.equal(handle.getAttribute('aria-valuemin'), '50');
   assert.equal(handle.getAttribute('aria-valuemax'), '150');
   assert.equal(handle.getAttribute('aria-valuenow'), '100');
@@ -1035,15 +1096,138 @@ test('DOM Tabular column sizes preserve controlled ownership and validate host i
   assert.equal(proposals.at(-1).values.name, 112);
   assert.equal(handle.getAttribute('aria-valuenow'), '100');
   handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, clientX: 10, bubbles: true }));
+  assert.equal(window.document.activeElement, handle, 'pointer activation gives keyboard resizing the same native target');
+  assert.equal(listeners(), 3);
   window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 30 }));
   window.dispatchEvent(new window.PointerEvent('pointerup'));
+  assert.equal(listeners(), 0);
   assert.equal(proposals.at(-1).values.name, 120);
   assert.equal(handle.getAttribute('aria-valuenow'), '100');
   assert.equal(connection.syncControlledValues({ columnSizes: { name: 120 } }).ok, true);
   assert.equal(connection.getColumnSizeState().values.name, 120);
   assert.equal(handle.getAttribute('aria-valuenow'), '120');
+  assert.equal(connection.syncControlledValues({ columnSizes: { name: 149 } }).ok, true);
+  handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+  assert.equal(proposals.at(-1).values.name, 150);
+  assert.equal(connection.syncControlledValues({ columnSizes: { name: 51 } }).ok, true);
+  handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+  assert.equal(proposals.at(-1).values.name, 50);
+  assert.equal(connection.syncControlledValues({ columnSizes: { name: 120 } }).ok, true);
+  for (let pointerId = 1; pointerId <= 16; pointerId++) {
+    const before = proposals.length;
+    handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, clientX: 10, pointerId }));
+    assert.equal(listeners(), 3);
+    window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 30, pointerId: pointerId + 100 }));
+    window.dispatchEvent(new window.PointerEvent('pointerup', { pointerId: pointerId + 100 }));
+    assert.equal(proposals.length, before, 'another pointer cannot move or end the active resize');
+    assert.equal(listeners(), 3);
+    window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 30, pointerId }));
+    assert.equal(proposals.length, before + 1);
+    window.dispatchEvent(new window.PointerEvent('pointerup', { pointerId }));
+    assert.equal(listeners(), 0);
+    window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 40, pointerId }));
+    assert.equal(proposals.length, before + 1, 'completed sessions cannot emit stale changes');
+  }
+  handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 30 }));
+  handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 31 }));
+  assert.equal(listeners(), 3, 'a new gesture replaces the old window listeners');
+  window.dispatchEvent(new window.PointerEvent('pointercancel', { pointerId: 31 }));
+  assert.equal(listeners(), 0);
+  handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 40 }));
+  release();
+  assert.equal(listeners(), 0, 'retiring the handle ends an active drag');
+  const retired = proposals.length;
+  window.dispatchEvent(new window.PointerEvent('pointermove', { clientX: 80, pointerId: 40 }));
+  assert.equal(proposals.length, retired);
+  connection.bindColumnResizeHandle(handle, { columnID: 'name' });
+  handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 50 }));
   connection.disconnect();
+  assert.equal(listeners(), 0, 'disconnect ends an active drag');
+  window.addEventListener = add; window.removeEventListener = remove;
 });
+
+test('DOM Tabular resize cannot acquire window listeners after synchronous focus retirement', () => {
+  for (const retirement of ['handle', 'connection']) {
+    const window = new Window(), root = window.document.createElement('div'), handle = window.document.createElement('button');
+    window.document.body.append(root); root.append(handle);
+    let acquired = 0;
+    const add = window.addEventListener;
+    window.addEventListener = function(type, listener, options) {
+      if (['pointermove', 'pointerup', 'pointercancel'].includes(type)) acquired++;
+      return add.call(this, type, listener, options);
+    };
+    const proposals = [], connection = createDataGrid({ root, columns, onColumnSizesChange: value => proposals.push(value) });
+    const release = connection.bindColumnResizeHandle(handle, { columnID: 'name' });
+    handle.addEventListener('focus', () => { if (retirement === 'handle') release(); else connection.disconnect(); }, { once: true });
+    handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 1, clientX: 10 }));
+    assert.equal(acquired, 0);
+    window.dispatchEvent(new window.PointerEvent('pointermove', { pointerId: 1, clientX: 30 }));
+    assert.equal(proposals.length, 0);
+    connection.disconnect(); root.remove(); window.addEventListener = add;
+  }
+});
+
+for (const [name, create] of [['DataTable', createDataTable], ['DataGrid', createDataGrid], ['DataTreeGrid', createDataTreeGrid]]) {
+  test(`DOM ${name} automatic resize samples its leaf allocation at activation, not per move`, () => {
+    const window = new Window(), table = name === 'DataTable';
+    const root = window.document.createElement(table ? 'table' : 'div');
+    const header = window.document.createElement(table ? 'th' : 'div');
+    const handle = window.document.createElement('button');
+    if (table) {
+      const head = window.document.createElement('thead'), row = window.document.createElement('tr');
+      root.append(head); head.append(row); row.append(header);
+    } else root.append(header);
+    header.append(handle); window.document.body.append(root);
+    let width = 180, measurements = 0;
+    header.getBoundingClientRect = () => { measurements++; return new window.DOMRect(0, 0, width, 32); };
+    const proposals = [];
+    const connection = create({ columns, ...(table ? { table: root } : { root }), columnSizes: {}, onColumnSizesChange: value => proposals.push(value) });
+    if (table) connection.setHeaderCellAttributes(header, { columnID: 'name' });
+    else connection.setColumnHeaderAttributes(header, { columnID: 'name' });
+    const release = connection.bindColumnResizeHandle(handle, { columnID: 'name', minSize: 50, maxSize: 300 });
+    try {
+      assert.equal(handle.getAttribute('aria-valuenow'), '180');
+      const initial = measurements;
+      handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      assert.equal(proposals.at(-1).values.name, 188, 'first right action grows the allocated column, not the minimum');
+      assert.equal(measurements, initial + 1);
+      assert.equal(handle.getAttribute('aria-valuenow'), '180', 'refusal retains the actual allocation');
+      handle.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, pointerId: 1, clientX: 10 }));
+      const started = measurements;
+      for (let index = 0; index < 5; index++) {
+        window.dispatchEvent(new window.PointerEvent('pointermove', { pointerId: 1, clientX: 20 + index }));
+        assert.equal(proposals.at(-1).values.name, 190 + index);
+      }
+      assert.equal(measurements, started, 'drag samples one starting allocation; move/refresh adds no layout reads');
+      window.dispatchEvent(new window.PointerEvent('pointerup', { pointerId: 1 }));
+      assert.equal(connection.syncControlledValues({ columnSizes: { name: 220 } }).ok, true);
+      const explicit = measurements;
+      handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      assert.equal(proposals.at(-1).values.name, 228);
+      assert.equal(measurements, explicit, 'explicit owner sizes bypass measurement');
+      width = 0;
+      assert.equal(connection.syncControlledValues({ columnSizes: {} }).ok, true);
+      assert.equal(handle.getAttribute('aria-valuenow'), '50');
+      const unavailable = measurements;
+      assert.equal(connection.syncControlledValues({ columnSizes: {} }).ok, true);
+      assert.equal(measurements, unavailable, 'unavailable geometry also has one cached fallback between activations');
+      width = 210;
+      handle.dispatchEvent(new window.FocusEvent('focus'));
+      assert.equal(handle.getAttribute('aria-valuenow'), '210');
+      width = 240;
+      handle.dispatchEvent(new window.FocusEvent('focus'));
+      assert.equal(handle.getAttribute('aria-valuenow'), '240', 'new activation refreshes an automatic allocation');
+      header.setAttribute('aria-colspan', '2');
+      const grouped = measurements;
+      handle.dispatchEvent(new window.FocusEvent('focus'));
+      assert.equal(handle.getAttribute('aria-valuenow'), '50');
+      assert.equal(measurements, grouped, 'a spanning group is not one column allocation');
+      release(); header.removeAttribute('aria-colspan');
+      handle.dispatchEvent(new window.FocusEvent('focus'));
+      assert.equal(measurements, grouped, 'retired handles no longer measure on focus');
+    } finally { release(); connection.disconnect(); root.remove(); }
+  });
+}
 
 test('DOM DataTable native editor emits parsed commit intent and suppresses IME commits', () => {
   const window = new Window();
@@ -1077,7 +1261,7 @@ test('DOM DataTable native editor emits parsed commit intent and suppresses IME 
   connection.disconnect();
 });
 
-test('DOM DataGrid editor coordinates begin, validation, IME, commit, and teardown', async () => {
+for (const commitOnChange of [false, true]) test(`DOM DataGrid editor coordinates begin, validation, IME, commit, and teardown (change=${commitOnChange})`, async () => {
   const window = new Window();
   const root = window.document.createElement('div');
   window.document.body.append(root);
@@ -1086,15 +1270,18 @@ test('DOM DataGrid editor coordinates begin, validation, IME, commit, and teardo
   assert.equal(connection.synchronizeView(clientResponse(connection.controller)).ok, true);
   const cell = window.document.createElement('div');
   const editor = window.document.createElement('input');
+  editor.setAttribute('aria-label', 'Edit member name');
   cell.append(editor);
   root.append(cell);
   assert.equal(connection.registerCell(cell, { cell: { rowID: 'r1', columnID: 'name' } }).ok, true);
   const unbind = connection.bindEditor(editor, {
     cell: { rowID: 'r1', columnID: 'name' },
+    commitOnChange,
     parseValue: (value) => value.length === 0
       ? { ok: false, error: { class: 'transition-rejection', code: 'profile-view-mismatch', message: 'Value is required.' } }
       : { ok: true, value },
   });
+  assert.equal(editor.getAttribute('aria-label'), 'Edit member name');
   cell.focus();
   root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'F2', bubbles: true }));
   await Promise.resolve();
@@ -1104,6 +1291,7 @@ test('DOM DataGrid editor coordinates begin, validation, IME, commit, and teardo
 
   editor.value = 'IME';
   editor.dispatchEvent(new window.CompositionEvent('compositionstart', { bubbles: true }));
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
   editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, isComposing: true }));
   assert.equal(connection.getSnapshot().edit.kind, 'editing');
   editor.dispatchEvent(new window.CompositionEvent('compositionend', { bubbles: true }));
@@ -1113,10 +1301,19 @@ test('DOM DataGrid editor coordinates begin, validation, IME, commit, and teardo
   assert.equal(connection.getSnapshot().edit.kind, 'editing');
   editor.value = 'Gamma';
   editor.dispatchEvent(new window.Event('input', { bubbles: true }));
-  editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(connection.getSnapshot().edit.kind, commitOnChange ? 'navigation' : 'editing');
+  if (!commitOnChange) editor.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   await Promise.resolve();
   assert.equal(connection.getSnapshot().edit.kind, 'navigation');
   assert.deepEqual(commands.at(-1), { type: 'commit-edit', cell: { rowID: 'r1', columnID: 'name' }, value: 'Gamma' });
+  const commits = commands.filter(command => command.type === 'commit-edit').length;
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(commands.filter(command => command.type === 'commit-edit').length, commits, 'late change on an idle editor cannot commit again');
+  assert.equal(connection.handleEvent({ type: 'begin-edit', cell: { rowID: 'r2', columnID: 'name' } }), true);
+  editor.dispatchEvent(new window.Event('change', { bubbles: true }));
+  assert.equal(commands.filter(command => command.type === 'commit-edit').length, commits, 'change from another editor cannot commit the active cell');
+  assert.deepEqual(connection.getSnapshot().edit.cell, { rowID: 'r2', columnID: 'name' });
 
   const count = commands.length;
   unbind();

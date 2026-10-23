@@ -66,6 +66,17 @@ export interface QuantityFieldUpdate {
   readonly commands: readonly QuantityFieldCommand[];
 }
 
+/** Materializes preferred or compatible display units in stable order, including the active unit. */
+export function getQuantityFieldDisplayUnits(policies: QuantityFieldPolicies, displayUnit: UnitID): readonly UnitID[] {
+  const preferred = policies.unitSystem?.getUnits(policies.canonicalUnit) ?? [];
+  const compatible = preferred.length > 0
+    ? preferred
+    : policies.registry.units
+      .filter((unit) => policies.registry.compatible(policies.canonicalUnit, unit.id))
+      .map((unit) => unit.id);
+  return Object.freeze([...new Set([...compatible, displayUnit])]);
+}
+
 export function createQuantityFieldState(
   policies: QuantityFieldPolicies,
   quantity: QuantityValue | null = null,

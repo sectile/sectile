@@ -2,6 +2,7 @@ import { unwrap } from '@sectile/core/result';
 import { fail, ok, validateID } from '../foundation.js';
 import { canonicalizeTabularAccessState } from './access.js';
 import { canonicalizeTabularColumnState } from './columns.js';
+export { projectTabularHeaders } from './columns.js';
 import { canonicalizeTabularExpansion } from './expansion.js';
 import { canonicalizeRowSelection } from './selection.js';
 import { tryCreateTabularQuery } from '../source/query.js';
@@ -197,14 +198,15 @@ export function reconcileTabularState(
           : `Controlled ${key} requires its external value.`, { key });
     }
   }
-  const query = model.controlled.query ? canonicalizeTabularStateQuery(model, values.query as TabularQuery) : ok(state.query);
+  const query = model.controlled.query ? canonicalizeTabularStateQuery(model, values.query as TabularQuery, state) : ok(state.query);
   if (!query.ok) return query;
   const rowSelection = model.controlled.rowSelection
     ? canonicalizeRowSelection(values.rowSelection as TabularRowSelection, model.limits)
     : ok(state.rowSelection);
   if (!rowSelection.ok) return rowSelection;
+  const schema = state.acceptedViewState.kind === 'none' ? model : state.acceptedViewState.view.columnSchema;
   const columnState = model.controlled.columnState
-    ? canonicalizeTabularColumnState(values.columnState as TabularColumnState, model.columns, model.headers)
+    ? canonicalizeTabularColumnState(values.columnState as TabularColumnState, schema.columns, schema.headers)
     : ok(state.columnState);
   if (!columnState.ok) return columnState;
   const accessState = model.controlled.accessState
@@ -228,10 +230,12 @@ export function reconcileTabularState(
 export function canonicalizeTabularStateQuery(
   model: Pick<TabularModel, 'columns' | 'limits'>,
   input: TabularQuery,
+  state?: Pick<TabularState, 'acceptedViewState'>,
 ): TabularResult<TabularQuery> {
   const query = tryCreateTabularQuery(input, model.limits);
   if (!query.ok) return query;
-  const columns = new Set(model.columns.map((column) => column.id));
+  const schema = state?.acceptedViewState;
+  const columns = new Set((schema === undefined || schema.kind === 'none' ? model.columns : schema.view.columnSchema.columns).map(column => column.id));
   for (const descriptor of [
     ...query.value.sort,
     ...query.value.groups,
@@ -535,6 +539,7 @@ export type {
   TabularGroupID,
   TabularHeaderNode,
   TabularHeaderNodeID,
+  TabularHeaderLayout,
   TabularLimits,
   TabularModel,
   TabularOptions,

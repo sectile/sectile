@@ -1,4 +1,7 @@
 import type { ChartAxisLayout } from '@sectile/chart/layout';
+import type { Result } from '@sectile/core/result';
+import { invalidRenderer } from '../result.js';
+import { normalizeRenderStyle } from '../style.js';
 import type {
   ChartDataBatch,
   ChartDataGeometry,
@@ -7,6 +10,7 @@ import type {
 } from '@sectile/chart/projection';
 import type {
   ChartRenderer,
+  ChartRenderStyle,
   ChartRendererCapabilities,
   ChartRendererDiagnostics,
   NormalizedChartRenderStyle,
@@ -19,13 +23,20 @@ export class Canvas2DChartRenderer implements ChartRenderer {
     asynchronousGPUTiming: false,
   });
   readonly #context: CanvasRenderingContext2D;
-  readonly #style: NormalizedChartRenderStyle;
+  #style: NormalizedChartRenderStyle;
   #diagnostics: ChartRendererDiagnostics = Object.freeze({ mode: 'canvas2d', uploadedBytes: 0, drawCalls: 0, liveResources: 1 });
   #active = true;
 
   public constructor(context: CanvasRenderingContext2D, style: NormalizedChartRenderStyle) {
     this.#context = context;
     this.#style = style;
+  }
+
+  public setStyle(style: ChartRenderStyle): Result<boolean> {
+    if (!this.#active) return invalidRenderer('Chart renderer is disconnected.');
+    const next = normalizeRenderStyle(style, this.#style); if (!next.ok) return next;
+    const changed = next.value !== this.#style; this.#style = next.value;
+    return { ok: true, value: changed };
   }
 
   public render(projection: ChartProjection, batches: readonly ChartProjectionBatch[] = projection.batches): void {

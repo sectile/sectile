@@ -12,6 +12,7 @@ test('Vue date range field renders two native, timezone-free inputs', async () =
         end: { year: 2026, month: 8, day: 28 },
       },
       readonly: true,
+      required: true,
     }, {
       default: () => [
         h(DateRangeFieldStartInput, { name: 'start' }),
@@ -26,4 +27,5 @@ test('Vue date range field renders two native, timezone-free inputs', async () =
   assert.equal((html.match(/readonly/g) ?? []).length >= 2, true);
   assert.match(html, /name="start"/);
   assert.match(html, /name="end"/);
+  assert.equal((html.match(/<input\b[^>]*\srequired(?:[\s=>])/g) ?? []).length, 2);
 });

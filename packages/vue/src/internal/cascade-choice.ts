@@ -170,7 +170,7 @@ export function createCascadeChoiceParts<State extends CascadeChoiceRootState>(o
         'aria-selected': String(state.value.selected),
         'aria-disabled': state.value.disabled ? 'true' : undefined,
         'aria-haspopup': state.value.branch ? 'listbox' : undefined,
-        'aria-expanded': state.value.branch ? String(state.value.expanded) : undefined,
+        'aria-expanded': undefined,
         [options.itemAttribute]: props.value,
         'data-scope': options.scope,
         'data-part': 'item',

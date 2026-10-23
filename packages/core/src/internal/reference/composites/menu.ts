@@ -8,6 +8,15 @@ export function applyReferenceMenuEvent<ID extends StableID>(tree: Tree<ID>, sta
   const visible = tree.visible(state.openPath).ids;
   if (typeof event === 'object') { if (!visible.includes(event.id)) return rejected('menu-target-hidden'); const ancestors = new Set(tree.ancestorsOf(event.id) ?? []); return accepted(stateOf(true, event.id, state.openPath.filter((id) => ancestors.has(id))), [{ type: 'focus', id: event.id }]); }
   const current = state.cursor.current;
+  if (event === 'next-root' || event === 'previous-root') {
+    const roots = tree.roots.ids, ancestry = current === null ? [] : tree.ancestorsOf(current) ?? [];
+    const root = ancestry.length > 0 ? ancestry[ancestry.length - 1] : current;
+    if (roots.length === 0) return accepted(state);
+    const index = root === null ? -1 : roots.indexOf(root as ID), forward = event === 'next-root';
+    const target = roots[index < 0 ? forward ? 0 : roots.length - 1 : (index + (forward ? 1 : -1) + roots.length) % roots.length] as ID;
+    const path = state.openPath.length && !tree.isLeaf(target) && !policies.disabled?.(target) ? [target] : [];
+    return accepted(stateOf(true, target, path), [{ type: 'focus', id: target }]);
+  }
   if (event === 'escape' || event === 'close-submenu') return close(tree, state);
   if (current === null) { const id = tree.roots.at(event === 'last' ? tree.roots.size - 1 : 0); return accepted(stateOf(true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
   if (event === 'next' || event === 'previous' || event === 'first' || event === 'last') { const parent = tree.parentOf(current); const ids = parent === null ? tree.roots.ids : tree.childrenOf(parent)?.ids ?? []; if (ids.length === 0) return accepted(state); const index = ids.indexOf(current); const target = event === 'first' ? 0 : event === 'last' ? ids.length - 1 : (index + (event === 'next' ? 1 : -1) + ids.length) % ids.length; const id = ids[target] as ID; return accepted(stateOf(true, id, state.openPath), [{ type: 'focus', id }]); }

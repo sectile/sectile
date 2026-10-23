@@ -12,6 +12,7 @@ import {
 } from '@sectile/core/cascade-list';
 import { unwrap } from '@sectile/core/result';
 import type { RevisionSnapshot } from '@sectile/core/revision';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import {
   createDOMCascadeChoiceBinding,
@@ -23,6 +24,7 @@ export type { CascadeListPolicies } from '@sectile/core/cascade-list';
 
 export interface CascadeListOptions<ID extends StableID = StableID> {
   readonly root: HTMLElement;
+  readonly direction?: ReadingDirection;
   readonly nodes: readonly TreeNodeInput<ID>[];
   readonly disabledItems?: readonly ID[];
   readonly policies?: CascadeListPolicies<ID>;
@@ -167,7 +169,7 @@ class DOMCascadeListConnection<ID extends StableID> implements CascadeListConnec
       scope: 'cascade-list',
       readState: () => this.getSnapshot().state,
       handleEvent: (event) => this.handleEvent(event),
-      toEvent: toCascadeListEvent,
+      toEvent: (event) => toCascadeListEvent(event, options.direction),
     });
   }
 
@@ -229,12 +231,13 @@ class DOMCascadeListConnection<ID extends StableID> implements CascadeListConnec
 
 export function toCascadeListEvent<ID extends StableID>(
   input: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey'>,
+  direction: ReadingDirection = 'ltr',
 ): CascadeListEvent<ID> | null {
   if (input.altKey || input.ctrlKey || input.metaKey) return null;
   if (input.key === 'ArrowDown') return 'next';
   if (input.key === 'ArrowUp') return 'previous';
-  if (input.key === 'ArrowRight') return 'right';
-  if (input.key === 'ArrowLeft') return 'left';
+  const horizontal = horizontalArrow(input.key, direction);
+  if (horizontal !== null) return horizontal === 'next' ? 'right' : 'left';
   if (input.key === 'Home') return 'first';
   if (input.key === 'End') return 'last';
   if (input.key === 'Enter' || input.key === ' ') return 'select';

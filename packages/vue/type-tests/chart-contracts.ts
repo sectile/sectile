@@ -34,6 +34,10 @@ result.controller.dispatch({ type: 'set-cursor', id: 1 });
 props.cursor satisfies ID | null | undefined;
 props.view satisfies ChartViewState<ID> | null | undefined;
 props.dom?.onProjectionError?.(projectionError);
+const paintOptions: ChartRootProps<ID>['dom'] = { renderStyle: { color: [0.1, 0.2, 0.3, 1], lineWidth: 2 } };
+// @ts-expect-error Renderer color preserves the native four-channel contract.
+const invalidPaint: ChartRootProps<ID>['dom'] = { renderStyle: { color: [0, 0, 0] } };
+void paintOptions; void invalidPaint;
 provider.controller satisfies UseChartResult<ID>['controller'];
 const components: ChartComponents<ID> = createChartComponents(result.controller);
 components.Root satisfies ChartComponents<ID>['Root'];

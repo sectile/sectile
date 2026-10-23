@@ -21,6 +21,18 @@ export interface TextSnapshot {
   readonly selection: TextSelection;
 }
 
+export interface TextQueryOptions {
+  readonly trigger: string;
+  readonly maxQueryCodeUnits: number;
+  readonly allowInline?: boolean;
+}
+export interface TextQuery {
+  readonly trigger: string;
+  readonly query: string;
+  readonly startCodeUnitOffset: number;
+  readonly endCodeUnitOffset: number;
+}
+
 export interface TextComposition {
   readonly baseline: TextSnapshot;
   readonly startCodeUnitOffset: number;
@@ -50,6 +62,7 @@ export function sameTextEditingState(
 }
 
 export type TextEvent =
+  | { readonly type: 'select'; readonly selection: TextSelectionInput }
   | {
       readonly type: 'replace';
       readonly startCodeUnitOffset: number;
@@ -80,6 +93,7 @@ export interface TextUpdate {
 type TextErrorClass = Extract<ErrorClass, 'construction' | 'transition-rejection'>;
 
 const canonicalTextStates = new WeakSet<object>();
+const textQueryWhitespace = /\s/u;
 
 export function isWellFormedPlainText(text: string): boolean {
   return typeof text === 'string' && isWellFormedUTF16(text);
@@ -132,6 +146,38 @@ export function normalizeTextEditingState(
   return normalizeEditingState(state, 'construction');
 }
 
+/** Project the current token without scanning an already canonical text source. */
+export function findTextQuery(state: TextEditingState, options: TextQueryOptions): Result<TextQuery | null> {
+  if (!isObject(options)) return fail('construction', 'invalid-text-query-options', 'Text query options must be an object.');
+  const { trigger, maxQueryCodeUnits, allowInline = false } = options;
+  if (typeof trigger !== 'string' || trigger.length === 0 || !isWellFormedPlainText(trigger) || textQueryWhitespace.test(trigger)
+    || !Number.isSafeInteger(maxQueryCodeUnits) || maxQueryCodeUnits < 0 || typeof allowInline !== 'boolean') {
+    return fail('construction', 'invalid-text-query-options', 'Text queries require a plain nonwhitespace trigger, nonnegative UTF-16 query ceiling and boolean inline policy.');
+  }
+  const normalized = normalizeEditingState(state, 'construction');
+  if (!normalized.ok) return normalized;
+  const current = normalized.value, { text, selection } = current.snapshot;
+  if (current.composition !== null || selection.anchorCodeUnitOffset !== selection.focusCodeUnitOffset) return ok(null);
+  const end = selection.focusCodeUnitOffset;
+  let floor = Math.max(0, end - maxQueryCodeUnits - trigger.length);
+  if (!isKnownTextCodeUnitBoundary(text, floor)) floor++;
+  let start = end;
+  // Copy only bounded characters: a query must not borrow a slice of the full source.
+  const units: string[] = [];
+  while (start > floor) {
+    const unit = text.charAt(start - 1);
+    if (textQueryWhitespace.test(unit)) break;
+    units.push(unit); start--;
+  }
+  if (!allowInline && start > 0 && !textQueryWhitespace.test(text.charAt(start - 1))) return ok(null);
+  const token = units.reverse().join('');
+  const offset = allowInline ? token.lastIndexOf(trigger) : token.startsWith(trigger) ? 0 : -1;
+  if (offset < 0) return ok(null);
+  const query = token.slice(offset + trigger.length);
+  if (query.length > maxQueryCodeUnits) return ok(null);
+  return ok(Object.freeze({ trigger, query, startCodeUnitOffset: start + offset, endCodeUnitOffset: end }));
+}
+
 export function applyTextEvent(
   state: TextEditingState,
   event: TextEvent,
@@ -148,6 +194,13 @@ export function applyTextEvent(
 
   let next: Result<TextEditingState>;
   switch (event.type) {
+    case 'select': {
+      const snapshot = createSnapshot(normalized.value.snapshot.text, event.selection, 'transition-rejection', true);
+      next = snapshot.ok
+        ? ok(sameSnapshot(normalized.value.snapshot, snapshot.value) ? normalized.value : textEditingState(snapshot.value, normalized.value.composition))
+        : snapshot;
+      break;
+    }
     case 'replace':
       next = replaceTextState(
         normalized.value,

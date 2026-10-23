@@ -5,6 +5,7 @@ export function usePresence(
   open: ComputedRef<boolean>,
   element: ShallowRef<HTMLElement | undefined>,
   onRetainedReopen?: () => void,
+  active?: Readonly<ShallowRef<boolean>>,
 ): ShallowRef<boolean> {
   const present = shallowRef(open.value);
   const initialElement = element.value;
@@ -13,12 +14,17 @@ export function usePresence(
     ...(initialElement === undefined ? {} : { element: initialElement }),
     onPresentChange: (next) => { present.value = next; },
   });
+  if (active?.value === false) connection.suspend();
+  if (active) watch(active, (next) => {
+    if (next) connection.resume(open.value, element.value);
+    else connection.suspend();
+  }, { flush: 'sync' });
 
   watch(open, (next, previous) => {
     if (!next) return;
     const retainedReopen = previous === false && connection.getPresent();
     connection.update(true, element.value);
-    if (retainedReopen) onRetainedReopen?.();
+    if (retainedReopen && active?.value !== false) onRetainedReopen?.();
   }, { flush: 'sync' });
   watch([open, element], ([next, node]) => {
     connection.update(next, node);

@@ -6,6 +6,7 @@ import {
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { dateTimePickerCapability } from './capabilities/date-time-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface DateTimePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateTimeValue | null; readonly defaultValue?: DateTimeValue | null;
@@ -16,13 +17,14 @@ export interface DateTimePickerRootProps extends PickerPartProps, PickerPosition
 }
 export const DateTimePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimePickerCapability, 'SectileDateTimePickerRoot');
 export type DateTimePickerRootSlotProps = PickerRootSlotProps<DateTimeValue | null>;
+export type DateTimePickerContentSlotProps = PickerContentSlotProps<DateTimeValue | null>;
 export type DateTimePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DateTimePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:open']>;
 export type DateTimePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DateTimePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date-time'>;
 export const DateTimePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date-time'>;
 export const DateTimePickerPortal = PickerPortal;
-export const DateTimePickerContent = PickerContent as unknown as PickerRootPartComponent<'date-time'>;
+export const DateTimePickerContent = PickerContent as unknown as PickerContentPartComponent<'date-time'>;
 export const DateTimePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date-time'>;
 export const DateTimePickerCell = PickerCell;
 export const DateTimePickerMonthCell = PickerMonthCell;

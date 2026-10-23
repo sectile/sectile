@@ -87,11 +87,15 @@ export function aliasVueProfileController<State, Event, Command>(
   if (refresh !== undefined) refreshers.set(alias, refresh);
 }
 
+export function snapshotOf(value: unknown): TabularSnapshot {
+  const candidate = value as TabularSnapshot & { readonly tabular?: TabularSnapshot };
+  const snapshot = candidate.tabular ?? candidate;
+  if (snapshot.state === undefined) throw new TypeError('Invalid Tabular profile snapshot.');
+  return snapshot;
+}
+
 export function stateOf(value: unknown): TabularSnapshot['state'] {
-  const candidate = value as { readonly state?: TabularSnapshot['state']; readonly tabular?: TabularSnapshot };
-  const state = candidate.tabular?.state ?? candidate.state;
-  if (state === undefined) throw new TypeError('Invalid Tabular profile snapshot.');
-  return state;
+  return snapshotOf(value).state;
 }
 
 export function controlledValues(options: {

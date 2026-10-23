@@ -1,7 +1,9 @@
-import type { PositionOptions } from '../../position.js';
+import type { PositionOptions, PositionRect } from '../../position.js';
+export { assertPositionOptions, snapshotPositionRect } from './engine.js';
 import {
   createPositionEngine,
   selectPositionRoute,
+  snapshotPositionRect,
   type PositionEngineConnection,
   type PositionEngineOptions,
 } from './engine.js';
@@ -10,6 +12,9 @@ export interface DOMPositionOptions {
   readonly root: HTMLElement;
   readonly onPositioned?: () => void;
   readonly reference?: HTMLElement | undefined;
+  readonly anchorRect?: PositionRect | undefined;
+  /** Internal live geometry owner; unavailable geometry hides the floating surface. */
+  readonly measureAnchorRect?: (() => PositionRect | undefined) | undefined;
   readonly arrow?: HTMLElement | undefined;
   readonly side?: PositionOptions['side'] | undefined;
   readonly align?: PositionOptions['align'] | undefined;
@@ -25,16 +30,19 @@ export interface DOMPositionOptions {
 
 export interface PositionConnection {
   update(): void;
+  syncAnchorRect(rect: PositionRect | undefined): void;
   disconnect(): void;
 }
 
 export const manualPositionConnection: PositionConnection = Object.freeze({
   update(): void {},
+  syncAnchorRect(): void {},
   disconnect(): void {},
 });
 
 export function createPosition(options: DOMPositionOptions): PositionConnection {
   let engine: PositionEngineConnection | undefined;
+  let anchorRect = options.anchorRect;
 
   const disconnect = (): void => {
     engine?.disconnect();
@@ -50,6 +58,8 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
       const engineOptions: PositionEngineOptions = {
         root: options.root,
         reference,
+        anchorRect,
+        measureAnchorRect: options.measureAnchorRect,
         arrow: options.arrow,
         side: options.side,
         align: options.align,
@@ -75,7 +85,12 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
     if (engine.route === 'css-anchor') options.onPositioned?.();
   };
 
-  return Object.freeze({ update, disconnect });
+  return Object.freeze({ update, disconnect, syncAnchorRect(rect: PositionRect | undefined): void {
+    const next = snapshotPositionRect(rect);
+    disconnect();
+    anchorRect = next;
+    update();
+  } });
 }
 
 function canPosition(root: HTMLElement, reference: HTMLElement): boolean {

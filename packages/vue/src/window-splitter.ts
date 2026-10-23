@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps, type PropType, type SlotsType, type VNodeChild } from 'vue';
+import { computed, defineComponent, getCurrentInstance, h, mergeProps, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   SliderRoot,
@@ -27,39 +27,49 @@ export const WindowSplitterRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const instance = getCurrentInstance()!;
     providePartContract('window-splitter', { thumb: 'handle' });
-    const minimum = percentage(props.min, 'min');
-    const maximum = percentage(props.max, 'max');
-    if (minimum >= maximum) throw new TypeError('WindowSplitterRoot min must be less than max.');
-    const constraintStyle = props.orientation === 'horizontal'
-      ? { position: 'absolute', insetBlock: '0', insetInlineStart: `${minimum}%`, insetInlineEnd: `${100 - maximum}%`, pointerEvents: 'none' }
-      : { position: 'absolute', insetInline: '0', insetBlockStart: `${minimum}%`, insetBlockEnd: `${100 - maximum}%`, pointerEvents: 'none' };
-    return (): VNodeChild => h(SliderRoot, mergeProps(attrs, props, {
-      asChild: true,
-      role: 'separator', readonly: false,
-      'onUpdate:modelValue': (value: string) => emit('update:modelValue', value),
-    }), {
-      default: (state: SliderSlotProps) => {
-        if (props.asChild) return slots['default']?.(state);
-        return h(Primitive, {
-          as: props.as,
-          style: {
-            position: 'relative',
-            '--sectile-window-splitter-percentage': `${state.value}%`,
-          },
-        }, {
-          default: () => [
-            h(SliderTrack, {
-              as: 'span',
-              'aria-hidden': 'true',
-              'data-constraint-track': '',
-              style: constraintStyle,
-            }),
-            slots['default']?.(state),
-          ],
-        });
-      },
+    const constraintStyle = computed(() => {
+      const minimum = percentage(props.min, 'min');
+      const maximum = percentage(props.max, 'max');
+      if (minimum >= maximum) throw new TypeError('WindowSplitterRoot min must be less than max.');
+      return props.orientation === 'horizontal'
+        ? { position: 'absolute', insetBlock: '0', insetInlineStart: `${minimum}%`, insetInlineEnd: `${100 - maximum}%`, pointerEvents: 'none' }
+        : { position: 'absolute', insetInline: '0', insetBlockStart: `${minimum}%`, insetBlockEnd: `${100 - maximum}%`, pointerEvents: 'none' };
     });
+    return (): VNodeChild => {
+      const currentConstraintStyle = constraintStyle.value;
+      const { name, form, ...behavior } = props;
+      const raw = instance.vnode.props;
+      return h(SliderRoot, mergeProps(attrs, behavior, {
+        ...(name !== undefined || (raw && Object.hasOwn(raw, 'name')) ? { name } : {}),
+        ...(form !== undefined || (raw && Object.hasOwn(raw, 'form')) ? { form } : {}),
+        asChild: true,
+        role: 'separator', readonly: false,
+        'onUpdate:modelValue': (value: string) => emit('update:modelValue', value),
+      }), {
+        default: (state: SliderSlotProps) => {
+          if (props.asChild) return slots['default']?.(state);
+          return h(Primitive, {
+            as: props.as,
+            style: {
+              position: 'relative',
+              '--sectile-window-splitter-percentage': `${state.value}%`,
+            },
+          }, {
+            default: () => [
+              h(SliderTrack, {
+                as: 'span',
+                'aria-hidden': 'true',
+                'data-constraint-track': '',
+                style: currentConstraintStyle,
+              }),
+              slots['default']?.(state),
+            ],
+          });
+        },
+      });
+    };
   },
 });
 

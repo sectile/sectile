@@ -5,6 +5,8 @@ import {
   inject,
   mergeProps,
   provide,
+  shallowRef,
+  onScopeDispose,
   type ComputedRef,
   type PropType,
   type SlotsType,
@@ -13,8 +15,9 @@ import {
 import { createMeterGroupState, type MeterGroupState } from '@sectile/core/meter-group';
 import {
   getMeterGroupRootAttributes,
-  getMeterGroupSegmentAttributes,
-  getMeterGroupTrackAttributes,
+  getMeterGroupAttributes,
+  type MeterGroupAttributes,
+  type MeterGroupAttributeRecord,
 } from '@sectile/dom/meter-group';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { normalizeDecimalInput } from './input/decimal-input.js';
@@ -63,12 +66,14 @@ export interface MeterGroupItemProps { readonly id: string; readonly as?: Primit
 export type MeterGroupItemSlotProps = MeterGroupSegmentSlotProps;
 export interface MeterGroupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
+/** One O(n) immutable publication; mounted parts use revision-owned O(1) lookups. */
 interface MeterGroupProjection {
   readonly state: MeterGroupState<string>;
-  readonly entries: ReadonlyMap<string, MeterGroupEntry>;
+  readonly attributes: MeterGroupAttributes<string>;
+  readonly slotsByID: ReadonlyMap<string, MeterGroupSegmentSlotProps>;
   readonly slot: MeterGroupRootSlotProps;
 }
-interface MeterGroupContext { readonly projection: ComputedRef<MeterGroupProjection> }
+interface MeterGroupContext { readonly projection: ComputedRef<MeterGroupProjection | undefined> }
 interface MeterGroupEntryContext { readonly segment: ComputedRef<MeterGroupSegmentSlotProps> }
 
 const meterGroupKey = Symbol('SectileMeterGroupRoot');
@@ -99,7 +104,9 @@ export const MeterGroupRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: MeterGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const projection = computed<MeterGroupProjection>(() => {
+    const active = shallowRef(true);
+    const projection = computed<MeterGroupProjection | undefined>(() => {
+      if (!active.value) return undefined;
       const entries = new Map(props.items.map((entry) => [entry.id, entry]));
       const state = createMeterGroupState({
         items: props.items.map((entry) => ({ id: entry.id, value: normalizeDecimalInput(entry.value) })),
@@ -108,29 +115,48 @@ export const MeterGroupRoot = defineComponent({
         ...(props.high === undefined ? {} : { high: normalizeDecimalInput(props.high) }),
         ...(props.optimum === undefined ? {} : { optimum: normalizeDecimalInput(props.optimum) }),
       });
+      const attributes = getMeterGroupAttributes(state);
+      const formatValue = props.formatValue;
+      const slotsByID = new Map<string, MeterGroupSegmentSlotProps>();
       const segments = Object.freeze(state.segments.map((segment) => {
         const entry = entries.get(segment.id);
         if (entry === undefined) throw new Error('Internal invariant breach: MeterGroup entry lookup failed.');
-        return projectSegment(state, entry, props.formatValue);
+        const projected = attributes.segment(segment.id, { label: entry.label,
+          ...(formatValue === undefined ? {} : { formatValue: value => formatValue(value, entry) }),
+        });
+        if (!projected.ok) throw new Error('Internal invariant breach: MeterGroup segment projection failed.');
+        const slot = projectSegment(segment.start, segment.end, entry, projected.value);
+        slotsByID.set(slot.id, slot);
+        return slot;
       }));
-      const rootAttributes = getMeterGroupRootAttributes(state);
-      return Object.freeze({
+      const projected = Object.freeze({
         state,
-        entries,
+        attributes,
+        slotsByID,
         slot: Object.freeze({
           segments,
           max: state.max,
           total: state.total,
           remaining: state.remaining,
-          percentage: Number(rootAttributes['data-percentage']),
+          percentage: Number(attributes.root['data-percentage']),
           zone: state.zone,
           valueText: props.formatTotal?.(state.total, state.max) ?? `${state.total} / ${state.max}`,
         }),
       });
+      // A caller formatter can synchronously dispose its component during projection.
+      return active.value ? projected : undefined;
+    });
+    onScopeDispose(() => {
+      active.value = false;
+      // Invalidate and refresh the lazy cache even if a public instance survives unmount.
+      void projection.value;
     });
     provide<MeterGroupContext>(meterGroupKey, { projection });
+    // A retained VNode reads the live owner instead of keeping an old index/snapshot.
+    const content = (): VNodeChild => projection.value === undefined ? undefined : slots['default']?.(projection.value.slot);
     return (): VNodeChild => {
       const current = projection.value;
+      if (current === undefined) return null;
       const projected = getMeterGroupRootAttributes(current.state, {
         ...(props.label === undefined ? {} : { label: props.label }),
         ...(typeof attrs['aria-labelledby'] === 'string' ? { labelledBy: attrs['aria-labelledby'] } : {}),
@@ -139,7 +165,7 @@ export const MeterGroupRoot = defineComponent({
       return h(Primitive, mergeProps(attrs, projected, {
         as: props.as,
         asChild: props.asChild,
-      }), { default: () => slots['default']?.(current.slot) });
+      }), { default: content });
     };
   },
 });
@@ -150,7 +176,7 @@ export const MeterGroupTrack = defineComponent({
   props: partProps,
   setup(props, { attrs, slots }) {
     const root = useMeterGroup('MeterGroupTrack');
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, getMeterGroupTrackAttributes(root.projection.value.state), {
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, readProjection(root).attributes.track, {
       as: props.as,
       asChild: props.asChild,
     }), slots);
@@ -168,7 +194,7 @@ export const MeterGroupSegment = defineComponent({
     provide<MeterGroupEntryContext>(meterGroupEntryKey, { segment });
     return (): VNodeChild => {
       const current = segment.value;
-      const projected = getMeterGroupSegmentAttributes(root.projection.value.state, current.id, {
+      const projected = readProjection(root).attributes.segment(current.id, {
         label: current.label,
         formatValue: () => current.valueText,
       });
@@ -207,7 +233,7 @@ export const MeterGroupValueText = defineComponent({
       asChild: props.asChild,
       'data-scope': 'meter-group',
       'data-part': 'value-text',
-    }), { default: () => slots['default']?.(root.projection.value.slot) ?? root.projection.value.slot.valueText });
+    }), { default: () => slots['default']?.(readProjection(root).slot) ?? readProjection(root).slot.valueText });
   },
 });
 
@@ -245,34 +271,34 @@ export const MeterGroupItemLabel = entryTextPart('SectileMeterGroupItemLabel', '
 export const MeterGroupItemValue = entryTextPart('SectileMeterGroupItemValue', 'item-value', (segment) => segment.valueText);
 
 function projectSegment(
-  state: MeterGroupState<string>,
+  start: string,
+  end: string,
   entry: MeterGroupEntry,
-  formatValue: MeterGroupValueFormatter | undefined,
+  attributes: MeterGroupAttributeRecord,
 ): MeterGroupSegmentSlotProps {
-  const attributes = getMeterGroupSegmentAttributes(state, entry.id, {
-    label: entry.label,
-    ...(formatValue === undefined ? {} : { formatValue: (value) => formatValue(value, entry) }),
-  });
-  if (!attributes.ok) throw new Error('Internal invariant breach: MeterGroup segment projection failed.');
-  const segment = state.segments.find((candidate) => candidate.id === entry.id);
-  if (segment === undefined) throw new Error('Internal invariant breach: MeterGroup segment lookup failed.');
   return Object.freeze({
     id: entry.id,
     label: entry.label,
-    value: segment.value,
-    valueText: String(attributes.value['aria-valuetext']),
-    start: segment.start,
-    end: segment.end,
-    percentage: Number(attributes.value['data-percentage']),
-    startPercentage: Number(attributes.value['data-start-percentage']),
-    endPercentage: Number(attributes.value['data-end-percentage']),
+    value: String(attributes['aria-valuenow']),
+    valueText: String(attributes['aria-valuetext']),
+    start,
+    end,
+    percentage: Number(attributes['data-percentage']),
+    startPercentage: Number(attributes['data-start-percentage']),
+    endPercentage: Number(attributes['data-end-percentage']),
   });
 }
 
 function segmentByID(root: MeterGroupContext, id: string, part: string): MeterGroupSegmentSlotProps {
-  const segment = root.projection.value.slot.segments.find((candidate) => candidate.id === id);
+  const segment = readProjection(root).slotsByID.get(id);
   if (segment === undefined) throw new TypeError(`${part} id ${id} is unavailable.`);
   return segment;
+}
+
+function readProjection(root: MeterGroupContext): MeterGroupProjection {
+  const current = root.projection.value;
+  if (current === undefined) throw new TypeError('MeterGroup is disposed.');
+  return current;
 }
 
 function meterGroupPart(

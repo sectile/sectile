@@ -18,6 +18,11 @@ import type { TemporalResult } from '../error.js';
 import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import { addDateYears, addDateMonths, addDateDays } from '../values/date.js';
+import { addTimeMilliseconds } from '../values/time.js';
+import { projectFieldSelection } from '../internal/field-format.js';
+import { dateTimeFieldFormatLayout, dateTimeFieldFormatMaximum, tryFormatDateTimeFieldValue, formatDateTimeFieldValue, parseDateTimeFieldValue, type DateTimeFieldFormat, type DateTimeFieldFormatPart } from './date-time-format.js';
+export { createDateTimeFieldFormat, tryCreateDateTimeFieldFormat, formatDateTimeFieldValue, parseDateTimeFieldValue } from './date-time-format.js';
+export type { DateTimeFieldFormat, DateTimeFieldFormatOptions, DateTimeFieldFormatPart } from './date-time-format.js';
 
 export type {
   DateTimeValue,
@@ -47,6 +52,7 @@ export type DateTimeSegment =
 export interface DateTimeFieldState {
   readonly value: DateTimeValue | null;
   readonly inputState: TextEditingState;
+  readonly format?: DateTimeFieldFormat;
 }
 
 export type DateTimeFieldEvent =
@@ -81,28 +87,32 @@ const DATE_TIME_FIELD_MAX_CODE_UNITS = 23;
 export function createDateTimeFieldState(
   value: DateTimeValue | null = null,
   inputState?: TextEditingState,
+  format?: DateTimeFieldFormat,
 ): DateTimeFieldState {
-  return unwrap(tryCreateDateTimeFieldState(value, inputState));
+  return unwrap(tryCreateDateTimeFieldState(value, inputState, format));
 }
 
 export function tryCreateDateTimeFieldState(
   value: DateTimeValue | null = null,
   inputState?: TextEditingState,
+  format?: DateTimeFieldFormat,
 ): TemporalResult<DateTimeFieldState> {
+  if (format !== undefined) { const issued = dateTimeFieldFormatMaximum(format); if (!issued.ok) return issued; }
   const valid = value === null ? ok(null) : tryCreateDateTimeValue(value.date, value.time);
   if (!valid.ok) return valid;
+  if (format !== undefined) { const layout = dateTimeFieldFormatLayout(format, valid.value); if (!layout.ok) return layout; }
   const input = inputState === undefined
-    ? committedInput(valid.value)
+    ? committedInput(valid.value, undefined, format)
     : normalizeTextEditingState(inputState);
   if (!input.ok) return input;
-  if (input.value.snapshot.text.length > DATE_TIME_FIELD_MAX_CODE_UNITS) {
+  if (input.value.snapshot.text.length > fieldMaximum(format)) {
     return fail(
       'construction',
       'date-time-field-draft-too-long',
-      'Date-time field drafts must fit YYYY-MM-DDTHH:mm with optional seconds and milliseconds.',
+      draftMessage(format),
     );
   }
-  return ok(Object.freeze({ value: valid.value, inputState: input.value }));
+  return ok(fieldState(valid.value, input.value, format));
 }
 
 export function applyDateTimeFieldEvent(
@@ -110,7 +120,7 @@ export function applyDateTimeFieldEvent(
   event: DateTimeFieldEvent,
   policies: DateTimeFieldPolicies = {},
 ): TemporalResult<DateTimeFieldUpdate> {
-  const valid = tryCreateDateTimeFieldState(state.value, state.inputState);
+  const valid = tryCreateDateTimeFieldState(state.value, state.inputState, state.format);
   if (!valid.ok) return transitionFailure(valid);
   const policy = validatePolicies(policies);
   if (!policy.ok) return policy;
@@ -119,44 +129,44 @@ export function applyDateTimeFieldEvent(
   if (typeof event === 'object' && event.type === 'text') {
     const edited = applyTextEvent(valid.value.inputState, event.event);
     if (!edited.ok) return edited;
-    if (edited.value.state.snapshot.text.length > DATE_TIME_FIELD_MAX_CODE_UNITS) {
+    if (edited.value.state.snapshot.text.length > fieldMaximum(valid.value.format)) {
       return fail(
         'transition-rejection',
         'date-time-field-draft-too-long',
-        'Date-time field drafts must fit YYYY-MM-DDTHH:mm with optional seconds and milliseconds.',
+        draftMessage(valid.value.format),
       );
     }
     return createMachineUpdate(
-      Object.freeze({ value: valid.value.value, inputState: edited.value.state }),
+      fieldState(valid.value.value, edited.value.state, valid.value.format),
       [{ type: 'input-state-changed', value: edited.value.state }],
     );
   }
 
   if (typeof event === 'object' && event.type === 'set-value') {
-    return commitValue(event.value, accepted);
+    return commitValue(event.value, accepted, undefined, valid.value.format);
   }
 
   if (event === 'cancel') {
-    const input = committedInput(valid.value.value);
+    const input = committedInput(valid.value.value, undefined, valid.value.format);
     if (!input.ok) return input;
     return createMachineUpdate(
-      Object.freeze({ value: valid.value.value, inputState: input.value }),
+      fieldState(valid.value.value, input.value, valid.value.format),
       [{ type: 'input-state-changed', value: input.value }],
     );
   }
 
   if (event === 'increment-segment' || event === 'decrement-segment') {
-    const draft = parseDateTimeValue(valid.value.inputState.snapshot.text);
+    const draft = parseDateTimeFieldValue(valid.value.inputState.snapshot.text, valid.value.format);
     if (!draft.ok && valid.value.value === null) return draft;
     const base = draft.ok ? draft.value : valid.value.value;
     if (base === null) {
       return fail('transition-rejection', 'date-time-field-value-missing', 'Date-time field has no value to adjust.');
     }
-    const segment = dateTimeSegmentAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset);
-    const requested = accepted.step?.[segment] ?? 1;
+    const segment = fieldPartAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset, base, valid.value.format);
+    const requested = segment === 'dayPeriod' ? 1 : accepted.step?.[segment] ?? 1;
     const direction = event === 'increment-segment' ? 1 : -1;
-    const adjusted = adjustSegment(base, segment, requested * direction);
-    return adjusted.ok ? commitValue(adjusted.value, accepted, segment) : adjusted;
+    const adjusted = segment === 'dayPeriod' ? adjustPeriod(base, direction) : adjustSegment(base, segment, requested * direction);
+    return adjusted.ok ? commitValue(adjusted.value, accepted, segment, valid.value.format) : adjusted;
   }
 
   if (event !== 'commit') {
@@ -169,10 +179,10 @@ export function applyDateTimeFieldEvent(
       'Date-time field cannot commit while text composition is active.',
     );
   }
-  const text = valid.value.inputState.snapshot.text.trim();
-  if (text.length === 0) return commitValue(null, accepted);
-  const parsed = parseDateTimeValue(text);
-  return parsed.ok ? commitValue(parsed.value, accepted) : parsed;
+  const text = valid.value.format === undefined ? valid.value.inputState.snapshot.text.trim() : valid.value.inputState.snapshot.text;
+  if (text.trim().length === 0) return commitValue(null, accepted, undefined, valid.value.format);
+  const parsed = parseDateTimeFieldValue(text, valid.value.format);
+  return parsed.ok ? commitValue(parsed.value, accepted, undefined, valid.value.format) : parsed;
 }
 
 export function dateTimeSegmentAt(offset: number): DateTimeSegment {
@@ -210,10 +220,43 @@ function adjustSegment(
 
 type CapturedPolicies = { [Key in keyof DateTimeFieldPolicies]-?: DateTimeFieldPolicies[Key] | undefined };
 
+function fieldState(value: DateTimeValue | null, inputState: TextEditingState, format?: DateTimeFieldFormat): DateTimeFieldState {
+  return Object.freeze(format === undefined ? { value, inputState } : { value, inputState, format });
+}
+function fieldMaximum(format?: DateTimeFieldFormat): number { return format === undefined ? DATE_TIME_FIELD_MAX_CODE_UNITS : unwrap(dateTimeFieldFormatMaximum(format)); }
+function draftMessage(format?: DateTimeFieldFormat): string { return format === undefined ? 'Date-time field drafts must fit YYYY-MM-DDTHH:mm with optional seconds and milliseconds.' : 'Date-time field draft exceeds its format length.'; }
+function fieldPartAt(offset: number, value: DateTimeValue | null, format?: DateTimeFieldFormat): DateTimeFieldFormatPart {
+  if (format === undefined) return dateTimeSegmentAt(offset);
+  const layout = unwrap(dateTimeFieldFormatLayout(format, value));
+  const index = layout.ends.findIndex(end => offset <= end);
+  return layout.parts[index < 0 ? layout.parts.length - 1 : index]!;
+}
+function adjustPeriod(value: DateTimeValue, direction: number): TemporalResult<DateTimeValue> {
+  const time = addTimeMilliseconds(value.time, direction * 43_200_000);
+  return time.ok ? tryCreateDateTimeValue(value.date, time.value) : time;
+}
+
+export function reformatDateTimeFieldState(state: DateTimeFieldState, format?: DateTimeFieldFormat): TemporalResult<DateTimeFieldState> {
+  const valid = tryCreateDateTimeFieldState(state.value, state.inputState, state.format); if (!valid.ok) return valid;
+  const current = valid.value, text = current.inputState.snapshot.text;
+  const canonical = current.value === null ? '' : formatDateTimeFieldValue(current.value, current.format);
+  const expanded = current.value !== null && current.format === undefined && current.value.time.millisecond === 0
+    && (current.value.time.second === 0 ? text === `${canonical}:00` || text === `${canonical}:00.000` : text === `${canonical}.000`);
+  if (current.inputState.composition !== null || !(text === canonical || expanded)) return fail('transition-rejection', 'date-time-field-format-draft-active', 'Date-time format changes require a settled draft.');
+  if (current.format === format) return ok(current);
+  if (current.value === null) return tryCreateDateTimeFieldState(null, undefined, format);
+  const previous = current.inputState.snapshot.selection;
+  const projected = committedInput(current.value, fieldPartAt(previous.focusCodeUnitOffset, current.value, current.format), format); if (!projected.ok) return projected;
+  const range = projected.value.snapshot.selection;
+  const input = tryCreateTextEditingState(projected.value.snapshot.text, projectFieldSelection(previous, text.length, range.anchorCodeUnitOffset, range.focusCodeUnitOffset, projected.value.snapshot.text.length));
+  return input.ok ? ok(fieldState(current.value, input.value, format)) : input;
+}
+
 function commitValue(
   value: DateTimeValue | null,
   policies: CapturedPolicies,
-  segment?: DateTimeSegment,
+  segment?: DateTimeFieldFormatPart,
+  format?: DateTimeFieldFormat,
 ): TemporalResult<DateTimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) {
@@ -245,9 +288,9 @@ function commitValue(
       );
     }
   }
-  const input = committedInput(value, segment);
+  const input = committedInput(value, segment, format);
   if (!input.ok) return input;
-  return createMachineUpdate(Object.freeze({ value, inputState: input.value }), [
+  return createMachineUpdate(fieldState(value, input.value, format), [
     { type: 'input-state-changed', value: input.value },
     { type: 'value-committed', value },
   ]);
@@ -255,9 +298,22 @@ function commitValue(
 
 function committedInput(
   value: DateTimeValue | null,
-  segment?: DateTimeSegment,
+  segment?: DateTimeFieldFormatPart,
+  format?: DateTimeFieldFormat,
 ): TemporalResult<TextEditingState> {
-  const text = value === null ? '' : formatDateTimeFieldInput(value, segment);
+  if (format !== undefined) {
+    const projected = value === null ? ok('') : tryFormatDateTimeFieldValue(value, format); if (!projected.ok) return projected;
+    if (value !== null && segment !== undefined) {
+      const layout = dateTimeFieldFormatLayout(format, value); if (!layout.ok) return layout;
+      const available = layout.value.parts.includes(segment) ? segment : segment === 'dayPeriod' ? 'hour' : format.time.precision === 'minute' ? 'minute' : 'second';
+      const index = layout.value.parts.indexOf(available);
+      return tryCreateTextEditingState(projected.value, { anchorCodeUnitOffset: layout.value.starts[index]!, focusCodeUnitOffset: layout.value.ends[index]! });
+    }
+    return tryCreateTextEditingState(projected.value);
+  }
+  const legacy = segment === 'dayPeriod' ? 'hour' : segment;
+  const text = value === null ? '' : formatDateTimeFieldInput(value, legacy);
+  segment = legacy;
   const start = segment === 'year' ? 0
     : segment === 'month' ? 5
       : segment === 'day' ? 8

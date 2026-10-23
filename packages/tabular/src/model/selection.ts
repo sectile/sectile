@@ -8,6 +8,7 @@ import {
 } from '@sectile/core/selection-expression';
 import { fail, ok, validateID } from '../foundation.js';
 import type {
+  TabularBulkSelectionState,
   TabularGroupID,
   TabularLimits,
   TabularResult,
@@ -15,6 +16,7 @@ import type {
   TabularRowID,
   TabularRowSelection,
   TabularSelectionTarget,
+  TabularSnapshot,
 } from '../contracts.js';
 
 const rowSelectionExpressions = new WeakMap<object, SelectionExpression<TabularRowID>>();
@@ -47,6 +49,33 @@ export function canonicalizeRowSelection(
 
 export function rowSelectionContains(selection: TabularRowSelection, rowID: TabularRowID): boolean {
   return expressionOf(selection).contains(rowID);
+}
+
+/**
+ * All-matching control state for a normalized snapshot, including retained stale views.
+ * Explicit selections require selected visible leaves; checked requires the complete
+ * known matching result. All-matching selections use query-wide exclusions.
+ */
+export function getAllMatchingSelectionState(snapshot: TabularSnapshot): TabularBulkSelectionState {
+  const accepted = snapshot.state.acceptedViewState;
+  const view = accepted.kind === 'none' ? null : accepted.view;
+  const count = view?.matchingLeafCount;
+  const total = count?.kind === 'known' ? count.value : null;
+  if (total === 0) return 'unchecked';
+  const selection = snapshot.state.rowSelection;
+  if (selection.kind === 'all-matching') {
+    if (selection.excludedRowIDs.length === 0) return 'checked';
+    return total !== null && selection.excludedRowIDs.length >= total ? 'unchecked' : 'indeterminate';
+  }
+  if (view === null) return 'unchecked';
+  const expression = expressionOf(selection);
+  let leaves = 0, selected = 0;
+  for (const row of view.rows) if (row.kind === 'leaf') {
+    leaves += 1;
+    if (expression.contains(row.id)) selected += 1;
+  }
+  if (selected === 0) return 'unchecked';
+  return total !== null && leaves === total && selected === total ? 'checked' : 'indeterminate';
 }
 
 export function toggleExplicitRowSelection(

@@ -233,6 +233,112 @@ test('document viewport resize coalesces with page scroll and refreshes the surf
   connection.disconnect();
 });
 
+test('measured target alignment follows geometry until independent native movement', () => {
+  let targetCalls = 0;
+  const fixture = createFixture({
+    scrollHeight: 2000,
+    tryScrollTarget: (state) => {
+      targetCalls += 1;
+      return success({ x: 0, y: state.targetY ?? 200 });
+    },
+    tryMeasure: (state, input) => input.measurements.length === 0 ? mutation(state)
+      : mutation({ generation: state.generation + 1, targetY: input.measurements[0] }, { x: 0, y: 10 }),
+  });
+  const connection = createVirtualizer({ ...fixture.options, measure: () => null });
+  assert.deepEqual(connection.scrollTo('item', 'end').value, { x: 0, y: 200 });
+  assert.equal(fixture.pendingFrames(), 0, 'a target does not start a polling loop');
+  fixture.resetEvidence();
+  assert.equal(connection.measure([320]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 320, 'keep the requested item alignment, not the old window anchor');
+  assert.equal(targetCalls, 2, 'one strategy lookup per active correction');
+  assert.equal(fixture.scrollport.geometryReads + fixture.surface.geometryReads, 0);
+
+  fixture.scrollport.scrollTop = 270;
+  fixture.scrollport.dispatch('scroll');
+  fixture.runFrame();
+  assert.equal(targetCalls, 2, 'independent movement releases target ownership');
+  assert.equal(connection.measure([500]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 280, 'ordinary canonical measurement correction resumes');
+  assert.equal(targetCalls, 2);
+  assert.equal(fixture.pendingFrames(), 0);
+  connection.disconnect();
+  assert.equal(fixture.scrollport.listeners.size, 0);
+  assert.equal(fixture.geometryObserver().observed.length + fixture.itemObserver().observed.length, 0);
+});
+
+test('measured target preserves immediate clamping and releases on authoritative replacement', () => {
+  let calls = 0;
+  const fixture = createFixture({ tryScrollTarget: () => { calls += 1; return success({ x: 0, y: 900 }); } });
+  const connection = createVirtualizer({ ...fixture.options, measure: () => null });
+  assert.deepEqual(connection.scrollTo('item', 'end').value, { x: 0, y: 420 });
+  assert.equal(fixture.pendingFrames(), 0);
+  fixture.scrollport.scrollHeight = 1200;
+  fixture.geometryObserver().emit([{ target: fixture.surface }]);
+  assert.equal(fixture.pendingFrames(), 1);
+  fixture.runFrame();
+  assert.equal(fixture.scrollport.scrollTop, 900, 'newly published physical extent admits the original target');
+  assert.equal(calls, 2);
+  assert.equal(connection.setState({ generation: 1 }).ok, true);
+  connection.refresh();
+  const stale = fixture.peekFrame();
+  connection.disconnect();
+  stale(0);
+  assert.equal(fixture.pendingFrames(), 0);
+  assert.equal(calls, 2, 'replacement and retired work cannot resume the old target');
+});
+
+test('rejected state or target removal preserves the last accepted measured target', () => {
+  const fixture = createFixture({
+    scrollHeight: 2000,
+    tryQuery: (state, input) => state.reject ? failure('virtual-layout-window-mismatch') : success(plan(state, input.viewport)),
+    tryScrollTarget: (state) => state.removed ? failure('virtual-layout-scroll-target-invalid')
+      : success({ x: 0, y: state.targetY ?? 200 }),
+    tryMeasure: (state, input) => input.measurements.length === 0 ? mutation(state)
+      : mutation({ generation: state.generation + 1, targetY: input.measurements[0] }),
+    tryMutate: (state) => mutation({ ...state, generation: state.generation + 1, removed: true, reject: true }),
+  });
+  const connection = createVirtualizer({ ...fixture.options, measure: () => null });
+  assert.equal(connection.scrollTo('item').ok, true);
+  assert.equal(connection.setState({ generation: 1, reject: true }).ok, false);
+  assert.equal(connection.measure([300]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 300);
+  assert.equal(connection.mutate({ type: 'remove' }).ok, false);
+  assert.equal(connection.measure([400]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 400, 'a rejected frame cannot retire the accepted target');
+  connection.disconnect();
+});
+
+test('measured target replacement survives nested publication and retires removed identities', () => {
+  const errors = [];
+  let connection, nested = false;
+  const fixture = createFixture({
+    scrollHeight: 2000,
+    tryScrollTarget: (state, id) => state.removed ? failure('virtual-layout-scroll-target-invalid')
+      : success({ x: 0, y: (state.targetY ?? 200) + (id === 'other' ? 100 : 0) }),
+    tryMeasure: (state, input) => input.measurements.length === 0 ? mutation(state)
+      : mutation({ generation: state.generation + 1, targetY: input.measurements[0] }),
+    tryMutate: (state) => mutation({ ...state, generation: state.generation + 1, removed: true }),
+  });
+  connection = createVirtualizer({ ...fixture.options, measure: () => null,
+    onError: error => errors.push(error),
+    onPlanChange: () => {
+      if (!nested) return;
+      nested = false;
+      assert.equal(connection.scrollTo('other', 'start').ok, true);
+    },
+  });
+  nested = true;
+  assert.deepEqual(connection.scrollTo('item', 'end').value, { x: 0, y: 200 });
+  assert.equal(fixture.scrollport.scrollTop, 300);
+  assert.equal(connection.measure([500]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 600, 'nested accepted target remains authoritative');
+  assert.equal(connection.mutate({ type: 'remove' }).ok, true);
+  assert.equal(connection.measure([700]).ok, true);
+  assert.equal(fixture.scrollport.scrollTop, 600, 'removed target no longer drives native scrolling');
+  assert.deepEqual(errors, [], 'ordinary target removal is not a failed mutation');
+  connection.disconnect();
+});
+
 test('document target scrolling delegates maximum clamping to the browser and reads settled page coordinates', () => {
   const fixture = createDocumentFixture({
     pageY: 100,

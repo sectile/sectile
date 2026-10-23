@@ -1,13 +1,11 @@
-import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
-import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
+import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
+import { createTreeViewController, toTreeViewEvent } from './composite/tree-controller.js';
+export { createTreeViewController, toTreeViewEvent, toTreeViewEffect } from './composite/tree-controller.js';
 import { unwrap } from '@sectile/core/result';
-import type { Result, SectileError, StableID } from '@sectile/core';
+import type { Result, StableID } from '@sectile/core';
 import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import { tryCreateTree, type Tree, type TreeNodeInput } from '@sectile/core/tree';
 import {
-  applyTreeViewEvent,
-  tryCreateTreeViewState,
-  type TreeViewCommand,
   type TreeViewEvent,
   type TreeViewPolicies,
   type TreeViewSelectionMode,
@@ -15,7 +13,7 @@ import {
 } from '@sectile/core/tree-view';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
-import { setInteractionAttributes } from './interaction/attributes.js';
+import { setInteractionAttributes, setDisclosureAccessibility } from './interaction/attributes.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type { TreeNodeInput } from '@sectile/core/tree';
@@ -125,6 +123,8 @@ export interface TreeViewConnection<ID extends StableID = StableID> {
   ): Result<RevisionSnapshot<TreeViewState<ID>>>;
   setTreeAttributes(label?: string): void;
   setItemAttributes(element: HTMLElement, attributes: TreeViewItemAttributes<ID>): void;
+  /** Release a mounted row without retiring the tree controller. */
+  releaseItem?(element: HTMLElement, id: ID): void;
   setDisclosureAttributes(element: HTMLElement, id: ID): void;
   handleEvent(event: TreeViewEvent<ID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
@@ -136,50 +136,6 @@ export type TreeViewOptions<ID extends StableID = StableID> =
   Omit<TreeViewControllerOptions<ID>, 'tree'>
   & Omit<TreeViewConnectionOptions<ID>, 'controller'>
   & { readonly nodes: readonly TreeNodeInput<ID>[] };
-
-export function createTreeViewController<ID extends StableID>(
-  options: TreeViewControllerOptions<ID>,
-): Result<TreeViewController<ID>> {
-  const selectionMode = options.selectionMode ?? options.policies?.selectionMode ?? 'single';
-  const initial = tryCreateTreeViewState(options.tree, {
-    selected: options.value ?? options.defaultValue ?? [],
-    expanded: options.expandedValues ?? options.defaultExpandedValues ?? [],
-    current: options.highlightedValue !== undefined
-      ? options.highlightedValue
-      : options.defaultHighlightedValue ?? null,
-  }, selectionMode);
-  if (!initial.ok) return initial;
-  const valueControlled = options.value !== undefined;
-  const expandedControlled = options.expandedValues !== undefined;
-  const highlightControlled = options.highlightedValue !== undefined;
-  const itemDisabled = new Set<ID>();
-  const suppliedEligibility = options.policies?.eligible;
-  const policies: TreeViewPolicies<ID> = {
-    ...options.policies,
-    selectionMode,
-    eligible: (id) => !itemDisabled.has(id) && (suppliedEligibility?.(id) ?? true),
-  };
-  const runtime = createSemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewCommand<ID>, TreeViewEffect<ID>>({
-    initial,
-    reducer: (state, event) => applyTreeViewEvent(options.tree, state, event, policies),
-    reconcile: (previous, proposed) => controlledState(
-      options.tree,
-      previous,
-      proposed,
-      valueControlled,
-      expandedControlled,
-      highlightControlled,
-      selectionMode,
-    ),
-    notify: treeViewNotifiers(options),
-    toEffect: toTreeViewEffect,
-    interaction: options,
-    interactionIntent: treeViewIntent,
-  });
-  return runtime.ok
-    ? { ok: true, value: new DOMTreeViewController({ ...options, selectionMode }, runtime.value, itemDisabled) }
-    : runtime;
-}
 
 export function createTreeView<ID extends StableID>(
   options: TreeViewOptions<ID>,
@@ -213,98 +169,87 @@ export function connectTreeView<ID extends StableID>(
   return new DOMTreeViewConnection(options);
 }
 
-export function toTreeViewEvent<ID extends StableID = StableID>(
-  input: KeyboardInput,
-): TreeViewEvent<ID> | null {
-  if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
-  if (input.key === 'ArrowDown') return 'next';
-  if (input.key === 'ArrowUp') return 'previous';
-  if (input.key === 'ArrowRight') return 'right';
-  if (input.key === 'ArrowLeft') return 'left';
-  if (input.key === ' ') return 'toggle-select';
-  return null;
-}
-
-export function toTreeViewEffect<ID extends StableID>(
-  command: TreeViewCommand<ID>,
-): TreeViewEffect<ID> {
-  return Object.freeze({ type: 'focus-element', id: command.id });
+interface TreeViewPresentation<ID extends StableID> {
+  readonly controller: TreeViewController<ID>;
+  readonly root: HTMLElement;
+  readonly onTransition: TreeViewConnectionOptions<ID>['onTransition'];
+  readonly onUpdate: TreeViewConnectionOptions<ID>['onUpdate'];
+  readonly disabled: ReadonlySet<ID>;
+  readonly interactionDisabled: boolean;
+  readonly focusEntry: DOMCompositeFocusEntry<ID>;
 }
 
 class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<ID> {
   public readonly tree: Tree<ID>;
-  readonly #controller: TreeViewController<ID>;
-  readonly #root: HTMLElement;
-  readonly #onTransition: ((details: TreeViewTransitionDetails<ID>) => void) | undefined;
-  readonly #onUpdate: (() => void) | undefined;
-  readonly #disabled: ReadonlySet<ID>;
-  readonly #interactionDisabled: boolean;
-  readonly #focusEntry: DOMCompositeFocusEntry<ID>;
+  #scope: TreeViewPresentation<ID> | undefined;
+  #snapshot: RevisionSnapshot<TreeViewState<ID>> | undefined;
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
-  #active = true;
 
   public constructor(options: TreeViewConnectionOptions<ID>) {
-    this.#controller = options.controller;
     this.tree = options.controller.tree;
-    this.#root = options.root;
-    this.#onTransition = options.onTransition;
-    this.#onUpdate = options.onUpdate;
-    this.#disabled = new Set(options.disabledItems ?? []);
-    this.#interactionDisabled = options.disabled === true;
-    this.#focusEntry = new DOMCompositeFocusEntry({
-      mode: 'root', root: this.#root, current: this.#controller.getSnapshot().state.cursor.current,
-      rootEnabled: !this.#interactionDisabled,
-    });
-    setInteractionAttributes(this.#root, options, false, true);
+    const snapshot = options.controller.getSnapshot();
+    this.#scope = {
+      controller: options.controller, root: options.root, onTransition: options.onTransition, onUpdate: options.onUpdate,
+      disabled: new Set(options.disabledItems ?? []), interactionDisabled: options.disabled === true,
+      focusEntry: new DOMCompositeFocusEntry({ mode: 'root', root: options.root,
+        current: snapshot.state.cursor.current, rootEnabled: options.disabled !== true }),
+    };
+    const scope = this.#scope;
+    setInteractionAttributes(scope.root, options, false, true);
     this.#handleKeydown = (event): void => {
       if (this.handleKeyboardEvent(event)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      const disclosureID = findDelegatedStableID(event.target, this.#root, 'treeViewDisclosureId');
+      const scope = this.#scope; if (!scope) return;
+      const disclosureID = findDelegatedStableID(event.target, scope.root, 'treeViewDisclosureId');
       if (disclosureID !== null) {
         const id = disclosureID as ID;
-        const expanded = this.#controller.getSnapshot().state.expansion.has(id);
+        const expanded = scope.controller.getSnapshot().state.expansion.has(id);
         this.handleEvent({ type: 'set-expanded', id, open: !expanded });
         return;
       }
-      const id = findDelegatedStableID(event.target, this.#root, 'treeViewId');
+      const id = findDelegatedStableID(event.target, scope.root, 'treeViewId');
       if (id !== null) this.handleEvent({ type: 'toggle-select', id: id as ID });
     };
-    this.#root.addEventListener('keydown', this.#handleKeydown);
-    this.#root.addEventListener('click', this.#handleClick);
+    scope.root.addEventListener('keydown', this.#handleKeydown);
+    scope.root.addEventListener('click', this.#handleClick);
   }
 
   public getSnapshot(): RevisionSnapshot<TreeViewState<ID>> {
-    return this.#controller.getSnapshot();
+    return this.#scope?.controller.getSnapshot() ?? this.#snapshot!;
   }
 
   public syncControlledValues(
     values: TreeViewControlledValues<ID>,
   ): Result<RevisionSnapshot<TreeViewState<ID>>> {
-    const result = this.#controller.syncControlledValues(values);
-    if (result.ok) {
-      this.#focusEntry.setCurrent(result.value.state.cursor.current);
-      this.#onUpdate?.();
-      this.focusCurrent();
+    const scope = this.#scope;
+    if (!scope) return { ok: false, error: { class: 'resource-rejection', code: 'connection-destroyed', message: 'The tree-view presentation is disconnected.' } };
+    const result = scope.controller.syncControlledValues(values);
+    if (result.ok && this.#scope === scope) {
+      scope.focusEntry.setCurrent(result.value.state.cursor.current);
+      scope.onUpdate?.();
+      if (this.#scope === scope) this.focusCurrent();
     }
     return result;
   }
 
   public setTreeAttributes(label?: string): void {
-    this.#root.setAttribute('role', 'tree');
-    if (this.#controller.selectionMode === 'multiple') this.#root.setAttribute('aria-multiselectable', 'true');
-    else this.#root.removeAttribute('aria-multiselectable');
-    if (label === undefined) this.#root.removeAttribute('aria-label');
-    else this.#root.setAttribute('aria-label', label);
+    const scope = this.#scope; if (!scope) return;
+    scope.root.setAttribute('role', 'tree');
+    if (scope.controller.selectionMode === 'multiple') scope.root.setAttribute('aria-multiselectable', 'true');
+    else scope.root.removeAttribute('aria-multiselectable');
+    if (label === undefined) scope.root.removeAttribute('aria-label');
+    else scope.root.setAttribute('aria-label', label);
   }
 
   public setItemAttributes(
     element: HTMLElement,
     attributes: TreeViewItemAttributes<ID>,
   ): void {
-    this.#controller.setItemDisabled(attributes.id, attributes.disabled === true);
-    const state = this.#controller.getSnapshot().state;
+    const scope = this.#scope; if (!scope) return;
+    scope.controller.setItemDisabled(attributes.id, attributes.disabled === true);
+    const state = scope.controller.getSnapshot().state;
     const leaf = this.tree.isLeaf(attributes.id);
     const level = (this.tree.depthOf(attributes.id) ?? 0) + 1;
     element.dataset['treeViewId'] = stableIDToken(attributes.id);
@@ -316,18 +261,27 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
     } else {
       element.removeAttribute('aria-expanded');
     }
-    const unavailable = this.#interactionDisabled || attributes.disabled === true || this.#disabled.has(attributes.id);
+    const unavailable = scope.interactionDisabled || attributes.disabled === true || scope.disabled.has(attributes.id);
     if (unavailable) element.setAttribute('aria-disabled', 'true');
     else element.removeAttribute('aria-disabled');
-    this.#focusEntry.bind(element, attributes.id, { available: !unavailable });
+    scope.focusEntry.bind(element, attributes.id, { available: !unavailable });
   }
 
   public setDisclosureAttributes(element: HTMLElement, id: ID): void {
+    const scope = this.#scope; if (!scope) return;
     element.dataset['treeViewDisclosureId'] = stableIDToken(id);
-    element.setAttribute('aria-hidden', 'true');
+    setDisclosureAccessibility(element, scope.controller.getSnapshot().state.expansion.has(id), scope.interactionDisabled || scope.disabled.has(id));
+  }
+
+  public releaseItem(element: HTMLElement, id: ID): void {
+    const scope = this.#scope; if (!scope) return;
+    if (scope.focusEntry.elementFor(id) !== element) return;
+    scope.focusEntry.release(id, element);
+    scope.controller.setItemDisabled(id, false);
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    if (!this.#scope) return false;
     const input: KeyboardInput = {
       key: event.key,
       altKey: event.altKey,
@@ -340,179 +294,35 @@ class DOMTreeViewConnection<ID extends StableID> implements TreeViewConnection<I
   }
 
   public handleEvent(event: TreeViewEvent<ID>): boolean {
-    const result = this.#controller.handleEvent(event);
-    this.#onTransition?.(Object.freeze({ event, result }));
-    if (result.ok) {
-      this.#focusEntry.setCurrent(result.snapshot.state.cursor.current);
-      this.#onUpdate?.();
-      this.focusCurrent();
+    const scope = this.#scope; if (!scope) return false;
+    const result = scope.controller.handleEvent(event);
+    if (this.#scope === scope) scope.onTransition?.(Object.freeze({ event, result }));
+    if (result.ok && this.#scope === scope) {
+      scope.focusEntry.setCurrent(result.snapshot.state.cursor.current);
+      scope.onUpdate?.();
+      if (this.#scope === scope) this.focusCurrent();
     }
     return result.ok || result.error.code !== 'interaction-disabled';
   }
 
   public focusCurrent(): void {
     queueMicrotask((): void => {
-      if (!this.#active) return;
-      const current = this.#controller.getSnapshot().state.cursor.current;
+      const scope = this.#scope; if (!scope) return;
+      const current = scope.controller.getSnapshot().state.cursor.current;
       if (current === null) {
-        this.#root.focus();
+        scope.root.focus();
         return;
       }
-      this.#focusEntry.elementFor(current)?.focus();
+      scope.focusEntry.elementFor(current)?.focus();
     });
   }
 
   public disconnect(): void {
-    this.#active = false;
-    this.#root.removeEventListener('keydown', this.#handleKeydown);
-    this.#root.removeEventListener('click', this.#handleClick);
-    this.#focusEntry.disconnect();
+    const scope = this.#scope; if (!scope) return;
+    this.#snapshot = scope.controller.getSnapshot();
+    this.#scope = undefined;
+    scope.root.removeEventListener('keydown', this.#handleKeydown);
+    scope.root.removeEventListener('click', this.#handleClick);
+    scope.focusEntry.disconnect();
   }
-}
-
-class DOMTreeViewController<ID extends StableID> implements TreeViewController<ID> {
-  public readonly tree: Tree<ID>;
-  public readonly selectionMode: TreeViewSelectionMode;
-  readonly #tree: Tree<ID>;
-  readonly #valueControlled: boolean;
-  readonly #expandedControlled: boolean;
-  readonly #highlightControlled: boolean;
-  readonly #itemDisabled: Set<ID>;
-  readonly #runtime: SemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewEffect<ID>>;
-
-  public constructor(
-    options: TreeViewControllerOptions<ID>,
-    runtime: SemanticController<TreeViewState<ID>, TreeViewEvent<ID>, TreeViewEffect<ID>>,
-    itemDisabled: Set<ID>,
-  ) {
-    this.tree = options.tree;
-    this.selectionMode = options.selectionMode ?? options.policies?.selectionMode ?? 'single';
-    this.#tree = options.tree;
-    this.#valueControlled = options.value !== undefined;
-    this.#expandedControlled = options.expandedValues !== undefined;
-    this.#highlightControlled = options.highlightedValue !== undefined;
-    this.#itemDisabled = itemDisabled;
-    this.#runtime = runtime;
-  }
-
-  public getSnapshot(): RevisionSnapshot<TreeViewState<ID>> {
-    return this.#runtime.getSnapshot();
-  }
-
-  public setItemDisabled(id: ID, disabled: boolean): void {
-    if (disabled) this.#itemDisabled.add(id);
-    else this.#itemDisabled.delete(id);
-  }
-
-  public syncControlledValues(
-    values: TreeViewControlledValues<ID>,
-  ): Result<RevisionSnapshot<TreeViewState<ID>>> {
-    const error = controlledInputError(
-      this.#valueControlled,
-      this.#expandedControlled,
-      this.#highlightControlled,
-      values,
-    );
-    if (error !== null) return { ok: false, error };
-    const state = tryCreateTreeViewState(this.#tree, {
-      selected: this.#valueControlled
-        ? (values.value as readonly ID[])
-        : this.#runtime.getSnapshot().state.selection.selected,
-      anchor: this.#runtime.getSnapshot().state.selection.anchor,
-      expanded: this.#expandedControlled
-        ? (values.expandedValues as readonly ID[])
-        : this.#runtime.getSnapshot().state.expansion.ids,
-      current: this.#highlightControlled
-        ? (values.highlightedValue as ID | null)
-        : this.#runtime.getSnapshot().state.cursor.current,
-    }, this.selectionMode);
-    return this.#runtime.replace(state);
-  }
-
-  public handleKeyboardInput(
-    input: KeyboardInput,
-    expectedRevision = this.#runtime.getSnapshot().revision,
-  ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
-    const event = toTreeViewEvent<ID>(input);
-    if (event === null) {
-      return this.#runtime.reject('unsupported-dom-key', 'DOM keyboard input does not map to a tree-view semantic event.', { key: input.key });
-    }
-    return this.handleEvent(event, expectedRevision);
-  }
-
-  public handleEvent(
-    event: TreeViewEvent<ID>,
-    expectedRevision = this.#runtime.getSnapshot().revision,
-  ): RevisionResult<TreeViewState<ID>, TreeViewEffect<ID>> {
-    return this.#runtime.handle(event, expectedRevision);
-  }
-}
-
-function treeViewNotifiers<ID extends StableID>(
-  options: TreeViewControllerOptions<ID>,
-): readonly ((previous: TreeViewState<ID>, proposed: TreeViewState<ID>) => void)[] {
-  return Object.freeze([
-    (previous, proposed) => {
-      if (!sameIDs(previous.selection.selected, proposed.selection.selected)) {
-        options.onValueChange?.(Object.freeze({ value: proposed.selection.selected, previousValue: previous.selection.selected }));
-      }
-    },
-    (previous, proposed) => {
-      if (!sameIDs(previous.expansion.ids, proposed.expansion.ids)) {
-        options.onExpandedValuesChange?.(Object.freeze({ value: proposed.expansion.ids, previousValue: previous.expansion.ids }));
-      }
-    },
-    (previous, proposed) => {
-      if (previous.cursor.current !== proposed.cursor.current) {
-        options.onHighlightedValueChange?.(Object.freeze({ value: proposed.cursor.current, previousValue: previous.cursor.current }));
-      }
-    },
-  ]);
-}
-
-function treeViewIntent<ID extends StableID>(event: TreeViewEvent<ID>): 'navigate' | 'mutate' {
-  const type = typeof event === 'object' ? event.type : event;
-  return type === 'toggle-select' ? 'mutate' : 'navigate';
-}
-
-function controlledState<ID extends StableID>(
-  tree: Tree<ID>,
-  previous: TreeViewState<ID>,
-  proposed: TreeViewState<ID>,
-  valueControlled: boolean,
-  expandedControlled: boolean,
-  highlightControlled: boolean,
-  selectionMode: TreeViewSelectionMode,
-): Result<TreeViewState<ID>> {
-  return tryCreateTreeViewState(tree, {
-    selected: valueControlled ? previous.selection.selected : proposed.selection.selected,
-    anchor: valueControlled ? previous.selection.anchor : proposed.selection.anchor,
-    expanded: expandedControlled ? previous.expansion.ids : proposed.expansion.ids,
-    current: highlightControlled ? previous.cursor.current : proposed.cursor.current,
-  }, selectionMode);
-}
-
-function controlledInputError<ID extends StableID>(
-  valueControlled: boolean,
-  expandedControlled: boolean,
-  highlightControlled: boolean,
-  values: TreeViewControlledValues<ID>,
-): SectileError | null {
-  return fieldError(valueControlled, values.value !== undefined, 'value', 'tree-view selection')
-    ?? fieldError(
-      expandedControlled,
-      values.expandedValues !== undefined,
-      'expanded-values',
-      'tree-view expansion',
-    )
-    ?? fieldError(
-      highlightControlled,
-      values.highlightedValue !== undefined,
-      'highlighted-value',
-      'tree-view highlight',
-    );
-}
-
-function sameIDs<ID extends StableID>(left: readonly ID[], right: readonly ID[]): boolean {
-  return left.length === right.length && left.every((id, index) => id === right[index]);
 }

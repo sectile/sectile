@@ -77,6 +77,8 @@ export type FormSubmissionElement =
 
 export interface FormParticipant<ID extends StableID = StableID> {
   readonly id: ID;
+  /** Physical interaction availability; accepted field data stays registered. */
+  readonly active?: boolean;
   readonly element: HTMLElement;
   readonly semanticControl?: HTMLElement;
   readonly focusTarget?: HTMLElement;
@@ -85,6 +87,8 @@ export interface FormParticipant<ID extends StableID = StableID> {
   readonly name?: FormFieldPath | null;
   readonly focus?: FormFocusHandler;
   readonly reset?: FormResetHandler;
+  /** Finish pending native control reactions before native FormData is read. */
+  readonly prepareSubmission?: (() => void) | undefined;
   readonly getValue?: (() => unknown) | undefined;
   readonly isValueEqual?: ((current: unknown, baseline: unknown) => boolean) | undefined;
 }
@@ -208,11 +212,16 @@ export interface FormConnection<
   Output extends object = Input,
 > {
   readonly state: FormState<ID>;
+  getActive(): boolean;
+  suspend(): void;
+  resume(): void;
   getSnapshot(): FormSnapshot<ID>;
   getFormData(submitter?: HTMLElement | null): FormData;
   reconfigure(options: FormReconfigureOptions<ID, Input, Output>): void;
   registerParticipant(participant: FormParticipant<ID>): () => void;
-  refreshParticipant(id: ID): boolean;
+  /** Value/baseline scopes avoid target observation and ordering work. */
+  refreshParticipant(id: ID, scope?: 'all' | 'value' | 'baseline'): boolean;
+  refreshParticipantActivity(id: ID): boolean;
   getField(id: ID): FormFieldState<ID> | null;
   setFieldMeta(id: ID, meta: FormFieldMetaInput): boolean;
   replaceFieldIssues(id: ID, source: FormIssueSource, issues: readonly FormIssue<ID>[]): boolean;

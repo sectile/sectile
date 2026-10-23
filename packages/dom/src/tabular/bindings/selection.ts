@@ -1,7 +1,6 @@
 import type {
   TabularRowSelection,
   TabularRowID,
-  TabularSnapshot,
 } from '@sectile/tabular';
 import {
   rowSelectionContains,
@@ -12,12 +11,11 @@ import type {
   TabularDOMBulkSelectionState,
 } from '../contracts.js';
 import {
-  currentView,
-} from '../projection.js';
-import {
   type BindingScope,
   bindEvent,
 } from './scope.js';
+
+export { getAllMatchingSelectionState as allMatchingSelectionState } from '@sectile/tabular/data-table';
 
 export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID): boolean {
   return rowSelectionContains(selection, rowID);
@@ -63,22 +61,6 @@ export function setRowSelectionControlAttributes(
   element.setAttribute('aria-checked', String(checked));
   element.setAttribute('aria-disabled', String(disabled));
   element.setAttribute('data-state', checked ? 'checked' : 'unchecked');
-}
-
-export function allMatchingSelectionState(snapshot: TabularSnapshot): TabularDOMBulkSelectionState {
-  const selection = snapshot.state.rowSelection;
-  const view = currentView(snapshot);
-  const count = view?.matchingLeafCount;
-  const total = count?.kind === 'known' ? count.value : null;
-  if (total === 0) return 'unchecked';
-  if (selection.kind === 'explicit-rows') {
-    const visibleLeafIDs = view?.rows.filter((row) => row.kind === 'leaf').map((row) => row.id) ?? [];
-    const selectedVisibleCount = visibleLeafIDs.filter((rowID) => rowSelected(selection, rowID)).length;
-    if (selectedVisibleCount === 0) return 'unchecked';
-    return total !== null && visibleLeafIDs.length === total && selectedVisibleCount === total ? 'checked' : 'indeterminate';
-  }
-  if (selection.excludedRowIDs.length === 0) return 'checked';
-  return total !== null && selection.excludedRowIDs.length >= total ? 'unchecked' : 'indeterminate';
 }
 
 export function setBulkSelectionControlAttributes(

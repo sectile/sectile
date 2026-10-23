@@ -37,7 +37,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, effectScope, h, nextTick, ref, shallowRef } = await import('vue');
+const { createApp, effectScope, h, nextTick, ref, shallowRef, watch } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { VirtualGrid } = await import('../.verification-dist/virtual/virtual-grid.js');
 const { VirtualList } = await import('../.verification-dist/virtual-list.js');
@@ -657,6 +657,44 @@ test('VirtualList projects horizontal cross geometry from the surface viewport',
     else Object.defineProperty(HTMLElement.prototype, 'clientHeight', heightDescriptor);
     if (widthDescriptor === undefined) delete HTMLElement.prototype.clientWidth;
     else Object.defineProperty(HTMLElement.prototype, 'clientWidth', widthDescriptor);
+  }
+});
+
+test('VirtualList preserves measured bootstrap state when same-identity values arrive before child publication', async () => {
+  const bounds = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'getBoundingClientRect');
+  const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight'), width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get: () => 96 });
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 120 });
+  Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', {
+    configurable: true, value: () => ({ x: 0, y: 0, top: 0, right: 120, bottom: 32, left: 0, width: 120, height: 32, toJSON() {} }),
+  });
+  const host = document.createElement('div'); document.body.append(host);
+  const items = shallowRef([{ id: 'b', label: 'Beta' }]), list = shallowRef(), errors = [];
+  const getID = value => value.id, sizePolicy = { kind: 'measured' };
+  const app = createApp({ setup() {
+    watch(() => list.value?.phase, phase => {
+      if (phase === 'ready') items.value = [{ id: 'b', label: 'Updated Beta' }];
+    }, { flush: 'sync' });
+    return () => h(VirtualList, { ref: list, items: items.value, getID, sizePolicy }, { item: ({ value }) => value.label });
+  } });
+  app.config.errorHandler = error => errors.push(error);
+  try {
+    app.mount(host);
+    await nextTick();
+    items.value = [{ id: 'b', label: 'Updated Beta' }];
+    await settle(); await settle();
+    assert.deepEqual(errors, []);
+    assert.equal(list.value.phase, 'ready');
+    assert.equal(list.value.state.domain.size, 1);
+    assert.equal(list.value.state.extents.size, 1);
+  } finally {
+    app.unmount(); host.remove();
+    if (bounds === undefined) delete HTMLElement.prototype.getBoundingClientRect;
+    else Object.defineProperty(HTMLElement.prototype, 'getBoundingClientRect', bounds);
+    if (height === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', height);
+    if (width === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', width);
   }
 });
 

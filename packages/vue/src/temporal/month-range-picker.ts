@@ -5,6 +5,7 @@ import {
   createPickerRoot, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { monthRangePickerCapability } from './capabilities/month-range-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface MonthRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null;
@@ -23,13 +24,14 @@ export interface MonthRangePickerRootProps extends PickerPartProps, PickerPositi
 
 export const MonthRangePickerRoot = /* @__PURE__ */ createPickerRoot(monthRangePickerCapability, 'SectileMonthRangePickerRoot', { scope: 'month-range-picker', granularity: 'month', defaultView: 'year' });
 export type MonthRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
+export type MonthRangePickerContentSlotProps = PickerContentSlotProps<DateRange | null>;
 export type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>;
 export type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const MonthRangePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date-range'>;
 export const MonthRangePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date-range'>;
 export const MonthRangePickerPortal = PickerPortal;
-export const MonthRangePickerContent = PickerContent as unknown as PickerRootPartComponent<'date-range'>;
+export const MonthRangePickerContent = PickerContent as unknown as PickerContentPartComponent<'date-range'>;
 export const MonthRangePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date-range'>;
 export const MonthRangePickerCell = /* @__PURE__ */ createPickerMonthCell('cell', 'SectileMonthRangePickerCell');
 export const MonthRangePickerStartInput = /* @__PURE__ */ createPickerInput('start-input', 'SectileMonthRangePickerStartInput');

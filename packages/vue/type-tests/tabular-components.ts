@@ -1,4 +1,10 @@
 import { shallowRef } from 'vue';
+import { getAllMatchingSelectionState } from '@sectile/tabular/data-table';
+import type { TabularBulkSelectionState } from '@sectile/tabular';
+import { projectTabularHeaders, type TabularHeaderLayout } from '@sectile/tabular/model';
+const headerLayout: readonly TabularHeaderLayout[] = projectTabularHeaders({ columns: [{ id: 'name' }], headers: [] }, new Map([['name', 1]]));
+// @ts-expect-error accepted header layout is readonly
+headerLayout[0]!.colSpan = 2;
 import {
   useDataTable,
   createDataTableComponents,
@@ -49,12 +55,34 @@ const inferredTable = useDataTable({
   }),
 });
 const table = inferredTable;
+const bulkState: TabularBulkSelectionState = getAllMatchingSelectionState(table.getSnapshot());
+const validBulkStates: readonly TabularBulkSelectionState[] = ['unchecked', 'indeterminate', 'checked'];
+// @ts-expect-error portable state uses the indeterminate value, not an ARIA token
+const invalidBulkState: TabularBulkSelectionState = 'mixed';
+// @ts-expect-error an aggregate result is not guaranteed to be fully checked
+const uncheckedNarrowing: 'checked' = getAllMatchingSelectionState(table.getSnapshot());
+// @ts-expect-error the getter consumes a profile snapshot, not a raw selection
+getAllMatchingSelectionState({ kind: 'explicit-rows', rowIDs: [] });
+void bulkState; void validBulkStates; void invalidBulkState; void uncheckedNarrowing;
 const groupedTable = useDataTable({ source: async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 2 }, rows: [{ kind: 'leaf', id: 'u1', cells: { name: 'Ada', active: true, profile: { name: 'Ada' }, items: [{ price: 10 }] } }, { kind: 'group', id: 'g1', parentGroupID: null, depth: 0, expanded: true, cells: { label: 'People', memberCount: 1 } }], columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name' }, { id: 'label' }], headers: [] }, removedRowIDs: [] }) });
 const grid = useDataGrid({ source: async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'leaf', id: 'u1', cells: { name: 'Ada', active: true, profile: { name: 'Ada' }, items: [{ price: 10 }] } }], columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name', capabilities: ['edit'] }, { id: 'active' }], headers: [] }, removedRowIDs: [] }) });
 const tree = useDataTreeGrid({ source: async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'leaf', id: 'u1', cells: { name: 'Ada', active: true, profile: { name: 'Ada' }, items: [{ price: 10 }] } }], columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name', capabilities: ['edit'] }, { id: 'active' }], headers: [] }, removedRowIDs: [] }), defaultExpansion: [] });
 const Table = createDataTableComponents(table);
 const Grid = createDataGridComponents(grid);
+const acceptedGridSizes: Readonly<Record<string, number>> = grid.columnSizes.value;
+// @ts-expect-error accepted size publication is readonly
+grid.columnSizes.value = {};
+// @ts-expect-error accepted size entries are readonly
+grid.columnSizes.value.name = 100;
+void acceptedGridSizes;
 const TreeGrid = createDataTreeGridComponents(tree);
+const acceptedTableSizes: Readonly<Record<string, number>> = table.columnSizes.value;
+const acceptedTreeSizes: Readonly<Record<string, number>> = tree.columnSizes.value;
+// @ts-expect-error accepted size publication is readonly
+table.columnSizes.value = {};
+// @ts-expect-error accepted size publication is readonly
+tree.columnSizes.value = {};
+void acceptedTableSizes; void acceptedTreeSizes;
 type TableProviderProps = InstanceType<typeof Table.Provider>['$props'];
 const tableProviderHasController: 'controller' extends keyof TableProviderProps ? true : false = false;
 
@@ -64,8 +92,8 @@ const rootProps: DataTableRootProps = { onCommand: () => {} };
 const expose: DataGridRootExpose<UserCells> = { controller: grid, refresh() {} };
 const resolver: DataTreeGridSourceResolver<UserCells> = async (request) => ({ ...request, viewRevision: 1, matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 }, rows: [], columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name' }, { id: 'active' }], headers: [] }, removedRowIDs: [] });
 const flatHeader: DataTableHeaderRowProps = {};
-const automaticTableBody: DataTableBodyProps = {};
-const manualGridBody: DataGridBodyProps = { manual: true };
+const automaticTableBody: DataTableBodyProps = { rowAttributes: { class: 'shipment-row' } };
+const manualGridBody: DataGridBodyProps = { manual: true, rowAttributes: { 'data-density': 'compact' } };
 const inheritedTableCell: DataTableCellProps<keyof UserCells> = { column: 'name' };
 const leafColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { column: 'name' };
 const groupedColumnHeader: DataTableColumnHeaderProps<keyof UserCells> = { header: 'employment' };

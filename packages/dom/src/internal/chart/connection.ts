@@ -8,6 +8,7 @@ import type {
   DOMChartLifecycleDiagnostics,
   DOMChartNavigation,
   ChartRenderer,
+  ChartRenderStyle,
   ChartRendererDiagnostics,
   DOMChartConnection,
   DOMChartOptions,
@@ -16,6 +17,7 @@ import type {
 } from './contracts.js';
 import { ChartNavigationAdapter } from './navigation.js';
 import { ChartOverlay } from './overlay.js';
+import { invalidRenderer } from './result.js';
 import { stableIDElementToken } from '../../identity.js';
 
 let connectionID = 0;
@@ -42,6 +44,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   readonly #resizeObserver: ResizeObserver | null;
   #viewport: ChartViewport;
   #projection: ChartProjection<ID> | null = null;
+  #paintPending = false;
   #accessibilityGeneration = -1;
   #accessibilityStart = 0;
   #accessibilityCount = 0;
@@ -81,9 +84,9 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
       });
       options.root.setAttribute('role', 'region');
       options.root.setAttribute('tabindex', '0');
-      options.root.setAttribute('aria-label', options.accessibilityLabel ?? 'Chart');
       options.canvas.setAttribute('aria-hidden', 'true');
       this.#list = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-data`, 'listbox');
+      this.setAccessibilityLabel(options.accessibilityLabel);
       this.#live = createAssistiveContainer(options.root.ownerDocument, `${this.#prefix}-live`, 'status');
       this.#live.setAttribute('aria-live', 'polite');
       cleanup.push(() => { this.#list.remove(); this.#live.remove(); });
@@ -145,10 +148,27 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
   }
   public setAccessibilityLabel(label?: string): void {
     if (!this.#active) return;
-    this.#options.root.setAttribute('aria-label', label ?? 'Chart');
+    const name = label ?? 'Chart';
+    this.#options.root.setAttribute('aria-label', name);
+    this.#list.setAttribute('aria-label', name);
   }
   public setNavigation(navigation?: DOMChartNavigation<ID>): Result<void> {
     return this.#navigation.setNavigation(navigation);
+  }
+
+  public setRenderStyle(style: ChartRenderStyle): Result<boolean> {
+    if (!this.#active) return invalidRenderer('DOM Chart is disconnected.');
+    try {
+      const setter = this.#renderer.setStyle;
+      if (!setter) return invalidRenderer('Chart renderer does not support style updates.');
+      const result = setter.call(this.#renderer, style); if (!result.ok) return result;
+      this.#paintPending ||= result.value;
+      if (this.#paintPending && this.#projection !== null) {
+        this.#renderer.render(this.#projection);
+        this.#paintPending = false;
+      }
+      return result;
+    } catch { return invalidRenderer('Chart renderer style update failed.'); }
   }
 
   public refresh(): void {
@@ -174,7 +194,7 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     }
     this.#projection = projected.value;
     let failure: readonly [unknown] | undefined;
-    try { this.#renderer.render(projected.value); }
+    try { this.#renderer.render(projected.value); this.#paintPending = false; }
     catch (error) { failure ??= [error]; }
     try { this.#overlay.render(projected.value, this.controller.getSnapshot().state); }
     catch (error) { failure ??= [error]; }
@@ -248,7 +268,11 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
     if (failure !== undefined) throw failure[0];
   };
 
-  readonly #handleResize = (): void => { this.#schedule(); };
+  readonly #handleResize = (): void => {
+    if (!this.#active) return;
+    this.#schedule();
+    this.#overlay.synchronizeViewport();
+  };
   readonly #handlePointerMove = (event: PointerEvent): void => {
     if (this.#navigation.isPointerGestureActive()) return;
     this.#pendingPointer = Object.freeze({ clientX: event.clientX, clientY: event.clientY });
@@ -381,7 +405,6 @@ export class DOMChart<ID extends StableID> implements DOMChartConnection<ID> {
         this.#nodes.set(id, option);
       }
       this.#list.append(fragment);
-      this.#list.setAttribute('aria-setsize', String(model.size));
       this.#accessibilityActive = null;
       this.#accessibilityCursor = null;
       this.#accessibilitySelection = null;

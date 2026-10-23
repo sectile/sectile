@@ -1,7 +1,7 @@
 import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
 import { controlledFieldError as fieldError } from '@sectile/core/adapter-runtime';
-import { unwrap } from '@sectile/core/result';
-import type { Result, SectileError, StableID } from '@sectile/core';
+import { failResult, okResult, unwrap } from '@sectile/core/result';
+import type { Result, SectileError, StableID, CoreErrorCode } from '@sectile/core';
 import {
   applyComboboxEvent,
   tryCreateComboboxState,
@@ -21,10 +21,11 @@ import {
 import { toTextEvent, type TextInput } from './text.js';
 import type { TextElement } from './text.js';
 import { DOMTextElementBinding } from './text/element-binding.js';
+import { textCaretAnchor } from './text/caret.js';
 import { setInteractionAttributes } from './interaction/attributes.js';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDElementToken, stableIDToken } from './identity.js';
-import { createDOMLayerBinding, type DOMLayerBinding } from './overlay/layer/binding.js';
+import { createDOMLayerBinding, type DOMLayerBinding, type DOMLayerReparentErrorCode, type DOMLayerPresentationListener, type DOMLayerPresentationSubscription } from './overlay/layer/binding.js';
 import {
   createPosition,
   manualPositionConnection,
@@ -128,24 +129,40 @@ export interface ComboboxTransitionDetails<ID extends StableID = StableID> {
   readonly result: RevisionResult<ComboboxState<ID>, ComboboxEffect<ID>>;
 }
 
+export type ComboboxPresentation = 'popup' | 'inline';
+export type ComboboxAnchor = 'input' | 'caret';
+export type ComboboxConstructionErrorCode = CoreErrorCode | 'dom.combobox-presentation' | 'dom.combobox-anchor';
 export interface ComboboxConnectionOptions<ID extends StableID = StableID> extends PositionOptions {
+  readonly layerHost?: import('./layer-host.js').LayerHostConnection | null;
   readonly controller: ComboboxController<ID>;
   readonly input: TextElement;
   readonly popup?: HTMLElement;
+  /** Inline lists share their enclosing host; only popup presentation owns a layer and position. */
+  readonly presentation?: ComboboxPresentation;
   readonly position?: boolean;
+  /** Caret uses the collapsed native input/textarea selection rather than the whole input. */
+  readonly anchor?: ComboboxAnchor;
   readonly manageVisibility?: boolean;
+  /** False borrows an existing editor; native text, selection and flags stay with its owner. */
+  readonly manageText?: boolean;
+  /** Supplement native key events when an external editor owns the IME session. */
+  readonly isInputComposing?: () => boolean;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly getItemElementID?: (id: ID) => string;
+  /** Gate active-descendant publication without changing the logical choice domain. */
+  readonly isItemRendered?: (id: NoInfer<ID>) => boolean;
   readonly onAccept?: (id: ID) => void;
   readonly onTransition?: (details: ComboboxTransitionDetails<ID>) => void;
   readonly onUpdate?: () => void;
 }
 
 export type ComboboxConnectionItemElementIDResolver<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['getItemElementID']>;
+export type ComboboxConnectionItemRenderedPredicate<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['isItemRendered']>;
 export type ComboboxConnectionAcceptHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onAccept']>;
 export type ComboboxConnectionTransitionHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onTransition']>;
 export type ComboboxConnectionUpdateHandler<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['onUpdate']>;
+export type ComboboxConnectionInputComposingPredicate<ID extends StableID = StableID> = NonNullable<ComboboxConnectionOptions<ID>['isInputComposing']>;
 
 export interface ComboboxItemAttributes<ID extends StableID = StableID> {
   readonly id: ID;
@@ -153,6 +170,12 @@ export interface ComboboxItemAttributes<ID extends StableID = StableID> {
 }
 
 export interface ComboboxConnection<ID extends StableID = StableID> {
+  getActive(): boolean;
+  getLayerOrder(): number | null;
+  subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription;
+  syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode>;
+  suspend(): void;
+  resume(): void;
   readonly domain: Sequence<ID>;
   readonly labels: ReadonlyMap<ID, string>;
   getSnapshot(): RevisionSnapshot<ComboboxState<ID>>;
@@ -221,19 +244,34 @@ export function createCombobox<ID extends StableID>(
 
 export function tryCreateCombobox<ID extends StableID>(
   options: ComboboxOptions<ID>,
-): Result<FacadeConnection<ComboboxConnection<ID>>> {
+): Result<FacadeConnection<ComboboxConnection<ID>>, ComboboxConstructionErrorCode> {
   return createFacadeConnection(options, tryCreateComboboxConnection);
 }
 
 function tryCreateComboboxConnection<ID extends StableID>(
   options: ComboboxOptions<ID>,
-): Result<ComboboxConnection<ID>> {
+): Result<ComboboxConnection<ID>, ComboboxConstructionErrorCode> {
+  const presentation = readComboboxPresentation(options.presentation);
+  if (!presentation.ok) return presentation;
+  const anchor = readComboboxAnchor(options.anchor);
+  if (!anchor.ok) return anchor;
   const domain = tryCreateSequence(options.items.map((item) => item.id));
   if (!domain.ok) return domain;
   const labels = new Map(options.items.map((item) => [item.id, item.label] as const));
-  const controller = createComboboxController({ ...options, domain: domain.value, labels });
+  const { isItemRendered: _isItemRendered, isInputComposing: _isInputComposing, ...controllerOptions } = options;
+  const controller = createComboboxController({ ...controllerOptions, domain: domain.value, labels });
   if (!controller.ok) return controller;
   return { ok: true, value: connectCombobox({ ...options, controller: controller.value }) };
+}
+
+function readComboboxPresentation(value: unknown): Result<ComboboxPresentation, ComboboxConstructionErrorCode> {
+  return value === undefined || value === 'popup' ? okResult('popup') : value === 'inline' ? okResult('inline')
+    : failResult('construction', 'dom.combobox-presentation', 'Combobox presentation requires popup or inline.');
+}
+
+function readComboboxAnchor(value: unknown): Result<ComboboxAnchor, ComboboxConstructionErrorCode> {
+  return value === undefined || value === 'input' ? okResult('input') : value === 'caret' ? okResult('caret')
+    : failResult('construction', 'dom.combobox-anchor', 'Combobox anchor requires input or caret.');
 }
 
 export function connectCombobox<ID extends StableID>(
@@ -275,18 +313,26 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   readonly #controller: ComboboxController<ID>;
   readonly #input: TextElement;
   readonly #popup: HTMLElement | undefined;
+  readonly #inline: boolean;
   readonly #visibility: HiddenBinding | undefined;
   readonly #getItemElementID: (id: ID) => string;
+  #isItemRendered: ((id: ID) => boolean) | undefined;
   readonly #onAccept: ((id: ID) => void) | undefined;
   readonly #onTransition: ((details: ComboboxTransitionDetails<ID>) => void) | undefined;
   readonly #onUpdate: (() => void) | undefined;
-  readonly #binding: DOMTextElementBinding;
+  readonly #binding: DOMTextElementBinding | undefined;
+  #isInputComposing: (() => boolean) | undefined;
   readonly #layer: DOMLayerBinding | undefined;
   readonly #position: PositionConnection;
   readonly #handleKeydown: (event: Event) => void;
   readonly #handleClick: (event: MouseEvent) => void;
+  #active = true;
+  #disconnected = false;
 
   public constructor(options: ComboboxConnectionOptions<ID>) {
+    const presentation = unwrap(readComboboxPresentation(options.presentation));
+    const anchor = unwrap(readComboboxAnchor(options.anchor));
+    this.#inline = presentation === 'inline';
     this.#controller = options.controller;
     this.domain = options.controller.domain;
     this.labels = options.controller.labels;
@@ -298,26 +344,31 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       : createHiddenBinding(this.#popup);
     this.#getItemElementID = options.getItemElementID
       ?? ((id): string => `sectile-combobox-${stableIDElementToken(id)}`);
+    this.#isItemRendered = options.isItemRendered;
     this.#onAccept = options.onAccept;
     this.#onTransition = options.onTransition;
     this.#onUpdate = options.onUpdate;
-    this.#binding = new DOMTextElementBinding({
+    this.#isInputComposing = options.isInputComposing;
+    this.#binding = options.manageText === false ? undefined : new DOMTextElementBinding({
       element: this.#input,
       getState: () => this.#controller.getSnapshot().state.text,
       dispatch: (input) => this.#dispatchTextInput(input).ok,
     });
-    this.#layer = this.#popup === undefined ? undefined : createDOMLayerBinding({
+    this.#layer = this.#popup === undefined || presentation === 'inline' ? undefined : createDOMLayerBinding({
       surface: this.#popup,
       owner: this.#input,
+      ...(options.layerHost === undefined ? {} : { layerHost: options.layerHost }),
       dismissOnInteractOutside: true,
       readOpen: () => this.#controller.getSnapshot().state.popupOpen,
       close: () => { this.handleEvent('close'); },
+      presentation: { suspend: () => this.#suspendResources(), resume: () => this.#resumeResources() },
     });
-    this.#position = this.#popup === undefined || options.position === false
+    this.#position = this.#popup === undefined || presentation === 'inline' || options.position === false
       ? manualPositionConnection
       : createPosition({
           root: this.#popup,
           reference: this.#input,
+          ...(anchor === 'caret' ? { measureAnchorRect: textCaretAnchor(this.#input) } : {}),
           side: options.side,
           align: options.align,
           sideOffset: options.sideOffset,
@@ -333,18 +384,41 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
       if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault();
     };
     this.#handleClick = (event): void => {
-      if (this.#popup === undefined) return;
+      if (event.defaultPrevented || !this.getActive() || this.#popup === undefined) return;
       const id = findDelegatedStableID(event.target, this.#popup, 'comboboxId');
       if (id !== null) this.handleEvent({ type: 'accept', id: id as ID });
     };
-    this.#input.addEventListener('keydown', this.#handleKeydown);
-    this.#popup?.addEventListener('click', this.#handleClick);
-    setInteractionAttributes(this.#input, options, true, true);
+    this.#bindNative();
+    if (options.manageText !== false) setInteractionAttributes(this.#input, options, true, true);
     this.render();
   }
 
   public getSnapshot(): RevisionSnapshot<ComboboxState<ID>> {
     return this.#controller.getSnapshot();
+  }
+
+  public getActive(): boolean { return this.#active && !this.#disconnected && (this.#layer?.getActive() ?? true); }
+  public getLayerOrder(): number | null { return this.#layer?.getLayerOrder() ?? null; }
+  public subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription {
+    return this.#layer?.subscribeLayerPresentation(listener)
+      ?? failResult('transition-rejection', 'dom.layer-inactive', 'Combobox has no popup presentation.');
+  }
+  public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> {
+    return this.#layer?.syncLayerParent(parent)
+      ?? failResult('transition-rejection', 'dom.layer-parent-inactive', 'Combobox has no popup presentation.');
+  }
+  public suspend(): void {
+    if (!this.getActive()) return;
+    if (this.#layer !== undefined) this.#layer.suspend();
+    else this.#suspendResources();
+  }
+  public resume(): void {
+    if (this.#disconnected || this.getActive()) return;
+    if (this.#layer !== undefined) this.#layer.resume();
+    else {
+      try { this.#resumeResources(); }
+      catch (error) { try { this.#suspendResources(); } catch { /* Preserve the resumption failure. */ } throw error; }
+    }
   }
 
   public syncControlledValues(
@@ -365,7 +439,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
     this.#input.setAttribute('aria-expanded', String(state.popupOpen));
     if (this.#popup?.id) this.#input.setAttribute('aria-controls', this.#popup.id);
     else this.#input.removeAttribute('aria-controls');
-    if (state.cursor.current === null) this.#input.removeAttribute('aria-activedescendant');
+    if (state.cursor.current === null || this.#isItemRendered?.(state.cursor.current) === false) this.#input.removeAttribute('aria-activedescendant');
     else {
       this.#input.setAttribute(
         'aria-activedescendant',
@@ -379,7 +453,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   public setPopupAttributes(label?: string): void {
     if (this.#popup === undefined) return;
     this.#popup.setAttribute('role', 'listbox');
-    this.#visibility?.setHidden(!this.#controller.getSnapshot().state.popupOpen);
+    this.#visibility?.setHidden(!this.getActive() || !this.#controller.getSnapshot().state.popupOpen);
     if (label === undefined) this.#popup.removeAttribute('aria-label');
     else this.#popup.setAttribute('aria-label', label);
   }
@@ -398,13 +472,17 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    if (event.defaultPrevented || !this.getActive()) return false;
+    // Inline lists have no independent dismissal surface; their enclosing host owns Escape.
+    if (this.#inline && event.key === 'Escape') return false;
     const input: KeyboardInput = {
       key: event.key,
       altKey: event.altKey,
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
-      isComposing: event.isComposing || this.#binding.isComposing,
+      isComposing: event.isComposing || this.#binding?.isComposing || this.#isInputComposing?.() === true,
     };
+    if (!this.getActive()) return false;
     const semanticEvent = toComboboxEvent<ID>(input);
     if (semanticEvent === null) return false;
     return this.handleEvent(semanticEvent);
@@ -420,28 +498,58 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   }
 
   public handleBeforeInput(event: InputEvent): boolean {
-    return this.#binding.handleBeforeInput(event);
+    return this.#binding?.handleBeforeInput(event) ?? false;
   }
 
   public render(): void {
-    this.#binding.render();
+    this.#binding?.render();
     this.#renderPopupState();
   }
 
   #renderPopupState(): void {
+    if (this.#disconnected) return;
     this.setInputAttributes(this.#input.getAttribute('aria-label') ?? undefined);
     this.setPopupAttributes(this.#popup?.getAttribute('aria-label') ?? undefined);
     this.#layer?.sync();
-    this.#position.update();
+    if (this.getActive()) this.#position.update();
   }
 
   public disconnect(): void {
-    this.#layer?.disconnect();
-    this.#position.disconnect();
-    this.#visibility?.disconnect();
-    this.#binding.disconnect();
+    if (this.#disconnected) return;
+    this.#disconnected = true;
+    this.#isItemRendered = undefined;
+    this.#isInputComposing = undefined;
+    let failed = false, failure: unknown;
+    try { if (this.#layer !== undefined) this.#layer.disconnect(); else this.#suspendResources(); }
+    catch (error) { failed = true; failure = error; }
+    try { this.#binding?.disconnect(); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    try { this.#visibility?.disconnect(); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    if (failed) throw failure;
+  }
+
+  #bindNative(): void {
+    this.#input.addEventListener('keydown', this.#handleKeydown);
+    this.#popup?.addEventListener('click', this.#handleClick);
+  }
+
+  #resumeResources(): void {
+    this.#active = true;
+    this.#bindNative();
+    this.#binding?.resume();
+    this.render();
+    this.#onUpdate?.();
+  }
+
+  #suspendResources(): void {
+    this.#active = false;
+    this.#binding?.suspend();
     this.#input.removeEventListener('keydown', this.#handleKeydown);
     this.#popup?.removeEventListener('click', this.#handleClick);
+    let failed = false, failure: unknown;
+    try { this.#position.disconnect(); } catch (error) { failed = true; failure = error; }
+    try { if (!this.#disconnected) this.#visibility?.setHidden(true); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    try { this.#onUpdate?.(); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    if (failed) throw failure;
   }
 
   #dispatchTextInput(
@@ -459,6 +567,7 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
   }
 
   #applyEffects(effects: readonly ComboboxEffect<ID>[]): void {
+    if (!this.getActive()) return;
     for (const effect of effects) {
       if (effect.type === 'dispatch-accept') this.#onAccept?.(effect.id);
     }

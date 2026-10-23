@@ -1,6 +1,7 @@
 import type { TextSelectionInput } from '@sectile/core/text';
 
 export type TextInput =
+  | { readonly type: 'select'; readonly selection: TextSelectionInput }
   | {
       readonly type: 'beforeinput';
       readonly inputType: string;

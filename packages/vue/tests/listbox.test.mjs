@@ -14,6 +14,23 @@ import { createHostNode, createTestRenderer } from './renderer.mjs';
 const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 const items = ['alpha', 'beta', 'nightly'];
 
+test('Vue listbox associates only a rendered current option and reports full-domain positions', async () => {
+  for (const renderedItems of [[], ['alpha'], ['beta']]) {
+    const html = await renderToString(createSSRApp({ render: () => h(ListboxRoot, {
+      items, defaultValue: 'beta', renderedItems,
+    }, { default: () => renderedItems.map(value => h(ListboxItem, { value }, () => value)) }) }));
+    browserWindow.document.body.innerHTML = html;
+    const root = browserWindow.document.querySelector('[role="listbox"]');
+    const option = browserWindow.document.querySelector('[role="option"]');
+    if (renderedItems.includes('beta')) assert.equal(root.getAttribute('aria-activedescendant'), option.id);
+    else assert.equal(root.hasAttribute('aria-activedescendant'), false);
+    if (option) {
+      assert.equal(option.getAttribute('aria-setsize'), '3');
+      assert.equal(option.getAttribute('aria-posinset'), String(items.indexOf(renderedItems[0]) + 1));
+    }
+  }
+});
+
 function options() {
   return items.map((value) => h(ListboxItem, { value }, {
     default: () => [
@@ -28,12 +45,14 @@ test('Vue listbox projects native listbox semantics and form state', async () =>
     render: () => h(ListboxRoot, {
       items,
       defaultValue: 'beta',
+      'aria-label': 'Channels',
       name: 'channel',
       required: true,
     }, { default: options }),
   });
   const html = await renderToString(app);
   assert.match(html, /role="listbox"/);
+  assert.match(html, /aria-label="Channels"/);
   assert.match(html, /tabindex="0"/);
   assert.match(html, /aria-activedescendant="sectile-listbox-/);
   assert.match(html, /role="option"/);
@@ -42,6 +61,20 @@ test('Vue listbox projects native listbox semantics and form state', async () =>
   assert.match(html, /data-part="item-indicator"/);
   assert.match(html, /<select/);
   assert.match(html, /name="channel"/);
+  const disabled = await renderToString(createSSRApp({ render: () => h(ListboxRoot, {
+    items, defaultValue: 'beta', name: 'disabled-channel', disabled: true,
+  }, { default: options }) }));
+  browserWindow.document.body.innerHTML = disabled;
+  assert.equal(browserWindow.document.querySelector('select').disabled, true);
+  assert.equal(browserWindow.document.querySelector('option[value="beta"]').hasAttribute('selected'), true);
+  const empty = await renderToString(createSSRApp({ render: () => h(ListboxRoot, {
+    items, name: 'empty-channel', required: true,
+  }, { default: options }) }));
+  browserWindow.document.body.innerHTML = empty;
+  const select = browserWindow.document.querySelector('select');
+  assert.equal(select.required, true);
+  assert.equal(select.options.item(0).value, '', 'required single select uses the first option as its empty placeholder');
+  assert.equal(select.options.item(0).selected, true); assert.equal(select.value, '');
 });
 
 test('Vue listbox generated IDs preserve exact values and active-descendant linkage', async () => {

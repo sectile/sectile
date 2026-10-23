@@ -1,8 +1,42 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyTimeRangeFieldEvent, createTimeRangeFieldState } from '../../.verification-dist/fields/time-range.js';
-import { createTimeValue, formatTimeValue } from '../../.verification-dist/fields/time.js';
+import { applyTimeRangeFieldEvent, createTimeRangeFieldState, reformatTimeRangeFieldState } from '../../.verification-dist/fields/time-range.js';
+import { createTimeValue, createTimeFieldFormat, formatTimeValue } from '../../.verification-dist/fields/time.js';
+import { createTextEditingState } from '@sectile/core/text';
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
+
+test('time range retains endpoint formats and switches settled endpoints atomically', () => {
+  const half = createTimeFieldFormat({ precision: 'minute', hourCycle: 'h12' });
+  const full = createTimeFieldFormat({ precision: 'minute', hourCycle: 'h23' });
+  const range = { start: time(9, 30), end: time(17, 45) };
+  const state = createTimeRangeFieldState({ value: range, startFormat: half, endFormat: half, active: 'end' });
+  const focused = applyTimeRangeFieldEvent(state, { type: 'focus', endpoint: 'start' }).value.state;
+  assert.equal(focused.start.format, half); assert.equal(focused.end.format, half);
+  const converted = reformatTimeRangeFieldState(state, full);
+  assert.equal(converted.ok, true); assert.deepEqual(converted.value.value, range); assert.equal(converted.value.active, 'end');
+  assert.equal(converted.value.start.inputState.snapshot.text, '09:30'); assert.equal(converted.value.end.inputState.snapshot.text, '17:45');
+  const changed = applyTimeRangeFieldEvent(converted.value, { type: 'field', endpoint: 'end', event: { type: 'set-value', value: time(18, 0) } });
+  assert.equal(changed.ok, true); assert.equal(changed.value.state.end.format, full); assert.equal(changed.value.state.start.format, full);
+  assert.equal(changed.value.state.end.inputState.snapshot.text, '18:00');
+  const dirty = createTimeRangeFieldState({ value: range, startFormat: half, endFormat: half, endInputState: createTextEditingState('05:') });
+  const rejected = reformatTimeRangeFieldState(dirty, full);
+  assert.equal(rejected.ok, false); assert.equal(rejected.error.code, 'time-field-format-draft-active');
+  assert.equal(dirty.start.inputState.snapshot.text, '09:30 AM'); assert.equal(dirty.end.inputState.snapshot.text, '05:');
+  const cancelled = applyTimeRangeFieldEvent(dirty, 'cancel');
+  assert.equal(cancelled.ok, true); assert.equal(cancelled.value.state.end.inputState.snapshot.text, '05:45 PM');
+  assert.equal(cancelled.value.state.end.format, half);
+  const composing = applyTimeRangeFieldEvent(state, { type: 'field', endpoint: 'end', event: { type: 'text', event: {
+    type: 'composition-start', startCodeUnitOffset: 0, endCodeUnitOffset: 0, text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 },
+  } } }).value.state;
+  assert.equal(reformatTimeRangeFieldState(composing, full).error.code, 'time-field-format-draft-active');
+  assert.equal(composing.start.inputState.snapshot.text, '09:30 AM'); assert.notEqual(composing.end.inputState.composition, null);
+  const precise = createTimeFieldFormat({ precision: 'second' });
+  const withSeconds = createTimeRangeFieldState({ value: { start: time(9, 30), end: time(17, 45, 1) }, startFormat: precise, endFormat: precise });
+  assert.equal(reformatTimeRangeFieldState(withSeconds, full).error.code, 'time-field-format-precision-loss');
+  assert.equal(withSeconds.start.format, precise); assert.equal(withSeconds.end.inputState.snapshot.text, '17:45:01');
+  const partial = reformatTimeRangeFieldState(createTimeRangeFieldState({ startValue: time(9, 30), startFormat: half }), full);
+  assert.equal(partial.ok, true); assert.equal(partial.value.value, null); assert.equal(partial.value.end.value, null);
+});
 
 test('time range field exposes only complete ordered wall-clock ranges', () => {
   let state = createTimeRangeFieldState();

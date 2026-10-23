@@ -1,4 +1,4 @@
-import { nextTick, onScopeDispose } from 'vue';
+import { getCurrentScope, nextTick, onBeforeUnmount, onScopeDispose } from 'vue';
 
 export interface ScheduledTask {
   schedule(): void;
@@ -6,6 +6,7 @@ export interface ScheduledTask {
 }
 
 export function useNextTickTask(task: () => void): ScheduledTask {
+  let callback: (() => void) | undefined = task;
   let active = true;
   let scheduled = false;
   let generation = 0;
@@ -21,12 +22,15 @@ export function useNextTickTask(task: () => void): ScheduledTask {
     void nextTick(() => {
       if (!active || generation !== expectedGeneration) return;
       scheduled = false;
-      task();
+      callback?.();
     });
   };
-  onScopeDispose(() => {
+  const dispose = (): void => {
     active = false;
+    callback = undefined;
     cancel();
-  });
+  };
+  if (getCurrentScope()) onScopeDispose(dispose);
+  else onBeforeUnmount(dispose);
   return Object.freeze({ schedule, cancel });
 }

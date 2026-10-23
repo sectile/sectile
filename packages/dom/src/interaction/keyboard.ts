@@ -7,6 +7,18 @@ export interface KeyboardInput {
   readonly metaKey?: boolean;
 }
 
+export function printableKey(input: KeyboardInput): string | null {
+  if (input.altKey === true || input.ctrlKey === true || input.metaKey === true) return null;
+  const key = input.key;
+  return key.length === 1 || (key.length === 2 && key.codePointAt(0)! > 0xffff) ? key : null;
+}
+
+export function repeatedTypeahead(buffer: string, next: string): string {
+  if (buffer.length === 0) return next;
+  for (const character of buffer) if (character !== next) return `${buffer}${next}`;
+  return next;
+}
+
 export function horizontalArrow(
   key: string,
   direction: ReadingDirection = 'ltr',

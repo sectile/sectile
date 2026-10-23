@@ -17,17 +17,283 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick, ref } = await import('vue');
-const { CarouselRoot } = await import('../.verification-dist/carousel.js');
+const { createApp, h, nextTick, ref, shallowRef, KeepAlive } = await import('vue');
+const { HostProvider } = await import('../.verification-dist/host-provider.js');
+const { CarouselRoot, CarouselPause, CarouselIndicatorGroup } = await import('../.verification-dist/carousel.js');
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
 const { FeedRoot } = await import('../.verification-dist/feed.js');
 const { GridCell, GridRoot, GridRow } = await import('../.verification-dist/grid.js');
 const { ListboxItem, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { MenuItem, MenuRoot, MenuSubContent, MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenubarRoot, NavigationMenuRoot } = await import('../.verification-dist/menu.js');
-const { PaginationRoot } = await import('../.verification-dist/pagination.js');
-const { SelectContent, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
-const { ToolbarItem, ToolbarRoot } = await import('../.verification-dist/toolbar.js');
+const { ContextMenuRoot, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } = await import('../.verification-dist/context-menu.js');
+const { PaginationRoot, PaginationItem } = await import('../.verification-dist/pagination.js');
+const { SelectContent, SelectItem, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
+const { ToolbarItem, ToolbarRoot, ToolbarSeparator } = await import('../.verification-dist/toolbar.js');
 const { TreeGridRoot } = await import('../.verification-dist/tree-grid.js');
+const { SequenceReorderRoot, SequenceReorderItem, SequenceReorderHandle, TreeReorderRoot, TreeReorderItem, TreeReorderHandle, TreeReorderDropTarget } = await import('../.verification-dist/reorder.js');
+
+const boardNodes = [{ id: 'left', parentID: null }, { id: 'right', parentID: null }, { id: 'a', parentID: 'left' }, { id: 'b', parentID: 'left' }];
+function boardParts(state) {
+  return state.getChildren(null).map(id => h(TreeReorderItem, { key: id, value: id }, { default: () => [id,
+    h(TreeReorderDropTarget, { parentID: id, label: `${id} cards` }, { default: () => state.getChildren(id).map(value =>
+      h(TreeReorderItem, { key: value, value }, { default: () => h(TreeReorderHandle, { label: `Move ${value}` }) })) }),
+  ] }));
+}
+test('Vue column Reorder keeps accepted membership, restores stable-ID focus, and respects readonly', async () => {
+  const root = shallowRef(), readonly = shallowRef(false), restrictedQueries = []; let state;
+  const fixture = mount(() => h(TreeReorderRoot, { ref: root, nodes: boardNodes, layout: 'columns', readonly: readonly.value }, {
+    default: current => { state = current; if (current.readonly) restrictedQueries.push(current.canMove('a', { parentID: 'left' })); return boardParts(current); },
+  }));
+  try {
+    await settle(); const before = fixture.host.querySelector('[data-value="a"]'); before.focus();
+    before.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', altKey: true, bubbles: true, cancelable: true }));
+    await settle(); const after = fixture.host.querySelector('[data-value="a"]');
+    assert.notEqual(before, after); assert.equal(document.activeElement, after);
+    assert.equal(state.getParent('a'), 'right'); assert.deepEqual(state.getChildren('left'), ['b']);
+    assert.equal(fixture.host.querySelector('[data-part="root"]').getAttribute('role'), 'list');
+    assert.equal(after.getAttribute('role'), 'listitem'); assert.equal(after.getAttribute('aria-level'), '2');
+    assert.equal(after.getAttribute('aria-posinset'), '1');
+    readonly.value = true; await settle();
+    assert.ok(restrictedQueries.length > 0);
+    assert.ok(restrictedQueries.every(value => value === false), 'logical readonly applies before the post-flush native rebind');
+    assert.equal(state.canMove('a', { parentID: 'left' }), false);
+    assert.equal(root.value.move('a', { parentID: 'left' }), false);
+    assert.equal(after.querySelector('button').disabled, true); root.value.focus('a'); assert.equal(document.activeElement, after);
+    readonly.value = false; await settle();
+    assert.equal(root.value.move('a', { parentID: 'left', beforeID: 'b' }), true); await settle();
+    assert.deepEqual(state.getChildren('left'), ['a', 'b']);
+  } finally { unmount(fixture.app, fixture.host); }
+});
+test('Vue controlled column moves remain proposals and use updated policy and source anchors', async () => {
+  const root = shallowRef(), input = shallowRef(boardNodes), policies = shallowRef({ capacity: parent => parent === 'right' ? 0 : undefined });
+  let state; const proposals = [];
+  const fixture = mount(() => h(TreeReorderRoot, { ref: root, nodes: input.value, controlled: true, layout: 'columns', policies: policies.value,
+    'onUpdate:nodes': nodes => proposals.push(nodes) }, { default: current => { state = current; return boardParts(current); } }));
+  try {
+    await settle(); assert.equal(root.value.canMove('a', { parentID: 'right' }), false);
+    assert.equal(root.value.move('a', { parentID: 'right' }), false); assert.equal(proposals.length, 0);
+    policies.value = {}; await settle();
+    assert.equal(state.canMove('a', { parentID: 'right' }), true); assert.equal(proposals.length, 0); assert.equal(state.getParent('a'), 'left');
+    assert.equal(root.value.move('a', { parentID: 'right' }), true); await settle();
+    assert.equal(state.getParent('a'), 'left'); assert.equal(proposals.length, 1);
+    input.value = proposals[0]; await settle(); assert.equal(state.getParent('a'), 'right');
+    input.value = [{ id: 'left', parentID: null }, { id: 'b', parentID: 'left' }]; await settle();
+    assert.deepEqual(state.getChildren(null), ['left']); assert.equal(root.value.move('b', { parentID: 'right' }), false);
+  } finally { unmount(fixture.app, fixture.host); }
+});
+test('Vue column Reorder suspends its six native listeners across Host, KeepAlive and root replacement', async () => {
+  const active = shallowRef(true), visible = shallowRef(true), as = shallowRef('div'), root = shallowRef();
+  const listeners = new Map(), add = HTMLElement.prototype.addEventListener, remove = HTMLElement.prototype.removeEventListener;
+  const count = () => [...listeners.values()].reduce((sum, types) => sum + [...types.values()].reduce((sum, set) => sum + set.size, 0), 0); let state, fixture;
+  HTMLElement.prototype.addEventListener = function(type, listener, ...rest) {
+    if (this.dataset.scope === 'tree-reorder' && this.dataset.part === 'root') {
+      const types = listeners.get(this) ?? new Map(), set = types.get(type) ?? new Set(); set.add(listener); types.set(type, set); listeners.set(this, types);
+    }
+    return add.call(this, type, listener, ...rest);
+  };
+  HTMLElement.prototype.removeEventListener = function(type, listener, ...rest) { listeners.get(this)?.get(type)?.delete(listener); return remove.call(this, type, listener, ...rest); };
+  try {
+    fixture = mount(() => h(HostProvider, { active: active.value }, () => h(KeepAlive, null, { default: () => visible.value
+      ? h(TreeReorderRoot, { ref: root, nodes: boardNodes, layout: 'columns', as: as.value }, { default: current => { state = current; return boardParts(current); } }) : null })));
+    await settle(); assert.equal(count(), 6); assert.equal(root.value.move('a', { parentID: 'right' }), true); await settle();
+    for (let cycle = 0; cycle < 3; cycle++) { active.value = false; await settle(); assert.equal(count(), 0); assert.equal(root.value.move('b', { parentID: 'right' }), false);
+      assert.equal(state.canMove('b', { get parentID() { throw Error('inactive target'); } }), false);
+      active.value = true; await settle(); assert.equal(count(), 6); assert.equal(state.getParent('a'), 'right'); }
+    visible.value = false; await settle(); assert.equal(count(), 0); visible.value = true; await settle(); assert.equal(count(), 6);
+    as.value = 'section'; await settle(); assert.equal(count(), 6); assert.equal(root.value.element.tagName, 'SECTION'); assert.equal(state.getParent('a'), 'right');
+    unmount(fixture.app, fixture.host); fixture = undefined; assert.equal(count(), 0);
+  } finally { if (fixture) unmount(fixture.app, fixture.host); HTMLElement.prototype.addEventListener = add; HTMLElement.prototype.removeEventListener = remove; }
+});
+test('saved Vue column Reorder ports retire without retaining platform roots or policy closures', { skip: typeof global.gc !== 'function' }, async () => {
+  const retained = heldBoardPorts(); retained.close(); await settle();
+  for (let turn = 0; turn < 25; turn++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
+  assert.ok(retained.element.deref() === undefined, 'held methods release the root');
+  assert.ok(retained.payload.deref() === undefined, 'held methods release caller policies');
+  assert.equal(retained.move('a', { get parentID() { throw Error('retired input'); } }), false);
+  assert.equal(retained.canMove('a', { get parentID() { throw Error('retired query'); } }), false);
+  assert.deepEqual(retained.children(null), []); assert.equal(retained.parent('a'), null); retained.focus('a');
+});
+test('Vue insertion parts route pointer drops to empty columns and unmounted canonical anchors', async () => {
+  const input = shallowRef([...boardNodes, { id: 'hidden', parentID: 'right' }]), before = shallowRef('hidden'); let state;
+  const hitTest = document.elementFromPoint;
+  const fixture = mount(() => h(TreeReorderRoot, { nodes: input.value, layout: 'columns' }, { default: current => {
+    state = current; return [h(TreeReorderItem, { value: 'a' }),
+      h(TreeReorderDropTarget, { parentID: 'right', beforeID: before.value, role: 'presentation' })];
+  } }));
+  try {
+    await settle(); const root = fixture.host.querySelector('[data-part="root"]'), zone = fixture.host.querySelector('[data-part="drop-target"]');
+    document.elementFromPoint = () => zone;
+    const drop = () => {
+      const item = fixture.host.querySelector('[data-value="a"]');
+      item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 9, button: 0, bubbles: true, cancelable: true }));
+      for (const type of ['pointermove', 'pointerup']) root.dispatchEvent(new window.PointerEvent(type, { pointerId: 9, button: 0, bubbles: true, cancelable: true }));
+    };
+    drop(); await settle(); assert.deepEqual(state.getChildren('right'), ['a', 'hidden']);
+    input.value = boardNodes; before.value = null; await settle(); drop(); await settle();
+    assert.deepEqual(state.getChildren('right'), ['a']);
+  } finally { document.elementFromPoint = hitTest; unmount(fixture.app, fixture.host); }
+});
+function heldBoardPorts() {
+  const root = shallowRef(), payload = { marker: 'board-policy' }; let state;
+  const fixture = mount(() => h(TreeReorderRoot, { ref: root, nodes: boardNodes, layout: 'columns', policies: { canMove: () => !!payload.marker } }, {
+    default: current => { state = current; return boardParts(current); },
+  }));
+  const close = boardCloser(fixture.app, fixture.host);
+  return { move: root.value.move, canMove: root.value.canMove, focus: root.value.focus, children: state.getChildren, parent: state.getParent,
+    element: new WeakRef(root.value.element), payload: new WeakRef(payload), close };
+}
+function boardCloser(app, host) {
+  let resource = { app, host };
+  return () => { const old = resource; resource = undefined; if (old) unmount(old.app, old.host); };
+}
+test('Vue column attachment failure drains acquired listeners and permits valid reconfiguration', async () => {
+  const failure = Error('column item projection'), errors = [], listeners = new Map(), disabled = shallowRef(false);
+  const count = () => [...listeners.values()].reduce((sum, set) => sum + set.size, 0);
+  const add = HTMLElement.prototype.addEventListener, remove = HTMLElement.prototype.removeEventListener, set = HTMLElement.prototype.setAttribute;
+  let armed = false;
+  HTMLElement.prototype.addEventListener = function(type, listener, ...rest) {
+    const result = add.call(this, type, listener, ...rest);
+    if (this.dataset.scope === 'tree-reorder' && this.dataset.part === 'root') {
+      const set = listeners.get(type) ?? new Set(); set.add(listener); listeners.set(type, set); if (count() === 6) armed = true;
+    }
+    return result;
+  };
+  HTMLElement.prototype.removeEventListener = function(type, listener, ...rest) { listeners.get(type)?.delete(listener); return remove.call(this, type, listener, ...rest); };
+  HTMLElement.prototype.setAttribute = function(name, value) { if (armed && name === 'data-reorder-id') { armed = false; throw failure; } return set.call(this, name, value); };
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(TreeReorderRoot, { nodes: boardNodes, layout: 'columns', disabled: disabled.value }, { default: boardParts }) });
+  app.config.errorHandler = error => errors.push(error);
+  try {
+    app.mount(host); armed = false; assert.ok(errors.includes(failure)); assert.equal(count(), 0);
+    HTMLElement.prototype.setAttribute = set; disabled.value = true; await settle(); assert.equal(count(), 6);
+  } finally { armed = false; app.unmount(); host.remove(); HTMLElement.prototype.addEventListener = add; HTMLElement.prototype.removeEventListener = remove; HTMLElement.prototype.setAttribute = set; }
+  assert.equal(count(), 0);
+});
+
+test('Vue menu keeps one model across label reconfiguration and replaces it with the authored tree', async () => {
+  const items = shallowRef([{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }]), label = shallowRef('Actions');
+  let view;
+  const fixture = mount(() => h(MenuRoot, { items: items.value, label: label.value }, { default: state => {
+    view = state; return items.value.map(item => h(MenuItem, { value: item.id }, { default: item => item.branch ? 'Branch' : 'Leaf' }));
+  } }));
+  try {
+    await settle(); const first = view.model; assert.equal(first.tree.isLeaf('file'), false);
+    label.value = 'File actions'; await settle(); assert.equal(view.model, first);
+    items.value = [{ id: 'file', parentID: null }]; await settle(); assert.notEqual(view.model, first);
+    assert.equal(view.model.tree.isLeaf('file'), true); assert.equal(fixture.host.querySelector('[data-sectile-menu-id=file]').hasAttribute('aria-haspopup'), false);
+  } finally { unmount(fixture.app, fixture.host); }
+  assert.equal(view.presentation, undefined);
+});
+
+test('Vue Reorder releases unmounted and reidentified items before root reconfiguration', async () => {
+  for (const tree of [false, true]) {
+    const visible = ref(true);
+    const disabled = ref(false);
+    const id = ref('a');
+    const Root = tree ? TreeReorderRoot : SequenceReorderRoot;
+    const Item = tree ? TreeReorderItem : SequenceReorderItem;
+    const domain = tree
+      ? { nodes: [{ id: 'a', parentID: null }, { id: 'b', parentID: null }] }
+      : { items: ['a', 'b'] };
+    const { app, host } = mount(() => h(Root, { ...domain, disabled: disabled.value }, {
+      default: () => visible.value ? h(Item, { value: id.value }, { default: () => id.value }) : null,
+    }));
+    try {
+      await settle();
+      const original = host.querySelector('[data-part="item"]');
+      id.value = 'b';
+      await settle();
+      assert.equal(original.getAttribute('aria-posinset'), '2');
+      visible.value = false;
+      await settle();
+      let writes = 0;
+      const setAttribute = original.setAttribute.bind(original);
+      original.setAttribute = (...args) => { writes += 1; return setAttribute(...args); };
+      disabled.value = true;
+      await settle();
+      visible.value = true;
+      await settle();
+      assert.equal(writes, 0, 'reconnect only projects mounted item registrations');
+      assert.notEqual(host.querySelector('[data-part="item"]'), original);
+    } finally { unmount(app, host); }
+  }
+});
+
+test('Vue controlled Reorder publishes accepted order and sibling-local slot positions', async () => {
+  for (const tree of [false, true]) {
+    const initial = tree
+      ? [{ id: 'root', parentID: null }, { id: 'a', parentID: 'root' }, { id: 'b', parentID: 'root' }]
+      : ['a', 'b'];
+    const order = ref(initial);
+    const proposals = [];
+    const Root = tree ? TreeReorderRoot : SequenceReorderRoot;
+    const Item = tree ? TreeReorderItem : SequenceReorderItem;
+    const { app, host } = mount(() => h(Root, {
+      controlled: true,
+      ...(tree ? { nodes: order.value, 'onUpdate:nodes': (value) => proposals.push(value) }
+        : { items: order.value, 'onUpdate:items': (value) => proposals.push(value) }),
+    }, { default: () => ['a', 'b'].map((id) => h(Item, { key: id, value: id }, {
+      default: ({ position }) => `${id}:${position}`,
+    })) }));
+    try {
+      await settle();
+      const a = host.querySelector('[data-value="a"]');
+      assert.equal(a.textContent, 'a:1');
+      const key = () => a.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', altKey: true, bubbles: true, cancelable: true }));
+      key();
+      await settle();
+      assert.equal(a.textContent, 'a:1');
+      assert.equal(a.getAttribute('aria-posinset'), '1');
+      key();
+      await settle();
+      assert.deepEqual(proposals[1], proposals[0]);
+      order.value = proposals[0];
+      await settle();
+      assert.equal(a.textContent, 'a:2');
+      assert.equal(a.getAttribute('aria-posinset'), '2');
+    } finally { unmount(app, host); }
+  }
+});
+
+test('Vue Reorder native handles retain input behavior and committed order across reconfiguration', async () => {
+  for (const tree of [false, true]) {
+    const disabled = ref(false);
+    const Root = tree ? TreeReorderRoot : SequenceReorderRoot;
+    const Item = tree ? TreeReorderItem : SequenceReorderItem;
+    const Handle = tree ? TreeReorderHandle : SequenceReorderHandle;
+    const domain = tree ? { nodes: [{ id: 'root', parentID: null }, { id: 'a', parentID: 'root' }, { id: 'b', parentID: 'root' }] } : { items: ['a', 'b'] };
+    const { app, host } = mount(() => h(Root, { ...domain, handleOnly: true, disabled: disabled.value, 'aria-label': 'Ordre', 'aria-roledescription': 'triable' }, {
+      default: () => ['a', 'b'].map(id => h(Item, { key: id, value: id }, { default: () => [
+        h(Handle, { label: `Move ${id}` }, { default: () => 'Handle' }), h('input'), h('textarea'), h('select'), h('button', { type: 'button' }, 'Action'), h('a', { href: '#native' }, 'Link'), h('span', { contenteditable: 'true' }, 'Edit'),
+      ] })),
+    }));
+    try {
+      await settle();
+      const a = host.querySelector('[data-value="a"]');
+      const root = host.querySelector('[data-part="root"]');
+      const handle = a.querySelector('[data-part="handle"]');
+      assert.equal(handle.tagName, 'BUTTON');
+      assert.equal(handle.type, 'button');
+      assert.equal(handle.getAttribute('aria-label'), 'Move a');
+      assert.equal(root.getAttribute('aria-label'), 'Ordre');
+      assert.equal(root.getAttribute('aria-roledescription'), 'triable');
+      for (const target of a.querySelectorAll('input,textarea,select,button:not([data-sectile-reorder-handle]),a,[contenteditable]')) {
+        const event = new window.KeyboardEvent('keydown', { key: 'End', altKey: true, bubbles: true, cancelable: true });
+        target.dispatchEvent(event);
+        assert.equal(event.defaultPrevented, false);
+        assert.equal(a.getAttribute('aria-posinset'), '1');
+      }
+      handle.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'End', altKey: true, bubbles: true, cancelable: true }));
+      await settle();
+      assert.equal(a.getAttribute('aria-posinset'), '2');
+      disabled.value = true;
+      await settle();
+      assert.equal(handle.disabled, true);
+      assert.equal(a.getAttribute('aria-posinset'), '2');
+      if (tree) { assert.equal(a.getAttribute('aria-level'), '2'); assert.equal(a.getAttribute('aria-setsize'), '2'); }
+    } finally { unmount(app, host); }
+  }
+});
 
 async function settle() {
   await nextTick();
@@ -460,17 +726,43 @@ test('Vue carousel proposes the next valid slide after removal', async () => {
 test('Vue toolbar reconciles controlled focus after items change', async () => {
   const items = ref(['a', 'b']);
   const value = ref('b');
+  const orientation = shallowRef('horizontal');
   const { app, host } = mount(() => h(ToolbarRoot, {
     items: items.value,
     modelValue: value.value,
+    orientation: orientation.value,
     'onUpdate:modelValue': (next) => { value.value = next; },
-  }));
+  }, { default: () => h(ToolbarSeparator) }));
 
   await settle();
+  assert.equal(host.querySelector('[role=separator]').getAttribute('aria-orientation'), 'vertical');
+  orientation.value = 'vertical';
   items.value = ['a'];
   await settle();
   assert.equal(value.value, 'a');
+  assert.equal(host.querySelector('[role=separator]').getAttribute('aria-orientation'), 'horizontal');
   unmount(app, host);
+});
+
+test('Vue carousel forwards reactive group and pause labels without competing attribute owners', async () => {
+  const korean = ref(true);
+  const koPause = paused => paused ? '자동 재생' : '일시 정지';
+  const enPause = paused => paused ? 'Resume' : 'Pause';
+  const { app, host } = mount(() => h(CarouselRoot, { slides: ['a', 'b'],
+    indicatorGroupLabel: korean.value ? '슬라이드 선택' : 'Choose', getPauseLabel: korean.value ? koPause : enPause,
+  }, { default: () => [h(CarouselPause), h(CarouselIndicatorGroup)] }));
+  await settle();
+  const pause = host.querySelector('[data-part="pause"]'), group = host.querySelector('[data-part="indicator-group"]');
+  assert.equal(group.getAttribute('aria-label'), '슬라이드 선택');
+  assert.equal(pause.getAttribute('aria-label'), '일시 정지');
+  pause.click(); await settle();
+  assert.equal(pause.getAttribute('aria-label'), '자동 재생');
+  korean.value = false; await settle();
+  assert.equal(group.getAttribute('aria-label'), 'Choose');
+  assert.equal(pause.getAttribute('aria-label'), 'Resume');
+  unmount(app, host);
+  pause.click(); await settle();
+  assert.equal(pause.getAttribute('aria-label'), 'Resume');
 });
 
 test('ISSUE-127: Vue toolbar keeps controlled null semantic state while DOM owns one entry', async () => {
@@ -511,13 +803,56 @@ test('Vue pagination clamps a controlled page when total shrinks', async () => {
     modelValue: page.value,
     itemsPerPage: 10,
     'onUpdate:modelValue': (next) => { page.value = next; },
-  }));
+  }, { default: ({ items }) => items.map(item => h(PaginationItem, { item: item.type === 'page' ? { ...item, selected: false } : item })) }));
 
   await settle();
+  assert.equal(host.querySelector('[aria-current=page]').dataset.paginationPage, '10');
   total.value = 15;
   await settle();
   assert.equal(page.value, 2);
+  assert.equal(host.querySelector('[aria-current=page]').dataset.paginationPage, '2');
+  assert.equal(host.querySelectorAll('[aria-current=page]').length, 1);
   unmount(app, host);
+});
+
+test('Vue Select fulfills pending keyboard focus when a windowed option mounts', async () => {
+  const visible = shallowRef(['a']), items = ['a', 'b']; let state;
+  const fixture = mount(() => h(SelectRoot, { items, renderedItems: visible.value, defaultValue: 'a', defaultOpen: true, position: false, label: 'Choose' }, {
+    default: value => { state = value; return [h(SelectTrigger, null, () => 'Choose'), h(SelectContent, null, {
+      default: () => visible.value.map(id => h(SelectItem, { value: id, key: id }, () => id)),
+    })]; },
+  }));
+  try {
+    await settle(); const a = fixture.host.querySelector('[role=option]'); a.focus();
+    a.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })); await settle();
+    assert.equal(state.highlightedValue, 'b'); assert.equal(state.value, 'a');
+    assert.equal(fixture.host.querySelector('[role=listbox]').hasAttribute('aria-activedescendant'), false);
+    visible.value = ['b']; await settle();
+    const b = fixture.host.querySelector('[role=option]'); assert.equal(document.activeElement, b);
+    assert.equal(b.tabIndex, 0); assert.equal(state.value, 'a');
+    assert.equal(fixture.host.querySelector('[role=listbox]').getAttribute('aria-activedescendant'), b.id);
+    visible.value = []; await settle();
+    assert.equal(fixture.host.querySelector('[role=listbox]').hasAttribute('aria-activedescendant'), false);
+    assert.equal(state.highlightedValue, 'b'); assert.equal(state.value, 'a');
+  } finally { unmount(fixture.app, fixture.host); }
+});
+
+test('Vue Select selected Form projection does not rescan source on cursor-only publication', async () => {
+  let reads = 0, state;
+  const items = Array.from({ length: 5000 }, (_, index) => 'row-' + index);
+  for (let index = 0; index < items.length; index++) {
+    const value = items[index]; Object.defineProperty(items, index, { get() { reads++; return value; }, configurable: true });
+  }
+  const fixture = mount(() => h(SelectRoot, { items, defaultValue: 'row-4999', defaultOpen: true, position: false, name: 'service', formOptions: 'selected' }, {
+    default: current => { state = current; return [h(SelectTrigger), h(SelectContent, null, { default: () => h(SelectItem, { value: 'row-4999' }, () => 'Last row') })]; },
+  }));
+  try {
+    await settle(); reads = 0;
+    const item = fixture.host.querySelector('[role=option]'); item.focus();
+    item.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })); await settle();
+    assert.equal(state.highlightedValue, 'row-4998');
+    assert.equal(reads, 0); assert.equal(fixture.host.querySelectorAll('select option').length, 2);
+  } finally { unmount(fixture.app, fixture.host); }
 });
 
 test('Vue select clears a controlled value removed from its items', async () => {
@@ -565,6 +900,7 @@ test('Vue menu families mount many submenu surfaces with linear branch projectio
       };
       let mounted;
       let surfaces = [];
+      let surfaceIDs = [];
       try {
         const content = () => branches.flatMap((id) => [
           h(MenuItem, { key: id, value: id }),
@@ -579,6 +915,7 @@ test('Vue menu families mount many submenu surfaces with linear branch projectio
         }));
         await settle();
         surfaces = [...mounted.host.querySelectorAll('[data-sectile-submenu-for]')];
+        surfaceIDs = surfaces.map(surface => surface.id);
         assert.equal(surfaces.length, size);
         assert.ok(branchWrites <= 4 * size + 2, `${Root.name}: ${size} branches caused ${branchWrites} projections`);
         for (const surface of surfaces) {
@@ -592,7 +929,7 @@ test('Vue menu families mount many submenu surfaces with linear branch projectio
         if (mounted !== undefined) unmount(mounted.app, mounted.host);
       }
       await settle();
-      for (const surface of surfaces) assert.equal(surface.id, '', 'unmount releases generated submenu identity');
+      for (const [index, surface] of surfaces.entries()) assert.equal(surface.id, surfaceIDs[index], 'Native part identity survives detached-node retention');
     }
   }
 });
@@ -697,7 +1034,9 @@ for (const Root of [MenuRoot, MenuButtonRoot, MenubarRoot, NavigationMenuRoot]) 
       await settle();
       assert.deepEqual(invoked, ['delta-1023']);
       assert.equal(elements[1].tabIndex, -1);
-      assert.equal(elements.at(-1).tabIndex, -1);
+      const inlineSurface = Root !== MenuButtonRoot;
+      assert.equal(elements.at(-1).tabIndex, inlineSurface ? 0 : -1);
+      if (inlineSurface) assert.equal(browserWindow.document.activeElement === elements.at(-1), true);
       assert.equal(discoveries, 0, 'click publication and presence completion do not scan parts');
       assert.equal(attributeWrites, 0);
     } finally { unmount(app, host); }
@@ -746,6 +1085,10 @@ test('Vue menu unregisters a conditionally removed submenu from DOM ownership', 
   assert.equal(host.querySelector('[data-sectile-submenu-for="file"]'), null);
   assert.equal(file.getAttribute('aria-controls'), null);
   assert.equal(submenu.style.position, '');
+  showSubmenu.value = true;
+  await settle();
+  const replacement = host.querySelector('[data-sectile-submenu-for="file"]');
+  assert.equal(replacement.id, submenu.id); assert.equal(file.getAttribute('aria-controls'), replacement.id);
   unmount(app, host);
 });
 
@@ -773,6 +1116,104 @@ test('Vue menu and feed reconcile internal focus after their domains change', as
   assert.equal(feedHighlight, 'a');
   unmount(app, host);
 });
+
+test('Vue ContextMenu delegates pointer and keyboard invocation and preserves point across provider and part reconnects', async () => {
+  const f = contextFixture();
+  try {
+    await f.drain(); f.trigger.focus();
+    assert.equal(f.pointer(200, 180).defaultPrevented, true); await f.drain();
+    assert.equal(f.content.hidden, false); assert.equal(f.content.style.left, '200px'); assert.equal(f.content.style.top, '180px');
+    assert.ok(document.activeElement === f.first); assert.equal(f.view.highlightedValue, 'first');
+    const model = f.view.model;
+    f.options.value = { ...f.options.value, label: 'Parcel actions' }; await f.drain();
+    assert.ok(f.view.model === model); assert.equal(f.content.style.left, '200px');
+    const previous = f.content; f.tag.value = 'section'; await f.drain();
+    assert.ok(f.content !== previous); assert.equal(f.content.localName, 'section');
+    assert.equal(f.content.style.left, '200px'); assert.equal(f.content.style.top, '180px');
+    f.direction.value = 'rtl'; await f.drain(); assert.equal(f.content.style.left, '160px');
+    f.key(f.trigger, 'F10', { shiftKey: true }); await f.drain();
+    assert.equal(f.content.style.left, '110px'); assert.equal(f.content.style.top, '70px');
+    assert.ok(document.activeElement === f.first);
+    f.key(f.first, 'Escape'); await f.drain(); assert.equal(f.view.open, false);
+    assert.ok(document.activeElement === f.trigger);
+  } finally { f.close(); }
+});
+
+test('Vue ContextMenu keeps controlled opening proposals and manual-point continuity without event replay', async () => {
+  const f = contextFixture({ open: false, position: false });
+  try {
+    await f.drain(); f.trigger.focus(); f.pointer(220, 190); await f.drain();
+    assert.deepEqual(f.proposals, [true]); assert.equal(f.view.open, false);
+    assert.ok(document.activeElement === f.trigger);
+    f.options.value = { ...f.options.value, open: true }; await f.drain();
+    assert.equal(f.content.hidden, false); assert.ok(document.activeElement === f.first);
+    f.options.value = { ...f.options.value, position: true }; await f.drain();
+    assert.equal(f.content.style.left, '220px'); assert.equal(f.content.style.top, '190px');
+    assert.deepEqual(f.proposals, [true], 'reconnects do not replay opening proposals');
+  } finally { f.close(); }
+});
+
+test('Vue ContextMenu releases inactive/unmounted work and makes retained native events and observer callbacks inert', async () => {
+  const f = contextFixture();
+  try {
+    await f.drain(); f.pointer(200, 180); await f.drain();
+    const accepted = f.proposals.length;
+    for (let cycle = 0; cycle < 4; cycle++) {
+      f.active.value = false; await f.drain();
+      assert.equal(f.frames.size, 0); assert.ok(f.observers.every(observer => observer.targets.size === 0));
+      assert.equal(f.pointer(300, 300).defaultPrevented, false);
+      f.active.value = true; await f.drain(); assert.equal(f.content.style.left, '200px');
+    }
+    assert.equal(f.proposals.length, accepted);
+    const trigger = f.trigger; f.unmount(); await f.drain();
+    for (const observer of f.observers) observer.callback();
+    const event = new browserWindow.MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX: 300, clientY: 300 });
+    trigger.dispatchEvent(event); await f.drain();
+    assert.equal(event.defaultPrevented, false); assert.equal(f.proposals.length, accepted);
+    assert.equal(f.frames.size, 0); assert.ok(f.observers.every(observer => observer.targets.size === 0));
+    assert.equal(f.view.presentation, undefined);
+  } finally { f.close(); }
+});
+
+function contextFixture(initial = {}) {
+  const options = shallowRef({ label: 'Actions', ...initial }), tag = shallowRef('div'), active = shallowRef(true), direction = shallowRef('ltr');
+  const items = [{ id: 'first', parentID: null }, { id: 'second', parentID: null }], proposals = [], frames = new Map(), observers = [];
+  const original = { request: browserWindow.requestAnimationFrame, cancel: browserWindow.cancelAnimationFrame, resize: browserWindow.ResizeObserver, intersection: browserWindow.IntersectionObserver };
+  let sequence = 0, view, retired = false;
+  browserWindow.requestAnimationFrame = callback => { const id = ++sequence; frames.set(id, callback); return id; };
+  browserWindow.cancelAnimationFrame = id => frames.delete(id);
+  browserWindow.ResizeObserver = browserWindow.IntersectionObserver = class {
+    targets = new Set();
+    constructor(callback) { this.callback = callback; observers.push(this); }
+    observe(target) { this.targets.add(target); }
+    disconnect() { this.targets.clear(); }
+  };
+  const setRect = (element, x, y, width, height) => { if (element) element.getBoundingClientRect = () => ({ x, y, width, height, left: x, top: y, right: x + width, bottom: y + height, toJSON() { return this; } }); };
+  const boundary = document.createElement('div'); document.body.append(boundary); setRect(boundary, 0, 0, 800, 600);
+  const fixture = mount(() => h(HostProvider, { active: active.value, direction: direction.value }, {
+    default: () => h(ContextMenuRoot, { ...options.value, items, collisionBoundary: boundary, collisionPadding: 0,
+      'onUpdate:open': value => proposals.push(value) }, {
+      default: state => { view = state; return [h(ContextMenuTrigger, null, { default: () => 'Context actions' }),
+        h(ContextMenuContent, { as: tag.value }, { default: () => items.map(item => h(ContextMenuItem, { value: item.id, as: 'button' }, { default: () => item.id })) })]; },
+    }),
+  }));
+  const trigger = () => fixture.host.querySelector('[data-scope=context-menu][data-part=trigger]');
+  const content = () => fixture.host.querySelector('[data-scope=context-menu][data-part=content]');
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) {
+    await settle(); setRect(trigger(), 50, 40, 100, 30); setRect(content(), 0, 0, 40, 20);
+    const pending = [...frames.values()]; frames.clear(); for (const callback of pending) callback(0);
+  } await settle(); };
+  const pointer = (clientX, clientY) => { const event = new browserWindow.MouseEvent('contextmenu', { bubbles: true, cancelable: true, button: 2, clientX, clientY }); trigger().dispatchEvent(event); return event; };
+  const key = (target, key, init = {}) => { const event = new browserWindow.KeyboardEvent('keydown', { bubbles: true, cancelable: true, key, ...init }); target.dispatchEvent(event); return event; };
+  const retire = () => { if (!retired) { retired = true; unmount(fixture.app, fixture.host); } };
+  const close = () => { try { retire(); } finally {
+    boundary.remove(); browserWindow.requestAnimationFrame = original.request; browserWindow.cancelAnimationFrame = original.cancel;
+    browserWindow.ResizeObserver = original.resize; browserWindow.IntersectionObserver = original.intersection;
+  } };
+  return { options, tag, active, direction, frames, observers, proposals, drain, pointer, key, unmount: retire, close,
+    get view() { return view; }, get trigger() { return trigger(); }, get content() { return content(); },
+    get first() { return fixture.host.querySelector('[data-sectile-menu-id=first]'); } };
+}
 
 function mount(render) {
   const host = document.createElement('div');

@@ -1,9 +1,10 @@
 import {
-  Teleport, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
-  shallowRef, watch, type Component, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
+  shallowRef, watch, type Component, type ComputedRef, type PropType, type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
 import { stableIDElementToken } from '@sectile/dom/identity';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
+import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
   PositionBoundary,
   PositionOptions,
@@ -14,7 +15,7 @@ import type {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
-import { useHostId, useHostPortalTarget } from './host-provider.js';
+import { HostPortal, provideHostLayerParent, useHostId } from './host-provider.js';
 import { usePresence } from './presence/presence.js';
 import {
   conditionalPresenceProps,
@@ -24,6 +25,7 @@ import {
 } from './presence/conditional-presence.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { usePopupPresentation } from './internal/popup-presentation.js';
 
 export interface SelectRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly items: readonly string[];
@@ -38,6 +40,9 @@ export interface SelectRootProps extends Omit<PositionOptions, 'arrowPadding'> {
   readonly name?: string;
   readonly form?: string;
   readonly required?: boolean;
+  readonly formOptions?: 'all' | 'selected';
+  /** Declared mounted IDs; undefined preserves complete-list ARIA publication. */
+  readonly renderedItems?: readonly string[] | undefined;
   readonly textValue?: (id: string) => string;
   readonly typeaheadTimeoutMs?: number;
   readonly position?: boolean;
@@ -56,6 +61,8 @@ export interface SelectItemIndicatorProps extends SelectPartProps, ConditionalPr
 export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
 interface RootContext {
+  readonly active: Readonly<ShallowRef<boolean>>;
+  readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   readonly state: ComputedRef<SelectRootSlotProps>;
   readonly unmountOnExit: ComputedRef<boolean>;
   readonly position: ComputedRef<boolean>;
@@ -65,7 +72,9 @@ interface RootContext {
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly indicatorPresence: ConditionalPresenceRegistry;
   readonly contentID: string;
+  isItemRendered(id: string): boolean;
   itemID(id: string): string;
+  registerPresence(present: ShallowRef<boolean>): () => void;
   registerTrigger(element?: HTMLButtonElement): void;
   registerPopup(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
@@ -84,6 +93,8 @@ export const SelectRoot = defineComponent({
     disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] }, disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined },
     form: { type: String, default: undefined }, required: { type: Boolean, default: false },
+    formOptions: { type: String as PropType<'all' | 'selected'>, default: 'all' },
+    renderedItems: { type: Array as PropType<readonly string[] | undefined>, default: undefined },
     textValue: { type: Function as PropType<SelectTextValueResolver>, default: undefined },
     typeaheadTimeoutMs: { type: Number, default: 700 },
     position: { type: Boolean, default: true },
@@ -104,15 +115,12 @@ export const SelectRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const initialValue = props.defaultValue, initialOpen = props.defaultOpen;
+    let resetPending = false;
     const root = shallowRef<HTMLElement>();
     const trigger = shallowRef<HTMLButtonElement>();
     const popup = shallowRef<HTMLElement>();
     const submissionElement = shallowRef<HTMLSelectElement | null>(null);
-    const participation = useCompositeFormControl({
-      root: () => root.value ?? null,
-      focusTarget: () => trigger.value ?? root.value ?? null,
-      submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
-    });
     const connection = shallowRef<SelectConnection<string>>();
     const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${stableIDElementToken(value)}`;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
@@ -127,6 +135,43 @@ export const SelectRoot = defineComponent({
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
       disabled: props.disabled, readonly: props.readonly,
     }));
+    const disabledIDs = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
+    const renderedItems = computed<readonly string[] | undefined>(() => {
+      const ids = props.renderedItems;
+      if (ids === undefined) return undefined;
+      if (!Array.isArray(ids) || ids.some(id => typeof id !== 'string')) throw new TypeError('SelectRoot renderedItems requires an array of IDs.');
+      return ids;
+    });
+    const selectedFormItems = computed<readonly string[]>(() => {
+      // Do not depend on the whole state snapshot: cursor/open changes must not
+      // repeat the source-membership scan used by sparse native serialization.
+      const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
+      return value === null || !props.items.includes(value) ? [] : [value];
+    });
+    const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
+    const { active, presentation, availability } = lifecycle;
+    const participation = useCompositeFormControl({
+      root: () => root.value ?? null,
+      focusTarget: () => active.value ? trigger.value ?? root.value ?? null : null,
+      validationTarget: () => active.value ? root.value ?? null : null,
+      submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
+      reset: () => {
+        if (resetPending) return;
+        resetPending = true;
+        queueMicrotask(() => {
+          resetPending = false;
+          if (!mounted) return;
+          disconnect();
+          const requested = valueControlled ? props.modelValue as string | null : initialValue;
+          const reconciled = reconcileCollectionState(props.items, requested === null ? [] : [requested], requested,
+            props.disabledItems, 'single', { preserveNullCurrent: true });
+          localValue.value = reconciled.selected[0] ?? null;
+          localOpen.value = openControlled ? props.open as boolean : initialOpen;
+          highlighted.value = reconciled.current;
+          lifecycle.reconnect();
+        });
+      },
+    });
     const selectedIDSet = computed<ReadonlySet<string>>(() => {
       const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
       return value === null ? new Set() : new Set([value]);
@@ -135,16 +180,22 @@ export const SelectRoot = defineComponent({
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
       localValue.value = snapshot.choice.selection.selected[0] ?? null; highlighted.value = snapshot.choice.cursor.current; localOpen.value = snapshot.open;
+      lifecycle.update();
       refreshItems();
     };
     const refreshItems = (): void => {
       if (popup.value === undefined || connection.value === undefined) return;
       popup.value.querySelectorAll<HTMLElement>('[data-sectile-select-id]').forEach((element) => {
-        const id = element.dataset['sectileSelectId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, props.disabledItems.includes(id));
+        const id = element.dataset['sectileSelectId']; if (id !== undefined) connection.value?.setItemAttributes(element, id, disabledIDs.value.has(id));
       });
     };
+    const disconnect = (): void => {
+      lifecycle.release();
+      try { connection.value?.disconnect(); }
+      finally { connection.value = undefined; }
+    };
     const connect = (): void => {
-      connection.value?.disconnect();
+      disconnect();
       if (root.value === undefined || trigger.value === undefined || popup.value === undefined) return;
       const requestedValue = valueControlled ? props.modelValue as string | null : localValue.value;
       const reconciled = reconcileCollectionState(
@@ -160,6 +211,7 @@ export const SelectRoot = defineComponent({
       highlighted.value = reconciled.current;
       if (valueControlled && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createSelect({
+        ...(lifecycle.layerHost.value === undefined ? {} : { layerHost: lifecycle.layerHost.value }),
         root: root.value, trigger: trigger.value, popup: popup.value, items: props.items, disabledItems: props.disabledItems,
         textValue: props.textValue ?? ((value: string) => value), typeaheadTimeoutMs: props.typeaheadTimeoutMs,
         position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding,
@@ -174,50 +226,55 @@ export const SelectRoot = defineComponent({
         disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
-        onOpenChange: (next) => { localOpen.value = next; emit('update:open', next); }, onUpdate: refresh,
+        onOpenChange: (next) => { if (!openControlled) localOpen.value = next; emit('update:open', next); }, onUpdate: refresh,
       });
       refreshItems(); refresh();
     };
     let mounted = false;
     let connectScheduled = false;
     const scheduleConnect = (): void => {
-      if (!mounted || connectScheduled || (props.unmountOnExit && !state.value.open)) return;
+      if (!mounted || !availability.value || connectScheduled || (props.unmountOnExit && !state.value.open)) return;
       connectScheduled = true;
       void nextTick(() => {
         connectScheduled = false;
-        if (mounted) connect();
+        if (mounted && availability.value) lifecycle.reconnect();
       });
     };
     provide<RootContext>(rootKey, {
-      state, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
-      disabledItems: computed(() => new Set(props.disabledItems)),
+      state, active, presentation, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
+      disabledItems: disabledIDs,
+      isItemRendered: id => renderedItems.value?.includes(id) ?? true,
       indicatorPresence,
+      registerPresence: lifecycle.registerPresence,
       registerTrigger: (element) => {
+        if (trigger.value === element) return;
         trigger.value = element;
+        if (!availability.value) { lifecycle.invalidate(); return; }
         if (element === undefined) {
-          connection.value?.disconnect();
-          connection.value = undefined;
+          disconnect();
         } else scheduleConnect();
       },
       registerPopup: (element) => {
+        if (popup.value === element) return;
         popup.value = element;
+        if (!availability.value) { lifecycle.invalidate(); return; }
         if (element === undefined) {
-          connection.value?.disconnect();
-          connection.value = undefined;
+          disconnect();
         } else scheduleConnect();
       },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled),
       activateTrigger: (event) => {
-        if (event?.defaultPrevented === true || connection.value !== undefined || props.disabled || state.value.open) return;
+        if (!lifecycle.mayOpen() || event?.defaultPrevented === true || connection.value !== undefined || props.disabled || state.value.open) return;
         if (!openControlled) localOpen.value = true;
         emit('update:open', true);
       },
       refresh: () => connection.value?.refresh(),
     });
-    onMounted(() => { mounted = true; connect(); });
-    onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], connect);
+    onMounted(() => { mounted = true; lifecycle.reconnect(); });
+    onBeforeUnmount(() => { mounted = false; disconnect(); });
+    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], lifecycle.reconnect);
     watch([() => props.modelValue, () => props.open], () => {
+      lifecycle.prepareModelUpdate();
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
         ...(valueControlled ? { value: props.modelValue as string | null } : {}),
@@ -226,8 +283,15 @@ export const SelectRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message); refresh();
     });
     return (): VNodeChild => {
+      if (props.formOptions !== 'all' && props.formOptions !== 'selected') throw new TypeError('SelectRoot formOptions requires all or selected.');
       const visual = h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; scheduleConnect(); },
+        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => {
+          const element = node instanceof HTMLElement ? node : undefined;
+          if (root.value === element) return;
+          root.value = element;
+          if (!availability.value) lifecycle.invalidate();
+          else scheduleConnect();
+        },
         'data-scope': 'select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
@@ -235,7 +299,9 @@ export const SelectRoot = defineComponent({
         ref: submissionElement,
         name: props.name, form: props.form, required: props.required, disabled: props.disabled,
         value: state.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
-      }, [h('option', { value: '' }), ...props.items.map((id) => h('option', { value: id, disabled: props.disabledItems.includes(id) }, props.textValue?.(id) ?? id))])];
+      }, [h('option', { value: '', selected: state.value.value === null }), ...(props.formOptions === 'selected' ? selectedFormItems.value : props.items).map((id) => h('option', {
+        value: id, selected: state.value.value === id, disabled: disabledIDs.value.has(id),
+      }, props.textValue?.(id) ?? id))])];
     };
   },
 });
@@ -270,17 +336,21 @@ export const SelectContent = defineComponent({
   name: 'SectileSelectContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open); const present = usePresence(open, element); watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' }); return (): VNodeChild => {
+  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open);
+    provideHostLayerParent({ element, open, presentation: root.presentation, active: root.active });
+    const present = usePresence(open, element, undefined, root.active);
+    onBeforeUnmount(root.registerPresence(present));
+    watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' }); return (): VNodeChild => {
     if (root.unmountOnExit.value && !present.value) return null;
     const exiting = !root.state.value.open && present.value;
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
-      id: root.contentID, role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
-      ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+      id: root.contentID, role: 'listbox', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+      ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       style: root.position.value
         ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
         : undefined,
-      'aria-activedescendant': root.state.value.highlightedValue === null ? undefined : root.itemID(root.state.value.highlightedValue),
+      'aria-activedescendant': root.state.value.highlightedValue === null || !root.isItemRendered(root.state.value.highlightedValue) ? undefined : root.itemID(root.state.value.highlightedValue),
       'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
     }), { default: () => slots['default']?.(root.state.value) });
   }; },
@@ -346,7 +416,7 @@ export const SelectPortal = defineComponent({
     disabled: { type: Boolean, default: false },
     defer: { type: Boolean, default: false },
   },
-  setup(props, { slots }) { useRoot('SelectPortal'); const portalTarget = useHostPortalTarget(); return (): VNodeChild => h(Teleport as Component, { to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled, defer: props.defer }, slots['default']?.()); },
+  setup(props, { slots }) { useRoot('SelectPortal'); return (): VNodeChild => h(HostPortal as Component, props, slots); },
 });
 
 function useRoot(part: string): RootContext { const root = inject<RootContext>(rootKey); if (root === undefined) throw new TypeError(`${part} must be used inside SelectRoot.`); return root; }

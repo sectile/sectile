@@ -10,7 +10,8 @@ test('Vue exposes every public DOM component family', async () => {
     domManifest,
     readPackage('../package.json'),
   ]);
-  const ignored = new Set(['.', './package.json', './form', './identity', './position', './presence', './tabular', './virtual']);
+  // Host infrastructure subpaths are not component families.
+  const ignored = new Set(['.', './package.json', './attributes', './stylesheet', './layout-basis', './layout-motion', './focus-visibility', './scroll-spy', './appearance', './layer-host', './form', './identity', './position', './presence', './tabular', './virtual', './temporal/format']);
   const domSubpaths = Object.keys(domPackage.exports).filter((subpath) => !ignored.has(subpath));
   const missing = domSubpaths.filter((subpath) => vuePackage.exports[subpath] === undefined);
 
@@ -31,10 +32,16 @@ test('Form is exposed only through its optional subpath', async () => {
   const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.FormRoot, undefined);
   assert.equal(rootModule.useFormControl, undefined);
+  assert.equal(rootModule.FileInputRoot, undefined);
+  assert.equal(rootModule.useFileUpload, undefined);
 
   const formModule = await import('../.verification-dist/form.js');
   assert.equal(typeof formModule.FormRoot, 'object');
   assert.equal(typeof formModule.useFormControl, 'function');
+  const fileModule = await import('../.verification-dist/form/file-input.js');
+  const uploadModule = await import('../.verification-dist/form/file-upload.js');
+  assert.equal(typeof uploadModule.useFileUpload, 'function');
+  for (const name of ['FileInputRoot', 'FileInputInput', 'FileInputTrigger', 'FileInputClear', 'FileInputDropzone']) assert.equal(typeof fileModule[name], 'object');
 });
 
 test('Chart is exposed only through its optional subpath', async () => {

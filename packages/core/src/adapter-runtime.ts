@@ -6,6 +6,8 @@ import {
   tryCreateInteractionState,
   requireInteraction,
   type InteractionStateInput,
+  type InteractionState,
+  type InteractionIntent,
 } from './interaction.js';
 import {
   applyRevisionedEvent,
@@ -103,6 +105,7 @@ export function controlledFieldError(
 
 export interface SemanticController<State, Event, Effect, Code extends string = CoreErrorCode> {
   getSnapshot(): RevisionSnapshot<State>;
+  syncInteraction(input: InteractionStateInput): Result<InteractionState>;
   replace(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
   handle(event: Event, expectedRevision?: number): RevisionResult<State, Effect, CoreErrorCode | Code>;
   reject<Code extends string>(code: Code, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, Effect, Code>;
@@ -124,7 +127,7 @@ export interface SemanticControllerOptions<State, Event, Command, Effect, Code e
   readonly complete?: SemanticControllerCompletion<State, Effect>;
   readonly toEffect: (command: Command) => Effect;
   readonly interaction?: InteractionStateInput | undefined;
-  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
+  readonly interactionIntent?: (event: Event) => InteractionIntent;
 }
 
 export type HostInputDecoder<HostInput, Event> = (input: HostInput) => Event | null;
@@ -132,6 +135,7 @@ export type HostEffectProjector<Command, HostEffect> = (command: Command) => Hos
 
 export interface HostAdapter<State, HostInput, HostEffect, Code extends string = CoreErrorCode> {
   getSnapshot(): RevisionSnapshot<State>;
+  syncInteraction(input: InteractionStateInput): Result<InteractionState>;
   replace(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
   handleInput(input: HostInput, expectedRevision?: number): RevisionResult<State, HostEffect, CoreErrorCode | Code> | null;
   reject<Code extends string>(code: Code, message: string, details?: Readonly<Record<string, unknown>>): RevisionResult<State, HostEffect, Code>;
@@ -147,8 +151,9 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
   options: SemanticControllerOptions<State, Event, Command, Effect, Code>,
 ): Result<SemanticController<State, Event, Effect, Code>, CoreErrorCode | Code> {
   if (!options.initial.ok) return options.initial;
-  const interaction = tryCreateInteractionState(options.interaction);
-  if (!interaction.ok) return interaction;
+  const initialInteraction = tryCreateInteractionState(options.interaction);
+  if (!initialInteraction.ok) return initialInteraction;
+  let interaction = initialInteraction.value;
   const snapshot = tryCreateRevisionSnapshot(options.initial.value);
   if (!snapshot.ok) return snapshot;
   const notifiers: readonly SemanticControllerNotifier<State>[] = options.notify === undefined
@@ -161,6 +166,11 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
     ok: true,
     value: Object.freeze({
       getSnapshot: (): RevisionSnapshot<State> => current,
+      syncInteraction: (input: InteractionStateInput): Result<InteractionState> => {
+        const next = tryCreateInteractionState(input);
+        if (next.ok) interaction = next.value;
+        return next;
+      },
       replace: (state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => {
         const next = synchronizeControllerState(current, state);
         if (next.ok) current = next.value;
@@ -171,7 +181,7 @@ export function createSemanticController<State, Event, Command, Effect, Code ext
         expectedRevision = current.revision,
       ): RevisionResult<State, Effect, CoreErrorCode | Code> => {
         const permitted = requireInteraction(
-          interaction.value,
+          interaction,
           options.interactionIntent?.(event) ?? 'mutate',
         );
         if (!permitted.ok) return rejectRevisionInput(current, permitted.error);
@@ -229,6 +239,7 @@ export function createHostAdapter<State, HostInput, Event, Command, HostEffect, 
     ok: true,
     value: Object.freeze({
       getSnapshot: (): RevisionSnapshot<State> => controller.value.getSnapshot(),
+      syncInteraction: (input: InteractionStateInput): Result<InteractionState> => controller.value.syncInteraction(input),
       replace: (state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code> => controller.value.replace(state),
       handleInput: (
         input: HostInput,
@@ -255,6 +266,7 @@ export interface ControlledComponentController<
   Code extends string = CoreErrorCode,
 > {
   getSnapshot(): RevisionSnapshot<State>;
+  syncInteraction(input: InteractionStateInput): Result<InteractionState>;
   syncControlledValue(value: Value): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
   handle(event: Event, expectedRevision?: number): RevisionResult<State, Command, CoreErrorCode | Code>;
 }
@@ -275,7 +287,7 @@ export interface ControlledComponentControllerOptions<
   readonly publishEffect?: (command: Command) => void;
   readonly onChange?: (value: Value, previous: Value) => void;
   readonly interaction?: InteractionStateInput;
-  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
+  readonly interactionIntent?: (event: Event) => InteractionIntent;
 }
 
 export function createControlledComponentController<
@@ -327,6 +339,7 @@ export function createControlledComponentController<
     ok: true,
     value: Object.freeze({
       getSnapshot,
+      syncInteraction: (input: InteractionStateInput): Result<InteractionState> => runtime.value.syncInteraction(input),
       syncControlledValue,
       handle: (event: Event, expectedRevision?: number) => runtime.value.handle(event, expectedRevision),
     }),
@@ -342,6 +355,7 @@ export interface CollectionComponentController<
 > {
   getDomain(): Domain;
   getSnapshot(): RevisionSnapshot<State>;
+  syncInteraction(input: InteractionStateInput): Result<InteractionState>;
   replaceDomain(domain: Domain): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
   replaceState(state: Result<State, Code>): Result<RevisionSnapshot<State>, CoreErrorCode | Code>;
   handle(event: Event, expectedRevision?: number): RevisionResult<State, Command, CoreErrorCode | Code>;
@@ -364,7 +378,7 @@ export interface CollectionComponentControllerOptions<
   readonly replaceDomain: (domain: Domain, previous: State) => Result<State, Code>;
   readonly notify?: (previous: State, proposed: State) => void;
   readonly interaction?: InteractionStateInput;
-  readonly interactionIntent?: (event: Event) => 'navigate' | 'mutate';
+  readonly interactionIntent?: (event: Event) => InteractionIntent;
 }
 
 export function createCollectionComponentController<
@@ -408,6 +422,7 @@ export function createCollectionComponentController<
     value: Object.freeze({
       getDomain: (): Domain => domain,
       getSnapshot: (): RevisionSnapshot<State> => runtime.value.getSnapshot(),
+      syncInteraction: (input: InteractionStateInput): Result<InteractionState> => runtime.value.syncInteraction(input),
       replaceDomain,
       replaceState: (state: Result<State, Code>) => runtime.value.replace(state),
       handle: (event: Event, expectedRevision?: number) => runtime.value.handle(event, expectedRevision),
@@ -510,6 +525,19 @@ interface FacadeOptions {
 
 type SnapshotOf<Connection extends SnapshotConnection> = ReturnType<Connection['getSnapshot']>;
 export type FacadeSnapshotListener<Connection extends SnapshotConnection> = (snapshot: SnapshotOf<Connection>) => void;
+class FacadeSubscription<Connection extends SnapshotConnection> {
+  #owner: Map<FacadeSnapshotListener<Connection>, FacadeSubscription<Connection>> | undefined;
+  #listener: FacadeSnapshotListener<Connection> | undefined;
+  constructor(owner: Map<FacadeSnapshotListener<Connection>, FacadeSubscription<Connection>>, listener: FacadeSnapshotListener<Connection>) {
+    this.#owner = owner; this.#listener = listener;
+  }
+  readonly unsubscribe = (): void => {
+    const owner = this.#owner, listener = this.#listener;
+    this.release();
+    if (listener) owner?.delete(listener);
+  };
+  release(): void { this.#owner = undefined; this.#listener = undefined; }
+}
 type StateOf<Connection extends SnapshotConnection> = SnapshotOf<Connection>['state'];
 type SendInput<Connection> = Connection extends { handleEvent(input: infer Input): boolean }
   ? Input
@@ -551,7 +579,8 @@ export function createFacadeConnection<
   options: Options,
   construct: (options: Options) => Result<Connection, Code>,
 ): Result<FacadeConnection<Connection>, Code> {
-  const subscribers = new Set<FacadeSnapshotListener<Connection>>();
+  const subscribers = new Map<FacadeSnapshotListener<Connection>, FacadeSubscription<Connection>>();
+  let applicationUpdate = options.onUpdate;
   let connection: Connection | undefined;
   let active = true;
   let activePublication: object | undefined;
@@ -566,7 +595,7 @@ export function createFacadeConnection<
       try { snapshot = connection.getSnapshot() as SnapshotOf<Connection>; }
       catch (error) { hasError = true; firstError = error; }
       if (snapshot !== undefined && activePublication === publication) {
-        for (const subscriber of [...subscribers]) {
+        for (const subscriber of [...subscribers.keys()]) {
           try { subscriber(snapshot); }
           catch (error) {
             if (!hasError) { hasError = true; firstError = error; }
@@ -576,7 +605,7 @@ export function createFacadeConnection<
       }
     }
     if (activePublication === publication) {
-      try { options.onUpdate?.(); }
+      try { applicationUpdate?.(); }
       catch (error) {
         if (!hasError) { hasError = true; firstError = error; }
       }
@@ -596,16 +625,20 @@ export function createFacadeConnection<
     : destroyedConnectionResult();
   const subscribe = (listener: FacadeSnapshotListener<Connection>): (() => void) => {
     if (!active) return inactiveUnsubscribe;
-    subscribers.add(listener);
-    return (): void => { subscribers.delete(listener); };
+    let subscription = subscribers.get(listener);
+    if (subscription === undefined) { subscription = new FacadeSubscription(subscribers, listener); subscribers.set(listener, subscription); }
+    return subscription.unsubscribe;
   };
   const destroy = (): void => {
     if (!active) return;
     active = false;
+    activePublication = undefined;
     try {
       const disconnect = target['disconnect'];
       if (typeof disconnect === 'function') Reflect.apply(disconnect, target, []);
     } finally {
+      applicationUpdate = undefined;
+      for (const subscription of subscribers.values()) subscription.release();
       subscribers.clear();
     }
   };

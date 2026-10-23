@@ -172,6 +172,8 @@ export type TabularRowSelection =
       readonly excludedRowIDs: readonly TabularRowID[];
     };
 
+export type TabularBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
+
 export interface TabularColumnState {
   readonly order: readonly TabularColumnID[];
   readonly hidden: readonly TabularColumnID[];
@@ -218,6 +220,15 @@ export interface TabularColumnSchema {
   readonly revision: number;
   readonly columns: readonly TabularColumnDefinition[];
   readonly headers: readonly TabularHeaderNode[];
+}
+
+export interface TabularHeaderLayout {
+  readonly headerNodeID: TabularHeaderNodeID;
+  readonly columnID: TabularColumnID | null;
+  readonly columnIndex: number;
+  readonly colSpan: number;
+  readonly rowSpan: number;
+  readonly depth: number;
 }
 
 export interface TabularView<Row extends TabularRow = TabularRow> {

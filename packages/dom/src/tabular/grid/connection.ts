@@ -396,6 +396,8 @@ export class DOMTabularGrid<
     };
     const commit = (): boolean => {
       if (registration.composing || options.disabled === true || options.readOnly === true) return false;
+      const edit = this.getSnapshot().edit;
+      if (edit.kind !== 'editing' || cellKey(edit.cell) !== key) return false;
       const value = readEditorValue(element, options.parseValue);
       element.setAttribute('aria-invalid', String(!value.ok));
       return value.ok && this.handleEvent({ type: 'commit-edit', value: value.value } as Event);
@@ -422,6 +424,7 @@ export class DOMTabularGrid<
       bindEvent(this.#scope, element, 'compositionstart', compositionStart),
       bindEvent(this.#scope, element, 'compositionend', compositionEnd),
     ];
+    if (options.commitOnChange === true) disposers.push(bindEvent(this.#scope, element, 'change', () => { commit(); }));
     this.#refreshers.add(update);
     update();
     return this.#scope.retain(() => {
@@ -524,9 +527,11 @@ export class DOMTabularGrid<
   }
 
   #updated(): void {
+    const focused = this.#options.root.ownerDocument.activeElement;
+    const ownsFocus = this.#ownsFocusTarget(focused);
     this.refresh();
     this.#options.onSnapshotChange?.(this.getSnapshot());
-    this.focusCurrent();
+    if (ownsFocus) this.focusCurrent();
   }
 
   #setRowAttributes(
@@ -635,18 +640,23 @@ export class DOMTabularGrid<
     const row = this.#projectedRowsByID.get(cell.rowID);
     return row !== undefined && this.#projectedColumnIndexes.has(cell.columnID) && this.#rowHasCell(row[0], cell.columnID);
   }
-  #findCell(target: EventTarget | null): GridDOMCellOptions | null {
+  #findCell(target: EventTarget | null): GridDOMCellRegistration | null {
     let node = target as Node | null;
     while (node !== null) {
       const registration = this.#cellOwners.get(node as HTMLElement);
-      if (registration !== undefined && this.#cells.get(registration[0]) === registration) return registration[2];
+      if (registration !== undefined && this.#cells.get(registration[0]) === registration) return registration;
       if (node === this.#options.root) break;
       node = node.parentNode;
     }
     return null;
   }
-  #focusTarget(target: EventTarget | null): void {
+  #ownsFocusTarget(target: EventTarget | null): boolean {
+    if (target === this.#options.root) return true;
     const registration = this.#findCell(target);
+    return registration !== null && (registration[1] === target || this.#editors.get(registration[0])?.element === target);
+  }
+  #focusTarget(target: EventTarget | null): void {
+    const registration = this.#findCell(target)?.[2] ?? null;
     if (registration === null || registration.disabled === true) return;
     const current = this.getProjection().cursor.current;
     if (current !== null && cellKey(current) === cellKey(registration.cell)) return;
@@ -654,6 +664,11 @@ export class DOMTabularGrid<
   }
   #keydown(event: KeyboardEvent): void {
     if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    const direction = event.key === 'ArrowLeft' ? 'left' : event.key === 'ArrowRight' ? 'right' : event.key === 'ArrowUp' ? 'up' : event.key === 'ArrowDown' ? 'down' : null;
+    const ownsFocus = this.#ownsFocusTarget(event.target);
+    // Cell actions retain native activation while arrow keys leave their action
+    // and return to grid navigation. Other embedded inputs own their keys.
+    if (!ownsFocus && (direction === null || (event.target as HTMLElement | null)?.tagName !== 'BUTTON')) return;
     const edit = this.getSnapshot().edit;
     if (edit.kind === 'editing') {
       if (event.key === 'Escape') {
@@ -667,9 +682,11 @@ export class DOMTabularGrid<
       if (this.handleEvent({ type: 'begin-edit' } as Event)) event.preventDefault();
       return;
     }
-    const direction = event.key === 'ArrowLeft' ? 'left' : event.key === 'ArrowRight' ? 'right' : event.key === 'ArrowUp' ? 'up' : event.key === 'ArrowDown' ? 'down' : null;
     if (direction !== null) {
-      if (this.handleEvent({ type: 'move-cell', direction } as Event)) event.preventDefault();
+      if (this.handleEvent({ type: 'move-cell', direction } as Event)) {
+        if (!ownsFocus) this.focusCurrent();
+        event.preventDefault();
+      }
       return;
     }
     if (event.key !== ' ') return;

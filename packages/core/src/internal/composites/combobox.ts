@@ -48,6 +48,8 @@ export interface ComboboxStateInput<ID extends StableID = StableID>
 
 export interface ComboboxPolicies<ID extends StableID = StableID> {
   readonly matches?: (label: string, query: string, id: ID) => boolean;
+  /** Candidate participation, independent of whether a matching row is visible. */
+  readonly eligible?: (id: ID) => boolean;
   readonly boundary?: BoundaryPolicy;
 }
 
@@ -122,6 +124,7 @@ export function applyComboboxEvent<ID extends StableID>(
       labels,
       committedQuery(current.text),
       policies.matches,
+      policies.eligible,
     );
     if (!eligible.ok) return eligible;
     if (!eligible.value.has(event.id)) {
@@ -161,6 +164,9 @@ export function applyComboboxEvent<ID extends StableID>(
         current.selection,
       ));
     case 'accept':
+      if (current.text.composition === null && current.cursor.current !== null && policies.eligible?.(current.cursor.current) === false) {
+        return fail('transition-rejection', 'combobox-candidate-unavailable', 'Combobox acceptance requires an eligible candidate.', { id: current.cursor.current });
+      }
       return acceptComboboxCandidate(domain, labels, current);
   }
 }
@@ -223,9 +229,13 @@ function editComboboxText<ID extends StableID>(
 ): Result<ComboboxUpdate<ID>> {
   const edited = applyTextEvent(state.text, event);
   if (!edited.ok) return edited;
+  if (event.type === 'select') {
+    return createMachineUpdate(edited.value.state === state.text ? state
+      : comboboxState(domain, edited.value.state, state.popupOpen, state.cursor, state.selection));
+  }
   const previousQuery = committedQuery(state.text);
   const nextQuery = committedQuery(edited.value.state);
-  const eligible = resolveEligible(domain, labels, nextQuery, policies.matches);
+  const eligible = resolveEligible(domain, labels, nextQuery, policies.matches, policies.eligible);
   if (!eligible.ok) return eligible;
 
   let current = state.cursor.current;
@@ -262,6 +272,7 @@ function moveCombobox<ID extends StableID>(
     labels,
     committedQuery(state.text),
     policies.matches,
+    policies.eligible,
   );
   if (!eligible.ok) return eligible;
   const options = {
@@ -311,10 +322,13 @@ function resolveEligible<ID extends StableID>(
   labels: ReadonlyMap<ID, string>,
   query: string,
   matches: ComboboxPolicies<ID>['matches'],
+  participates?: ComboboxPolicies<ID>['eligible'],
 ): Result<ReadonlySet<ID>> {
-  if (matches === undefined) return ok(new Set(domain.ids));
+  if (matches === undefined && participates === undefined) return ok(new Set(domain.ids));
   const eligible = new Set<ID>();
   for (const id of domain.ids) {
+    if (participates?.(id) === false) continue;
+    if (matches === undefined) { eligible.add(id); continue; }
     const label = labels.get(id);
     if (label === undefined) {
       return fail(
@@ -353,6 +367,9 @@ function validatePolicies<ID extends StableID>(
       'invalid-filter-policy',
       'Combobox matches policy must be a function.',
     );
+  }
+  if (policies.eligible !== undefined && typeof policies.eligible !== 'function') {
+    return fail('transition-rejection', 'invalid-combobox-policies', 'Combobox eligible policy must be a function.');
   }
   const boundary = policies.boundary ?? 'stop';
   if (boundary !== 'stop' && boundary !== 'wrap') {

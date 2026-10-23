@@ -19,6 +19,25 @@ const registry = createUnitRegistry([
   { id: 'second', symbol: 's', dimension: { time: 1 }, scale: '1' },
 ]);
 
+test('DOM quantity field preserves host-owned options and publishes rejected commits', () => {
+  const input = new FakeInput(), unitSelect = new FakeSelect();
+  const option = { value: 'meter', textContent: 'm' };
+  unitSelect.append(option);
+  let updates = 0;
+  const field = createQuantityField({ input, unitSelect, manageUnitOptions: false,
+    policies: { registry, canonicalUnit: 'meter' }, onUpdate: () => updates++ });
+  field.refresh();
+  assert.equal(unitSelect.children[0], option);
+  nativeInput(input, 'not a quantity');
+  const previous = updates;
+  assert.equal(field.handleEvent('commit'), false);
+  assert.equal(input.attributes.get('aria-invalid'), 'true');
+  assert.equal(updates, previous + 1);
+  field.disconnect();
+  assert.equal(unitSelect.children[0], option);
+  assert.ok([...input.listeners.values(), ...unitSelect.listeners.values()].every(listeners => listeners.size === 0));
+});
+
 test('DOM quantity field owns compatible unit options, text editing, and canonical commit', () => {
   const input = new FakeInput();
   const unitSelect = new FakeSelect();

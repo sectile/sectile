@@ -20,12 +20,18 @@ export interface SelectionSnapshotInput<ID extends StableID = StableID> {
   readonly anchor?: ID | null;
 }
 
+let selectionDomainProof: (state: unknown, domain: object) => boolean;
 class ImmutableSelectionState<ID extends StableID> implements SelectionState<ID> {
   public readonly selected: readonly ID[];
   public readonly anchor: ID | null;
   readonly #selected: ReadonlySet<ID>;
   readonly #domain: SelectionDomain<ID> | null;
   readonly #indexes: readonly number[];
+
+  static {
+    selectionDomainProof = (state, domain): boolean => typeof state === 'object' && state !== null
+      && #domain in state && state.#domain === domain;
+  }
 
   public constructor(
     selected: readonly ID[],
@@ -52,6 +58,11 @@ class ImmutableSelectionState<ID extends StableID> implements SelectionState<ID>
   public indexesFor(domain: SelectionDomain<ID>): readonly number[] | null {
     return this.#domain === domain ? this.#indexes : null;
   }
+}
+
+/** Owner-local proof; consumers cannot forge the private state/domain binding. */
+export function isCanonicalSelectionState<ID extends StableID>(state: SelectionState<ID>, domain: SelectionDomain<ID>): boolean {
+  return selectionDomainProof(state, domain);
 }
 
 export function createSelectionState<ID extends StableID>(

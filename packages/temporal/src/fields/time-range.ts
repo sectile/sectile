@@ -1,77 +1,34 @@
-import { type TimeRange, type TimeValue, tryCreateTimeRange, compareTimeValues } from '../values/time.js';
-import {
-  type TimeFieldState,
-  type TimeFieldEvent,
-  type TimeFieldPolicies,
-  tryCreateTimeFieldState,
-  applyTimeFieldEvent,
-} from './time.js';
-import type { TextEditingState } from '@sectile/core/text';
 import { unwrap } from '@sectile/core/result';
+import type { TextEditingState } from '@sectile/core/text';
 import type { TemporalResult } from '../error.js';
-import { transitionFailure, ok, fail } from '../internal/foundation.js';
-import { createMachineUpdate } from '../internal/machine.js';
-import type { ErrorClass } from '@sectile/core';
-
-export type {
-  TimeRange,
-} from '../values/time.js';
-export {
-  createTimeRange,
-  tryCreateTimeRange,
-} from '../values/time.js';
+import { applyTimeFieldEvent, tryCreateTimeFieldState, reformatTimeFieldState, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeFieldFormat } from './time.js';
+import { compareTimeValues, tryCreateTimeRange, type TimeRange, type TimeValue } from '../values/time.js';
+import { applyRangeFieldEvent, tryCreateRangeFieldState, reformatRangeFieldState,
+  type RangeFieldConstruction, type RangeFieldTransition, type RangeFieldPresentation } from '../internal/range-field.js';
+export type { TimeRange } from '../values/time.js';
+export { createTimeRange, tryCreateTimeRange } from '../values/time.js';
 
 export type TimeRangeFieldEndpoint = 'start' | 'end';
-
 export interface TimeRangeFieldState { readonly value: TimeRange | null; readonly start: TimeFieldState; readonly end: TimeFieldState; readonly active: TimeRangeFieldEndpoint }
-
-export interface TimeRangeFieldStateInput { readonly value?: TimeRange | null; readonly startValue?: TimeValue | null; readonly endValue?: TimeValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly active?: TimeRangeFieldEndpoint }
-
+export interface TimeRangeFieldStateInput { readonly value?: TimeRange | null; readonly startValue?: TimeValue | null; readonly endValue?: TimeValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly startFormat?: TimeFieldFormat; readonly endFormat?: TimeFieldFormat; readonly active?: TimeRangeFieldEndpoint }
 export type TimeRangeFieldEvent = { readonly type: 'field'; readonly endpoint: TimeRangeFieldEndpoint; readonly event: TimeFieldEvent } | { readonly type: 'focus'; readonly endpoint: TimeRangeFieldEndpoint } | 'cancel';
-
 export type TimeRangeFieldCommand = { readonly type: 'input-state-changed'; readonly endpoint: TimeRangeFieldEndpoint; readonly value: TextEditingState } | { readonly type: 'range-committed'; readonly value: TimeRange | null } | { readonly type: 'focus-endpoint'; readonly endpoint: TimeRangeFieldEndpoint };
-
 export interface TimeRangeFieldPolicies extends TimeFieldPolicies {}
-
 export interface TimeRangeFieldUpdate { readonly state: TimeRangeFieldState; readonly commands: readonly TimeRangeFieldCommand[] }
 
-export function createTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): TimeRangeFieldState {
-  return unwrap(tryCreateTimeRangeFieldState(input));
-}
+const construction: RangeFieldConstruction<TimeValue, TimeRange, TimeFieldState, TimeFieldFormat> = {
+  createField: tryCreateTimeFieldState, createRange: tryCreateTimeRange,
+  endpointError: { code: 'invalid-time-range-field-endpoint', message: 'Time range field active endpoint must be start or end.' },
+  invertedError: { code: 'inverted-time-range-field', message: 'Time range field start must not be after end.' },
+};
+// Only private plain data is copied; unused editing/presentation records have no effects.
+const transition: RangeFieldTransition<TimeValue, TimeRange, TimeFieldState, TimeFieldFormat, TimeFieldEvent, TimeRangeFieldPolicies> = /* @__PURE__ */ Object.assign({}, construction, {
+  applyField: applyTimeFieldEvent, compare: compareTimeValues,
+  requiredError: { code: 'time-range-field-value-required' as const, message: 'Time range field requires a range.' },
+});
+const presentation: RangeFieldPresentation<TimeValue, TimeRange, TimeFieldState, TimeFieldFormat> = /* @__PURE__ */ Object.assign({}, construction, { reformatField: reformatTimeFieldState });
 
-export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): TemporalResult<TimeRangeFieldState> {
-  const range = input.value === undefined || input.value === null ? ok<TimeRange | null>(null) : completeRange(input.value.start, input.value.end, 'construction'); if (!range.ok) return range;
-  const startValue = input.startValue !== undefined ? input.startValue : range.value?.start ?? null;
-  const endValue = input.endValue !== undefined ? input.endValue : range.value?.end ?? null;
-  const start = tryCreateTimeFieldState(startValue, input.startInputState); if (!start.ok) return start;
-  const end = tryCreateTimeFieldState(endValue, input.endInputState); if (!end.ok) return end;
-  const value = completeRange(start.value.value, end.value.value, 'construction'); if (!value.ok) return value;
-  const active = input.active ?? 'start'; if (active !== 'start' && active !== 'end') return fail('construction', 'invalid-time-range-field-endpoint', 'Time range field active endpoint must be start or end.');
-  return ok(Object.freeze({ value: value.value, start: start.value, end: end.value, active }));
-}
-
-export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: TimeRangeFieldEvent, policies: TimeRangeFieldPolicies = {}): TemporalResult<TimeRangeFieldUpdate> {
-  const valid = tryCreateTimeRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active }); if (!valid.ok) return transitionFailure(valid);
-  if (event === 'cancel') {
-    const start = applyTimeFieldEvent(valid.value.start, 'cancel', endpointPolicies(policies)); if (!start.ok) return start;
-    const end = applyTimeFieldEvent(valid.value.end, 'cancel', endpointPolicies(policies)); if (!end.ok) return end;
-    return composeState(start.value.state, end.value.state, valid.value.active, [{ type: 'input-state-changed', endpoint: 'start', value: start.value.state.inputState }, { type: 'input-state-changed', endpoint: 'end', value: end.value.state.inputState }]);
-  }
-  if (event.type === 'focus') return createMachineUpdate(Object.freeze({ ...valid.value, active: event.endpoint }), [{ type: 'focus-endpoint', endpoint: event.endpoint }]);
-  const active = event.endpoint; const changed = applyTimeFieldEvent(active === 'start' ? valid.value.start : valid.value.end, event.event, endpointPolicies(policies)); if (!changed.ok) return changed;
-  const start = active === 'start' ? changed.value.state : valid.value.start; const end = active === 'end' ? changed.value.state : valid.value.end;
-  const next = completeRange(start.value, end.value); if (!next.ok) return next;
-  const committing = event.event === 'commit' || typeof event.event === 'object' && event.event.type === 'set-value';
-  if (committing && policies.required === true && next.value === null) return fail('transition-rejection', 'time-range-field-value-required', 'Time range field requires a range.');
-  const commands: TimeRangeFieldCommand[] = changed.value.commands.filter((command) => command.type === 'input-state-changed').map((command) => ({ type: 'input-state-changed', endpoint: active, value: command.value }));
-  if (committing && !sameRange(valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
-  return composeState(start, end, active, commands);
-}
-
-function composeState(start: TimeFieldState, end: TimeFieldState, active: TimeRangeFieldEndpoint, commands: readonly TimeRangeFieldCommand[]): TemporalResult<TimeRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
-
-function completeRange(start: TimeValue | null, end: TimeValue | null, errorClass: ErrorClass = 'transition-rejection'): TemporalResult<TimeRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateTimeRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-time-range-field', 'Time range field start must not be after end.'); }
-
-function endpointPolicies(policies: TimeRangeFieldPolicies): TimeFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
-
-function sameRange(left: TimeRange | null, right: TimeRange | null): boolean { return left === null || right === null ? left === right : compareTimeValues(left.start, right.start) === 0 && compareTimeValues(left.end, right.end) === 0; }
+export function createTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): TimeRangeFieldState { return unwrap(tryCreateTimeRangeFieldState(input)); }
+export function tryCreateTimeRangeFieldState(input: TimeRangeFieldStateInput = {}): TemporalResult<TimeRangeFieldState> { return tryCreateRangeFieldState(construction, input); }
+export function applyTimeRangeFieldEvent(state: TimeRangeFieldState, event: TimeRangeFieldEvent, policies: TimeRangeFieldPolicies = {}): TemporalResult<TimeRangeFieldUpdate> { return applyRangeFieldEvent(transition, state, event, policies); }
+export function reformatTimeRangeFieldState(state: TimeRangeFieldState, format?: TimeFieldFormat): TemporalResult<TimeRangeFieldState> { return reformatRangeFieldState(presentation, state, format); }

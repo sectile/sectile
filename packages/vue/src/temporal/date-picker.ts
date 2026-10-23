@@ -5,6 +5,7 @@ import {
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { datePickerCapability } from './capabilities/date-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface DatePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateValue | null; readonly defaultValue?: DateValue | null;
@@ -15,13 +16,14 @@ export interface DatePickerRootProps extends PickerPartProps, PickerPositionProp
 }
 export const DatePickerRoot = /* @__PURE__ */ createPickerRoot(datePickerCapability, 'SectileDatePickerRoot');
 export type DatePickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
+export type DatePickerContentSlotProps = PickerContentSlotProps<DateValue | null>;
 export type DatePickerValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DatePickerOpenChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:open']>;
 export type DatePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DatePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date'>;
 export const DatePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date'>;
 export const DatePickerPortal = PickerPortal;
-export const DatePickerContent = PickerContent as unknown as PickerRootPartComponent<'date'>;
+export const DatePickerContent = PickerContent as unknown as PickerContentPartComponent<'date'>;
 export const DatePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date'>;
 export const DatePickerCell = PickerCell;
 export const DatePickerMonthCell = PickerMonthCell;

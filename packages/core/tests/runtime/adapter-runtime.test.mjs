@@ -8,6 +8,43 @@ import {
   createSemanticController,
 } from '../../.verification-dist/adapter-runtime.js';
 
+test('controller facades replace interaction independently of state and preserve accepted policy on rejection', () => {
+  for (const kind of ['semantic', 'host', 'controlled', 'collection']) {
+    let reductions = 0, notifications = 0;
+    const reducer = (state) => { reductions++; return { ok: true, value: { state: state + 1, commands: [] } }; };
+    const common = { initial: { ok: true, value: 0 }, reducer, toEffect: value => value,
+      notify: () => { notifications++; }, interactionIntent: event => event };
+    const built = kind === 'semantic' ? createSemanticController(common)
+      : kind === 'host' ? createHostAdapter({ ...common, decode: value => value, project: value => value })
+      : kind === 'controlled' ? createControlledComponentController({ ...common, controlled: true,
+        create: value => ({ ok: true, value }), read: value => value, onChange: common.notify })
+      : createCollectionComponentController({ ...common, domain: {}, initial: () => common.initial,
+        reducer: (_domain, state, event) => reducer(state, event), reconcile: (_domain, _previous, proposed) => ({ ok: true, value: proposed }),
+        replaceDomain: (_domain, state) => ({ ok: true, value: state }) });
+    assert.equal(built.ok, true);
+    const controller = built.value, initial = controller.getSnapshot();
+    const handle = event => kind === 'host' ? controller.handleInput(event) : controller.handle(event);
+    const disabled = controller.syncInteraction({ disabled: true });
+    assert.equal(disabled.ok, true); assert.deepEqual(disabled.value, { disabled: true, readOnly: false });
+    assert.equal(Object.isFrozen(disabled.value), true);
+    assert.equal(controller.getSnapshot(), initial); assert.equal(notifications, 0);
+    assert.equal(handle('navigate').error.code, 'interaction-disabled');
+    assert.equal(controller.syncInteraction({ disabled: 'invalid' }).error.code, 'invalid-disabled-state');
+    assert.equal(controller.syncInteraction({ readOnly: 'invalid' }).error.code, 'invalid-read-only-state');
+    assert.equal(handle('mutate').error.code, 'interaction-disabled'); assert.equal(reductions, 0);
+    assert.equal(handle('configure').ok, true); assert.equal(reductions, 1);
+    const input = { readOnly: true }; controller.syncInteraction(input); input.readOnly = false;
+    assert.equal(handle('mutate').error.code, 'interaction-read-only');
+    assert.equal(handle('navigate').ok, true); assert.equal(reductions, 2);
+    controller.syncInteraction({}); assert.equal(handle('mutate').ok, true); assert.equal(reductions, 3);
+    if (kind === 'controlled') {
+      controller.syncInteraction({ disabled: true });
+      assert.equal(controller.syncControlledValue(7).ok, true); assert.equal(controller.getSnapshot().state, 7);
+      assert.equal(handle('mutate').error.code, 'interaction-disabled');
+    }
+  }
+});
+
 test('semantic controller supports opaque state without serialization', () => {
   const initial = Object.freeze({ count: 1n, metadata: new Map([['source', 'test']]) });
   const constructed = createSemanticController({
@@ -549,3 +586,52 @@ test('destroyed facade connections reject every mutation path and new subscripti
   assert.deepEqual(snapshots, []);
   assert.equal(updates, 0);
 });
+
+test('retained facades release construction inputs and release application hooks at destruction', { skip: typeof global.gc !== 'function' }, async () => {
+  for (const destroyed of [false, true]) {
+    let facade, saved, weak;
+    await new Promise(resolve => setImmediate(() => {
+      const payload = { updates: 0 }; weak = new WeakRef(payload);
+      facade = createFacadeConnection({ payload, ...(destroyed ? { onUpdate: updateFor(payload) } : {}) }, retainedFixture).value;
+      saved = facade.handleEvent; if (destroyed) facade.destroy(); resolve();
+    }));
+    for (let turn = 0; turn < 20; turn++) { global.gc(); await new Promise(resolve => setImmediate(resolve)); }
+    assert.equal(weak.deref(), undefined); assert.equal(facade.getSnapshot().state, 0);
+    assert.equal(saved(1), !destroyed);
+  }
+});
+
+function updateFor(payload) { return () => { payload.updates++; }; }
+test('saved unsubscribe ports release retired listeners before the port itself is collected', { skip: typeof global.gc !== 'function' }, async () => {
+  for (const mode of ['unsubscribe', 'destroy']) {
+    const facade = createFacadeConnection({}, retainedFixture).value; let unsubscribe, weak;
+    await new Promise(resolve => setImmediate(() => {
+      const payload = { updates: 0 }; weak = new WeakRef(payload);
+      unsubscribe = facade.subscribe(updateFor(payload));
+      if (mode === 'unsubscribe') unsubscribe(); else facade.destroy();
+      resolve();
+    }));
+    for (let turn = 0; turn < 20; turn++) { global.gc(); await new Promise(resolve => setImmediate(resolve)); }
+    assert.equal(weak.deref(), undefined, mode); unsubscribe(); facade.destroy();
+  }
+});
+test('duplicate listeners publish once and a retired unsubscribe cannot revoke a newer registration', () => {
+  const facade = createFacadeConnection({}, retainedFixture).value; let calls = 0;
+  const listener = () => { calls++; };
+  const first = facade.subscribe(listener), duplicate = facade.subscribe(listener);
+  facade.send(1); assert.equal(calls, 1); first(); facade.send(1); assert.equal(calls, 1);
+  const current = facade.subscribe(listener); duplicate(); first(); facade.send(1); assert.equal(calls, 2);
+  current(); facade.send(1); assert.equal(calls, 2); facade.destroy();
+});
+test('destruction during publication retires the active notification generation', () => {
+  let applicationUpdates = 0;
+  const facade = createFacadeConnection({ onUpdate() { applicationUpdates++; } }, retainedFixture).value;
+  const calls = [];
+  facade.subscribe(() => { calls.push('first'); facade.destroy(); });
+  facade.subscribe(() => { calls.push('retired'); });
+  facade.send(1); assert.deepEqual(calls, ['first']); assert.equal(applicationUpdates, 0);
+});
+function retainedFixture(options) {
+  const publish = options.onUpdate;
+  return { ok: true, value: { getSnapshot: () => ({ state: 0 }), handleEvent: () => { publish?.(); return true; }, disconnect() {} } };
+}

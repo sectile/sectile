@@ -16,10 +16,13 @@ import {
   type SelectionSnapshotInput,
   type SelectionState,
 } from '../state/selection.js';
+import { ownsTreeSelection, normalizeTreeSelectionState, proposeTreeSelectionToggle, type TreeSelection } from './tree-selection.js';
 
 export type TreeViewEvent<ID extends StableID = StableID> =
   | 'next'
   | 'previous'
+  | 'first'
+  | 'last'
   | 'right'
   | 'left'
   | 'toggle-select'
@@ -42,6 +45,16 @@ export interface TreeViewStateInput<ID extends StableID = StableID>
   extends SelectionSnapshotInput<ID> {
   readonly expanded?: Iterable<ID>;
   readonly current?: ID | null;
+}
+
+export interface TreeViewCheckStateInput<ID extends StableID = StableID> extends Omit<TreeViewStateInput<ID>, 'anchor'> {
+  readonly anchor?: null;
+}
+/** True keeps that accepted part; otherwise the proposed part is used. */
+export interface TreeViewControlledParts {
+  readonly selection?: boolean;
+  readonly expansion?: boolean;
+  readonly cursor?: boolean;
 }
 
 export type TreeViewSelectionMode = 'single' | 'multiple';
@@ -85,6 +98,53 @@ export function tryCreateTreeViewState<ID extends StableID>(
   const selection = createSelectionState(tree.preorder(), selectionMode, input);
   if (!selection.ok) return selection;
   return ok(treeViewState(tree, expansion, createCursorState(current), selection.value));
+}
+
+export function createTreeViewCheckState<ID extends StableID>(
+  tree: Tree<ID>, checking: TreeSelection<NoInfer<ID>>, input: TreeViewCheckStateInput<NoInfer<ID>> = {},
+): TreeViewState<ID> {
+  return unwrap(tryCreateTreeViewCheckState(tree, checking, input));
+}
+
+/** Pure admission; defaults to the projection's current accepted leaf values. */
+export function tryCreateTreeViewCheckState<ID extends StableID>(
+  tree: Tree<ID>, checking: TreeSelection<NoInfer<ID>>, input: TreeViewCheckStateInput<NoInfer<ID>> = {},
+): Result<TreeViewState<ID>> {
+  const selection = normalizeTreeSelectionState(tree, checking, input);
+  if (!selection.ok) return selection;
+  if (input.anchor !== undefined && input.anchor !== null) return fail('construction', 'selection-anchor-outside-domain', 'Checked tree selection does not use a range anchor.');
+  const expansion = createExpansionState(tree, input.expanded ?? []), current = input.current ?? null;
+  if (current !== null && !treeVisible(tree, expansion).contains(current)) {
+    return fail('construction', 'tree-view-cursor-hidden', 'Tree-view cursor must be visible under the requested expansion.', { current });
+  }
+  return ok(treeViewState(tree, expansion, createCursorState(current), selection.value));
+}
+
+/** Compose accepted/proposed canonical parts without materializing their values. */
+export function reconcileTreeViewState<ID extends StableID>(
+  tree: Tree<ID>, previous: TreeViewState<NoInfer<ID>>, proposed: TreeViewState<NoInfer<ID>>,
+  controlled: TreeViewControlledParts = {}, selectionMode: TreeViewSelectionMode = 'multiple',
+): Result<TreeViewState<ID>> {
+  const { selection: keepSelection = false, expansion: keepExpansion = false, cursor: keepCursor = false } = controlled;
+  if (typeof keepSelection !== 'boolean' || typeof keepExpansion !== 'boolean' || typeof keepCursor !== 'boolean') {
+    return fail('construction', 'invalid-boundary', 'Controlled tree parts must be boolean.');
+  }
+  const selection = keepSelection ? previous.selection : proposed.selection;
+  const expansion = keepExpansion ? previous.expansion : proposed.expansion;
+  const cursor = keepCursor ? previous.cursor : proposed.cursor;
+  if (!hasCanonicalState(tree, previous) || !hasCanonicalState(tree, proposed)) {
+    return tryCreateTreeViewState(tree, { selected: selection.selected, anchor: selection.anchor, expanded: expansion.ids, current: cursor.current }, selectionMode);
+  }
+  const visibleInPrevious = expansion === previous.expansion && cursor.current === previous.cursor.current;
+  const visibleInProposed = expansion === proposed.expansion && cursor.current === proposed.cursor.current;
+  if (cursor.current !== null && !visibleInPrevious && !visibleInProposed && !treeVisible(tree, expansion).contains(cursor.current)) {
+    return fail('construction', 'tree-view-cursor-hidden', 'Tree-view cursor must be visible under the requested expansion.', { current: cursor.current });
+  }
+  if (selectionMode !== 'single' && selectionMode !== 'multiple') return fail('construction', 'invalid-selection-mode', 'Selection mode must be single or multiple.', { mode: selectionMode });
+  if (selectionMode === 'single' && selection.size > 1) return fail('construction', 'invalid-selection-cardinality', 'Single selection must contain at most one identity.', { selectedCount: selection.size });
+  if (selection === previous.selection && expansion === previous.expansion && cursor === previous.cursor) return ok(previous);
+  if (selection === proposed.selection && expansion === proposed.expansion && cursor === proposed.cursor) return ok(proposed);
+  return ok(treeViewState(tree, expansion, cursor, selection));
 }
 
 export function applyTreeViewEvent<ID extends StableID>(
@@ -161,9 +221,9 @@ export function applyTreeViewEvent<ID extends StableID>(
     ), [{ type: 'focus', id: event.id }]);
   }
 
-  if (event === 'next' || event === 'previous') {
-    const target = current === null
-      ? eligibleFromEdge(visible, event === 'next' ? 1 : -1, eligible)
+  if (event === 'next' || event === 'previous' || event === 'first' || event === 'last') {
+    const target = current === null || event === 'first' || event === 'last'
+      ? eligibleFromEdge(visible, event === 'next' || event === 'first' ? 1 : -1, eligible)
       : movementTarget(visible, current, event === 'next' ? 1 : -1, eligible);
     if (target === null) return createMachineUpdate(normalized);
     return createMachineUpdate(
@@ -232,6 +292,31 @@ function movementTarget<ID extends StableID>(
     if (id !== null && eligible(id)) return id;
   }
   return null;
+}
+
+/**
+ * Pure checked-tree proposal. The projection shares this Tree and its accepted
+ * leaf values; the caller accepts the returned state and updates it separately.
+ * Cursor/focus stays independent of the checked selection's null range anchor.
+ */
+export function applyTreeViewCheckEvent<ID extends StableID>(
+  tree: Tree<ID>, state: TreeViewState<NoInfer<ID>>, event: TreeViewEvent<NoInfer<ID>>, checking: TreeSelection<NoInfer<ID>>, policies: TreeViewPolicies<NoInfer<ID>> = {},
+): Result<TreeViewUpdate<ID>> {
+  if (!ownsTreeSelection(tree, checking)) return fail('transition-rejection', 'tree-selection-owner-mismatch', 'Checked selection must belong to the same tree.');
+  const { selectionMode, eligible } = policies;
+  if (selectionMode !== undefined && selectionMode !== 'multiple') return fail('transition-rejection', 'invalid-selection-mode', 'Checked trees require multiple-value selection.');
+  const checkedPolicies: TreeViewPolicies<ID> = { selectionMode: 'multiple', ...(eligible === undefined ? {} : { eligible }) };
+  if (event !== 'toggle-select' && (typeof event !== 'object' || event === null || event.type !== 'toggle-select')) {
+    return applyTreeViewEvent(tree, state, event, checkedPolicies);
+  }
+  const id = typeof event === 'object' ? event.id : state.cursor.current;
+  if (id === null) return applyTreeViewEvent(tree, state, event, checkedPolicies);
+  const focused = applyTreeViewEvent(tree, state, { type: 'focus', id }, checkedPolicies);
+  if (!focused.ok) return focused;
+  const selection = proposeTreeSelectionToggle(tree, checking, focused.value.state.selection.selected, id);
+  if (!selection.ok) return selection;
+  return createMachineUpdate(treeViewState(tree, focused.value.state.expansion, focused.value.state.cursor, selection.value),
+    typeof event === 'object' ? focused.value.commands : []);
 }
 
 function eligibleFromEdge<ID extends StableID>(domain: { readonly size: number; at(index: number): ID | null }, direction: -1 | 1, eligible: (id: ID) => boolean): ID | null {
@@ -336,6 +421,8 @@ function isTreeViewEvent<ID extends StableID>(value: unknown): value is TreeView
   if (typeof value === 'string') {
     return value === 'next'
       || value === 'previous'
+      || value === 'first'
+      || value === 'last'
       || value === 'right'
       || value === 'left'
       || value === 'toggle-select';

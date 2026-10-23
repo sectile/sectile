@@ -53,6 +53,8 @@ export interface CarouselOptions<ID extends StableID = StableID> {
   readonly nextButton?: HTMLElement;
   readonly pauseButton?: HTMLElement;
   readonly indicatorGroup?: HTMLElement;
+  readonly indicatorGroupLabel?: string;
+  readonly getPauseLabel?: (paused: boolean) => string;
   readonly getSlideLabel?: (id: ID, index: number, count: number) => string;
   readonly getIndicatorLabel?: (id: ID, index: number, count: number) => string;
   readonly onValueChange?: (value: ID | null) => void;
@@ -230,7 +232,7 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
     if (options.indicatorGroup !== undefined) {
       options.indicatorGroup.setAttribute('role', 'tablist');
-      options.indicatorGroup.setAttribute('aria-label', 'Choose slide');
+      options.indicatorGroup.setAttribute('aria-label', options.indicatorGroupLabel ?? 'Choose slide');
       options.indicatorGroup.setAttribute('aria-orientation', options.orientation ?? 'horizontal');
     }
     this.#refresh();
@@ -334,7 +336,8 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
     setDisabled(this.#options.nextButton, position.count < 2 || bounded && position.index === position.count - 1);
     if (this.#options.pauseButton !== undefined) {
       this.#options.pauseButton.setAttribute('aria-pressed', String(state.paused));
-      this.#options.pauseButton.setAttribute('aria-label', state.paused ? 'Resume automatic rotation' : 'Pause automatic rotation');
+      this.#options.pauseButton.setAttribute('aria-label', this.#options.getPauseLabel?.(state.paused)
+        ?? (state.paused ? 'Resume automatic rotation' : 'Pause automatic rotation'));
     }
   }
 

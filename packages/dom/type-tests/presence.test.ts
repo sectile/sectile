@@ -20,13 +20,29 @@ const options: PresenceOptions = {
 };
 const connection: PresenceConnection = createPresence(options);
 const present: boolean = connection.update(true, undefined);
+connection.suspend();
+const resumed: boolean = connection.resume(true, document.createElement('div'));
+void resumed;
 const exitCancel: ExitPresenceCancel | null = retainExitPresence(
   document.createElement('div'),
   () => {},
 );
 
-const rendererOwnedCarousel: Pick<CarouselOptions<string>, 'manageVisibility'> = { manageVisibility: false };
+const rendererOwnedCarousel: Pick<CarouselOptions<string>, 'manageVisibility' | 'indicatorGroupLabel' | 'getPauseLabel'> = {
+  manageVisibility: false, indicatorGroupLabel: '슬라이드 선택', getPauseLabel: paused => paused ? '재생' : '정지',
+};
 const rendererOwnedCombobox: Pick<ComboboxConnectionOptions<string>, 'manageVisibility'> = { manageVisibility: false };
+const externalComboboxEditor: Pick<ComboboxConnectionOptions<'a'>, 'manageText' | 'isInputComposing'> = { manageText: false, isInputComposing: () => false };
+const caretCombobox: Pick<ComboboxConnectionOptions<'a'>, 'anchor'> = { anchor: 'caret' }; void caretCombobox;
+// @ts-expect-error Native caret anchoring is a closed placement choice.
+const invalidCaretCombobox: Pick<ComboboxConnectionOptions<'a'>, 'anchor'> = { anchor: 'cursor' }; void invalidCaretCombobox;
+// @ts-expect-error IME observations return a boolean, not native event objects.
+const invalidExternalComboboxEditor: Pick<ComboboxConnectionOptions<'a'>, 'isInputComposing'> = { isInputComposing: () => new Event('compositionstart') };
+void externalComboboxEditor; void invalidExternalComboboxEditor;
+const renderedCombobox: Pick<ComboboxConnectionOptions<'a' | 'b'>, 'isItemRendered'> = { isItemRendered: id => { const value: 'a' | 'b' = id; return value === 'a'; } };
+// @ts-expect-error Render publication is a boolean observation, not an ID conversion.
+const invalidRenderedCombobox: Pick<ComboboxConnectionOptions<'a' | 'b'>, 'isItemRendered'> = { isItemRendered: () => 'a' };
+void renderedCombobox; void invalidRenderedCombobox;
 const rendererOwnedCascade: Pick<CascadeSelectOptions<string>, 'manageVisibility'> = { manageVisibility: false };
 const rendererOwnedDate: Pick<DatePickerOptions, 'manageVisibility'> = { manageVisibility: false };
 const rendererOwnedDateRange: Pick<DateRangePickerOptions, 'manageVisibility'> = { manageVisibility: false };

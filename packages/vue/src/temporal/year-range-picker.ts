@@ -5,6 +5,7 @@ import {
   createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './picker.js';
 import { yearRangePickerCapability } from './capabilities/year-range-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface YearRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null;
@@ -23,13 +24,14 @@ export interface YearRangePickerRootProps extends PickerPartProps, PickerPositio
 
 export const YearRangePickerRoot = /* @__PURE__ */ createPickerRoot(yearRangePickerCapability, 'SectileYearRangePickerRoot', { scope: 'year-range-picker', granularity: 'year', defaultView: 'year' });
 export type YearRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
+export type YearRangePickerContentSlotProps = PickerContentSlotProps<DateRange | null>;
 export type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:open']>;
 export type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const YearRangePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date-range'>;
 export const YearRangePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date-range'>;
 export const YearRangePickerPortal = PickerPortal;
-export const YearRangePickerContent = PickerContent as unknown as PickerRootPartComponent<'date-range'>;
+export const YearRangePickerContent = PickerContent as unknown as PickerContentPartComponent<'date-range'>;
 export const YearRangePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date-range'>;
 export const YearRangePickerCell = /* @__PURE__ */ createPickerYearCell('cell', 'SectileYearRangePickerCell');
 export const YearRangePickerStartInput = /* @__PURE__ */ createPickerInput('start-input', 'SectileYearRangePickerStartInput');

@@ -176,11 +176,16 @@ export const PaginationItem = defineComponent({
     const disabled = computed(() => root.disabled.value || (props.item.type === 'control' && props.item.disabled));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
-      elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.register(node, props.item); },
+      elementRef: (node: unknown) => {
+        if (!(node instanceof HTMLElement)) return;
+        const item = props.item;
+        root.register(node, item.type === 'page' && item.selected !== selected.value ? { ...item, selected: selected.value } : item);
+      },
       type: props.as === 'button' ? 'button' : undefined,
       'data-sectile-pagination-index': root.state.value.items.indexOf(props.item),
       'data-scope': 'pagination', 'data-part': props.item.type,
       'data-selected': selected.value ? '' : undefined,
+      'aria-current': selected.value ? 'page' : undefined,
     }), { default: () => slots['default']?.({ item: props.item, selected: selected.value, disabled: disabled.value }) });
   },
 });

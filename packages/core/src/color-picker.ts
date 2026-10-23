@@ -45,9 +45,12 @@ export interface ColorAreaValue {
 
 /** Integer RGBA channels in the inclusive 0..255 interval. */
 export type ColorValue = Rgba8;
+/** Exact editing coordinates; RGB8 remains the accepted color value. */
+export type ColorAreaSelection = Omit<ColorAreaValue, 'alpha'>;
 
 export interface ColorPickerState {
   readonly value: ColorValue;
+  readonly area?: ColorAreaSelection;
   readonly draft: string | null;
   readonly format: ColorFormat;
   readonly channel: ColorChannel;
@@ -55,6 +58,7 @@ export interface ColorPickerState {
 
 export interface ColorPickerStateInput {
   readonly value?: ColorValue | string;
+  readonly area?: ColorAreaSelection;
   readonly draft?: string | null;
   readonly format?: ColorFormat;
   readonly channel?: ColorChannel;
@@ -101,16 +105,23 @@ export function formatColorValue(value: ColorValue, format: ColorFormat = 'hex')
   return isFormat(format) ? formatColorText(value, format) : fail('construction', 'color-format-invalid', 'Color format is unsupported.');
 }
 
-export function getColorAreaValue(value: ColorValue): Result<ColorAreaValue> {
+export function getColorAreaValue(value: ColorValue, selection?: ColorAreaSelection): Result<ColorAreaValue> {
   if (!validColorValue(value)) {
     const invalid = tryCreateColorValue(value.red, value.green, value.blue, value.alpha);
     if (!invalid.ok) return invalid;
+  }
+  if (selection !== undefined) {
+    if (!unitInterval(selection.x) || !unitInterval(selection.y) || !Number.isFinite(selection.hue) || selection.hue < 0 || selection.hue > 360)
+      return fail('construction', 'color-area-out-of-range', 'Color area selection must have bounded finite coordinates.');
+    const projected = colorFromArea(selection, value.alpha / 255);
+    if (!sameRGB(value, projected)) return fail('construction', 'color-coordinate-invalid', 'Color area selection must represent the accepted RGB value.');
+    return ok(Object.freeze({ x: selection.x, y: selection.y, hue: selection.hue, alpha: value.alpha / 255 }));
   }
   const hsv = srgbToHsv(rgba8ToSrgb(value));
   return ok(Object.freeze({ x: hsv.saturation, y: hsv.value, hue: hsv.hue, alpha: value.alpha / 255 }));
 }
 
-export function getColorCoordinates(value: ColorValue, format: ColorFormat): Result<readonly ColorCoordinateValue[]> {
+export function getColorCoordinates(value: ColorValue, format: ColorFormat, selection?: ColorAreaSelection): Result<readonly ColorCoordinateValue[]> {
   if (!validColorValue(value)) {
     const invalid = tryCreateColorValue(value.red, value.green, value.blue, value.alpha);
     if (!invalid.ok) return invalid;
@@ -127,17 +138,12 @@ export function getColorCoordinates(value: ColorValue, format: ColorFormat): Res
     ]));
   }
   if (format === 'hsv') {
-    const red = value.red / 255;
-    const green = value.green / 255;
-    const blue = value.blue / 255;
-    const maximum = Math.max(red, green, blue);
-    const delta = maximum - Math.min(red, green, blue);
-    const sector = delta === 0 ? 0 : maximum === red ? (green - blue) / delta : maximum === green ? 2 + (blue - red) / delta : 4 + (red - green) / delta;
-    const hue = ((60 * (sector < 0 ? sector + 6 : sector)) % 360 + 360) % 360;
+    const area = getColorAreaValue(value, selection);
+    if (!area.ok) return area;
     return ok(Object.freeze([
-      coordinate('hue', 'Hue', hue, 0, 360, 1, '°'),
-      coordinate('saturation', 'Saturation', (maximum === 0 ? 0 : delta / maximum) * 100, 0, 100, 1, '%'),
-      coordinate('value', 'Value', maximum * 100, 0, 100, 1, '%'),
+      coordinate('hue', 'Hue', area.value.hue, 0, 360, 1, '°'),
+      coordinate('saturation', 'Saturation', area.value.x * 100, 0, 100, 1, '%'),
+      coordinate('value', 'Value', area.value.y * 100, 0, 100, 1, '%'),
       alpha,
     ]));
   }
@@ -214,12 +220,26 @@ export function tryCreateColorPickerState(input: ColorPickerStateInput = {}, pol
   if (!isChannel(channel)) return fail('construction', 'color-channel-invalid', 'Color channel is unsupported.');
   if (channel === 'alpha' && policies.allowAlpha === false) return fail('construction', 'color-alpha-disabled', 'Alpha cannot be active when alpha editing is disabled.');
   if (input.draft !== undefined && input.draft !== null && typeof input.draft !== 'string') return fail('construction', 'color-draft-invalid', 'Color draft must be text or null.');
-  return ok(Object.freeze({ value: value.value, draft: input.draft ?? null, format, channel }));
+  const area = getColorAreaValue(value.value, input.area);
+  if (!area.ok) return area;
+  return ok(Object.freeze({ value: value.value, area: areaSelection(area.value), draft: input.draft ?? null, format, channel }));
+}
+
+/** Reconcile owner values without discarding a matching current or proposed area selection. */
+export function reconcileColorPickerState(previous: ColorPickerState, input: ColorPickerStateInput,
+  policies: ColorPickerPolicies = {}, proposal?: ColorPickerState): Result<ColorPickerState> {
+  const { area: _area, ...base } = previous;
+  const next = tryCreateColorPickerState({ ...base, ...input }, policies);
+  if (!next.ok || input.area !== undefined) return next;
+  const retained = proposal !== undefined && sameRGB(proposal.value, next.value.value) ? proposal : previous;
+  if (!sameRGB(retained.value, next.value.value) || retained.area === undefined) return next;
+  return tryCreateColorPickerState({ ...next.value, area: retained.area }, policies);
 }
 
 export function applyColorPickerEvent(state: ColorPickerState, event: ColorPickerEvent, policies: ColorPickerPolicies = {}): Result<ColorPickerUpdate> {
   const valid = tryCreateColorPickerState(state, policies);
   if (!valid.ok) return fail('transition-rejection', valid.error.code, valid.error.message, valid.error.details);
+  // Admission always materializes area, including structural states without it.
   if (event === 'cancel') return createMachineUpdate(colorState(state, { draft: null }));
   if (event === 'commit') {
     if (state.draft === null) return createMachineUpdate(state);
@@ -248,18 +268,29 @@ export function applyColorPickerEvent(state: ColorPickerState, event: ColorPicke
     return commit(colorState(state, { channel }), withChannel(state.value, channel, event.value), policies);
   }
   if (event.type === 'set-coordinate') {
+    if (event.format === 'hsv' && (event.coordinate === 'hue' || event.coordinate === 'saturation' || event.coordinate === 'value')) {
+      const limit = event.coordinate === 'hue' ? 360 : 100;
+      if (!Number.isFinite(event.value) || event.value < 0 || event.value > limit)
+        return fail('transition-rejection', 'color-coordinate-out-of-range', 'Color coordinate is outside its supported range.');
+      const current = valid.value.area!;
+      const area = { x: event.coordinate === 'saturation' ? event.value / 100 : current.x,
+        y: event.coordinate === 'value' ? event.value / 100 : current.y, hue: event.coordinate === 'hue' ? event.value : current.hue };
+      return commit(state, colorFromArea(area, state.value.alpha / 255), policies, area);
+    }
     const value = setColorCoordinate(state.value, event.format, event.coordinate, event.value);
     return value.ok ? commit(state, value.value, policies) : fail('transition-rejection', value.error.code, value.error.message, value.error.details);
   }
   if (event.type === 'set-area') {
     if (!unitInterval(event.x) || !unitInterval(event.y)) return fail('transition-rejection', 'color-area-out-of-range', 'Color area coordinates must be from 0 through 1.');
-    const current = srgbToHsv(rgba8ToSrgb(state.value));
-    return commit(state, srgbToRgba8(hsvToSrgb({ hue: current.hue, saturation: event.x, value: event.y, alpha: current.alpha })), policies);
+    const current = valid.value.area!;
+    const area = { x: event.x, y: event.y, hue: current.hue };
+    return commit(state, colorFromArea(area, state.value.alpha / 255), policies, area);
   }
   if (event.type === 'set-hue') {
     if (!Number.isFinite(event.value) || event.value < 0 || event.value > 360) return fail('transition-rejection', 'color-hue-out-of-range', 'Hue must be from 0 through 360.');
-    const current = srgbToHsv(rgba8ToSrgb(state.value));
-    return commit(state, srgbToRgba8(hsvToSrgb({ hue: event.value, saturation: current.saturation, value: current.value, alpha: current.alpha })), policies);
+    const current = valid.value.area!;
+    const area = { x: current.x, y: current.y, hue: event.value };
+    return commit(state, colorFromArea(area, state.value.alpha / 255), policies, area);
   }
   if (event.type === 'set-alpha') {
     if (!unitInterval(event.value)) return fail('transition-rejection', 'color-alpha-out-of-range', 'Alpha must be from 0 through 1.');
@@ -272,9 +303,15 @@ export function applyColorPickerEvent(state: ColorPickerState, event: ColorPicke
   return commit(state, value.value, policies);
 }
 
-function commit(state: ColorPickerState, value: ColorValue, policies: ColorPickerPolicies): Result<ColorPickerUpdate> {
+function colorFromArea(area: ColorAreaSelection, alpha: number): ColorValue {
+  return srgbToRgba8(hsvToSrgb({ hue: area.hue, saturation: area.x, value: area.y, alpha }));
+}
+
+function commit(state: ColorPickerState, value: ColorValue, policies: ColorPickerPolicies, selection?: ColorAreaSelection): Result<ColorPickerUpdate> {
   if (policies.allowAlpha === false && value.alpha !== 255) return fail('transition-rejection', 'color-alpha-disabled', 'Alpha editing is disabled.');
-  const next = colorState(state, { value, draft: null });
+  const area = getColorAreaValue(value, selection ?? (sameRGB(state.value, value) ? state.area : undefined));
+  if (!area.ok) return area;
+  const next = colorState(state, { value, area: areaSelection(area.value), draft: null });
   if (sameColor(state.value, value) && state.draft === null) return createMachineUpdate(next);
   const text = formatColorValue(value, state.format);
   if (!text.ok) return fail('transition-rejection', text.error.code, text.error.message, text.error.details);
@@ -288,6 +325,7 @@ function withChannel(value: ColorValue, channel: ColorChannel, next: number): Co
 function colorState(state: ColorPickerState, patch: Partial<ColorPickerState>): ColorPickerState {
   return Object.freeze({
     value: patch.value ?? state.value,
+    ...(patch.area === undefined && state.area === undefined ? {} : { area: patch.area ?? state.area }),
     draft: patch.draft === undefined ? state.draft : patch.draft,
     format: patch.format ?? state.format,
     channel: patch.channel ?? state.channel,
@@ -304,6 +342,9 @@ function validatePolicies(policies: ColorPickerPolicies): Result<true> {
 function sameColor(left: ColorValue, right: ColorValue): boolean {
   return left.red === right.red && left.green === right.green && left.blue === right.blue && left.alpha === right.alpha;
 }
+
+function sameRGB(left: ColorValue, right: ColorValue): boolean { return left.red === right.red && left.green === right.green && left.blue === right.blue; }
+function areaSelection(value: ColorAreaValue): ColorAreaSelection { return Object.freeze({ x: value.x, y: value.y, hue: value.hue }); }
 
 function isChannel(value: string): value is ColorChannel {
   return value === 'red' || value === 'green' || value === 'blue' || value === 'alpha';

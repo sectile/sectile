@@ -1,10 +1,154 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
-import { createMenu } from '../.verification-dist/menu.js';
-import { createMenuButton } from '../.verification-dist/menu-button.js';
+import { createMenu, tryCreateMenu } from '../.verification-dist/menu.js';
+import { createMenuModel } from '@sectile/core/menu';
+import { createMenuButton, tryCreateMenuButton } from '../.verification-dist/menu-button.js';
+import { createContextMenu } from '../.verification-dist/context-menu.js';
+import { readPositionSourceRegistryDiagnostics } from '../.verification-dist/overlay/position/engine.js';
 import { createMenubar } from '../.verification-dist/menubar.js';
 import { createNavigationMenu } from '../.verification-dist/navigation-menu.js';
+
+test('submenu release restores a preexisting SSR control relationship', () => {
+  const root = new FakeElement(), anchor = new FakeElement(), panel = new FakeElement();
+  anchor.setAttribute('aria-controls', 'server-panel'); panel.id = 'server-panel'; panel.setAttribute('id', 'server-panel');
+  const menu = createMenubar({ root, items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }] });
+  try {
+    menu.setItemAttributes(anchor, 'file'); menu.setSubmenuAttributes(panel, 'file');
+    assert.equal(menu.getSubmenuID('file'), 'server-panel');
+    menu.setSubmenuAttributes(undefined, 'file'); assert.equal(anchor.getAttribute('aria-controls'), 'server-panel');
+    assert.equal(menu.getSubmenuID('file'), undefined);
+    assert.equal(panel.id, 'server-panel');
+    menu.setSubmenuAttributes(panel, 'file'); anchor.setAttribute('aria-controls', 'external-panel'); menu.refresh();
+    assert.equal(anchor.getAttribute('aria-controls'), 'server-panel');
+    menu.setSubmenuAttributes(undefined, 'file'); assert.equal(anchor.getAttribute('aria-controls'), 'external-panel');
+  } finally { menu.disconnect(); }
+});
+
+test('menubar horizontal keys cross root branches atomically and Tab preserves native traversal', async () => {
+  for (const direction of ['ltr', 'rtl']) {
+    const before = readPositionSourceRegistryDiagnostics(), { window, root, file, child, submenu } = menuDOM(600, 400);
+    const make = tag => window.document.createElement(tag), edit = make('button'), undo = make('button'), recent = make('button'), deep = make('button'), editPanel = make('div'), nested = make('div');
+    root.replaceChildren(file, edit, submenu, editPanel); submenu.replaceChildren(child, recent, nested); nested.append(deep); editPanel.append(undo);
+    const menu = createMenubar({ root, direction, items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }, { id: 'recent', parentID: 'file' },
+      { id: 'deep', parentID: 'recent' }, { id: 'edit', parentID: null }, { id: 'undo', parentID: 'edit' }], defaultHighlightedValue: 'file' });
+    const key = (element, name, init = {}) => { const event = new window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true, ...init }); element.dispatchEvent(event); return event; };
+    const forward = direction === 'ltr' ? 'ArrowRight' : 'ArrowLeft', back = direction === 'ltr' ? 'ArrowLeft' : 'ArrowRight';
+    for (const [element, id] of [[file, 'file'], [child, 'open'], [recent, 'recent'], [deep, 'deep'], [edit, 'edit'], [undo, 'undo']]) menu.setItemAttributes(element, id);
+    menu.setSubmenuAttributes(submenu, 'file'); menu.setSubmenuAttributes(nested, 'recent'); menu.setSubmenuAttributes(editPanel, 'edit');
+    try {
+      file.focus(); key(file, 'Enter'); await settlePosition(window); assert.equal(window.document.activeElement === child, true);
+      key(child, forward); await settlePosition(window); assert.equal(window.document.activeElement === edit, true);
+      assert.deepEqual(menu.getSnapshot().state.openPath, ['edit']); assert.equal(submenu.hidden, true); assert.equal(editPanel.hidden, false);
+      key(edit, 'ArrowDown'); await settlePosition(window); key(undo, back); await settlePosition(window);
+      assert.equal(window.document.activeElement === file, true); assert.deepEqual(menu.getSnapshot().state.openPath, ['file']);
+      key(file, ' '); await settlePosition(window); key(child, 'ArrowDown'); await settlePosition(window); key(recent, forward); await settlePosition(window);
+      assert.equal(window.document.activeElement === deep, true); key(deep, back); await settlePosition(window);
+      assert.equal(window.document.activeElement === recent, true); assert.deepEqual(menu.getSnapshot().state.openPath, ['file']);
+      assert.equal(key(recent, 'Tab', { shiftKey: true }).defaultPrevented, false); assert.deepEqual(menu.getSnapshot().state.openPath, []);
+      assert.equal(window.document.activeElement === file, true); assert.equal(submenu.hidden, true);
+    } finally { menu.disconnect(); }
+    await settlePosition(window); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+  }
+});
+
+test('menu button trigger arrows admit Core opening and endpoint focus and release their listener', () => {
+  const { window, root, trigger, file, child } = menuDOM(600, 400);
+  const menu = createMenuButton({ root, trigger, position: false, items: [{ id: 'first', parentID: null }, { id: 'last', parentID: null }] });
+  menu.setItemAttributes(file, 'first'); menu.setItemAttributes(child, 'last');
+  const key = (name, init = {}) => { const event = new window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true, ...init }); trigger.dispatchEvent(event); return event; };
+  try {
+    assert.equal(key('ArrowDown', { ctrlKey: true }).defaultPrevented, false); assert.equal(menu.getSnapshot().state.open, false);
+    assert.equal(key('ArrowDown').defaultPrevented, true); assert.equal(menu.getSnapshot().state.cursor.current, 'first');
+    menu.handleEvent('close-popup'); assert.equal(key('ArrowUp').defaultPrevented, true); assert.equal(menu.getSnapshot().state.cursor.current, 'last');
+    const tab = new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }); child.dispatchEvent(tab);
+    assert.equal(tab.defaultPrevented, false); assert.equal(menu.getSnapshot().state.open, false);
+    assert.notEqual(window.document.activeElement, trigger, 'Tab leaves focus traversal to the browser rather than returning to the trigger');
+  } finally { menu.disconnect(); }
+  assert.equal(key('ArrowDown').defaultPrevented, false);
+  const refused = createMenuButton({ root, trigger, position: false, open: false, items: [{ id: 'first', parentID: null }] });
+  try { key('ArrowDown'); assert.equal(refused.getSnapshot().state.open, false); assert.equal(refused.getSnapshot().state.cursor.current, null); }
+  finally { refused.disconnect(); }
+});
+
+test('menu keyboard input admits its actual focused registered item before interpreting the first key', async () => {
+  for (const create of [createMenu, createMenuButton]) {
+    const { window, root, trigger, file, child, submenu } = menuDOM(600, 400);
+    const menu = create({ root, trigger, position: false, defaultOpen: true,
+      items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }, { id: 'edit', parentID: null }],
+    });
+    menu.setItemAttributes(file, 'file'); menu.setItemAttributes(child, 'open'); menu.setSubmenuAttributes(submenu, 'file');
+    try {
+      assert.equal(menu.getSnapshot().state.cursor.current, null);
+      file.focus(); file.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }));
+      assert.deepEqual(menu.getSnapshot().state.openPath, ['file']);
+      assert.equal(menu.getSnapshot().state.cursor.current, 'open');
+      await settlePosition(window);
+      assert.equal(window.document.activeElement === child, true, 'the admitted branch focuses its child');
+    } finally { menu.destroy(); window.close(); }
+  }
+});
+
+test('navigation leaf anchors keep native activation keys and cancel disabled navigation', () => {
+  const { window, root } = menuDOM(600, 400), link = window.document.createElement('a'), blocked = window.document.createElement('a'), invoked = [];
+  link.href = '#docs'; blocked.href = '#blocked'; blocked.setAttribute('role', 'link'); root.replaceChildren(link, blocked);
+  const menu = createNavigationMenu({ root, items: [{ id: 'docs', parentID: null }, { id: 'blocked', parentID: null }],
+    defaultHighlightedValue: 'docs', disabledItems: ['blocked'], onInvoke: id => invoked.push(id) });
+  menu.setItemAttributes(link, 'docs'); menu.setItemAttributes(blocked, 'blocked');
+  assert.equal(blocked.getAttribute('role'), 'link');
+  const key = (element, name) => { const event = new window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }); element.dispatchEvent(event); return event; };
+  try {
+    link.focus(); assert.equal(key(link, 'Enter').defaultPrevented, false); assert.equal(key(link, ' ').defaultPrevented, false); assert.deepEqual(invoked, []);
+    // Simulated DOM does not synthesize the browser's Enter click.
+    const click = new window.MouseEvent('click', { bubbles: true, cancelable: true }); link.dispatchEvent(click);
+    assert.equal(click.defaultPrevented, false); assert.deepEqual(invoked, ['docs']);
+    blocked.focus(); assert.equal(key(blocked, 'Enter').defaultPrevented, true);
+    const rejected = new window.MouseEvent('click', { bubbles: true, cancelable: true }); blocked.dispatchEvent(rejected);
+    assert.equal(rejected.defaultPrevented, true); assert.deepEqual(invoked, ['docs']);
+  } finally { menu.disconnect(); }
+});
+
+test('inline bars translate submenu arrows and return Core-admitted focus to the visible owner', async () => {
+  for (const create of [createMenubar, createNavigationMenu]) {
+    const before = readPositionSourceRegistryDiagnostics(), { window, root, file, child, submenu } = menuDOM(600, 400);
+    const last = window.document.createElement('button'), edit = window.document.createElement('button'), invoked = [];
+    root.append(edit, submenu); submenu.append(child, last);
+    const menu = create({ root, items: [{ id: 'file', parentID: null }, { id: 'edit', parentID: null },
+      { id: 'open', parentID: 'file' }, { id: 'last', parentID: 'file' }], defaultHighlightedValue: 'file', disabledItems: ['open'], onInvoke: id => invoked.push(id) });
+    const key = (element, name) => element.dispatchEvent(new window.KeyboardEvent('keydown', { key: name, bubbles: true, cancelable: true }));
+    menu.setItemAttributes(file, 'file'); menu.setItemAttributes(edit, 'edit'); menu.setItemAttributes(child, 'open'); menu.setItemAttributes(last, 'last'); menu.setSubmenuAttributes(submenu, 'file');
+    try {
+      file.focus(); key(file, 'ArrowDown'); await settlePosition(window); assert.equal(window.document.activeElement === child, true);
+      key(child, 'Enter'); assert.deepEqual(invoked, []);
+      key(child, 'ArrowDown'); await settlePosition(window); assert.equal(window.document.activeElement === last, true);
+      key(last, 'Enter'); assert.deepEqual(invoked, ['last']); assert.equal(menu.getSnapshot().state.cursor.current, 'file');
+      assert.equal(window.document.activeElement === file, true); assert.deepEqual(menu.getSnapshot().state.openPath, []);
+      edit.focus(); key(edit, 'ArrowLeft'); assert.equal(menu.getSnapshot().state.cursor.current, 'file'); assert.equal(window.document.activeElement === file, true);
+    } finally { menu.disconnect(); }
+    await settlePosition(window); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+  }
+});
+
+test('menu factories borrow a prepared Core model for branch projection and invocation', () => {
+  const model = createMenuModel([{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }]);
+  for (const create of [createMenu, createMenuButton, createMenubar, createNavigationMenu]) {
+    const root = new FakeElement(), branch = new FakeElement(), leaf = new FakeElement(); let invoked;
+    const connection = create({ root, model, defaultHighlightedValue: 'file', onInvoke: id => { invoked = id; },
+      ...(create === createMenuButton ? { trigger: new FakeElement(), defaultOpen: true, position: false } : {}) });
+    try {
+      connection.setItemAttributes(branch, 'file'); connection.setItemAttributes(leaf, 'open');
+      assert.equal(branch.getAttribute('aria-haspopup'), create === createNavigationMenu ? null : 'menu'); connection.handleEvent('open-submenu');
+      assert.equal(branch.getAttribute('aria-expanded'), 'true'); connection.handleEvent('invoke'); assert.equal(invoked, 'open');
+    } finally { connection.disconnect(); }
+    assert.ok([...root.listeners.values()].every(listeners => listeners.size === 0));
+  }
+});
+test('menu rejects competing definitions before acquiring host resources', () => {
+  const root = new FakeElement(), items = [{ id: 'file', parentID: null }], model = createMenuModel(items);
+  const result = tryCreateMenu({ root, items, model });
+  assert.equal(result.ok, false); assert.equal(result.error.code, 'dom.menu-definition-ambiguous');
+  assert.equal(root.listeners.size, 0); assert.equal(root.attributes.size, 0);
+});
 
 test('DOM menu button owns trigger, nested popup path, and invocation', () => {
   const root = new FakeElement();
@@ -27,6 +171,122 @@ test('DOM menu button owns trigger, nested popup path, and invocation', () => {
 
   assert.equal(invoked, 'open');
   assert.equal(trigger.attributes.get('aria-expanded'), 'false');
+});
+
+test('retained menu moves preserve only current focus and release cancelled or retired captures', () => {
+  for (const create of [createMenuButton, createContextMenu]) {
+    const before = readPositionSourceRegistryDiagnostics(), { window, root, trigger, file } = menuDOM(600, 400);
+    const first = window.document.createElement('section'), second = window.document.createElement('section'), outside = window.document.createElement('button');
+    window.document.body.append(first, second, outside); first.append(root);
+    const menu = create({ root, trigger, position: false, defaultOpen: true, defaultHighlightedValue: 'file', items: [{ id: 'file', parentID: null }] });
+    menu.setItemAttributes(file, 'file');
+    const move = () => { const target = root.parentNode === first ? second : first; root.remove(); target.append(root); file.blur(); };
+    try {
+      const snapshot = menu.getSnapshot();
+      for (let cycle = 0; cycle < 3; cycle++) {
+        file.focus(); menu.prepareMove(); move(); menu.completeMove();
+        assert.equal(window.document.activeElement === file, true); assert.equal(menu.getSnapshot() === snapshot, true);
+      }
+      file.focus(); menu.prepareMove(); move(); outside.focus(); menu.completeMove();
+      assert.equal(window.document.activeElement === outside, true, 'newer external focus wins');
+      file.focus(); menu.prepareMove(); move(); menu.completeMove(false); menu.completeMove();
+      assert.equal(window.document.activeElement === file, false, 'cancellation does not replay focus');
+      file.focus(); menu.prepareMove(); move(); menu.handleEvent('close-popup'); menu.handleEvent('open-popup'); file.blur(); menu.completeMove();
+      assert.equal(window.document.activeElement === file, false, 'new opening rejects a stale capture');
+      file.focus(); menu.prepareMove(); move(); menu.suspend(); menu.completeMove();
+      assert.equal(window.document.activeElement === file, false); menu.resume();
+      file.focus(); menu.prepareMove(); move(); menu.disconnect(); menu.completeMove();
+      assert.equal(window.document.activeElement === file, false);
+      assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+    } finally { menu.destroy(); window.close(); }
+  }
+});
+
+test('controlled popup focus returns only after an accepted close without replacing newer focus', () => {
+  for (const create of [createMenuButton, createContextMenu]) {
+    const { window, root, trigger, file } = menuDOM(500, 300);
+    const requests = [], outside = window.document.createElement('button');
+    window.document.body.append(outside);
+    const menu = create({ root, trigger, open: true, position: false,
+      items: [{ id: 'file', parentID: null }], defaultHighlightedValue: 'file',
+      onOpenChange: value => requests.push(value),
+    });
+    menu.setItemAttributes(file, 'file');
+    try {
+      file.focus(); menu.handleEvent('close-popup');
+      assert.equal(menu.getSnapshot().state.open, true);
+      assert.equal(window.document.activeElement, file, 'a proposal does not move focus');
+      menu.syncControlledValue(false);
+      assert.equal(window.document.activeElement, trigger, 'accepted close returns focus');
+      menu.syncControlledValue(true); file.focus(); menu.handleEvent('close-popup');
+      outside.focus(); menu.syncControlledValue(false);
+      assert.equal(window.document.activeElement, outside, 'late acknowledgement respects newer focus');
+      menu.syncControlledValue(true); file.focus();
+      const tab = new window.KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true });
+      file.dispatchEvent(tab); menu.syncControlledValue(false);
+      assert.equal(tab.defaultPrevented, false);
+      assert.notEqual(window.document.activeElement, trigger, 'Tab does not return to the trigger');
+      menu.syncControlledValue(true); file.focus(); menu.handleEvent('close-popup');
+      menu.suspend(); menu.syncControlledValue(false); outside.focus(); menu.resume();
+      assert.equal(window.document.activeElement, outside, 'suspension discards a pending return');
+      assert.deepEqual(requests, [false, false, false, false]);
+    } finally { menu.destroy(); outside.remove(); root.remove(); trigger.remove(); window.close(); }
+  }
+});
+
+test('menu reconstruction validates initial submenu navigation through Core', () => {
+  const options = { root: new FakeElement(), trigger: new FakeElement(), defaultOpen: true,
+    items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
+    defaultOpenPath: ['file'], defaultHighlightedValue: 'open', position: false,
+  };
+  const menu = createMenuButton(options);
+  assert.deepEqual(menu.state.openPath, ['file']); assert.equal(menu.state.cursor.current, 'open'); menu.destroy();
+  const invalid = tryCreateMenuButton({ ...options, defaultOpenPath: ['open'] });
+  assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'invalid-menu-open-path');
+});
+
+test('menu families suspend actual root and submenu work while retaining registration and drain callback failures', async () => {
+  for (const create of [createMenu, createMenuButton, createContextMenu, createMenubar, createNavigationMenu]) {
+    const before = readPositionSourceRegistryDiagnostics(), { window, root, trigger, file, child, submenu } = menuDOM(500, 300);
+    let failUpdate = false;
+    const failure = new Error('Menu projection failed'), requests = [];
+    const menu = create({ root, trigger, open: true,
+      items: [{ id: 'file', parentID: null }, { id: 'open', parentID: 'file' }],
+      defaultOpenPath: ['file'], defaultHighlightedValue: 'open',
+      onOpenChange: value => requests.push(value), onUpdate: () => { if (failUpdate) throw failure; },
+    });
+    menu.setItemAttributes(file, 'file'); menu.setItemAttributes(child, 'open'); menu.setSubmenuAttributes(submenu, 'file');
+    try {
+      await settlePosition(window); assert.notDeepEqual(readPositionSourceRegistryDiagnostics(), before);
+      trigger.focus(); root.inert = true; menu.handleEvent({ type: 'focus', id: 'open' });
+      const snapshot = menu.getSnapshot();
+      for (let cycle = 0; cycle < 3; cycle++) {
+        menu.suspend(); menu.suspend(); root.inert = false;
+        assert.equal(menu.getSnapshot(), snapshot); assert.equal(menu.getActive(), false);
+        assert.equal(root.hidden, true); assert.equal(submenu.hidden, true);
+        assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+        root.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+        menu.refresh(); menu.refresh('file'); await settlePosition(window);
+        assert.equal(menu.getSnapshot(), snapshot); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+        menu.resume(); menu.resume(); await settlePosition(window);
+        assert.equal(menu.getActive(), true); assert.equal(root.hidden, false); assert.equal(submenu.hidden, false);
+        assert.equal(document.activeElement, trigger, 'suspended pending focus is not replayed');
+        assert.equal(file.getAttribute('aria-controls'), submenu.id); assert.equal(child.tabIndex, 0);
+        assert.notDeepEqual(readPositionSourceRegistryDiagnostics(), before);
+      }
+      assert.deepEqual(requests, []);
+      failUpdate = true; assert.throws(() => menu.suspend(), error => error === failure);
+      assert.equal(menu.getActive(), false); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+      assert.throws(() => menu.resume(), error => error === failure);
+      assert.equal(menu.getActive(), false); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+      failUpdate = false; menu.resume(); await settlePosition(window);
+      failUpdate = true; assert.throws(() => menu.disconnect(), error => error === failure);
+      menu.resume(); menu.refresh(); menu.setSubmenuAttributes(submenu, 'file'); menu.setItemAttributes(child, 'open');
+      assert.equal(menu.getActive(), false); assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+      assert.equal(file.getAttribute('aria-controls'), null); assert.equal(submenu.id, ''); assert.equal(child.tabIndex, -1);
+      assert.deepEqual(requests, []);
+    } finally { failUpdate = false; menu.destroy(); window.close(); }
+  }
 });
 
 test('DOM menu item registration performs constant projection work per flat item', () => {
@@ -190,10 +450,10 @@ test('DOM menu transitions project only changed cursor hosts at 1k, 10k, and 100
       assert.deepEqual(tabWrites, []);
       root.emit('click', { target: elements.at(-1), composedPath: () => [elements.at(-1), root] });
       assert.deepEqual(invoked, [size - 1]);
-      assert.deepEqual(tabWrites, [[0, -1], [size - 1, 0], [size - 1, -1], [0, 0]]);
+      assert.deepEqual([...tabWrites], [[0, -1], [size - 1, 0], [size - 1, -1], [0, 0], [0, -1], [size - 1, 0]]);
       menu.refresh(null);
       assert.equal(elements.reduce((sum, element) => sum + element.projectionWrites, 0), 0);
-      assert.equal(menu.state.cursor.current, null);
+      assert.equal(menu.state.cursor.current, size - 1, 'an inline leaf remains the visible focus owner after invocation');
     } finally { menu.destroy(); }
   }
 });
@@ -571,6 +831,8 @@ test('standalone menu roots preserve consumer-authored hidden state', () => {
 
   assert.equal(root.getAttribute('hidden'), 'until-found');
   assert.equal(root.hidden, true);
+  menu.suspend(); menu.resume();
+  assert.equal(root.getAttribute('hidden'), 'until-found');
   menu.disconnect();
   assert.equal(root.getAttribute('hidden'), 'until-found');
 });

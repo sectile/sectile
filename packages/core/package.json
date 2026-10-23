@@ -21,6 +21,11 @@
   },
   "types": "./dist/index.d.ts",
   "exports": {
+    "./transfer": {
+      "types": "./dist/transfer.d.ts",
+      "import": "./dist/transfer.js",
+      "default": "./dist/transfer.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
@@ -95,6 +100,11 @@
       "types": "./dist/identity.d.ts",
       "import": "./dist/identity.js",
       "default": "./dist/identity.js"
+    },
+    "./json": {
+      "types": "./dist/structures/json.d.ts",
+      "import": "./dist/structures/json.js",
+      "default": "./dist/structures/json.js"
     },
     "./selection": {
       "types": "./dist/selection.d.ts",
@@ -350,6 +360,11 @@
       "types": "./dist/tree-view.d.ts",
       "import": "./dist/tree-view.js",
       "default": "./dist/tree-view.js"
+    },
+    "./tree-select": {
+      "types": "./dist/tree-select.d.ts",
+      "import": "./dist/tree-select.js",
+      "default": "./dist/tree-select.js"
     },
     "./tree-grid": {
       "types": "./dist/tree-grid.d.ts",

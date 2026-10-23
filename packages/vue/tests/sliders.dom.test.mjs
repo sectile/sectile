@@ -18,7 +18,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, h, nextTick, ref } = await import('vue');
+const { createApp, h, nextTick, ref, shallowRef } = await import('vue');
 const {
   SliderRange,
   SliderRoot,
@@ -195,6 +195,91 @@ test('Vue multi-thumb slider keeps both thumbs adjustable', async () => {
 
   app.unmount();
   host.remove();
+});
+
+test('Vue multi-thumb slider rebinds replaced tracks and live presentation without retaining old pointer targets', async () => {
+  const host = document.createElement('div'); document.body.append(host); const trackKey = shallowRef(0), updates = [];
+  const options = shallowRef({ orientation: 'horizontal', getThumbLabel: id => 'Before ' + id, formatValue: value => value + ' before' });
+  const app = createApp({ render: () => h(MultiThumbSliderRoot, { thumbs: ['low', 'high'], defaultValue: [20, 80], ...options.value,
+    'onUpdate:modelValue': values => updates.push([...values]),
+  }, { default: () => [h(MultiThumbSliderTrack, { key: trackKey.value }), h(MultiThumbSliderThumb, { value: 'low' }), h(MultiThumbSliderThumb, { value: 'high' })] }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const press = (element, x, y = 5) => { element.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true, clientX: x, clientY: y, pointerId: 1 })); element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 })); };
+  try {
+    app.mount(host); await drain(); const retired = host.querySelector('[data-part="track"]'); horizontalTrack(retired);
+    host.querySelector('[data-sectile-multi-thumb="high"]').focus();
+    trackKey.value++; await drain(); const track = host.querySelector('[data-part="track"]'); horizontalTrack(track);
+    const focusedHigh = host.querySelector('[data-sectile-multi-thumb="high"]');
+    focusedHigh.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain();
+    assert.equal(focusedHigh.getAttribute('aria-valuenow'), '81');
+    press(track, 60); await drain(); assert.deepEqual(updates.at(-1), ['20', '60']);
+    const count = updates.length; press(retired, 95); await drain(); assert.equal(updates.length, count);
+    options.value = { orientation: 'vertical', getThumbLabel: id => 'After ' + id, formatValue: value => value + ' after' }; await drain();
+    track.getBoundingClientRect = () => ({ left: 0, top: 0, width: 10, height: 100, bottom: 100 });
+    press(track, 5, 25); await drain(); const high = host.querySelector('[data-sectile-multi-thumb="high"]');
+    assert.equal(high.getAttribute('aria-valuenow'), '75'); assert.equal(high.getAttribute('aria-label'), 'After high'); assert.equal(high.getAttribute('aria-valuetext'), '75 after');
+    options.value = { ...options.value, as: 'section' }; await drain();
+    assert.equal(host.querySelector('[data-part="root"]').tagName, 'SECTION');
+    const replacement = host.querySelector('[data-part="track"]');
+    replacement.getBoundingClientRect = () => ({ left: 0, top: 0, width: 10, height: 100, bottom: 100 });
+    press(replacement, 5, 10); await drain(); assert.deepEqual(updates.at(-1), ['20', '90']);
+    const replacedCount = updates.length; press(track, 5, 50); await drain(); assert.equal(updates.length, replacedCount);
+    trackKey.value++; app.unmount(); await drain(); const before = updates.length; press(track, 95); await drain(); assert.equal(updates.length, before);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
+});
+
+test('Vue multi-thumb slider retires removed thumb projection and registers a replacement element', async () => {
+  const host = document.createElement('div'); document.body.append(host); const visible = shallowRef(true), tag = shallowRef('span');
+  const app = createApp({ render: () => h(MultiThumbSliderRoot, { thumbs: ['low', 'high'], defaultValue: [20, 80] }, {
+    default: () => [visible.value ? h(MultiThumbSliderThumb, { value: 'low', as: tag.value }) : null, h(MultiThumbSliderThumb, { value: 'high' })],
+  }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const increment = element => { element.focus(); element.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); };
+  try {
+    app.mount(host); await drain(); const retired = host.querySelector('[data-sectile-multi-thumb="low"]'), before = retired.getAttribute('aria-valuemax');
+    visible.value = false; await drain(); increment(host.querySelector('[data-sectile-multi-thumb="high"]')); await drain();
+    assert.equal(retired.getAttribute('aria-valuemax'), before);
+    visible.value = true; tag.value = 'button'; await drain(); const replacement = host.querySelector('[data-sectile-multi-thumb="low"]');
+    increment(replacement); await drain(); assert.equal(replacement.getAttribute('aria-valuenow'), '21');
+    const value = replacement.getAttribute('aria-valuenow'); app.unmount(); increment(replacement); await drain(); assert.equal(replacement.getAttribute('aria-valuenow'), value);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
+});
+
+test('Vue multi-thumb slider accepts simultaneous controlled range and values against the new owner', async () => {
+  const host = document.createElement('div'); document.body.append(host); const options = shallowRef({ thumbs: ['low', 'high'], max: 100, modelValue: [20, 80] });
+  const app = createApp({ render: () => h(MultiThumbSliderRoot, options.value, {
+    default: () => options.value.thumbs.map(value => h(MultiThumbSliderThumb, { value })),
+  }) });
+  try {
+    app.mount(host); await settle(); options.value = { thumbs: ['start', 'end'], max: 200, modelValue: [40, 160] };
+    for (let turn = 0; turn < 5; turn++) await nextTick();
+    assert.equal(host.querySelector('[data-sectile-multi-thumb="end"]').getAttribute('aria-valuenow'), '160');
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('Vue window splitter updates its constrained surface with live range and orientation', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({ min: 20, max: 80, orientation: 'horizontal' });
+  const updates = [];
+  const app = createApp({ render: () => h(WindowSplitterRoot, {
+    ...options.value, defaultValue: 50, 'onUpdate:modelValue': value => updates.push(value),
+  }, { default: () => [h(WindowSplitterPane, { side: 'before' }), h(WindowSplitterHandle), h(WindowSplitterPane, { side: 'after' })] }) });
+  try {
+    app.mount(host); await settle();
+    options.value = { min: 30, max: 70, orientation: 'vertical' };
+    await settle();
+    const track = host.querySelector('[data-constraint-track]'), handle = host.querySelector('[data-part="handle"]');
+    assert.equal(track.style.insetBlockStart, '30%');
+    assert.equal(track.style.insetBlockEnd, '30%');
+    assert.equal(track.style.insetInlineStart, '');
+    assert.equal(handle.getAttribute('aria-orientation'), 'vertical');
+    track.getBoundingClientRect = () => ({ x: 0, y: 30, left: 0, top: 30, right: 10, bottom: 70,
+      width: 10, height: 40, toJSON: () => ({}) });
+    handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 60, pointerId: 9 }));
+    await settle();
+    assert.equal(handle.getAttribute('aria-valuenow'), '60');
+    assert.deepEqual(updates, ['60']);
+  } finally { app.unmount(); host.remove(); }
 });
 
 test('Vue window splitter drags against the complete pane surface', async () => {

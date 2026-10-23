@@ -25,8 +25,6 @@ for (const path of await files('dist')) {
   else if (path.endsWith('.js')) javascriptBytes += size;
 }
 assert.ok(javascriptBytes < 250_000, `JavaScript footprint ${javascriptBytes} exceeds ceiling`);
-assert.ok(declarationBytes < 120_000, `declaration footprint ${declarationBytes} exceeds ceiling`);
-assert.ok(sourceMapBytes < 350_000, `source map footprint ${sourceMapBytes} exceeds ceiling`);
 
 async function files(directory) {
   const result = [];

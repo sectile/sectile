@@ -1,17 +1,15 @@
 import { unwrap } from '@sectile/core/result';
-import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
+import type { FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { formatTimeValue } from '@sectile/temporal/time-field';
-import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldCommand, type TimeRangeFieldEndpoint, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
-import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
-import { DOMTextElementBinding } from '../text/element-binding.js';
-import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
-import { toTextEvent, type TextInput } from '../text.js';
+import { formatTimeFieldValue, type TimeFieldFormat, type TimeValue } from '@sectile/temporal/time-field';
+import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
+import { getTimeFieldPlaceholder } from './time-field.js';
+import { createDOMTemporalFacadeConnection, type DOMTemporalResult } from './internal/result.js';
+import { constructRangeField, type RangeFieldAdapter } from './internal/range-field.js';
 
 export type { TimeRange } from '@sectile/temporal/time-range-field';
-export interface TimeRangeFieldOptions { readonly startInput: HTMLInputElement; readonly endInput: HTMLInputElement; readonly policies?: TimeRangeFieldPolicies; readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }
+export interface TimeRangeFieldOptions { readonly startInput: HTMLInputElement; readonly endInput: HTMLInputElement; readonly policies?: TimeRangeFieldPolicies; readonly value?: TimeRange | null; readonly defaultValue?: TimeRange | null; readonly defaultState?: TimeRangeFieldState; readonly format?: TimeFieldFormat; readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string; readonly onValueChange?: (value: TimeRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void }
 
 export type TimeRangeFieldValueChangeHandler = NonNullable<TimeRangeFieldOptions['onValueChange']>;
 export type TimeRangeFieldStartInputStateChangeHandler = NonNullable<TimeRangeFieldOptions['onStartInputStateChange']>;
@@ -19,45 +17,26 @@ export type TimeRangeFieldEndInputStateChangeHandler = NonNullable<TimeRangeFiel
 export type TimeRangeFieldUpdateHandler = NonNullable<TimeRangeFieldOptions['onUpdate']>;
 export interface TimeRangeFieldControlledValues { readonly value?: TimeRange | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState }
 export interface TimeRangeFieldConnection { getSnapshot(): RevisionSnapshot<TimeRangeFieldState>; getValue(): TimeRange | null; syncControlledValues(values: TimeRangeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<TimeRangeFieldState>>; handleEvent(event: TimeRangeFieldEvent): boolean; refresh(): void; disconnect(): void }
-export function createTimeRangeField(options: TimeRangeFieldOptions): FacadeConnection<TimeRangeFieldConnection> { return unwrap(tryCreateTimeRangeField(options)); }
-export function tryCreateTimeRangeField(options: TimeRangeFieldOptions): DOMTemporalResult<FacadeConnection<TimeRangeFieldConnection>> { return createDOMTemporalFacadeConnection(options, construct); }
+export function createTimeRangeField(options: TimeRangeFieldOptions): FacadeConnection<TimeRangeFieldConnection> {
+  return unwrap(tryCreateTimeRangeField(options));
+}
+export function tryCreateTimeRangeField(options: TimeRangeFieldOptions): DOMTemporalResult<FacadeConnection<TimeRangeFieldConnection>> {
+  return createDOMTemporalFacadeConnection(options, construct);
+}
 
+const adapter: RangeFieldAdapter<TimeValue, TimeRange, TimeRangeFieldState, TimeFieldFormat, TimeRangeFieldPolicies> = {
+  initial: tryCreateTimeRangeFieldState,
+  reduce: (state, event, options) => applyTimeRangeFieldEvent(state, event, {
+    ...options.policies, ...(options.required === undefined ? {} : { required: options.required }),
+  }),
+  format: formatTimeFieldValue,
+  placeholder: getTimeFieldPlaceholder,
+  inputMode: format => format?.dayPeriods === undefined ? 'numeric' : 'text',
+  controlledShapeMessage: 'Controlled time range field values must preserve their construction-time shape.',
+};
 function construct(options: TimeRangeFieldOptions): DOMTemporalResult<TimeRangeFieldConnection> {
-  const controlled = { value: options.value !== undefined, start: options.startInputState !== undefined, end: options.endInputState !== undefined };
-  const runtime = createDOMTemporalController<TimeRangeFieldState, TimeRangeFieldEvent, TimeRangeFieldCommand, TimeRangeFieldCommand>({
-    initial: tryCreateTimeRangeFieldState({ value: options.value !== undefined ? options.value : options.defaultValue ?? null, ...optionalInputState('startInputState', options.startInputState ?? options.defaultStartInputState), ...optionalInputState('endInputState', options.endInputState ?? options.defaultEndInputState) }),
-    reducer: (state, event) => applyTimeRangeFieldEvent(state, event, { ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) }),
-    reconcile: (previous, proposed) => tryCreateTimeRangeFieldState({ startValue: controlled.value ? previous.start.value : proposed.start.value, endValue: controlled.value ? previous.end.value : proposed.end.value, startInputState: controlled.start ? previous.start.inputState : proposed.start.inputState, endInputState: controlled.end ? previous.end.inputState : proposed.end.inputState, active: proposed.active }),
-    notify: [
-      (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); },
-      (previous, proposed) => { if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); },
-    ], toEffect: (command) => command, interaction: options,
-  });
-  return runtime.ok ? { ok: true, value: new DOMTimeRangeField(options, runtime.value, controlled) } : runtime;
+  return constructRangeField(adapter, options);
 }
-
-class DOMTimeRangeField implements TimeRangeFieldConnection {
-  readonly options: TimeRangeFieldOptions; readonly runtime: DOMTemporalController<TimeRangeFieldState, TimeRangeFieldEvent, TimeRangeFieldCommand>; readonly controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean };
-  readonly #bindings: Record<TimeRangeFieldEndpoint, DOMTextElementBinding>; readonly #keydown: Record<TimeRangeFieldEndpoint, (event: Event) => void>; readonly #blur: Record<TimeRangeFieldEndpoint, () => void>; readonly #focus: Record<TimeRangeFieldEndpoint, () => void>;
-  public constructor(options: TimeRangeFieldOptions, runtime: DOMTemporalController<TimeRangeFieldState, TimeRangeFieldEvent, TimeRangeFieldCommand>, controlled: { readonly value: boolean; readonly start: boolean; readonly end: boolean }) {
-    this.options = options; this.runtime = runtime; this.controlled = controlled;
-    this.#bindings = { start: new DOMTextElementBinding({ element: options.startInput, getState: () => this.getSnapshot().state.start.inputState, dispatch: (input) => this.#text('start', input) }), end: new DOMTextElementBinding({ element: options.endInput, getState: () => this.getSnapshot().state.end.inputState, dispatch: (input) => this.#text('end', input) }) };
-    this.#keydown = { start: (event) => this.#key('start', event), end: (event) => this.#key('end', event) }; this.#blur = { start: () => this.#commitOrCancel('start'), end: () => this.#commitOrCancel('end') }; this.#focus = { start: () => { this.handleEvent({ type: 'focus', endpoint: 'start' }); }, end: () => { this.handleEvent({ type: 'focus', endpoint: 'end' }); } };
-    for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); input.addEventListener('keydown', this.#keydown[endpoint]); input.addEventListener('blur', this.#blur[endpoint]); input.addEventListener('focus', this.#focus[endpoint]); } this.refresh();
-  }
-  public getSnapshot(): RevisionSnapshot<TimeRangeFieldState> { return this.runtime.getSnapshot(); } public getValue(): TimeRange | null { return this.getSnapshot().state.value; }
-  public syncControlledValues(values: TimeRangeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<TimeRangeFieldState>> { if (this.controlled.value !== (values.value !== undefined) || this.controlled.start !== (values.startInputState !== undefined) || this.controlled.end !== (values.endInputState !== undefined)) return { ok: false, error: { class: 'construction', code: 'controlled-shape-mismatch', message: 'Controlled time range field values must preserve their construction-time shape.' } }; const current = this.getSnapshot().state; const value = this.controlled.value ? values.value as TimeRange | null : current.value; const startValue = value?.start ?? null; const endValue = value?.end ?? null; const startInputState = this.controlled.start ? values.startInputState : synchronizeControlledFieldInput(synchronizeFieldInputSelection(current.start.inputState, this.options.startInput), current.start.value === null ? '' : formatTimeValue(current.start.value), startValue === null ? '' : formatTimeValue(startValue)); const endInputState = this.controlled.end ? values.endInputState : synchronizeControlledFieldInput(synchronizeFieldInputSelection(current.end.inputState, this.options.endInput), current.end.value === null ? '' : formatTimeValue(current.end.value), endValue === null ? '' : formatTimeValue(endValue)); const result = this.runtime.replace(tryCreateTimeRangeFieldState({ value, ...optionalInputState('startInputState', startInputState), ...optionalInputState('endInputState', endInputState), active: current.active })); if (result.ok) { this.refresh(); this.options.onUpdate?.(); } return result; }
-  public handleEvent(event: TimeRangeFieldEvent): boolean { const result = this.runtime.handle(event); if (typeof event === 'object' && event.type === 'field') setFieldValidity(this.#input(event.endpoint), result); if (result.ok) { for (const command of result.commands) { if (command.type === 'range-committed') this.options.onValueChange?.(command.value); if (command.type === 'focus-endpoint') this.#input(command.endpoint).focus(); } this.refresh(); this.options.onUpdate?.(); } return result.ok; }
-  public refresh(): void { for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); input.type = 'text'; input.inputMode = 'numeric'; input.placeholder = 'HH:mm'; input.required = this.options.required ?? this.options.policies?.required ?? false; setInteractionAttributes(input, this.options, true, true); const label = endpoint === 'start' ? this.options.startLabel : this.options.endLabel; if (label !== undefined) input.setAttribute('aria-label', label); this.#bindings[endpoint].render(); } }
-  public disconnect(): void { for (const endpoint of ['start', 'end'] as const) { const input = this.#input(endpoint); this.#bindings[endpoint].disconnect(); input.removeEventListener('keydown', this.#keydown[endpoint]); input.removeEventListener('blur', this.#blur[endpoint]); input.removeEventListener('focus', this.#focus[endpoint]); } }
-  #input(endpoint: TimeRangeFieldEndpoint): HTMLInputElement { return endpoint === 'start' ? this.options.startInput : this.options.endInput; } #text(endpoint: TimeRangeFieldEndpoint, input: TextInput): boolean { const event = toTextEvent(input); return event !== null && this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event } }); }
-  #key(endpoint: TimeRangeFieldEndpoint, nativeEvent: Event): void { const event = nativeEvent as KeyboardEvent; if (this.#bindings[endpoint].isComposing || event.isComposing) return; const semantic = event.key === 'ArrowUp' ? 'increment-segment' : event.key === 'ArrowDown' ? 'decrement-segment' : event.key === 'Enter' ? 'commit' : event.key === 'Escape' ? 'cancel' : null; if (semantic !== null) { event.preventDefault(); if (semantic === 'increment-segment' || semantic === 'decrement-segment') this.#syncSelection(endpoint); this.handleEvent(semantic === 'cancel' ? 'cancel' : { type: 'field', endpoint, event: semantic }); } }
-  #syncSelection(endpoint: TimeRangeFieldEndpoint): void {
-    this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event: nativeFieldSelectionEvent(this.#input(endpoint)) } });
-  }
-  #commitOrCancel(endpoint: TimeRangeFieldEndpoint): void { if (!this.#bindings[endpoint].isComposing && !this.handleEvent({ type: 'field', endpoint, event: 'commit' })) this.handleEvent({ type: 'field', endpoint, event: 'cancel' }); }
-}
-function optionalInputState<Key extends 'startInputState' | 'endInputState'>(key: Key, value: TextEditingState | undefined): { readonly [Property in Key]?: TextEditingState } { return value === undefined ? {} : { [key]: value } as { readonly [Property in Key]?: TextEditingState }; }
 
 export { tryCreateTimeRangeFieldState } from '@sectile/temporal/time-range-field';
 export type { TimeRangeFieldPolicies, TimeRangeFieldState } from '@sectile/temporal/time-range-field';

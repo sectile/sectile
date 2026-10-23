@@ -33,7 +33,7 @@ import type {
   FormRootComponent,
   FormSubmitEvent,
 } from './contracts.js';
-import { useHostId } from '../host-provider.js';
+import { provideHostActive, useHostActive, useHostId } from '../host-provider.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
 import {
   type FormSubmissionFailure,
@@ -72,6 +72,9 @@ const FormRootImpl = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: FormRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, expose, slots }) {
+    const availability = useHostActive();
+    const active = shallowRef(availability.value);
+    provideHostActive(active);
     const root = shallowRef<HTMLFormElement | null>(null);
     const summary = shallowRef<HTMLElement | null>(null);
     const summaryId = `${useHostId()}-summary`;
@@ -82,8 +85,6 @@ const FormRootImpl = defineComponent({
     let syncFieldDiagnostics = (): void => {};
 
     const register = (participant: FormParticipant<string>): (() => void) => {
-      const existing = participants.get(participant.id);
-      existing?.unregister?.();
       const registered: RegisteredParticipant = { participant };
       participants.set(participant.id, registered);
       if (connection.value !== null) registered.unregister = connection.value.registerParticipant(participant);
@@ -173,7 +174,7 @@ const FormRootImpl = defineComponent({
       connection.value?.replaceIssues('field', [...fieldDiagnostics.values()]);
     };
     const mount = (): void => {
-      if (root.value === null) return;
+      if (root.value === null || !availability.value) return;
       connection.value?.destroy();
       connection.value = createForm({
         form: root.value,
@@ -185,6 +186,7 @@ const FormRootImpl = defineComponent({
       syncConfiguredIssues();
       syncFieldDiagnostics();
       emit('stateChange', connection.value.state);
+      active.value = connection.value.getActive();
     };
     const mountTask = useNextTickTask(mount);
 
@@ -194,6 +196,24 @@ const FormRootImpl = defineComponent({
       connection.value?.destroy();
       connection.value = null;
     });
+    watch(availability, next => {
+      if (!next) { active.value = false; mountTask.cancel(); connection.value?.suspend(); }
+    }, { flush: 'sync' });
+    watch(availability, next => {
+      if (!next) return;
+      if (connection.value === null) mountTask.schedule();
+      else {
+        try {
+          connection.value.reconfigure(configuration());
+          connection.value.resume();
+          active.value = connection.value.getActive();
+        } catch (error) {
+          active.value = false;
+          try { connection.value.suspend(); } catch { /* Preserve the initiating resumption failure. */ }
+          throw error;
+        }
+      }
+    }, { flush: 'post' });
     watch([
       summary,
       () => props.schema,
@@ -203,7 +223,7 @@ const FormRootImpl = defineComponent({
       () => props.onSubmit,
       () => props.mapSubmitError,
     ], () => {
-      void nextTick(() => connection.value?.reconfigure(configuration()));
+      void nextTick(() => { if (active.value) connection.value?.reconfigure(configuration()); });
     });
     watch(() => props.issues, () => { void nextTick(syncConfiguredIssues); }, { deep: true });
 
@@ -219,6 +239,7 @@ const FormRootImpl = defineComponent({
       reset: (): void => connection.value?.reset(),
     };
     const formContext: FormContext = {
+      active,
       summary,
       summaryId,
       register,
@@ -255,6 +276,7 @@ const FormRootImpl = defineComponent({
       ref: (element: unknown) => { root.value = element as HTMLFormElement | null; },
       'data-scope': 'form',
       'data-part': 'root',
+      ...(!active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       'data-validation-status': validation.value.status,
       'data-submission-status': submission.value.status,
     }), slots['default']?.(slotProps) ?? []);

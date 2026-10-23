@@ -5,6 +5,7 @@ import {
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { dateRangePickerCapability } from './capabilities/date-range-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface DateRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null; readonly defaultValue?: DateRange | null;
@@ -15,13 +16,14 @@ export interface DateRangePickerRootProps extends PickerPartProps, PickerPositio
 }
 export const DateRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot');
 export type DateRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
+export type DateRangePickerContentSlotProps = PickerContentSlotProps<DateRange | null>;
 export type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DateRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:open']>;
 export type DateRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DateRangePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date-range'>;
 export const DateRangePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date-range'>;
 export const DateRangePickerPortal = PickerPortal;
-export const DateRangePickerContent = PickerContent as unknown as PickerRootPartComponent<'date-range'>;
+export const DateRangePickerContent = PickerContent as unknown as PickerContentPartComponent<'date-range'>;
 export const DateRangePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date-range'>;
 export const DateRangePickerCell = PickerCell;
 export const DateRangePickerMonthCell = PickerMonthCell;

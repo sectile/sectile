@@ -22,7 +22,7 @@ import {
   formFieldContextKey,
   type FormFieldContext,
 } from './context.js';
-import { useHostId } from '../host-provider.js';
+import { provideHostActive, useHostActive, useHostId } from '../host-provider.js';
 import {
   safeEncodeFormFieldPath,
   resolveElement,
@@ -36,8 +36,10 @@ import {
 } from './native.js';
 import {
   type FormControlRegistration,
+  type FormSubmissionRegistration,
   type FormLabelMode,
   type FormMetadataAttribute,
+  type FormFieldDefaults,
   provideFormControlFieldContext,
 } from './control.js';
 import type { FormIssueSource } from '@sectile/form/state';
@@ -60,18 +62,30 @@ export const FormField = defineComponent({
   slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const formContext = useFormContext('FormField');
+    const hostAvailability = useHostActive();
+    const availability = computed(() => hostAvailability.value && formContext.active.value);
+    const observing = shallowRef(true);
+    const active = computed(() => availability.value && observing.value);
+    provideHostActive(active);
     const generatedId = useHostId();
     const id = computed(() => props.id ?? `form-field-${generatedId}`);
     const nameKey = computed(() => (
       props.name === undefined ? undefined : safeEncodeFormFieldPath(props.name) ?? undefined
     ));
     const root = shallowRef<HTMLElement | null>(null);
+    const controlDefaults = shallowRef<FormFieldDefaults>(Object.freeze({
+      disabled: props.disabled === true, readonly: props.readonly === true, required: props.required === true,
+    }));
     const controls = shallowRef<readonly FormControlRegistration[]>([]);
     const fallback = shallowRef<FormControlRegistration | null>(null);
     const nativeFallbackProblem = shallowRef<string | null>(null);
     const appliedAttributes = new Map<HTMLElement, Map<string, string | null>>();
     let observer: MutationObserver | undefined;
     let unregister: (() => void) | undefined;
+    let registeredId: string | undefined;
+    let remountPending = false;
+    let disposed = false;
+    let activityGeneration = 0;
     let diagnosticId: string | undefined;
     let observedTargets: readonly HTMLElement[] = [];
     let warnedMultipleControls = false;
@@ -173,7 +187,8 @@ export const FormField = defineComponent({
       else if (labelMode.value !== 'for' && props.readonly === true) assign('aria-readonly', 'true');
       if (labelMode.value !== 'for') {
         const refreshValue = (): void => {
-          queueMicrotask(() => formContext.connection.value?.refreshParticipant(id.value));
+          const generation = activityGeneration;
+          queueMicrotask(() => { if (!disposed && active.value && generation === activityGeneration) formContext.connection.value?.refreshParticipant(id.value); });
         };
         attributes['onClick'] = refreshValue;
         attributes['onKeydown'] = refreshValue;
@@ -181,6 +196,20 @@ export const FormField = defineComponent({
       return Object.freeze(attributes);
     };
 
+    const submissionAttributesFor = (submission: FormSubmissionRegistration, resolved?: FormSubmissionElement | null): Readonly<Record<string, unknown>> => {
+      const element = submission.capabilities === undefined ? resolved ?? resolveElement(submission.element) : null;
+      const capabilities = submission.capabilities ?? (element === null ? {} : nativeSubmissionCapabilities(element));
+      const attributes: Record<string, unknown> = {};
+      if (capabilities.name === true && nameKey.value !== undefined) {
+        const submissionName = safeEncodeSubmissionName(nameKey.value, submission.relativeName);
+        if (submissionName !== null) attributes['name'] = submissionName;
+      }
+      if (capabilities.form === true && props.form !== undefined) attributes['form'] = props.form;
+      if (capabilities.required === true && props.required === true) attributes['required'] = true;
+      if (capabilities.disabled === true && props.disabled === true) attributes['disabled'] = true;
+      if (capabilities.readonly === true && props.readonly === true) attributes['readonly'] = true;
+      return Object.freeze(attributes);
+    };
     const restoreControlAttributes = (): void => {
       for (const [element, attributes] of appliedAttributes) {
         for (const [name, previous] of attributes) {
@@ -191,6 +220,7 @@ export const FormField = defineComponent({
       appliedAttributes.clear();
     };
     const applyControlAttributes = (): void => {
+      if (!active.value || disposed) return;
       restoreControlAttributes();
       const registration = activeControl.value;
       if (registration === undefined || registration === null) return;
@@ -201,22 +231,13 @@ export const FormField = defineComponent({
       for (const submission of resolveSubmissionRegistrations(registration)) {
         const element = resolveElement(submission.element);
         if (element === null) continue;
-        const capabilities = submission.capabilities ?? nativeSubmissionCapabilities(element);
         const explicit = submission.explicit ?? registration.explicit;
-        const attributes: Record<string, unknown> = {};
-        if (capabilities.name === true && nameKey.value !== undefined) {
-          const submissionName = safeEncodeSubmissionName(nameKey.value, submission.relativeName);
-          if (submissionName !== null) attributes['name'] = submissionName;
-        }
-        if (capabilities.form === true && props.form !== undefined) attributes['form'] = props.form;
-        if (capabilities.required === true && props.required === true) attributes['required'] = true;
-        if (capabilities.disabled === true && props.disabled === true) attributes['disabled'] = true;
-        if (capabilities.readonly === true && props.readonly === true) attributes['readonly'] = true;
-        applyMetadata(element, attributes, explicit, appliedAttributes);
+        applyMetadata(element, submissionAttributesFor(submission, element), explicit, appliedAttributes);
       }
     };
 
     const discoverNativeFallback = (): void => {
+      if (!active.value || disposed) return;
       if (controls.value.length > 0 || root.value === null) {
         fallback.value = null;
         nativeFallbackProblem.value = null;
@@ -244,6 +265,7 @@ export const FormField = defineComponent({
     };
 
     const syncDiagnostic = (): void => {
+      if (!active.value || disposed) return;
       const currentId = id.value;
       if (diagnosticId !== undefined && diagnosticId !== currentId) {
         formContext.setFieldDiagnostic(diagnosticId, null);
@@ -278,6 +300,7 @@ export const FormField = defineComponent({
     };
 
     const refreshParticipantTargets = (): void => {
+      if (!active.value || disposed) return;
       const registration = activeControl.value;
       const next = registration === null || registration === undefined
         ? root.value === null ? [] : [root.value]
@@ -323,22 +346,26 @@ export const FormField = defineComponent({
       };
     };
 
-    const mount = (): void => {
-      unregister?.();
-      unregister = undefined;
-      if (root.value === null) return;
-      discoverNativeFallback();
-      observer?.disconnect();
-      observer = new MutationObserver(() => {
+    const observe = (): void => {
+      if (root.value === null || !active.value || disposed) return;
+      observer ??= new MutationObserver(() => {
+        if (!active.value || disposed) return;
         discoverNativeFallback();
         applyControlAttributes();
         syncDiagnostic();
         refreshParticipantTargets();
       });
       observer.observe(root.value, { childList: true, subtree: true });
+    };
+    const mount = (): void => {
+      if (root.value === null || !active.value || disposed) return;
+      if (registeredId !== id.value) { unregister?.(); unregister = undefined; registeredId = undefined; }
+      discoverNativeFallback();
+      observe();
       applyControlAttributes();
       const participant: FormParticipant<string> = {
         id: id.value,
+        get active() { return active.value; },
         get element() { return root.value as HTMLElement; },
         get semanticControl() { return semanticControl() ?? root.value as HTMLElement; },
         get focusTarget() {
@@ -366,6 +393,7 @@ export const FormField = defineComponent({
             .filter((element): element is FormSubmissionElement => element !== null);
         },
         focus: () => {
+          if (!active.value || disposed) return false;
           const registration = activeControl.value;
           const control = registration === undefined || registration === null
             ? null
@@ -374,11 +402,13 @@ export const FormField = defineComponent({
           return control !== null && document.activeElement === control;
         },
         reset: () => activeControl.value?.reset?.(),
+        get prepareSubmission() { return activeControl.value?.prepareSubmission; },
         get getValue() { return activeControl.value?.getValue; },
         get isValueEqual() { return activeControl.value?.isValueEqual; },
         ...(nameKey.value === undefined ? {} : { name: nameKey.value }),
       };
       unregister = formContext.register(participant);
+      registeredId = id.value; remountPending = false;
       observedTargets = Object.freeze([
         participant.element,
         participant.semanticControl ?? participant.element,
@@ -392,6 +422,7 @@ export const FormField = defineComponent({
 
     onMounted(mountTask.schedule);
     onBeforeUnmount(() => {
+      disposed = true; observing.value = false; activityGeneration += 1;
       mountTask.cancel();
       observer?.disconnect();
       observer = undefined;
@@ -399,10 +430,34 @@ export const FormField = defineComponent({
       if (diagnosticId !== undefined) formContext.setFieldDiagnostic(diagnosticId, null);
       unregister?.();
       unregister = undefined;
+      registeredId = undefined;
     });
-    watch([id, nameKey], mountTask.schedule);
+    watch(availability, next => {
+      if (next || disposed) return;
+      observing.value = false; activityGeneration += 1;
+      mountTask.cancel(); observer?.disconnect();
+      if (registeredId !== undefined) formContext.connection.value?.refreshParticipantActivity(registeredId);
+    }, { flush: 'sync' });
+    watch(availability, next => {
+      if (!next || disposed) return;
+      observing.value = true;
+      try {
+        if (unregister === undefined || remountPending) mount();
+        else { discoverNativeFallback(); observe(); applyControlAttributes(); syncDiagnostic(); refreshParticipantTargets(); }
+        if (registeredId !== undefined) formContext.connection.value?.refreshParticipantActivity(registeredId);
+      } catch (error) {
+        observing.value = false; activityGeneration += 1; observer?.disconnect();
+        try { if (registeredId !== undefined) formContext.connection.value?.refreshParticipantActivity(registeredId); }
+        catch { /* Preserve the initiating resumption failure. */ }
+        throw error;
+      }
+    }, { flush: 'post' });
+    // Release inherited writers before the control patches newly authored props.
+    watch(() => activeControl.value?.explicit, restoreControlAttributes, { flush: 'sync' });
+    watch([id, nameKey], () => { remountPending = true; if (active.value) mountTask.schedule(); });
     watch([
       activeControl,
+      () => activeControl.value?.explicit,
       effectiveControlId,
       labelMode,
       nameKey,
@@ -412,6 +467,10 @@ export const FormField = defineComponent({
       () => props.readonly,
       () => slotProps.value.valid,
     ], () => {
+      const previous = controlDefaults.value;
+      const disabled = props.disabled === true, readonly = props.readonly === true, required = props.required === true;
+      if (previous.disabled !== disabled || previous.readonly !== readonly || previous.required !== required)
+        controlDefaults.value = Object.freeze({ disabled, readonly, required });
       applyControlAttributes();
       syncDiagnostic();
     }, { flush: 'post' });
@@ -421,7 +480,12 @@ export const FormField = defineComponent({
       registerControl,
       attributesFor,
     });
-    provideFormControlFieldContext({ registerControl, attributesFor });
+    provideFormControlFieldContext({ registerControl, attributesFor, submissionAttributesFor, defaults: controlDefaults,
+      refreshControl(registration, mode = 'value') {
+        if (active.value && !disposed && registeredId !== undefined && activeControl.value === registration)
+          formContext.connection.value?.refreshParticipant(registeredId, mode);
+      },
+    });
 
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as,
@@ -429,6 +493,7 @@ export const FormField = defineComponent({
       elementRef: (element: unknown) => { root.value = element as HTMLElement | null; },
       'data-scope': 'form',
       'data-part': 'field',
+      ...(!active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       'data-valid': slotProps.value.valid ? '' : undefined,
       'data-invalid': slotProps.value.valid ? undefined : '',
       'data-touched': slotProps.value.touched ? '' : undefined,

@@ -67,6 +67,8 @@ export interface ChartRendererOptions {
 
 export interface ChartRenderer {
   readonly capabilities: ChartRendererCapabilities;
+  /** Replaces fallback paint; datum colors remain authoritative. Does not draw. */
+  setStyle?(style: ChartRenderStyle): Result<boolean>;
   render(projection: ChartProjection, batches?: readonly ChartProjectionBatch[]): void;
   getDiagnostics(): ChartRendererDiagnostics;
   flush(): void;
@@ -84,6 +86,8 @@ export interface DOMChartOptions<ID extends StableID = StableID> {
   readonly canvas: HTMLCanvasElement;
   readonly controller: ChartController<ID>;
   readonly renderer?: ChartRendererMode | ChartRenderer;
+  /** Initial fallback paint; borrowed renderers must support setStyle. */
+  readonly renderStyle?: ChartRenderStyle;
   readonly renderPolicy?: ChartRenderPolicy;
   readonly accessibilityLimit?: number;
   readonly accessibilityLabel?: string;
@@ -110,6 +114,8 @@ export interface DOMChartConnection<ID extends StableID = StableID> {
   getRendererDiagnostics(): ChartRendererDiagnostics | null;
   getLifecycleDiagnostics(): DOMChartLifecycleDiagnostics;
   setAccessibilityLabel(label?: string): void;
+  /** Repaints the retained projection without querying or measuring. */
+  setRenderStyle(style: ChartRenderStyle): Result<boolean>;
   setNavigation(navigation?: DOMChartNavigation<ID>): Result<void>;
   refresh(): void;
   flush(): void;

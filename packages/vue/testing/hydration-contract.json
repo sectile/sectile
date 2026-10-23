@@ -37,5 +37,10 @@
       "evidence": "tests/hydration.dom.test.mjs"
     }
   ],
-  "unverified": []
+  "unverified": [
+    {
+      "area": "E6 CheckboxTree, TreeSelect, Transfer and column Reorder",
+      "reason": "Focused SSR, DOM and Form checks do not establish dedicated server-to-client hydration or physical rendering/AT acceptance for these new compositions. Maintainer acceptance remains Pending."
+    }
+  ]
 }

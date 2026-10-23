@@ -316,7 +316,7 @@ importers:
         specifier: workspace:*
         version: link:../virtual
       '@vue/server-renderer':
-        specifier: ^3.5.0
+        specifier: ^3.5.41
         version: 3.5.41
       happy-dom:
         specifier: ^20.11.6
@@ -331,7 +331,7 @@ importers:
         specifier: 5.4.21
         version: 5.4.21(@types/node@26.2.0)(lightningcss@1.33.0)(terser@5.51.2)
       vue:
-        specifier: ^3.5.0
+        specifier: ^3.5.41
         version: 3.5.41(typescript@7.0.2)
       vue-tsc:
         specifier: ^3.0.6

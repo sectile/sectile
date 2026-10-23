@@ -11,6 +11,10 @@
       "types": "dist/error.d.ts"
     },
     {
+      "subpath": "./files",
+      "types": "dist/files.d.ts"
+    },
+    {
       "subpath": "./path",
       "types": "dist/path.d.ts"
     },
@@ -23,19 +27,27 @@
       "types": "dist/state.d.ts"
     },
     {
+      "subpath": "./uploads",
+      "types": "dist/uploads.d.ts"
+    },
+    {
       "subpath": "./values",
       "types": "dist/values.d.ts"
     }
   ],
-  "fingerprint": "f73e0c2ba249480a1763bbc68d0f32157d54805645d0023e946d386a31291d4e",
+  "fingerprint": "903a5356fb6e0ffe3ab9168815013490f9437b352039427fae0d5986d3d6ee26",
   "files": [
     {
       "path": "dist/error.d.ts",
       "sha256": "958843be1baa78692ba613a27443df5ea4aae62d9c7aa5a691ae6227547fecec"
     },
     {
+      "path": "dist/files.d.ts",
+      "sha256": "eec1082596191b9dd113a667c8d731d5dd41ebe533fc87bedccfc7f114e22132"
+    },
+    {
       "path": "dist/index.d.ts",
-      "sha256": "0bd7568cb76aa1805ed415e92ca861db40d6431c11fd6415809ddf163a8bb137"
+      "sha256": "f9bef353cdc2fe0265f54d09035d245932e22d44148383995cc7d4435e78b56c"
     },
     {
       "path": "dist/internal/construction/limits.d.ts",
@@ -84,6 +96,10 @@
     {
       "path": "dist/state.d.ts",
       "sha256": "f42104c53fc7123ea701522e722c8c7fe61bc13b5da1c9288291c6face20f0ef"
+    },
+    {
+      "path": "dist/uploads.d.ts",
+      "sha256": "e013c8e35d3b40cb94db36126f92237f0ca264c430a5d6f4f5b537fc57656381"
     },
     {
       "path": "dist/values.d.ts",

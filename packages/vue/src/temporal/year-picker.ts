@@ -5,6 +5,7 @@ import {
   createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './picker.js';
 import { yearPickerCapability } from './capabilities/year-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface YearPickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateValue | null;
@@ -23,13 +24,14 @@ export interface YearPickerRootProps extends PickerPartProps, PickerPositionProp
 
 export const YearPickerRoot = /* @__PURE__ */ createPickerRoot(yearPickerCapability, 'SectileYearPickerRoot', { scope: 'year-picker', granularity: 'year', defaultView: 'year' });
 export type YearPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
+export type YearPickerContentSlotProps = PickerContentSlotProps<DateValue | null>;
 export type YearPickerValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearPickerOpenChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:open']>;
 export type YearPickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const YearPickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date'>;
 export const YearPickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date'>;
 export const YearPickerPortal = PickerPortal;
-export const YearPickerContent = PickerContent as unknown as PickerRootPartComponent<'date'>;
+export const YearPickerContent = PickerContent as unknown as PickerContentPartComponent<'date'>;
 export const YearPickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date'>;
 export const YearPickerCell = /* @__PURE__ */ createPickerYearCell('cell', 'SectileYearPickerCell');
 export const YearPickerInput = /* @__PURE__ */ createPickerInput('input', 'SectileYearPickerInput');

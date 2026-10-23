@@ -14,7 +14,7 @@ Object.assign(globalThis, {
   Event: window.Event,
 });
 
-const { createApp, h, nextTick, ref } = await import('vue');
+const { createApp, h, nextTick, ref, shallowRef } = await import('vue');
 const rating = await import('../.verification-dist/rating.js');
 const stepper = await import('../.verification-dist/stepper.js');
 const checkboxGroup = await import('../.verification-dist/checkbox-group.js');
@@ -31,6 +31,68 @@ function renderClient(render) {
   host.remove();
   return html;
 }
+
+for (const [arrow, trigger, controlled] of [[false, true, true], [true, true, true], [true, true, false], [true, false, false]]) test(`external popup anchors retarget existing geometry without changing open state or focused content (${arrow}/${trigger}/${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const reads = { first: 0, second: 0, compound: 0, trigger: 0 };
+  const rect = (key, left) => () => { reads[key]++; return { x: left, y: 100, left, top: 100, right: left + 20, bottom: 120, width: 20, height: 20 }; };
+  const first = document.createElement('span'), second = document.createElement('span');
+  first.getBoundingClientRect = rect('first', 100); second.getBoundingClientRect = rect('second', 200);
+  document.body.append(first, second);
+  first.tabIndex = 0; first.focus();
+  const anchor = shallowRef(first), compound = shallowRef(true), restoreFocusTarget = shallowRef(undefined), opens = [], errors = [];
+  let root;
+  const app = createApp({ render: () => h(popover.PopoverRoot, {
+    ref: value => { root = value; }, ...(controlled ? { open: true } : { defaultOpen: true }), anchor: anchor.value, restoreFocusTarget: restoreFocusTarget.value,
+    strategy: 'fixed', side: 'bottom', align: 'start', sideOffset: 0, avoidCollisions: false,
+    'onUpdate:open': value => opens.push(value),
+  }, { default: () => [
+    compound.value ? h(popover.PopoverAnchor, { ref: value => { if (value?.$el instanceof HTMLElement) value.$el.getBoundingClientRect = rect('compound', 30); } }, { default: () => 'Rendered fallback' }) : null,
+    trigger ? h(popover.PopoverTrigger, { ref: value => { if (value?.$el instanceof HTMLElement) value.$el.getBoundingClientRect = rect('trigger', 10); } }, { default: () => 'Trigger fallback' }) : null,
+    h(popover.PopoverContent, null, { default: () => [arrow ? h(popover.PopoverArrow) : null, h('input', { 'aria-label': 'First focus candidate' }), h('input', { 'aria-label': 'Retained focus' })] }),
+  ] }) });
+  app.config.errorHandler = error => errors.push(error);
+  const settle = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); await new Promise(resolve => setTimeout(resolve, 20)); };
+  try {
+    app.mount(host); await settle();
+    assert.deepEqual(errors, []);
+    const content = host.querySelector('[data-part="content"]'), input = host.querySelector('[aria-label="Retained focus"]');
+    assert.ok(content instanceof HTMLElement);
+    const assertReference = (element, key, left) => {
+      if (content.dataset.positionRoute === 'css-anchor') {
+        const name = element.style.getPropertyValue('anchor-name'); assert.ok(name);
+        assert.equal(content.style.getPropertyValue('position-anchor'), name);
+      } else {
+        assert.ok(reads[key] > 0, JSON.stringify({ anchorBound: root?.$props.anchor === element, reads, hidden: content.hidden, style: content.style.cssText }));
+        assert.equal(content.style.left, `${left}px`);
+      }
+    };
+    assertReference(first, 'first', 100);
+    assert.equal(reads.compound, 0);
+    input.focus(); assert.ok(document.activeElement === input, 'input receives explicit focus');
+    restoreFocusTarget.value = second; await settle(); assert.ok(document.activeElement === input, 'return-target replacement preserves focused content');
+    restoreFocusTarget.value = trigger ? null : first; await settle(); assert.ok(document.activeElement === input, 'return-target clear or retarget is not a new opening');
+    compound.value = false; await settle(); assert.ok(document.activeElement === input, 'shadowed anchor removal preserves focus');
+    compound.value = true; await settle(); assert.ok(document.activeElement === input, 'shadowed anchor addition preserves focus'); assert.equal(reads.compound, 0);
+    anchor.value = second; await settle();
+    assertReference(second, 'second', 200); assert.ok(document.activeElement === input, 'external retarget preserves focused content'); assert.deepEqual(opens, []);
+    const oldReads = reads.first;
+    window.dispatchEvent(new window.Event('scroll')); await settle(); assert.equal(reads.first, oldReads);
+    anchor.value = undefined; await settle(); assertReference(host.querySelector('[data-part="anchor"]'), 'compound', 30);
+    assert.ok(document.activeElement === input, 'rendered anchor fallback preserves focused content'); assert.deepEqual(opens, []);
+    if (trigger) { compound.value = false; await settle(); assertReference(host.querySelector('[data-part="trigger"]'), 'trigger', 10); }
+    if (!controlled) {
+      root.requestClose();
+      await settle();
+      assert.equal(content.hidden, true); assert.deepEqual(opens, [false]);
+      if (trigger) assert.ok(document.activeElement === host.querySelector('[data-part="trigger"]'), 'anchor retargeting preserves the original trigger focus-return owner');
+      else assert.ok(document.activeElement === first, 'triggerless accepted close uses the explicit initiating target, not the geometry reference');
+    }
+    assert.deepEqual(errors, []);
+    app.unmount(); await settle(); const retiredReads = { ...reads };
+    window.dispatchEvent(new window.Event('scroll')); await settle(); assert.deepEqual(reads, retiredReads);
+  } finally { if (host.__vue_app__) app.unmount(); host.remove(); first.remove(); second.remove(); }
+});
 
 test('composed Vue controls preserve their public scope and part contract after mounting', () => {
   const rendered = {

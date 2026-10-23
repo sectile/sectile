@@ -1,10 +1,11 @@
 import {
   computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
-  shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  shallowRef, watch, type ComputedRef, type PropType, type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
-  createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxOptions, type ComboboxPolicies,
+  createCombobox, type ComboboxConnection, type ComboboxItem as ComboboxItemDefinition, type ComboboxOptions, type ComboboxPolicies, type ComboboxPresentation, type ComboboxAnchor,
 } from '@sectile/dom/combobox';
+import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
   PositionBoundary,
   PositionOptions,
@@ -17,6 +18,8 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useNativeInputFormControl } from './form/control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { usePopupPresentation } from './internal/popup-presentation.js';
+import { provideHostLayerParent } from './host-provider.js';
 import { usePresence } from './presence/presence.js';
 import {
   conditionalPresenceProps,
@@ -36,6 +39,12 @@ export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'>
   readonly?: boolean;
   readonly label?: string;
   readonly position?: boolean;
+  readonly anchor?: ComboboxAnchor;
+  readonly presentation?: ComboboxPresentation;
+  /** DOM option IDs; logical item values remain unchanged. */
+  readonly itemId?: (id: string) => string;
+  /** Currently rendered IDs; undefined preserves complete-list publication. */
+  readonly renderedItems?: readonly string[] | undefined;
   readonly policies?: ComboboxPolicies<string>;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
@@ -43,26 +52,32 @@ export interface ComboboxRootProps extends Omit<PositionOptions, 'arrowPadding'>
 export interface ComboboxRootSlotProps { readonly value: string | null; readonly inputValue: string; readonly highlightedValue: string | null; readonly open: boolean; readonly disabled: boolean; readonly: boolean }
 export interface ComboboxItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ComboboxItemSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
+export interface ComboboxResultsSlotProps extends ComboboxRootSlotProps { readonly items: readonly ComboboxItemDefinition<string>[]; readonly active: boolean }
 export interface ComboboxPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface ComboboxEmptyProps extends ComboboxPartProps, ConditionalPresenceProps {}
 
 interface Context {
+  readonly active: Readonly<ShallowRef<boolean>>;
+  readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
+  registerPresence(present: ShallowRef<boolean>): () => void;
   readonly state: ComputedRef<ComboboxRootSlotProps>;
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<PositionStrategy>;
   readonly label: ComputedRef<string | undefined>;
   readonly connection: ComputedRef<ComboboxConnection<string> | undefined>;
+  readonly matchingItems: ComputedRef<readonly ComboboxItemDefinition<string>[]>;
   matchesItem(id: string): boolean;
   hasMatches(): boolean;
-  registerInput(element?: HTMLInputElement): void;
+  registerInput(element?: HTMLInputElement | HTMLTextAreaElement, manageText?: boolean): void;
   registerPopup(element?: HTMLElement): void;
   registerItem(element: HTMLElement, id: string, disabled: boolean): void;
   setInputComposing(composing: boolean): void;
+  reset(): void;
 }
 const key = Symbol('SectileComboboxRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } };
 
-export const ComboboxRoot = defineComponent({
+export const ComboboxRoot = /* @__PURE__ */ defineComponent({
   name: 'SectileComboboxRoot', inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly ComboboxItemDefinition<string>[]>, required: true },
@@ -70,7 +85,10 @@ export const ComboboxRoot = defineComponent({
     inputValue: { type: String, default: undefined }, defaultInputValue: { type: String, default: '' },
     open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined },
-    position: { type: Boolean, default: true },
+    position: { type: Boolean, default: true }, presentation: { type: String as PropType<ComboboxPresentation>, default: 'popup' },
+    anchor: { type: String as PropType<ComboboxAnchor>, default: 'input' },
+    itemId: Function as PropType<(id: string) => string>,
+    renderedItems: { type: Array as PropType<readonly string[] | undefined>, default: undefined },
     side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
     align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
     sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
@@ -89,16 +107,20 @@ export const ComboboxRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const input = shallowRef<HTMLInputElement>(); const popup = shallowRef<HTMLElement>();
+    const input = shallowRef<HTMLInputElement | HTMLTextAreaElement>(); const popup = shallowRef<HTMLElement>();
+    let manageText = true;
     const connection = shallowRef<ComboboxConnection<string>>();
     const matchingText = shallowRef<TextState>();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
     const localInput = shallowRef(props.inputValue ?? props.defaultInputValue); const localOpen = shallowRef(props.open ?? props.defaultOpen);
+    const initialValue = localValue.value, initialInput = localInput.value, initialOpen = localOpen.value;
     const highlighted = shallowRef<string | null>(null);
+    const inline = shallowRef(props.presentation === 'inline');
     let proposedInputState: TextState | null = null;
     const livePolicies = {} as ComboboxPolicies<string>;
     Object.defineProperties(livePolicies, {
       matches: { get: () => props.policies?.matches },
+      eligible: { get: () => props.policies?.eligible },
       boundary: { get: () => props.policies?.boundary },
     });
     const controlled = {
@@ -111,7 +133,19 @@ export const ComboboxRoot = defineComponent({
       inputValue: props.inputValue ?? localInput.value, highlightedValue: highlighted.value,
       open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly,
     }));
+    const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
     const itemLabels = computed(() => new Map(props.items.map((item) => [item.id, item.label] as const)));
+    const renderedItems = computed<ReadonlySet<string> | undefined>(() => {
+      const ids = props.renderedItems;
+      if (ids === undefined) return undefined;
+      if (!Array.isArray(ids)) throw new TypeError('ComboboxRoot renderedItems requires an array of IDs');
+      const rendered = new Set<string>();
+      if (ids.length !== 0) {
+        const domain = itemLabels.value;
+        for (const id of ids) if (domain.has(id)) rendered.add(id);
+      }
+      return rendered;
+    });
     const matchingQuery = computed(() => {
       const text = matchingText.value;
       return text === undefined
@@ -132,11 +166,22 @@ export const ComboboxRoot = defineComponent({
       }
       return false;
     };
+    const matchingItems = computed<readonly ComboboxItemDefinition<string>[]>(() => props.policies?.matches === undefined
+      ? props.items
+      : Object.freeze(props.items.filter(item => matchesItem(item.id))));
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state; if (snapshot === undefined) return;
       matchingText.value = snapshot.text;
       localValue.value = snapshot.selection.selected[0] ?? null; localInput.value = snapshot.text.snapshot.text;
-      localOpen.value = snapshot.popupOpen; highlighted.value = snapshot.cursor.current; refreshItems();
+      localOpen.value = snapshot.popupOpen; highlighted.value = snapshot.cursor.current;
+      lifecycle.update();
+      if (!connection.value!.getActive()) {
+        inputComposing = false;
+        if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+        if (reconnectPending) { reconnectPending = false; lifecycle.invalidate(); }
+      }
+      refreshItems();
     };
     const refreshItems = (): void => {
       if (popup.value === undefined || connection.value === undefined) return;
@@ -149,8 +194,11 @@ export const ComboboxRoot = defineComponent({
     let reconnectPending = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     const connect = (): void => {
+      if (manageText && connection.value && (proposedInputState ?? connection.value.getSnapshot().state.text).composition !== null) {
+        connection.value.handleEvent({ type: 'text', event: { type: 'composition-commit' } });
+      }
       const previousText = connection.value?.getSnapshot().state.text;
-      connection.value?.disconnect(); if (input.value === undefined) return;
+      disconnect(); if (input.value === undefined) return;
       const items = props.items.map((item) => item.id);
       const requestedValue = controlled.value ? props.modelValue as string | null : localValue.value;
       const reconciled = reconcileCollectionState(
@@ -173,15 +221,20 @@ export const ComboboxRoot = defineComponent({
       highlighted.value = reconciled.current;
       if (controlled.value && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCombobox({
+        ...(lifecycle.layerHost.value === undefined ? {} : { layerHost: lifecycle.layerHost.value }),
         input: input.value, ...(popup.value === undefined ? {} : { popup: popup.value }), items: props.items,
         manageVisibility: false,
+        manageText,
+        isInputComposing: () => inputComposing,
         policies: livePolicies,
         ...(controlled.value ? { value } : { defaultValue: value }),
         defaultHighlightedValue: reconciled.current,
         ...(controlled.input ? { inputState } : { defaultInputState: inputState }),
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: props.disabled, readOnly: props.readonly,
-        position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset,
+        presentation: props.presentation, position: props.position, anchor: props.anchor, side: props.side, align: props.align, sideOffset: props.sideOffset,
+        ...(props.itemId === undefined ? {} : { getItemElementID: props.itemId }),
+        isItemRendered: id => renderedItems.value?.has(id) ?? true,
         collisionPadding: props.collisionPadding,
         ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
         avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached,
@@ -201,18 +254,25 @@ export const ComboboxRoot = defineComponent({
             syncControlledValues(proposal.snapshot.text === text ? proposal : createTextState(text));
           });
         },
-        onOpenChange: ({ value }) => { localOpen.value = value; emit('update:open', value); },
+        onOpenChange: ({ value }) => { if (!controlled.open) localOpen.value = value; emit('update:open', value); },
         onHighlightedValueChange: ({ value }) => { highlighted.value = value; emit('highlight', value); },
         onAccept: (id) => emit('accept', id), onUpdate: refresh,
       });
-      connection.value.setInputAttributes(props.label); connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
+      inline.value = props.presentation === 'inline';
+      connection.value.setInputAttributes(props.label ?? (!manageText ? input.value.getAttribute('aria-label') ?? undefined : undefined));
+      connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
+    };
+    const disconnect = (): void => {
+      lifecycle.release();
+      try { connection.value?.disconnect(); } finally { connection.value = undefined; }
     };
     const requestConnect = (): void => {
+      if (!lifecycle.availability.value) { lifecycle.invalidate(); return; }
       if (inputComposing || reconnectPending) {
         reconnectPending = true;
         return;
       }
-      connect();
+      lifecycle.reconnect();
     };
     const setInputComposing = (composing: boolean): void => {
       inputComposing = composing;
@@ -221,7 +281,7 @@ export const ComboboxRoot = defineComponent({
         reconnectTimer = null;
         if (!mounted || inputComposing) return;
         reconnectPending = false;
-        connect();
+        lifecycle.reconnect();
       }, 0);
     };
     let connectScheduled = false;
@@ -230,31 +290,55 @@ export const ComboboxRoot = defineComponent({
       connectScheduled = true;
       void nextTick(() => {
         connectScheduled = false;
-        if (mounted) connect();
+        if (mounted) lifecycle.reconnect();
       });
     };
     provide<Context>(key, {
-      state, position: computed(() => props.position), strategy: computed(() => props.strategy),
+      reset: () => {
+        queueMicrotask(() => {
+          if (!mounted) return;
+          if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+          reconnectTimer = null; reconnectPending = false; inputComposing = false; proposedInputState = null;
+          disconnect();
+          localValue.value = controlled.value ? props.modelValue as string | null : initialValue;
+          localInput.value = controlled.input ? props.inputValue as string : initialInput;
+          localOpen.value = controlled.open ? props.open as boolean : initialOpen;
+          highlighted.value = null; matchingText.value = undefined;
+          lifecycle.reconnect();
+        });
+      },
+      state, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+      position: computed(() => !inline.value && props.position), strategy: computed(() => props.strategy),
       label: computed(() => props.label), connection: computed(() => connection.value),
-      matchesItem, hasMatches,
-      registerInput: (element) => { const changed = input.value !== element; input.value = element; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); },
+      matchesItem, hasMatches, matchingItems,
+      registerInput: (element, ownsText = true) => {
+        const changed = input.value !== element || manageText !== ownsText;
+        if (input.value !== element) {
+          inputComposing = false; reconnectPending = false;
+          if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+          reconnectTimer = null;
+        }
+        input.value = element; manageText = ownsText; if (changed) scheduleConnect();
+      }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, { id, disabled }),
       setInputComposing,
     });
-    onMounted(() => { mounted = true; connect(); });
+    onMounted(() => { mounted = true; lifecycle.reconnect(); });
     onBeforeUnmount(() => {
       mounted = false;
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
       reconnectPending = false;
-      connection.value?.disconnect();
-      connection.value = undefined;
+      disconnect();
       proposedInputState = null;
     });
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) requestConnect();
     });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
+    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.presentation, () => props.anchor, () => props.itemId, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
+    watch(renderedItems, () => {
+      if (connection.value?.getActive()) connection.value.setInputAttributes(props.label);
+    }, { flush: 'post' });
     watch([() => props.modelValue, () => props.inputValue, () => props.open], () => {
       const inputState = controlled.input
         && proposedInputState !== null
@@ -267,6 +351,7 @@ export const ComboboxRoot = defineComponent({
       syncControlledValues(inputState);
     });
     const syncControlledValues = (inputState?: TextState): void => {
+      lifecycle.prepareModelUpdate();
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
         ...(controlled.value ? { value: props.modelValue as string | null } : {}),
@@ -290,13 +375,44 @@ export type ComboboxOpenChangeHandler = (value: boolean) => void;
 export type ComboboxHighlightHandler = (value: string | null) => void;
 export type ComboboxAcceptHandler = (value: string) => void;
 
-export const ComboboxInput = defineComponent({
+export const ComboboxResults = /* @__PURE__ */ defineComponent({
+  name: 'SectileComboboxResults', inheritAttrs: false,
+  slots: Object as SlotsType<{ default: (props: ComboboxResultsSlotProps) => VNodeChild }>,
+  setup(_props, { slots }) {
+    const root = useRoot('ComboboxResults');
+    return (): VNodeChild => slots['default']?.({ ...root.state.value, items: root.matchingItems.value, active: root.active.value });
+  },
+});
+
+/** Adopt an existing native editor without owning its value, selection or Form registration. */
+export const ComboboxEditor = /* @__PURE__ */ defineComponent({
+  name: 'SectileComboboxEditor', inheritAttrs: false,
+  slots: Object as SlotsType<{ default: () => VNodeChild }>,
+  setup(_props, { attrs, slots }) {
+    const root = useRoot('ComboboxEditor');
+    const registerEditor = (node: unknown): void => {
+      const element = node instanceof HTMLInputElement
+        || typeof HTMLTextAreaElement !== 'undefined' && node instanceof HTMLTextAreaElement ? node : undefined;
+      root.registerInput(element, false);
+    };
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      asChild: true, elementRef: registerEditor, role: 'combobox',
+      ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
+      'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open),
+      onCompositionstart: () => { if (root.active.value) root.setInputComposing(true); },
+      onCompositionend: () => { if (root.active.value) root.setInputComposing(false); },
+      'data-scope': 'combobox', 'data-part': 'input',
+    }), slots);
+  },
+});
+
+export const ComboboxInput = /* @__PURE__ */ defineComponent({
   name: 'SectileComboboxInput', inheritAttrs: false,
   props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
   setup(props, { attrs }) {
     const root = useRoot('ComboboxInput');
     const input = shallowRef<HTMLInputElement | null>(null);
-    const participation = useNativeInputFormControl(input);
+    const participation = useNativeInputFormControl(input, { reset: root.reset });
     const renderServerValue = typeof window === 'undefined';
     const registerInput = (node: unknown): void => {
       input.value = node instanceof HTMLInputElement ? node : null;
@@ -309,14 +425,14 @@ export const ComboboxInput = defineComponent({
       name: props.name, form: props.form, required: props.required,
       disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': root.label.value,
       'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open),
-      onCompositionstart: () => root.setInputComposing(true),
-      onCompositionend: () => root.setInputComposing(false),
+      onCompositionstart: () => { if (root.active.value) root.setInputComposing(true); },
+      onCompositionend: () => { if (root.active.value) root.setInputComposing(false); },
       'data-scope': 'combobox', 'data-part': 'input',
     }, participation.controlProps.value));
   },
 });
 
-export const ComboboxContent = defineComponent({
+export const ComboboxContent = /* @__PURE__ */ defineComponent({
   name: 'SectileComboboxContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
@@ -324,15 +440,17 @@ export const ComboboxContent = defineComponent({
     const root = useRoot('ComboboxContent');
     const element = shallowRef<HTMLElement>();
     const open = computed(() => root.state.value.open);
-    const present = usePresence(open, element);
+    provideHostLayerParent({ active: root.active, open, element, presentation: root.presentation });
+    const present = usePresence(open, element, undefined, root.active);
+    onBeforeUnmount(root.registerPresence(present));
     watch(present, async () => { await nextTick(); root.connection.value?.render(); }, { flush: 'post' });
     const registerContent = (node: unknown): void => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); };
     return (): VNodeChild => {
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: registerContent,
-        role: 'listbox', hidden: !present.value, 'aria-label': root.label.value,
-        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        role: 'listbox', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+        ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         style: root.position.value
           ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
           : undefined,
@@ -342,7 +460,7 @@ export const ComboboxContent = defineComponent({
   },
 });
 
-export const ComboboxItem = defineComponent({
+export const ComboboxItem = /* @__PURE__ */ (() => defineComponent({
   name: 'SectileComboboxItem', inheritAttrs: false,
   props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: ComboboxItemSlotProps) => VNodeChild }>,
@@ -360,9 +478,9 @@ export const ComboboxItem = defineComponent({
       'data-highlighted': state.value.highlighted ? '' : undefined,
     }), { default: () => slots['default']?.(state.value) });
   },
-});
+}))();
 
-export const ComboboxEmpty = defineComponent({
+export const ComboboxEmpty = /* @__PURE__ */ (() => defineComponent({
   name: 'SectileComboboxEmpty', inheritAttrs: false, props: { ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
@@ -386,7 +504,7 @@ export const ComboboxEmpty = defineComponent({
       }), { default: () => slots['default']?.(root.state.value) });
     };
   },
-});
+}))();
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside ComboboxRoot.`); return root; }
 

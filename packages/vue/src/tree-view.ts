@@ -1,6 +1,6 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
-  shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  computed, defineComponent, h, mergeProps, onBeforeUnmount, onMounted,
+  shallowRef, watch, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
   createTreeView,
@@ -10,10 +10,9 @@ import {
 } from '@sectile/dom/tree-view';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { createTreeGroup, createTreeItem, createTreeDisclosure, provideTreeParts } from './internal/tree-parts.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
-  conditionalPresenceProps,
-  useConditionalPresence,
   type ConditionalPresenceProps,
 } from './presence/conditional-presence.js';
 
@@ -42,14 +41,6 @@ export interface TreeViewItemSlotProps extends Omit<TreeViewRootSlotProps, 'valu
 export interface TreeViewPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TreeViewGroupProps extends TreeViewPartProps, ConditionalPresenceProps { readonly for: string }
 
-interface Context {
-  readonly state: ComputedRef<TreeViewRootSlotProps>;
-  readonly selectedItems: ComputedRef<ReadonlySet<string>>;
-  readonly expandedItems: ComputedRef<ReadonlySet<string>>;
-  readonly disabledItems: ComputedRef<ReadonlySet<string>>;
-  registerItem(element: HTMLElement, id: string, disabled: boolean): void;
-  registerDisclosure(element: HTMLElement, id: string): void;
-}
 interface TreeViewConnectionOwner {
   readonly nodes: readonly TreeNodeInput<string>[];
   readonly selectionMode: TreeViewSelectionMode;
@@ -59,8 +50,6 @@ interface TreeViewConnectionOwner {
   readonly label: string | undefined;
   readonly eligible: TreeViewEligiblePredicate<string> | undefined;
 }
-const key = Symbol('SectileTreeViewRoot');
-const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
 export const TreeViewRoot = defineComponent({
   name: 'SectileTreeViewRoot', inheritAttrs: false,
@@ -155,10 +144,12 @@ export const TreeViewRoot = defineComponent({
     const expandedItems = computed<ReadonlySet<string>>(
       () => new Set(state.value.expandedValues),
     );
-    provide<Context>(key, {
+    provideTreeParts({
+      scope: 'tree-view',
       state, selectedItems, expandedItems, disabledItems,
       registerItem: (node, id, disabled) => connection.value?.setItemAttributes(node, { id, disabled }),
       registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
+      unregisterItem: (node, id) => connection.value?.releaseItem?.(node, id),
     });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
     watch([() => props.nodes, () => props.selectionMode, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], connect);
@@ -178,56 +169,9 @@ export type TreeViewValueChangeHandler = (value: readonly string[]) => void;
 export type TreeViewExpandedValuesChangeHandler = (value: readonly string[]) => void;
 export type TreeViewHighlightedValueChangeHandler = (value: string | null) => void;
 
-export const TreeViewGroup = defineComponent({
-  name: 'SectileTreeViewGroup', inheritAttrs: false,
-  props: { for: { type: String, required: true }, ...partProps, ...conditionalPresenceProps },
-  slots: Object as SlotsType<{ default: (props: TreeViewRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) {
-    const root = useRoot('TreeViewGroup');
-    const expanded = computed(() => root.expandedItems.value.has(props.for));
-    const forcePresent = computed(() => props.forcePresent);
-    const presence = useConditionalPresence(expanded, forcePresent);
-    return (): VNodeChild => {
-      const inactivePresent = !expanded.value && presence.present.value;
-      return h(Primitive, mergeProps(attrs, {
-        as: props.as,
-        asChild: props.asChild,
-        elementRef: presence.register,
-        role: 'group',
-        hidden: presence.hidden.value,
-        ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
-        'data-scope': 'tree-view',
-        'data-part': 'group',
-        'data-state': expanded.value ? 'open' : 'closed',
-      }), { default: () => slots['default']?.(root.state.value) });
-    };
-  },
-});
-
-export const TreeViewItem = defineComponent({
-  name: 'SectileTreeViewItem', inheritAttrs: false,
-  props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, ...partProps },
-  slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeViewItem'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.value, selectedValues: root.state.value.value, selected: root.selectedItems.value.has(props.value), expanded: root.expandedItems.value.has(props.value), highlighted: root.state.value.highlightedValue === props.value, disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value, props.disabled); },
-    'data-sectile-tree-view-item': props.value, 'data-scope': 'tree-view', 'data-part': 'item',
-    'data-selected': state.value.selected ? '' : undefined, 'data-expanded': state.value.expanded ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
-    'data-disabled': state.value.disabled ? '' : undefined,
-  }), { default: () => slots['default']?.(state.value) }); },
-});
-
-export const TreeViewDisclosure = defineComponent({
-  name: 'SectileTreeViewDisclosure', inheritAttrs: false,
-  props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } },
-  slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeViewDisclosure'); const state = computed<TreeViewItemSlotProps>(() => ({ expandedValues: root.state.value.expandedValues, highlightedValue: root.state.value.highlightedValue, readonly: root.state.value.readonly, value: props.for, selectedValues: root.state.value.value, selected: root.selectedItems.value.has(props.for), expanded: root.expandedItems.value.has(props.for), highlighted: root.state.value.highlightedValue === props.for, disabled: root.state.value.disabled || root.disabledItems.value.has(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: props.as === 'button' ? state.value.disabled : undefined,
-    elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); }, 'data-sectile-tree-view-disclosure': props.for,
-    'data-scope': 'tree-view', 'data-part': 'disclosure', 'data-state': state.value.expanded ? 'open' : 'closed',
-  }), { default: () => slots['default']?.(state.value) }); },
-});
-
-function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside TreeViewRoot.`); return root; }
+export const TreeViewGroup = /* @__PURE__ */ createTreeGroup('SectileTreeViewGroup', 'tree-view');
+export const TreeViewItem = /* @__PURE__ */ createTreeItem('SectileTreeViewItem', 'tree-view');
+export const TreeViewDisclosure = /* @__PURE__ */ createTreeDisclosure('SectileTreeViewDisclosure', 'tree-view');
 
 function snapshotTreeViewConnectionOwner(
   props: Readonly<{

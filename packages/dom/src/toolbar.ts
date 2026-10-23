@@ -198,8 +198,9 @@ class DOMToolbarConnection<ID extends StableID> implements ToolbarConnection<ID>
         if (effect.type === 'invoke-control') this.#options.onInvoke?.(effect.id);
       }
       queueMicrotask(() => {
-        if (!this.#active || result.snapshot.state.cursor.current === null) return;
-        this.#focusEntry.elementFor(result.snapshot.state.cursor.current)?.focus();
+        if (!this.#active) return;
+        const current = this.#runtime.getSnapshot().state.cursor.current;
+        if (current !== null) this.#focusEntry.elementFor(current)?.focus();
       });
       this.#options.onUpdate?.();
     }

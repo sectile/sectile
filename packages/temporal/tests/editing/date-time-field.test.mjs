@@ -1,10 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createTextEditingState } from '@sectile/core/text';
 import {
   addDateDays,
   addDateMonths,
   applyDateFieldEvent,
   createDateFieldState,
+  createDateFieldFormat,
   createDateRange,
   createDateValue,
   dateDayOfWeek,
@@ -17,6 +19,7 @@ import {
   addTimeMilliseconds,
   applyTimeFieldEvent,
   createTimeFieldState,
+  createTimeFieldFormat,
   createTimeValue,
   formatTimeValue,
   parseTimeValue,
@@ -29,10 +32,108 @@ import {
   dateTimeSegmentAt,
   formatDateTimeValue,
   parseDateTimeValue,
+  createDateTimeFieldFormat,
+  tryCreateDateTimeFieldFormat,
+  formatDateTimeFieldValue,
+  parseDateTimeFieldValue,
+  reformatDateTimeFieldState,
+  tryCreateDateTimeFieldState,
 } from '../../.verification-dist/fields/date-time.js';
 
 const date = (year, month, day) => createDateValue(year, month, day);
 const time = (hour, minute, second = 0, millisecond = 0) => createTimeValue(hour, minute, second, millisecond);
+
+test('date-time formats compose issued layouts and existing parsers in either group order', () => {
+  const day = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const clock = createTimeFieldFormat({ precision: 'minute', hourCycle: 'h12', dayPeriods: ['A', 'POST'] });
+  for (const order of [['date', 'time'], ['time', 'date']]) {
+    const format = createDateTimeFieldFormat({ date: day, time: clock, order, separator: ' | ' });
+    for (const [hour, label, digits] of [[9, 'A', '09'], [17, 'POST', '05']]) {
+      const value = createDateTimeValue(date(2026, 10, 14), time(hour, 30));
+      const expected = order[0] === 'date' ? `14/10/2026 | ${digits}:30 ${label}` : `${digits}:30 ${label} | 14/10/2026`;
+      assert.equal(formatDateTimeFieldValue(value, format), expected);
+      assert.deepEqual(parseDateTimeFieldValue(expected, format).value, value);
+      assert.equal(parseDateTimeFieldValue(expected.replace(' | ', ' / '), format).error.code, 'invalid-date-time-format');
+    }
+    assert.throws(() => formatDateTimeFieldValue(createDateTimeValue(date(2026, 10, 14), time(9, 30, 1)), format), /precision/i);
+  }
+  const value = createDateTimeValue(date(2026, 10, 14), time(9, 30));
+  assert.equal(formatDateTimeFieldValue(value), formatDateTimeValue(value));
+  assert.deepEqual(parseDateTimeFieldValue(formatDateTimeValue(value)).value, value);
+  assert.equal(tryCreateDateTimeFieldFormat({ date: {}, time: clock }).error.code, 'invalid-date-time-field-format');
+  assert.equal(tryCreateDateTimeFieldFormat({ date: day, time: clock, order: ['date', 'date'] }).ok, false);
+  let reads = 0;
+  assert.equal(tryCreateDateTimeFieldFormat({ get date() { reads++; return day; }, time: clock }).ok, false); assert.equal(reads, 0);
+});
+
+test('date-time composition admits its exact 418-unit bound and rejects an oversized separator', () => {
+  const digits = ['𝟎', '𝟏', '𝟐', '𝟑', '𝟒', '𝟓', '𝟔', '𝟕', '𝟖', '𝟗'];
+  const literal = 'x'.repeat(32);
+  const day = createDateFieldFormat({ order: ['year', 'month', 'day'], literals: [literal, literal, literal, literal], digits });
+  const clock = createTimeFieldFormat({ precision: 'millisecond', hourCycle: 'h12', literals: Array(6).fill(literal), digits, dayPeriods: ['a'.repeat(32), 'b'.repeat(32)] });
+  const format = createDateTimeFieldFormat({ date: day, time: clock, separator: literal });
+  const value = createDateTimeValue(date(2026, 10, 14), time(15, 24, 38, 125));
+  const text = formatDateTimeFieldValue(value, format); assert.equal(text.length, 418);
+  assert.deepEqual(parseDateTimeFieldValue(text, format).value, value);
+  assert.equal(createDateTimeFieldState(value, undefined, format).inputState.snapshot.text, text);
+  assert.equal(tryCreateDateTimeFieldState(value, createTextEditingState(text + 'x'), format).error.code, 'date-time-field-draft-too-long');
+  assert.equal(tryCreateDateTimeFieldFormat({ date: day, time: clock, separator: literal + 'x' }).ok, false);
+});
+
+test('formatted date-time editing retains format, logical parts, period date and numeric carry', () => {
+  const day = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const half = createDateTimeFieldFormat({ date: day, time: createTimeFieldFormat({ precision: 'minute', hourCycle: 'h12' }) });
+  const value = createDateTimeValue(date(2026, 10, 14), time(15, 24));
+  let state = createDateTimeFieldState(value, createTextEditingState('14/10/2026 03:24 PM', { anchorCodeUnitOffset: 17, focusCodeUnitOffset: 19 }), half);
+  const period = applyDateTimeFieldEvent(state, 'increment-segment'); assert.equal(period.ok, true);
+  assert.equal(period.value.state.format, half); assert.deepEqual(period.value.state.value.date, value.date); assert.equal(period.value.state.value.time.hour, 3);
+  assert.equal(period.value.state.inputState.snapshot.text, '14/10/2026 03:24 AM');
+  state = applyDateTimeFieldEvent(state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 19, text: '15/10/2026 04:30 PM', selection: { anchorCodeUnitOffset: 19, focusCodeUnitOffset: 19 } } }).value.state;
+  assert.equal(state.format, half);
+  const committed = applyDateTimeFieldEvent(state, 'commit'); assert.equal(committed.ok, true); assert.equal(committed.value.state.value.date.day, 15); assert.equal(committed.value.state.value.time.hour, 16);
+  const cancelled = applyDateTimeFieldEvent(state, 'cancel'); assert.equal(cancelled.value.state.inputState.snapshot.text, '14/10/2026 03:24 PM');
+  const full = createDateTimeFieldFormat({ date: day, time: createTimeFieldFormat({ precision: 'minute' }), order: ['time', 'date'] });
+  const midnight = createDateTimeFieldState(createDateTimeValue(date(2024, 1, 31), time(23, 59)), createTextEditingState('23:59 31/01/2024', { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 5 }), full);
+  const carried = applyDateTimeFieldEvent(midnight, 'increment-segment'); assert.equal(carried.ok, true);
+  assert.equal(carried.value.state.inputState.snapshot.text, '00:00 01/02/2024'); assert.equal(carried.value.state.format, full);
+  assert.equal(tryCreateDateTimeFieldState(createDateTimeValue(value.date, time(15, 24, 1)), undefined, half).error.code, 'time-field-format-precision-loss');
+});
+
+test('date-time reformat preserves logical selection direction and refuses drafts, IME and loss', () => {
+  const day = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const first = createDateTimeFieldFormat({ date: day, time: createTimeFieldFormat({ precision: 'minute' }), order: ['time', 'date'] });
+  const next = createDateTimeFieldFormat({ date: createDateFieldFormat({ order: ['year', 'month', 'day'] }), time: createTimeFieldFormat({ precision: 'second' }) });
+  const value = createDateTimeValue(date(2026, 10, 14), time(15, 24));
+  const state = createDateTimeFieldState(value, createTextEditingState('15:24 14/10/2026', { anchorCodeUnitOffset: 11, focusCodeUnitOffset: 9 }), first);
+  const converted = reformatDateTimeFieldState(state, next); assert.equal(converted.ok, true);
+  assert.equal(converted.value.inputState.snapshot.text, '2026-10-14 15:24:00');
+  assert.equal(converted.value.inputState.snapshot.selection.anchorCodeUnitOffset, 7); assert.equal(converted.value.inputState.snapshot.selection.focusCodeUnitOffset, 5);
+  assert.deepEqual(converted.value.value, value);
+  for (const [selection, expected] of [
+    [{ anchorCodeUnitOffset: 0, focusCodeUnitOffset: 16 }, [0, 19]],
+    [{ anchorCodeUnitOffset: 9, focusCodeUnitOffset: 9 }, [7, 7]],
+  ]) {
+    const selected = createDateTimeFieldState(value, createTextEditingState('15:24 14/10/2026', selection), first);
+    const result = reformatDateTimeFieldState(selected, next); assert.equal(result.ok, true);
+    assert.deepEqual([result.value.inputState.snapshot.selection.anchorCodeUnitOffset, result.value.inputState.snapshot.selection.focusCodeUnitOffset], expected);
+  }
+  const half = createDateTimeFieldFormat({ date: day, time: createTimeFieldFormat({ precision: 'minute', hourCycle: 'h12' }) });
+  const period = createDateTimeFieldState(value, createTextEditingState('14/10/2026 03:24 PM', { anchorCodeUnitOffset: 17, focusCodeUnitOffset: 19 }), half);
+  const noPeriod = reformatDateTimeFieldState(period, next).value.inputState.snapshot.selection;
+  assert.deepEqual([noPeriod.anchorCodeUnitOffset, noPeriod.focusCodeUnitOffset], [11, 13]);
+  const seconds = createDateTimeFieldState(value, createTextEditingState('2026-10-14 15:24:00', { anchorCodeUnitOffset: 17, focusCodeUnitOffset: 19 }), next);
+  const noSeconds = reformatDateTimeFieldState(seconds, first).value.inputState.snapshot.selection;
+  assert.deepEqual([noSeconds.anchorCodeUnitOffset, noSeconds.focusCodeUnitOffset], [3, 5]);
+  const dirty = createDateTimeFieldState(value, createTextEditingState('15:'), first);
+  assert.equal(reformatDateTimeFieldState(dirty, next).error.code, 'date-time-field-format-draft-active');
+  const composing = applyDateTimeFieldEvent(state, { type: 'text', event: { type: 'composition-start', startCodeUnitOffset: 0, endCodeUnitOffset: 0, text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0 } } }).value.state;
+  assert.equal(reformatDateTimeFieldState(composing, next).error.code, 'date-time-field-format-draft-active');
+  const precise = createDateTimeFieldState(createDateTimeValue(value.date, time(15, 24, 1)), undefined, next);
+  assert.equal(reformatDateTimeFieldState(precise, first).error.code, 'time-field-format-precision-loss');
+  const expanded = createDateTimeFieldState(value, createTextEditingState('2026-10-14T15:24:00.000'));
+  assert.equal(reformatDateTimeFieldState(expanded, first).value.inputState.snapshot.text, '15:24 14/10/2026');
+  assert.equal(tryCreateDateTimeFieldState(value, createTextEditingState('x'.repeat(20)), half).error.code, 'date-time-field-draft-too-long');
+});
 
 test('time formatting captures extended fields once and preserves all formats', () => {
   for (const [second, millisecond, expected] of [

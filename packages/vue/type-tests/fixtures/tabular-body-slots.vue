@@ -23,7 +23,7 @@ const booleanValue = (value: boolean): boolean => value;
 <template>
   <DataTable.Provider>
     <DataTable.Root>
-      <DataTable.Body v-slot="{ row, rowIndex, isGroup }">
+      <DataTable.Body :row-attributes="{ class: 'shipment-row' }" v-slot="{ row, rowIndex, isGroup }">
         <DataTable.Cell column="name">{{ stringValue(row.cells.name) }}</DataTable.Cell>
         <DataTable.Cell column="active">{{ booleanValue(row.cells.active) }}</DataTable.Cell>
         {{ rowIndex.toFixed(0) }} · {{ isGroup.valueOf() }}
@@ -33,7 +33,7 @@ const booleanValue = (value: boolean): boolean => value;
 
   <DataGrid.Provider>
     <DataGrid.Root>
-      <DataGrid.Body v-slot="{ row }">
+      <DataGrid.Body :row-attributes="{ class: 'shipment-row' }" v-slot="{ row }">
         <DataGrid.Cell column="name">{{ stringValue(row.cells.name) }}</DataGrid.Cell>
         <DataGrid.Cell column="active">{{ booleanValue(row.cells.active) }}</DataGrid.Cell>
       </DataGrid.Body>
@@ -42,7 +42,7 @@ const booleanValue = (value: boolean): boolean => value;
 
   <DataTreeGrid.Provider>
     <DataTreeGrid.Root>
-      <DataTreeGrid.Body v-slot="{ row }">
+      <DataTreeGrid.Body :row-attributes="{ class: 'shipment-row' }" v-slot="{ row }">
         <DataTreeGrid.Cell column="name">{{ stringValue(row.cells.name) }}</DataTreeGrid.Cell>
         <DataTreeGrid.Cell column="active">{{ booleanValue(row.cells.active) }}</DataTreeGrid.Cell>
       </DataTreeGrid.Body>

@@ -150,13 +150,16 @@ export function rectOverflow(rect: Rect, boundary: Rect, padding: Insets = ZERO_
   return Object.freeze({ top, right, bottom, left, total: top + right + bottom + left, maximum: Math.max(top, right, bottom, left) });
 }
 
-export function clampRect(rect: Rect, boundary: Rect, padding: Insets = ZERO_INSETS): Rect {
+/** Oversized rectangles align to start by default. Nearest retains an existing
+ * covering position, or moves the minimum distance to cover the available box. */
+export function clampRect(rect: Rect, boundary: Rect, padding: Insets = ZERO_INSETS, overflow: 'start' | 'nearest' = 'start'): Rect {
   const inner = insetRect(boundary, padding);
   const maxX = inner.x + inner.width - rect.width;
   const maxY = inner.y + inner.height - rect.height;
+  const nearest = overflow === 'nearest';
   return Object.freeze({
-    x: maxX < inner.x ? inner.x : Math.min(Math.max(rect.x, inner.x), maxX),
-    y: maxY < inner.y ? inner.y : Math.min(Math.max(rect.y, inner.y), maxY),
+    x: maxX < inner.x ? nearest ? Math.min(Math.max(rect.x, maxX), inner.x) : inner.x : Math.min(Math.max(rect.x, inner.x), maxX),
+    y: maxY < inner.y ? nearest ? Math.min(Math.max(rect.y, maxY), inner.y) : inner.y : Math.min(Math.max(rect.y, inner.y), maxY),
     width: rect.width,
     height: rect.height,
   });

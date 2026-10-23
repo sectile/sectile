@@ -185,6 +185,7 @@ export { createMenu, tryCreateMenu, type MenuConnection, type MenuOptions } from
 export { createMenubar, tryCreateMenubar, type MenubarConnection, type MenubarOptions } from './menubar.js';
 export { createNavigationMenu, tryCreateNavigationMenu, type NavigationMenuConnection, type NavigationMenuOptions } from './navigation-menu.js';
 export { createMenuButton, tryCreateMenuButton, type MenuButtonConnection, type MenuButtonOptions } from './menu-button.js';
+export { createContextMenu, tryCreateContextMenu, type ContextMenuConnection, type ContextMenuOptions, type ContextMenuConstructionErrorCode } from './context-menu.js';
 export {
   createCarousel, tryCreateCarousel,
   type CarouselAutoplayOptions,
@@ -289,6 +290,9 @@ export {
 } from './tree-grid.js';
 export {
   connectText,
+  writeClipboardText,
+  type ClipboardWriteOptions,
+  type ClipboardWriteErrorCode,
   createText, tryCreateText,
   createTextController,
   createTextState,
@@ -307,7 +311,7 @@ export {
 } from './text.js';
 export { createEditable, tryCreateEditable, type EditableConnection, type EditableOptions } from './editable.js';
 export { createToast, tryCreateToast, type ToastConnection, type ToastOptions } from './toast.js';
-export { createTimer, tryCreateTimer, type TimerAction, type TimerConnection, type TimerItemType, type TimerOptions } from './timer.js';
+export { createTimer, getTimerRootAttributes, tryCreateTimer, tryResolveTimerInterval, type TimerAction, type TimerAttributeRecord, type TimerConnection, type TimerErrorCode, type TimerItemType, type TimerOptions, type TimerRootAttributesOptions } from './timer.js';
 export { createCascadeList, tryCreateCascadeList, toCascadeListEvent, type CascadeListConnection, type CascadeListControlledValues, type CascadeListItemDefinition, type CascadeListOptions, type CascadeListPolicies } from './cascade-list.js';
 export { createCascadeSelect, tryCreateCascadeSelect, toCascadeSelectEvent, type CascadeSelectConnection, type CascadeSelectControlledValues, type CascadeSelectItemDefinition, type CascadeSelectOptions, type CascadeSelectPolicies } from './cascade-select.js';
 export { createColorPicker, tryCreateColorPicker, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerOptions, type ColorValue } from './color-picker.js';
@@ -558,11 +562,13 @@ export {
 } from './meter.js';
 export {
   createMeterGroup,
+  getMeterGroupAttributes,
   getMeterGroupRootAttributes,
   getMeterGroupSegmentAttributes,
   getMeterGroupTrackAttributes,
   tryCreateMeterGroup,
   type MeterGroupAttributeRecord,
+  type MeterGroupAttributes,
   type MeterGroupConnection,
   type MeterGroupControlledValues,
   type MeterGroupOptions,

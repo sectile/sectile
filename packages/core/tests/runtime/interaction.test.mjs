@@ -22,6 +22,10 @@ test('interaction state distinguishes disabled, read-only, and navigation', () =
   assert.equal(permitsInteraction(disabled, 'navigate'), false);
   assert.equal(permitsInteraction(disabled, 'mutate'), false);
   assert.equal(requireInteraction(disabled, 'navigate').error.code, 'interaction-disabled');
+  for (const state of [enabled, readOnly, disabled]) {
+    assert.equal(permitsInteraction(state, 'configure'), true);
+    assert.equal(requireInteraction(state, 'configure').ok, true);
+  }
 });
 
 test('interaction construction rejects non-boolean flags', () => {

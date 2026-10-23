@@ -17,7 +17,7 @@ import {
 } from '@sectile/core/tree-grid';
 import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDToken } from './identity.js';
-import { setInteractionAttributes } from './interaction/attributes.js';
+import { setInteractionAttributes, setDisclosureAccessibility } from './interaction/attributes.js';
 import { DOMCompositeFocusEntry } from './composite/focus-entry.js';
 
 export type {
@@ -176,6 +176,7 @@ export interface TreeGridConnection<
   ): void;
   setDisclosureAttributes(element: HTMLElement, id: RowID): void;
   bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void;
+  unbindEditor(element: HTMLInputElement): void;
   handleEvent(event: TreeGridEvent<RowID, CellID>): boolean;
   handleKeyboardEvent(event: KeyboardEvent): boolean;
   focusCurrent(): void;
@@ -334,6 +335,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
   #lastCellClick: { readonly id: CellID; readonly time: number } | null = null;
   #editBaseline: { readonly id: CellID; readonly value: string } | null = null;
   #composing = false;
+  #compositionEditor: HTMLInputElement | null = null;
   #commitAfterComposition = false;
   #active = true;
   #compositionCommitTimer: ReturnType<typeof setTimeout> | null = null;
@@ -439,7 +441,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
 
   public setDisclosureAttributes(element: HTMLElement, id: RowID): void {
     element.dataset['treeGridDisclosureId'] = stableIDToken(id);
-    element.setAttribute('aria-hidden', 'true');
+    setDisclosureAccessibility(element, this.#controller.getSnapshot().state.expansion.has(id), this.#disabled);
   }
 
   public bindEditor(element: HTMLInputElement, options: TreeGridEditorOptions<CellID>): void {
@@ -457,9 +459,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       return;
     }
     if (previous !== undefined) {
-      element.removeEventListener('input', previous.input);
-      element.removeEventListener('compositionstart', previous.compositionStart);
-      element.removeEventListener('compositionend', previous.compositionEnd);
+      this.unbindEditor(element);
     }
     const value = this.#getCellValue(options.id);
     if (element.value !== value) element.value = value;
@@ -467,16 +467,24 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
       this.#setCellValue(options.id, element.value);
     };
     const compositionStart = (): void => {
+      if (this.#compositionCommitTimer !== null) clearTimeout(this.#compositionCommitTimer);
+      this.#compositionCommitTimer = null;
+      this.#compositionEditor = element;
       this.#composing = true;
       this.#commitAfterComposition = false;
     };
     const compositionEnd = (): void => {
+      if (this.#compositionEditor !== element) return;
       this.#composing = false;
-      if (!this.#commitAfterComposition) return;
+      if (!this.#commitAfterComposition) {
+        this.#compositionEditor = null;
+        return;
+      }
       this.#commitAfterComposition = false;
       if (this.#compositionCommitTimer !== null) clearTimeout(this.#compositionCommitTimer);
       this.#compositionCommitTimer = setTimeout((): void => {
         this.#compositionCommitTimer = null;
+        this.#compositionEditor = null;
         if (!this.#active) return;
         if (this.#controller.getSnapshot().state.editMode !== 'editing') return;
         this.#dispatchKeyboardInput({ key: 'Enter' });
@@ -486,6 +494,21 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     element.addEventListener('compositionstart', compositionStart);
     element.addEventListener('compositionend', compositionEnd);
     this.#editors.set(element, { id: options.id, input, compositionStart, compositionEnd });
+  }
+
+  public unbindEditor(element: HTMLInputElement): void {
+    const listeners = this.#editors.get(element);
+    if (listeners === undefined) return;
+    element.removeEventListener('input', listeners.input);
+    element.removeEventListener('compositionstart', listeners.compositionStart);
+    element.removeEventListener('compositionend', listeners.compositionEnd);
+    this.#editors.delete(element);
+    if (this.#compositionEditor !== element) return;
+    this.#compositionEditor = null;
+    this.#composing = false;
+    this.#commitAfterComposition = false;
+    if (this.#compositionCommitTimer !== null) clearTimeout(this.#compositionCommitTimer);
+    this.#compositionCommitTimer = null;
   }
 
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
@@ -537,12 +560,7 @@ class DOMTreeGridConnection<RowID extends StableID, CellID extends StableID>
     this.#root.removeEventListener('click', this.#handleClick);
     this.#root.removeEventListener('dblclick', this.#handleDoubleClick);
     this.#focusEntry.disconnect();
-    for (const [element, listeners] of this.#editors) {
-      element.removeEventListener('input', listeners.input);
-      element.removeEventListener('compositionstart', listeners.compositionStart);
-      element.removeEventListener('compositionend', listeners.compositionEnd);
-    }
-    this.#editors.clear();
+    for (const element of this.#editors.keys()) this.unbindEditor(element);
   }
 
   #dispatchKeyboardInput(input: KeyboardInput): boolean {

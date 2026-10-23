@@ -17,6 +17,7 @@
     "./grid-control",
     "./tree",
     "./result",
+    "./json",
     "./selection",
     "./interaction",
     "./adapter-runtime",
@@ -75,6 +76,7 @@
     "./package.json"
   ],
   "requiredRuntimeSubpaths": [
+    "./json",
     "./sequence",
     "./range",
     "./index-span",
@@ -145,6 +147,7 @@
     "./toast"
   ],
   "runtimeTargets": {
+    "./json": "structures/json",
     "./sequence": "structures/sequence",
     "./range": "structures/range",
     "./index-span": "structures/index-span",

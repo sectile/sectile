@@ -8,7 +8,7 @@ import { createCursorState, type CursorState } from '../state/cursor.js';
 const menuVisibleViews = new WeakMap<object, WeakMap<object, ReturnType<Tree<StableID>['visible']>>>();
 
 export interface MenuState<ID extends StableID = StableID> { readonly open: boolean; readonly cursor: CursorState<ID>; readonly openPath: readonly ID[] }
-export type MenuEvent<ID extends StableID = StableID> = 'open-popup' | 'close-popup' | 'next' | 'previous' | 'first' | 'last' | 'open-submenu' | 'close-submenu' | 'invoke' | 'escape' | { readonly type: 'focus'; readonly id: ID };
+export type MenuEvent<ID extends StableID = StableID> = 'open-popup' | 'close-popup' | 'next' | 'previous' | 'next-root' | 'previous-root' | 'first' | 'last' | 'open-submenu' | 'close-submenu' | 'invoke' | 'escape' | { readonly type: 'focus'; readonly id: ID };
 export type MenuCommand<ID extends StableID = StableID> = { readonly type: 'focus' | 'invoke'; readonly id: ID } | { readonly type: 'restore-focus' };
 export interface MenuUpdate<ID extends StableID = StableID> { readonly state: MenuState<ID>; readonly commands: readonly MenuCommand<ID>[] }
 export interface MenuPolicies<ID extends StableID = StableID> { readonly disabled?: (id: ID) => boolean }
@@ -34,6 +34,7 @@ export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuS
   if (!state.open) return fail('transition-rejection', 'menu-closed', 'Menu events require an open menu.');
   if (typeof event === 'object') { if (!menuVisible(tree, state.openPath).contains(event.id)) return fail('transition-rejection', 'menu-target-hidden', 'Direct menu focus requires a visible item.'); return createMachineUpdate(menuState(tree, true, event.id, pathFor(tree, event.id, state.openPath)), [{ type: 'focus', id: event.id }]); }
   const current = state.cursor.current;
+  if (event === 'next-root' || event === 'previous-root') return moveRoot(tree, state, event === 'next-root' ? 1 : -1, policies);
   if (event === 'escape') return closeLevel(tree, state);
   if (current === null) { const id = tree.roots.at(event === 'last' ? tree.roots.size - 1 : 0); return createMachineUpdate(menuState(tree, true, id, []), id === null ? [] : [{ type: 'focus', id }]); }
   if (event === 'next' || event === 'previous' || event === 'first' || event === 'last') { const siblings = tree.parentOf(current) === null ? tree.roots : tree.childrenOf(tree.parentOf(current) as ID); if (siblings === null || siblings.size === 0) return createMachineUpdate(state); const index = siblings.indexOf(current) ?? 0; const target = event === 'first' ? 0 : event === 'last' ? siblings.size - 1 : (index + (event === 'next' ? 1 : -1) + siblings.size) % siblings.size; const id = siblings.at(target); return id === null ? createMachineUpdate(state) : createMachineUpdate(menuState(tree, true, id, state.openPath), [{ type: 'focus', id }]); }
@@ -41,6 +42,21 @@ export function applyMenuEvent<ID extends StableID>(tree: Tree<ID>, state: MenuS
   if (event === 'close-submenu') return closeLevel(tree, state);
   if (tree.isLeaf(current) !== true || policies.disabled?.(current) === true) return createMachineUpdate(state);
   return createMachineUpdate(menuState(tree, false, null, []), [{ type: 'invoke', id: current }, { type: 'restore-focus' }]);
+}
+
+function moveRoot<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>, step: 1 | -1, policies: MenuPolicies<ID>): Result<MenuUpdate<ID>> {
+  const roots = tree.roots;
+  if (roots.size === 0) return createMachineUpdate(state);
+  let root = state.cursor.current;
+  if (root !== null) {
+    let parent = tree.parentOf(root);
+    while (parent !== null) { root = parent; parent = tree.parentOf(root); }
+  }
+  const index = root === null ? null : roots.indexOf(root);
+  const target = roots.at(index === null ? step === 1 ? 0 : roots.size - 1 : (index + step + roots.size) % roots.size);
+  if (target === null) return createMachineUpdate(state);
+  const path = state.openPath.length > 0 && tree.isLeaf(target) === false && policies.disabled?.(target) !== true ? [target] : [];
+  return createMachineUpdate(menuState(tree, true, target, path), [{ type: 'focus', id: target }]);
 }
 
 function closeLevel<ID extends StableID>(tree: Tree<ID>, state: MenuState<ID>): Result<MenuUpdate<ID>> {

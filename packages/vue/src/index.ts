@@ -1,9 +1,20 @@
 export {
   SequenceReorderItem,
+  SequenceReorderHandle,
   SequenceReorderRoot,
   TreeReorderItem,
+  TreeReorderHandle,
   TreeReorderRoot,
+  TreeReorderDropTarget,
+  type TreeReorderDropTargetProps,
+  type TreeReorderExpose,
+  type TreeReorderTarget,
+  type TreeReorderRootEmits,
+  type TreeReorderRootSlots,
+  type SequenceReorderRootEmits,
+  type SequenceReorderRootSlots,
   type ReorderItemProps,
+  type ReorderHandleProps,
   type ReorderItemSlotProps,
   type ReorderOrientation,
   type ReorderRootSlotProps,
@@ -154,6 +165,13 @@ export {
   TextField,
   type TextFieldModelModifiers,
   type TextFieldProps,
+  type TextFieldExpose,
+  type TextFieldSnapshot,
+  type TextFieldQuery,
+  type TextFieldQueryOptions,
+  type TextFieldReplacement,
+  type TextFieldEditResult,
+  type TextFieldEditRejection,
 } from './text.js';
 export {
   EditableArea,
@@ -317,13 +335,16 @@ export {
 } from './window-splitter.js';
 export {
   ComboboxContent,
+  ComboboxEditor,
   ComboboxEmpty,
   ComboboxInput,
   ComboboxItem,
+  ComboboxResults,
   ComboboxRoot,
   type ComboboxItemProps,
   type ComboboxItemSlotProps,
   type ComboboxPartProps,
+  type ComboboxResultsSlotProps,
   type ComboboxRootProps,
   type ComboboxRootSlotProps,
 } from './combobox.js';
@@ -344,6 +365,11 @@ export {
   type MenuRootSlotProps,
   type MenuSubContentProps,
 } from './menu.js';
+export {
+  ContextMenuRoot, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSubContent, ContextMenuSeparator,
+  type ContextMenuRootProps, type ContextMenuRootSlotProps, type ContextMenuItemProps, type ContextMenuItemSlotProps,
+  type ContextMenuPartProps, type ContextMenuSubContentProps, type ContextMenuOpenChangeHandler, type ContextMenuInvokeHandler,
+} from './context-menu.js';
 export {
   NavigationMenuContent,
   NavigationMenuIndicator,
@@ -437,10 +463,16 @@ export {
   TreeGridCell,
   TreeGridDisclosure,
   TreeGridEditor,
+  TreeGridGroup,
+  TreeGridHeader,
+  TreeGridHeaderCell,
   TreeGridRoot,
   TreeGridRow,
   type TreeGridCellSlotProps,
   type TreeGridPartProps,
+  type TreeGridGroupProps,
+  type TreeGridHeaderCellProps,
+  type TreeGridHeaderCellSlotProps,
   type TreeGridRootProps,
   type TreeGridRootSlotProps,
   type TreeGridRowSlotProps,
@@ -604,6 +636,7 @@ export type {
 } from './tags-input.js';
 export type {
   TextFieldValueChangeHandler,
+  TextFieldSnapshotChangeHandler,
 } from './text.js';
 export type {
   TimerCompleteHandler,

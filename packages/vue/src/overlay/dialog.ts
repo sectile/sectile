@@ -1,4 +1,5 @@
 import { createDialog, type DialogConnection, type DialogOptions } from '@sectile/dom/dialog';
+export type { PopupCloseReason } from '@sectile/dom/dialog';
 import {
   createPopupComponents,
   type PopupFactoryOptions,

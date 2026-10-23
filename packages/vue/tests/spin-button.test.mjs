@@ -34,9 +34,9 @@ test('Vue spin button renders a native input and optional compound controls', as
       min: '-1', max: '2', step: '0.5', defaultValue: '0', label: 'Opacity',
     }, {
       default: () => [
-        h(SpinButtonDecrement, null, { default: () => 'Decrease' }),
+        h(SpinButtonDecrement, { label: '줄이기' }, { default: () => '−' }),
         h(SpinButtonInput, { name: 'opacity' }),
-        h(SpinButtonIncrement, null, { default: () => 'Increase' }),
+        h(SpinButtonIncrement, { 'aria-label': '늘리기' }, { default: () => '+' }),
       ],
     }),
   });
@@ -48,6 +48,8 @@ test('Vue spin button renders a native input and optional compound controls', as
   assert.match(html, /name="opacity"/);
   assert.match(html, /data-part="decrement"/);
   assert.match(html, /data-part="increment"/);
+  assert.match(html, /aria-label="줄이기"/);
+  assert.match(html, /aria-label="늘리기"/);
 });
 
 test('Vue spin button forwards its host input before connecting the DOM adapter', () => {
@@ -120,6 +122,8 @@ test('Vue spin button reconfigures interaction when readonly changes', async () 
     const root = container.children[0];
     const input = root.children[1];
     const increment = root.children[2];
+    assert.equal(root.children[0].props['aria-label'], 'Decrement');
+    assert.equal(increment.props['aria-label'], 'Increment');
 
     input.value = '4';
     input.listeners.get('input')({ inputType: 'insertText', isComposing: false });

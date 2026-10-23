@@ -6,6 +6,7 @@ import {
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { dateTimeRangePickerCapability } from './capabilities/date-time-range-picker.js';
+import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface DateTimeRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateTimeRange | null; readonly defaultValue?: DateTimeRange | null;
@@ -16,13 +17,14 @@ export interface DateTimeRangePickerRootProps extends PickerPartProps, PickerPos
 }
 export const DateTimeRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimeRangePickerCapability, 'SectileDateTimeRangePickerRoot');
 export type DateTimeRangePickerRootSlotProps = PickerRootSlotProps<DateTimeRange | null>;
+export type DateTimeRangePickerContentSlotProps = PickerContentSlotProps<DateTimeRange | null>;
 export type DateTimeRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type DateTimeRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:open']>;
 export type DateTimeRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:highlightedValue']>;
 export const DateTimeRangePickerTrigger = PickerTrigger as unknown as PickerRootPartComponent<'date-time-range'>;
 export const DateTimeRangePickerAnchor = PickerAnchor as unknown as PickerRootPartComponent<'date-time-range'>;
 export const DateTimeRangePickerPortal = PickerPortal;
-export const DateTimeRangePickerContent = PickerContent as unknown as PickerRootPartComponent<'date-time-range'>;
+export const DateTimeRangePickerContent = PickerContent as unknown as PickerContentPartComponent<'date-time-range'>;
 export const DateTimeRangePickerGrid = PickerGrid as unknown as PickerRootPartComponent<'date-time-range'>;
 export const DateTimeRangePickerCell = PickerCell;
 export const DateTimeRangePickerMonthCell = PickerMonthCell;

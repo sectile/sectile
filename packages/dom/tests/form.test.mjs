@@ -3,6 +3,176 @@ import test from 'node:test';
 import { Window } from 'happy-dom';
 import { createForm, defineFormSubmission } from '../.verification-dist/form/connection.js';
 
+test('value and baseline participant refresh stay field-local while default refresh preserves target/order discovery', () => {
+  const dom = installDOM(); let form;
+  try {
+    const root = dom.window.document.createElement('form'), input = dom.window.document.createElement('input'); root.append(input); dom.window.document.body.append(root);
+    let value = 'initial', siblingReads = 0;
+    const siblings = Array.from({ length: 32 }, (_unused, index) => {
+      const element = dom.window.document.createElement('input'); root.append(element);
+      return { id: 'sibling-' + index, get element() { siblingReads++; return element; } };
+    });
+    form = createForm({ form: root, participants: [{ id: 'files', element: input, getValue: () => value }, ...siblings] });
+    siblingReads = 0; const sibling = form.getField('sibling-0'); value = 'accepted';
+    assert.equal(form.refreshParticipant('files', 'value'), true); assert.equal(form.getField('files').dirty, true);
+    form.refreshParticipant('files', 'baseline'); assert.equal(form.getField('files').dirty, false);
+    value = 'next'; form.refreshParticipant('files', 'value'); assert.equal(form.getField('files').dirty, true);
+    const snapshot = form.getSnapshot(); form.refreshParticipant('files', 'value'); assert.equal(form.getSnapshot().revision, snapshot.revision);
+    assert.equal(form.refreshParticipant('files', 'arbitrary'), false); assert.equal(form.getSnapshot().revision, snapshot.revision);
+    assert.equal(siblingReads, 0); assert.equal(form.getField('sibling-0'), sibling);
+    form.refreshParticipant('files'); assert.ok(siblingReads > 0, 'the counter must detect full target/order refresh');
+  } finally { form?.destroy(); dom.restore(); }
+});
+
+test('value participant refresh follows input validation policy while manual refresh remains explicit', () => {
+  for (const revalidateOn of [[], ['input']]) {
+    const dom = installDOM(); let form;
+    try {
+      const root = dom.window.document.createElement('form'), input = dom.window.document.createElement('input');
+      input.name = 'field'; root.append(input); dom.window.document.body.append(root);
+      let value = 'initial', calls = 0;
+      form = createForm({ form: root, participants: [{ id: 'field', element: input, getValue: () => value }],
+        validateOn: ['input'], revalidateOn,
+        validate() { calls++; return value === 'bad' ? { issues: [{ path: 'field', message: 'Invalid value' }] } : {}; },
+      });
+      value = 'bad'; form.refreshParticipant('field', 'value');
+      assert.equal(calls, 1); assert.equal(form.getField('field').valid, false);
+      value = 'accepted'; form.refreshParticipant('field', 'value');
+      assert.equal(calls, revalidateOn.length ? 2 : 1);
+      assert.equal(form.getField('field').valid, !!revalidateOn.length);
+      value = 'bad'; root.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+      const before = calls;
+      value = 'manual'; form.refreshParticipant('field');
+      assert.equal(calls, before + 1); assert.equal(form.getField('field').valid, true);
+    } finally { form?.destroy(); dom.restore(); }
+  }
+});
+
+test('participant preparation flushes accepted metadata before validation without recursive revalidation', () => {
+  const dom = installDOM(); let form;
+  try {
+    const root = dom.window.document.createElement('form'), input = dom.window.document.createElement('input'); input.name = 'file'; root.append(input); dom.window.document.body.append(root);
+    let value = 'initial', calls = 0, submitted;
+    form = createForm({ form: root, participants: [{ id: 'file', element: input, getValue: () => value, prepareSubmission() { form.refreshParticipant('file', 'value'); } }],
+      validateOn: ['input'], validate() { calls++; return calls === 1 ? { issues: [{ path: 'file', message: 'Old invalid value' }] } : {}; },
+      onSubmit(payload) { submitted = payload; },
+    });
+    value = 'invalid'; input.value = value; input.dispatchEvent(new dom.window.Event('input', { bubbles: true })); assert.equal(form.state.validation.status, 'invalid'); assert.equal(calls, 1);
+    value = 'accepted'; input.value = value;
+    root.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(calls, 2); assert.equal(submitted.formData.get('file'), 'accepted'); assert.equal(submitted.state.dirty, true);
+  } finally { form?.destroy(); dom.restore(); }
+});
+
+test('an inactive participant under an active Form retains metadata but owns no external observation or physical validation target', async () => {
+  const dom = installDOM(); let form;
+  try {
+    const { document, Event } = dom.window;
+    const root = document.createElement('form'), field = document.createElement('div');
+    const input = document.createElement('input'), external = document.createElement('input'), sibling = document.createElement('input');
+    input.name = 'email'; input.value = 'baseline'; external.name = 'external'; sibling.name = 'sibling';
+    field.append(input); root.append(field, sibling); document.body.append(root, external);
+    let available = true, focus = 0; const listeners = new Map();
+    const add = external.addEventListener.bind(external), remove = external.removeEventListener.bind(external);
+    external.addEventListener = (type, listener, options) => { add(type, listener, options); const set = listeners.get(type) ?? new Set(); set.add(listener); listeners.set(type, set); };
+    external.removeEventListener = (type, listener, options) => { remove(type, listener, options); listeners.get(type)?.delete(listener); };
+    const count = () => [...listeners.values()].reduce((sum, set) => sum + set.size, 0);
+    form = createForm({ form: root, participants: [
+      { id: 'email', element: field, semanticControl: input, submissionElements: [input, external], get active() { return available; }, focus: () => { focus++; return true; } },
+      { id: 'sibling', element: sibling },
+    ], onSubmit: () => ({ ok: false, issues: [{ id: 'email-server', source: 'server', fieldId: 'email', message: 'Retained' }] }) });
+    input.value = 'accepted'; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('blur'));
+    for (let cycle = 0; cycle < 3; cycle++) {
+      input.dispatchEvent(new Event('invalid', { cancelable: true }));
+      const validation = form.state.validation;
+      const accepted = form.getField('email'); available = false; assert.equal(form.refreshParticipantActivity('email'), true);
+      assert.equal(count(), 0); assert.equal(form.getActive(), true); assert.equal(form.getField('email'), accepted);
+      input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('blur'));
+      input.dispatchEvent(new Event('invalid', { bubbles: false, cancelable: true })); await Promise.resolve(); assert.equal(form.getField('email'), accepted);
+      sibling.value = `sibling-${cycle}`; sibling.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(form.getField('sibling').dirty, true);
+      available = true; form.refreshParticipantActivity('email'); assert.equal(count(), 4); assert.equal(form.getField('email'), accepted);
+      await Promise.resolve(); assert.equal(form.state.validation, validation, 'a queued native invalid batch belongs to its previous participant availability');
+    }
+    available = false; form.refreshParticipantActivity('email'); input.required = true; input.value = '';
+    root.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    assert.equal(form.state.allIssues.some(issue => issue.source === 'native'), false); assert.equal(focus, 0);
+    assert.equal(form.getField('email').touched, true); assert.equal(form.getField('email').dirty, true);
+    available = true; form.refreshParticipantActivity('email'); input.value = 'baseline'; input.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(form.getField('email').dirty, false);
+    form.destroy(); assert.equal(count(), 0);
+  } finally { form?.destroy(); dom.restore(); }
+});
+
+test('Form suspension retains field baselines and releases root and external observation through churn and failure', async () => {
+  const dom = installDOM(); let form;
+  try {
+    const { document, Event } = dom.window;
+    const root = document.createElement('form'), external = document.createElement('input');
+    external.name = 'email'; external.value = 'initial'; document.body.append(root, external);
+    const track = element => {
+      const listeners = new Map(), add = element.addEventListener.bind(element), remove = element.removeEventListener.bind(element);
+      element.addEventListener = (type, listener, options) => { add(type, listener, options); const entries = listeners.get(type) ?? new Set(); entries.add(listener); listeners.set(type, entries); };
+      element.removeEventListener = (type, listener, options) => { remove(type, listener, options); listeners.get(type)?.delete(listener); };
+      return () => [...listeners.values()].reduce((sum, entries) => sum + entries.size, 0);
+    };
+    const rootCount = track(root), externalCount = track(external);
+    form = createForm({ form: root, participants: [{ id: 'email', element: external }] });
+    external.value = 'accepted'; external.dispatchEvent(new Event('input', { bubbles: true }));
+    external.dispatchEvent(new Event('blur')); const accepted = form.state;
+    for (let cycle = 0; cycle < 3; cycle++) {
+      external.dispatchEvent(new Event('invalid', { cancelable: true }));
+      form.suspend(); form.suspend(); assert.equal(form.getActive(), false); assert.equal(rootCount(), 0); assert.equal(externalCount(), 0);
+      external.value = 'unobserved'; external.dispatchEvent(new Event('input', { bubbles: true })); external.dispatchEvent(new Event('blur'));
+      assert.equal(form.state, accepted);
+      form.resume(); form.resume(); assert.equal(form.getActive(), true); assert.equal(rootCount(), 6); assert.equal(externalCount(), 4);
+      await Promise.resolve(); assert.equal(form.state, accepted, 'a queued invalid batch from the previous activation cannot restart validation');
+    }
+    external.value = 'initial'; external.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(form.getField('email').dirty, false);
+    form.suspend(); const add = external.addEventListener, failure = new Error('External observation failed');
+    external.addEventListener = function(type, ...args) { if (type === 'blur') throw failure; return add.call(this, type, ...args); };
+    try { assert.throws(() => form.resume(), error => error === failure); assert.equal(rootCount(), 0); assert.equal(externalCount(), 0); assert.equal(form.getActive(), false); }
+    finally { external.addEventListener = add; }
+    form.resume(); assert.equal(externalCount(), 4); form.suspend(); form.destroy(); form.resume();
+    form.registerParticipant({ id: 'late', element: external }); assert.equal(rootCount(), 0); assert.equal(externalCount(), 0); assert.equal(form.getActive(), false);
+  } finally { form?.destroy(); dom.restore(); }
+});
+
+test('Form suspension cancels pending validation before callback failure and rejects stale completion after resume', async () => {
+  const dom = installDOM(); let form;
+  try {
+    const { document, Event } = dom.window;
+    const root = document.createElement('form'), input = document.createElement('input'); input.name = 'email'; root.append(input); document.body.append(root);
+    let resolve, signal, fail = false; const failure = new Error('Form publication failed');
+    form = createForm({ form: root, participants: [{ id: 'email', element: input }], validateOn: ['input'],
+      validate: (_values, context) => { signal = context.signal; return new Promise(done => { resolve = done; }); },
+      onStateChange: () => { if (fail) throw failure; },
+    });
+    input.value = 'accepted'; input.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(form.state.validation.status, 'validating');
+    fail = true; assert.throws(() => form.suspend(), error => error === failure); assert.equal(signal.aborted, true); assert.equal(form.getActive(), false);
+    assert.equal(form.state.validation.status, 'idle'); fail = false; form.resume(); const revision = form.getSnapshot().revision;
+    resolve({ issues: [{ message: 'Stale' }] }); await Promise.resolve(); await Promise.resolve();
+    assert.equal(form.getSnapshot().revision, revision); assert.equal(form.state.allIssues.length, 0);
+    input.value = 'next'; input.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(form.state.validation.status, 'validating');
+    form.destroy(); assert.equal(signal.aborted, true); form.resume(); assert.equal(form.getActive(), false);
+  } finally { form?.destroy(); dom.restore(); }
+});
+
+test('accepted managed submission can settle while Form observation is paused without focus or announcement', async () => {
+  const dom = installDOM(); let form;
+  try {
+    const { document, Event } = dom.window;
+    const root = document.createElement('form'), input = document.createElement('input'); input.name = 'email'; root.append(input); document.body.append(root);
+    let resolve, focus = 0, announcements = 0;
+    form = createForm({ form: root, participants: [{ id: 'email', element: input, focus: () => { focus++; return true; } }],
+      onSubmit: () => new Promise(done => { resolve = done; }), onAnnounceSummary: () => { announcements++; },
+    });
+    root.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })); assert.equal(form.state.submission.status, 'submitting');
+    form.suspend(); resolve({ ok: false, issues: [{ id: 'server-email', fieldId: 'email', message: 'Unavailable', source: 'server' }] });
+    await Promise.resolve(); await Promise.resolve(); assert.equal(form.state.submission.status, 'failed');
+    assert.equal(form.state.allIssues.length, 1); assert.equal(focus, 0); assert.equal(announcements, 0);
+    form.resume(); assert.equal(form.state.allIssues.length, 1); assert.equal(focus, 0); assert.equal(announcements, 0);
+  } finally { form?.destroy(); dom.restore(); }
+});
+
 test('DOM defineFormSubmission returns one immutable schema/handler binding', () => {
   const schema = { '~standard': { version: 1, vendor: 'test', validate: () => ({ value: {} }) } };
   const onSubmit = () => ({ ok: true });

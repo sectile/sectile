@@ -3,6 +3,7 @@ import {
   tryCreateMeterGroupState,
   type MeterGroupInput,
   type MeterGroupState,
+  type MeterGroupSegment,
 } from '@sectile/core/meter-group';
 import { createRevisionSnapshot, type RevisionSnapshot } from '@sectile/core/revision';
 import { unwrap } from '@sectile/core/result';
@@ -26,6 +27,32 @@ export interface MeterGroupSegmentAttributesOptions<ID extends StableID = Stable
   readonly formatValue?: MeterGroupValueFormatter<ID>;
   readonly scope?: string;
   readonly part?: string;
+}
+
+/** Explicit O(n) view construction; repeated segment access is expected O(1).
+ * Input is a canonical readonly state. Create another view for a new state.
+ * The view owns only its index; dropping it releases that index. */
+export interface MeterGroupAttributes<ID extends StableID = StableID> {
+  readonly root: MeterGroupAttributeRecord;
+  readonly track: MeterGroupAttributeRecord;
+  readonly segment: (id: ID, options?: MeterGroupSegmentAttributesOptions<ID>) => Result<MeterGroupAttributeRecord>;
+}
+
+export function getMeterGroupAttributes<const ID extends StableID>(
+  state: MeterGroupState<ID>,
+  options: MeterGroupRootAttributesOptions = {},
+): MeterGroupAttributes<ID> {
+  const segments = new Map<ID, MeterGroupSegment<ID>>();
+  for (const segment of state.segments) if (!segments.has(segment.id)) segments.set(segment.id, segment);
+  return createAttributeView(segments, state.max, getMeterGroupRootAttributes(state, options), getMeterGroupTrackAttributes(state));
+}
+
+function createAttributeView<ID extends StableID>(segments: ReadonlyMap<ID, MeterGroupSegment<ID>>, maximum: string,
+  root: MeterGroupAttributeRecord, track: MeterGroupAttributeRecord): MeterGroupAttributes<ID> {
+  return Object.freeze({ root, track, segment(id: ID, options: MeterGroupSegmentAttributesOptions<ID> = {}): Result<MeterGroupAttributeRecord> {
+    const segment = segments.get(id);
+    return segment === undefined ? segmentUnavailable(id) : { ok: true, value: projectSegmentAttributes(maximum, segment, options) };
+  } });
 }
 
 export interface MeterGroupControlledValues<ID extends StableID = StableID> extends MeterGroupInput<ID> {}
@@ -78,6 +105,7 @@ export function getMeterGroupTrackAttributes<ID extends StableID>(
   });
 }
 
+/** O(n) one-off projection without a retained index. Repeated queries use getMeterGroupAttributes. */
 export function getMeterGroupSegmentAttributes<ID extends StableID>(
   state: MeterGroupState<ID>,
   id: ID,
@@ -85,23 +113,26 @@ export function getMeterGroupSegmentAttributes<ID extends StableID>(
 ): Result<MeterGroupAttributeRecord> {
   const segment = state.segments.find((candidate) => candidate.id === id);
   if (segment === undefined) return segmentUnavailable(id);
+  return { ok: true, value: projectSegmentAttributes(state.max, segment, options) };
+}
+
+function projectSegmentAttributes<ID extends StableID>(maximum: string, segment: MeterGroupSegment<ID>,
+  options: MeterGroupSegmentAttributesOptions<ID>): MeterGroupAttributeRecord {
   const percentage = formatExactPercentage(segment.valueRatio);
   const startPercentage = formatExactPercentage(segment.startRatio);
   const endPercentage = formatExactPercentage(segment.endRatio);
-  return {
-    ok: true,
-    value: Object.freeze({
+  return Object.freeze({
       role: 'meter',
       'aria-valuemin': '0',
-      'aria-valuemax': state.max,
+      'aria-valuemax': maximum,
       'aria-valuenow': segment.value,
-      'aria-valuetext': options.formatValue?.(segment.value, id) ?? segment.value,
+      'aria-valuetext': options.formatValue?.(segment.value, segment.id) ?? segment.value,
       'aria-label': options.label,
       'aria-labelledby': options.labelledBy,
       'aria-describedby': options.describedBy,
       'data-scope': options.scope ?? 'meter-group',
       'data-part': options.part ?? 'segment',
-      'data-id': id,
+      'data-id': segment.id,
       'data-percentage': percentage,
       'data-start-percentage': startPercentage,
       'data-end-percentage': endPercentage,
@@ -110,8 +141,7 @@ export function getMeterGroupSegmentAttributes<ID extends StableID>(
         `--sectile-meter-group-start-percentage: ${startPercentage}%`,
         `--sectile-meter-group-end-percentage: ${endPercentage}%`,
       ].join('; '),
-    }),
-  };
+    });
 }
 
 export function createMeterGroup<ID extends StableID>(options: MeterGroupOptions<ID>): MeterGroupConnection<ID> {
@@ -133,10 +163,12 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
     readonly options: MeterGroupSegmentAttributesOptions<ID>;
   }>();
   #snapshot: RevisionSnapshot<MeterGroupState<ID>>;
+  #attributes: MeterGroupAttributes<ID> | undefined;
 
   public constructor(options: MeterGroupOptions<ID>, snapshot: RevisionSnapshot<MeterGroupState<ID>>) {
     this.#options = options;
     this.#snapshot = snapshot;
+    this.#attributes = getMeterGroupAttributes(snapshot.state);
     this.refreshAttributes();
   }
 
@@ -150,7 +182,9 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
     const next = tryCreateMeterGroupState(values);
     if (!next.ok) return next;
     if (this.#snapshot.revision === Number.MAX_SAFE_INTEGER) return revisionCeiling();
+    const attributes = getMeterGroupAttributes(next.value);
     this.#snapshot = createRevisionSnapshot(next.value, this.#snapshot.revision + 1);
+    this.#attributes = attributes;
     this.refreshAttributes();
     this.#options.onUpdate?.();
     return { ok: true, value: this.#snapshot };
@@ -161,7 +195,7 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
     element: HTMLElement,
     options: MeterGroupSegmentAttributesOptions<ID>,
   ): Result<() => void> {
-    const attributes = getMeterGroupSegmentAttributes(this.#snapshot.state, id, options);
+    const attributes = this.#readAttributes().segment(id, options);
     if (!attributes.ok) return attributes;
     const registration = Object.freeze({ element, options });
     this.#segments.set(id, registration);
@@ -176,12 +210,13 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
 
   public refreshAttributes(): void {
     const state = this.#snapshot.state;
+    const projected = this.#readAttributes();
     applyAttributes(this.#options.root, getMeterGroupRootAttributes(state, this.#options));
     if (this.#options.track !== undefined) {
       applyAttributes(this.#options.track, getMeterGroupTrackAttributes(state));
     }
     for (const [id, registration] of this.#segments) {
-      const attributes = getMeterGroupSegmentAttributes(state, id, registration.options);
+      const attributes = projected.segment(id, registration.options);
       if (attributes.ok) applyAttributes(registration.element, attributes.value);
       else clearSegmentAttributes(registration.element);
     }
@@ -189,6 +224,11 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
 
   public disconnect(): void {
     this.#segments.clear();
+    this.#attributes = undefined;
+  }
+
+  #readAttributes(): MeterGroupAttributes<ID> {
+    return this.#attributes ??= getMeterGroupAttributes(this.#snapshot.state);
   }
 }
 

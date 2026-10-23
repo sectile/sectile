@@ -97,8 +97,14 @@ export const SwitchRoot = defineComponent({
         element: inputElement,
         capabilities: hiddenInputSubmissionCapabilities,
       }],
+      reset: () => {
+        if (controlled) return;
+        controller.value = createController(false, initialValue, props, emit);
+        refresh();
+      },
     });
     const controlled = useControlledStateInvariant('SwitchRoot', 'modelValue', () => props.modelValue);
+    const initialValue = controlled ? props.modelValue as boolean : props.defaultValue;
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as boolean : props.defaultValue,

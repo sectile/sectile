@@ -1,4 +1,5 @@
 export interface ModalEffects {
+  update(additionalBranches: readonly HTMLElement[]): void;
   release(): void;
 }
 
@@ -14,7 +15,8 @@ interface ScrollSnapshot {
 
 interface ModalEntry {
   readonly id: symbol;
-  readonly branches: readonly HTMLElement[];
+  branches: readonly HTMLElement[];
+  readonly getOrder: () => number | null;
 }
 
 interface ModalState {
@@ -27,34 +29,48 @@ interface ModalState {
 
 const states = new WeakMap<Document, ModalState>();
 
-export function acquireModalEffects(surface: HTMLElement, additionalBranches: readonly HTMLElement[] = []): ModalEffects {
+export function acquireModalEffects(surface: HTMLElement, additionalBranches: readonly HTMLElement[], getOrder: () => number | null): ModalEffects {
   const document = surface.ownerDocument;
-  if (document?.body === undefined || document.body === null) return Object.freeze({ release(): void {} });
+  if (document?.body === undefined || document.body === null) return Object.freeze({ update(): void {}, release(): void {} });
   const state = states.get(document) ?? createState(document);
-  const entry = { id: Symbol('sectile-modal'), branches: [surface, ...additionalBranches] };
+  const entry: ModalEntry = { id: Symbol('sectile-modal'), branches: [surface, ...additionalBranches], getOrder };
   state.entries.push(entry);
-  applyTopModal(state);
   let released = false;
-
-  return Object.freeze({
-    release(): void {
-      if (released) return;
-      released = true;
-      const index = state.entries.findIndex((candidate) => candidate.id === entry.id);
-      if (index >= 0) state.entries.splice(index, 1);
-      if (state.entries.length > 0) {
-        applyTopModal(state);
-        return;
-      }
-      restoreIsolation(state);
+  const release = (): void => {
+    if (released) return;
+    released = true;
+    const index = state.entries.findIndex((candidate) => candidate.id === entry.id);
+    if (index >= 0) state.entries.splice(index, 1);
+    if (state.entries.length > 0) {
+      applyTopModal(state);
+      return;
+    }
+    try { restoreIsolation(state); }
+    finally {
       state.hidden.clear();
-      if (document.body !== null) {
-        document.body.style.overflow = state.scroll.overflow;
-        document.body.style.paddingRight = state.scroll.paddingRight;
+      try {
+        if (document.body !== null) {
+          try { document.body.style.overflow = state.scroll.overflow; }
+          finally { document.body.style.paddingRight = state.scroll.paddingRight; }
+        }
+      } finally {
+        try { state.observer?.disconnect(); }
+        finally { states.delete(document); }
       }
-      state.observer?.disconnect();
-      states.delete(document);
+    }
+  };
+  try { applyTopModal(state); }
+  catch (error) {
+    try { release(); } catch { /* Preserve the original installation failure. */ }
+    throw error;
+  }
+  return Object.freeze({
+    update(branches: readonly HTMLElement[]): void {
+      if (released) return;
+      entry.branches = [surface, ...branches];
+      applyTopModal(state);
     },
+    release,
   });
 }
 
@@ -70,7 +86,13 @@ function createState(document: Document): ModalState {
 
 function applyTopModal(state: ModalState): void {
   restoreIsolation(state, true);
-  const branches = state.entries.at(-1)?.branches.filter((branch) => branch.isConnected) ?? [];
+  let top: ModalEntry | undefined;
+  let topOrder = -1;
+  for (const entry of state.entries) {
+    const order = entry.getOrder();
+    if (order !== null && order > topOrder) { top = entry; topOrder = order; }
+  }
+  const branches = top?.branches.filter((branch) => branch.isConnected) ?? [];
   if (branches.length === 0) return;
   const preserveAriaHidden = new Set(branches.slice(1));
   const allowedChildren = new Map<HTMLElement, Set<HTMLElement>>();

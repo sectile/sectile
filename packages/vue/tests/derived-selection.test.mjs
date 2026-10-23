@@ -16,10 +16,11 @@ test('Vue rating specializes radio semantics and exposes an optional clear contr
   const app = createSSRApp({
     render: () => h(RatingRoot, { items: ['1', '2', '3'], defaultValue: '2', clearable: true }, {
       default: () => [
-        ...['1', '2', '3'].map((value) => h(RatingItem, { value }, {
+        ...['1', '2', '3'].map((value) => h(RatingItem, { value, ...(value === '1' ? { 'aria-label': '1점' } : value === '3' ? { 'aria-labelledby': 'rating-high-label' } : {}) }, {
           default: () => [value, h(RatingIndicator, null, { default: () => 'selected' })],
         })),
         h(RatingClear, null, { default: () => 'Clear' }),
+        h('span', { id: 'rating-high-label' }, '좋아요'),
       ],
     }),
   });
@@ -27,6 +28,9 @@ test('Vue rating specializes radio semantics and exposes an optional clear contr
   assert.match(html, /role="radiogroup"/);
   assert.match(html, /aria-roledescription="rating"/);
   assert.match(html, /aria-label="2 rating"/);
+  assert.match(html, /aria-label="1점"/);
+  assert.match(html, /aria-labelledby="rating-high-label"/);
+  assert.doesNotMatch(html, /aria-label="3 rating"/);
   assert.match(html, /data-part="clear"/);
   assert.equal((html.match(/data-scope="rating"/g) ?? []).length, 8);
   assert.doesNotMatch(html, /data-scope="radio-group"/);

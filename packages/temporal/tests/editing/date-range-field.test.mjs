@@ -1,9 +1,30 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyDateRangeFieldEvent, createDateRangeFieldState } from '../../.verification-dist/fields/date-range.js';
-import { createDateValue, formatDateValue } from '../../.verification-dist/fields/date.js';
+import { applyDateRangeFieldEvent, createDateRangeFieldState, reformatDateRangeFieldState } from '../../.verification-dist/fields/date-range.js';
+import { createDateValue, createDateFieldFormat, formatDateValue } from '../../.verification-dist/fields/date.js';
+import { createTextEditingState } from '@sectile/core/text';
 
 const date = (year, month, day) => createDateValue(year, month, day);
+
+test('range editing retains both admitted formats and projects them atomically', () => {
+  const us = createDateFieldFormat({ order: ['month', 'day', 'year'], literals: ['', '/', '/', ''] });
+  const gb = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const range = { start: date(2026, 10, 14), end: date(2026, 11, 1) };
+  let state = createDateRangeFieldState({ value: range, startFormat: us, endFormat: us, active: 'end' });
+  const focused = applyDateRangeFieldEvent(state, { type: 'focus', endpoint: 'end' });
+  assert.equal(focused.ok, true); state = focused.value.state;
+  assert.equal(state.start.format, us); assert.equal(state.end.format, us);
+  const converted = reformatDateRangeFieldState(state, gb); assert.equal(converted.ok, true);
+  assert.equal(converted.value.start.inputState.snapshot.text, '14/10/2026'); assert.equal(converted.value.end.inputState.snapshot.text, '01/11/2026');
+  assert.equal(converted.value.active, 'end'); assert.deepEqual(converted.value.value, range);
+  const changed = applyDateRangeFieldEvent(converted.value, { type: 'field', endpoint: 'end', event: { type: 'set-value', value: date(2026, 11, 2) } });
+  assert.equal(changed.ok, true); assert.equal(changed.value.state.end.inputState.snapshot.text, '02/11/2026'); assert.equal(changed.value.state.start.format, gb);
+  const dirty = createDateRangeFieldState({ value: range, startFormat: us, endFormat: us, endInputState: createTextEditingState('11/') });
+  const rejected = reformatDateRangeFieldState(dirty, gb); assert.equal(rejected.ok, false); assert.equal(rejected.error.code, 'date-field-format-draft-active');
+  assert.equal(dirty.start.inputState.snapshot.text, '10/14/2026'); assert.equal(dirty.end.inputState.snapshot.text, '11/');
+  const cancelled = applyDateRangeFieldEvent(dirty, 'cancel'); assert.equal(cancelled.ok, true);
+  assert.equal(cancelled.value.state.end.inputState.snapshot.text, '11/01/2026'); assert.equal(cancelled.value.state.end.format, us);
+});
 
 test('date range field exposes only complete ordered ranges', () => {
   let state = createDateRangeFieldState();

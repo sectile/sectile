@@ -47,6 +47,7 @@ interface RootContext {
   readonly disabled: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly partContract: PartContract;
+  focus(value: string): void;
   select(value: string, target: HTMLElement): void;
 }
 interface ItemContext { readonly state: ComputedRef<RadioGroupItemSlotProps>; readonly partContract: PartContract }
@@ -85,9 +86,17 @@ export const RadioGroupRoot = defineComponent({
         element: () => inputElements[index] ?? null,
         capabilities: hiddenInputSubmissionCapabilities,
       })),
+      reset: () => {
+        if (controlled) return;
+        const reconciled = reconcileCollectionState(props.items, initialValue === '' ? [] : [initialValue],
+          initialValue || null, props.disabledItems, 'single');
+        controller.value = makeController(reconciled.selected[0] ?? '', reconciled.current);
+        snapshot.value = controller.value.getSnapshot();
+      },
     });
     provideFormControlOwner();
     const controlled = useControlledStateInvariant('RadioGroupRoot', 'modelValue', () => props.modelValue);
+    const initialValue = controlled ? props.modelValue as string : props.defaultValue;
     const makeController = (value: string, highlightedValue = value || null): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
       const result = createListboxControllerFromItems({
@@ -100,15 +109,26 @@ export const RadioGroupRoot = defineComponent({
         direction: direction.value,
         policies: { selectionFollowsFocus: true },
         ...(controlled ? { value: selected } : { defaultValue: selected }),
-        defaultHighlightedValue: highlightedValue ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
+        highlightedValue: highlightedValue ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
         onValueChange: ({ value: next }) => emit('update:modelValue', next[0] ?? ''),
-        onHighlightedValueChange: ({ value: next }) => emit('highlight', next),
+        onHighlightedValueChange: ({ value: next }) => syncHighlight(next),
       });
       if (!result.ok) throw new TypeError(result.error.message);
       return result.value;
     };
     const controller = shallowRef(makeController(controlled ? props.modelValue as string : props.defaultValue));
     const snapshot = shallowRef(controller.value.getSnapshot());
+    const syncHighlight = (current: string | null): void => {
+      const previous = controller.value.getSnapshot();
+      if (previous.state.cursor.current === current) return;
+      const result = controller.value.syncControlledValues({
+        ...(controlled ? { value: previous.state.selection.selected } : {}),
+        highlightedValue: current,
+      });
+      if (!result.ok) throw new TypeError(result.error.message);
+      snapshot.value = result.value;
+      emit('highlight', current);
+    };
     const rebuild = (): void => {
       const requested = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
       const reconciled = reconcileCollectionState(
@@ -125,7 +145,9 @@ export const RadioGroupRoot = defineComponent({
     };
     watch(() => props.modelValue, (next) => {
       if (!controlled || next === undefined) return;
-      const result = controller.value.syncControlledValues({ value: next === '' ? [] : [next] });
+      const result = controller.value.syncControlledValues({
+        value: next === '' ? [] : [next], highlightedValue: controller.value.getSnapshot().state.cursor.current,
+      });
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
@@ -136,24 +158,32 @@ export const RadioGroupRoot = defineComponent({
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const apply = (result: ReturnType<ListboxController<string>['handleEvent']>, root?: HTMLElement): boolean => {
       if (!result.ok) return false;
-      snapshot.value = result.snapshot;
-      if (root !== undefined) void nextTick(() => focusItem(root, result.snapshot.state.cursor.current));
+      snapshot.value = controller.value.getSnapshot();
+      if (root !== undefined) void nextTick(() => focusItem(root, snapshot.value.state.cursor.current));
       return true;
     };
     const part = usePartContract('radio-group', 'root');
     provide<RootContext>(rootKey, {
       value, highlighted, disabled, disabledItems, partContract: part,
+      focus: syncHighlight,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="radiogroup"]') as HTMLElement | undefined),
     });
     const rootAttributes = computed(() => getRadioGroupRootAttributes({ orientation: props.orientation, direction: direction.value, disabled: props.disabled, readOnly: props.readonly }));
     const slotProps = computed<RadioGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
+        'aria-label': attrs['aria-label'],
         as: props.as, asChild: props.asChild,
         elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
         'data-scope': part.scope,
         onKeydown: (event: KeyboardEvent) => {
-          if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
+          if (event.defaultPrevented) return;
+          const root = event.currentTarget as HTMLElement;
+          if (event.target !== root) {
+            const item = (event.target as Element | null)?.closest?.('[data-radio-group-id]');
+            if (item?.closest('[role="radiogroup"]') !== root) return;
+          }
+          if (!apply(controller.value.handleKeyboardInput(event), root)) return;
           event.preventDefault();
         },
       }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.value) });
@@ -202,6 +232,7 @@ export const RadioGroupItem = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       'data-scope': part.scope,
+      onFocus: () => { if (!state.value.disabled) root.focus(props.value); },
       onClick: (event: MouseEvent) => {
         if (!event.defaultPrevented && !state.value.disabled) root.select(props.value, event.currentTarget as HTMLElement);
       },
@@ -244,5 +275,11 @@ function useRoot(part: string): RootContext {
 }
 function focusItem(root: HTMLElement, id: string | null): void {
   if (id === null) return;
-  for (const item of root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) if (item.dataset['radioGroupId'] === id) item.focus();
+  const token = getRadioGroupItemAttributes({ id, checked: false, highlighted: false })['data-radio-group-id'];
+  for (const item of root.querySelectorAll<HTMLElement>('[data-radio-group-id]')) {
+    if (item.dataset['radioGroupId'] === token && item.closest('[role="radiogroup"]') === root) {
+      item.focus();
+      return;
+    }
+  }
 }

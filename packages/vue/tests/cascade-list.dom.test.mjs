@@ -20,7 +20,8 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
+const { createApp, createSSRApp, h, nextTick, ref, shallowRef } = await import('vue');
+const { HostProvider } = await import('../.verification-dist/host-provider.js');
 const { renderToString } = await import('@vue/server-renderer');
 const {
   CascadeListColumn,
@@ -221,6 +222,33 @@ test('Vue cascade list hydrates the same always-visible structure', async () => 
   assert.equal(host.querySelectorAll('[role="listbox"]').length, 3);
   assert.equal(host.querySelector('select[name="location"]').value, 'seoul');
   unmount(app, host);
+});
+
+test('Vue cascade list follows live host direction without changing its selected leaf', async () => {
+  const direction = shallowRef('ltr');
+  const { app, host } = mount(() => h(HostProvider, { direction: direction.value }, {
+    default: () => h(CascadeListRoot, { nodes: initialNodes, defaultValue: 'seoul' }, {
+      default: (state) => [...renderColumns(state), h('output', { 'data-selected-value': '' }, state.value)],
+    }),
+  }));
+  try {
+    await settle();
+    const root = host.querySelector('[data-part="root"][data-scope="cascade-list"]');
+    assert.equal(root.dir, 'ltr');
+    keydown(option(host, 'seoul'), 'ArrowLeft');
+    await settle();
+    assert.equal(option(host, 'korea').tabIndex, 0);
+    direction.value = 'rtl';
+    await settle();
+    assert.equal(root.dir, 'rtl');
+    keydown(option(host, 'korea'), 'ArrowRight');
+    await settle();
+    assert.equal(option(host, 'asia').tabIndex, 0);
+    keydown(option(host, 'asia'), 'ArrowLeft');
+    await settle();
+    assert.equal(option(host, 'korea').tabIndex, 0);
+    assert.equal(host.querySelector('[data-selected-value]').textContent, 'seoul');
+  } finally { unmount(app, host); }
 });
 
 function mount(render) {

@@ -5,15 +5,56 @@ import { createSSRApp, h, nextTick, ref } from 'vue';
 import { RadioGroupIndicator, RadioGroupItem, RadioGroupRoot } from '../.verification-dist/radio-group.js';
 import { ToggleGroupItem, ToggleGroupRoot } from '../.verification-dist/toggle-group.js';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from '../.verification-dist/tabs.js';
+import { createTabsIDCache } from '../.verification-dist/internal/tabs-context.js';
+import { createSequence } from '@sectile/core/sequence';
 import { createTestWindow } from './happy-dom.mjs';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
 
 const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
+test('Tabs ID retention follows the current canonical domain and releases its source on disposal', () => {
+  let domain = createSequence(['a', 'b']), reads = 0;
+  const identities = createTabsIDCache('bounded', () => { reads++; return domain; });
+  const a = identities.get('a'); assert.equal(identities.get('a'), a);
+  domain = createSequence(['b', 'a']); identities.reconcile(); assert.equal(identities.get('a'), a);
+  const unknown = identities.get('outside'); assert.equal(identities.retained, 1);
+  const observedReads = reads; void identities.retained; assert.equal(reads, observedReads);
+  domain = createSequence(['outside']); identities.reconcile();
+  assert.deepEqual(identities.get('outside'), unknown); assert.equal(identities.retained, 1);
+  for (let epoch = 0; epoch < 40; epoch++) {
+    const ids = Array.from({ length: 32 }, (_, index) => epoch + ':' + index);
+    domain = createSequence(ids); identities.reconcile(); assert.equal(identities.retained, 0);
+    for (const id of ids) identities.get(id);
+    for (let index = 0; index < 32; index++) identities.get('unadmitted:' + index);
+    assert.equal(identities.retained, ids.length);
+  }
+  domain = createSequence([]); identities.reconcile(); assert.equal(identities.retained, 0);
+  domain = createSequence(['last']); identities.get('last'); identities.dispose(); const finalReads = reads;
+  assert.equal(identities.retained, 0); assert.throws(() => identities.get('last'), /disposed/);
+  assert.equal(reads, finalReads); identities.dispose();
+});
+
+for (const [Root, Item, key, datasetKey, multiple] of [
+  [ToggleGroupRoot, ToggleGroupItem, 'data-toggle-group-id', 'toggleGroupId', true],
+  [RadioGroupRoot, RadioGroupItem, 'data-radio-group-id', 'radioGroupId', false],
+]) test(`${Root.name} keyboard focus reaches the item carrying the projected host identity`, async () => {
+  const renderer = createTestRenderer(), items = ['left edge', 'وسط: center'];
+  const app = renderer.createApp({ render: () => h(Root, { items, orientation: 'horizontal', defaultValue: multiple ? [items[0]] : items[0] }, {
+    default: () => items.map(value => h(Item, { value }, () => value)),
+  }) });
+  const container = createHostNode('root'); app.mount(container);
+  try {
+    const root = container.children[0]; let focused = null;
+    root.querySelectorAll = () => root.children.map((item, index) => ({ dataset: { [datasetKey]: item.props[key] }, closest: () => root, focus() { focused = items[index]; } }));
+    root.props.onKeydown({ key: 'ArrowRight', target: root, currentTarget: root, defaultPrevented: false, preventDefault() {} });
+    await nextTick(); await nextTick();
+    assert.equal(focused, 'وسط: center');
+  } finally { app.unmount(); }
+});
 
 test('Vue radio group projects persistent indicators and native form radios', async () => {
   const items = ['email', 'sms'];
   const app = createSSRApp({
-    render: () => h(RadioGroupRoot, { items, defaultValue: 'email', name: 'channel' }, {
+    render: () => h(RadioGroupRoot, { items, defaultValue: 'email', name: 'channel', 'aria-label': 'Notification channel' }, {
       default: () => items.map((value) => h(RadioGroupItem, { value }, {
         default: () => [value, h(RadioGroupIndicator, null, () => 'selected')],
       })),
@@ -21,6 +62,7 @@ test('Vue radio group projects persistent indicators and native form radios', as
   });
   const html = await renderToString(app);
   assert.match(html, /role="radiogroup"/);
+  assert.match(html, /aria-label="Notification channel"/);
   assert.match(html, /role="radio"/);
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /type="radio"/);

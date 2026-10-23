@@ -42,6 +42,7 @@ interface RootContext {
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
+  focus(value: string): void;
   press(value: string, target: HTMLElement): void;
 }
 const rootKey = Symbol('SectileToggleGroupRoot');
@@ -74,9 +75,17 @@ export const ToggleGroupRoot = defineComponent({
         element: () => submissionElements[index] ?? null,
         capabilities: hiddenValueSubmissionCapabilities,
       })),
+      reset: () => {
+        if (controlled) return;
+        const reconciled = reconcileCollectionState(props.items, initialValue, initialValue[0] ?? null,
+          props.disabledItems, props.multiple ? 'multiple' : 'single');
+        controller.value = makeController(reconciled.selected, reconciled.current);
+        snapshot.value = controller.value.getSnapshot();
+      },
     });
     provideFormControlOwner();
     const controlled = useControlledStateInvariant('ToggleGroupRoot', 'modelValue', () => props.modelValue);
+    const initialValue = Object.freeze([...(controlled ? props.modelValue ?? [] : props.defaultValue)]);
     const makeController = (value: readonly string[], highlightedValue = value[0] ?? null): ListboxController<string> => {
       const result = createListboxControllerFromItems({
         items: props.items,
@@ -127,6 +136,7 @@ export const ToggleGroupRoot = defineComponent({
     };
     provide<RootContext>(rootKey, {
       value, highlighted, disabled, readonly, disabledItems,
+      focus: (id) => { if (snapshot.value.state.cursor.current !== id) apply(controller.value.handleEvent({ type: 'focus', id })); },
       press: (id, target) => apply(controller.value.handleEvent({ type: 'toggle', id }), target.closest('[data-scope="toggle-group"][data-part="root"]') as HTMLElement | undefined),
     });
     const slotProps = computed<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
@@ -166,6 +176,7 @@ export const ToggleGroupItem = defineComponent({
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, getToggleGroupItemAttributes({ id: props.value, pressed: state.value.pressed, highlighted: state.value.highlighted, disabled: state.value.disabled }) as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
+      onFocus: () => { if (!state.value.disabled) root.focus(props.value); },
       onClick: (event: MouseEvent) => { if (!event.defaultPrevented && !state.value.disabled && !state.value.readonly) root.press(props.value, event.currentTarget as HTMLElement); },
     }), { default: () => slots['default']?.(state.value) });
   },
@@ -178,5 +189,6 @@ function useRoot(): RootContext {
 }
 function focusItem(root: HTMLElement, id: string | null): void {
   if (id === null) return;
-  for (const item of root.querySelectorAll<HTMLElement>('[data-toggle-group-id]')) if (item.dataset['toggleGroupId'] === id) item.focus();
+  const token = getToggleGroupItemAttributes({ id, pressed: false, highlighted: false })['data-toggle-group-id'];
+  for (const item of root.querySelectorAll<HTMLElement>('[data-toggle-group-id]')) if (item.dataset['toggleGroupId'] === token) item.focus();
 }

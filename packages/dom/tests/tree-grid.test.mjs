@@ -97,6 +97,46 @@ test('DOM tree-grid connection owns ARIA, edit rollback, and IME Enter commit', 
   assert.equal(renders, 1);
 });
 
+test('DOM tree-grid releases editor listeners and pending composition work', async () => {
+  let value = 'Root';
+  const connection = createTreeGrid({
+    rows: modelRows(), root: new FakeElement(), defaultHighlightedValue: 'root-name',
+    getCellValue: () => value, setCellValue: (_id, next) => { value = next; },
+  });
+  for (let cycle = 0; cycle < 12; cycle += 1) {
+    const input = new FakeInput();
+    connection.bindEditor(input, { id: 'root-name' });
+    input.value = `Edit ${cycle}`; input.emit('input');
+    assert.equal(value, `Edit ${cycle}`);
+    connection.unbindEditor(input); connection.unbindEditor(input);
+    for (const type of ['input', 'compositionstart', 'compositionend']) assert.equal(input.listeners.get(type)?.size ?? 0, 0);
+    input.value = 'Detached'; input.emit('input');
+    assert.equal(value, `Edit ${cycle}`, 'released input cannot change application values');
+  }
+  const input = new FakeInput();
+  connection.bindEditor(input, { id: 'root-name' });
+  connection.handleKeyboardEvent(keyboardEvent('Enter'));
+  input.emit('compositionstart');
+  connection.handleKeyboardEvent(keyboardEvent('Enter', { isComposing: true }));
+  input.emit('compositionend');
+  connection.unbindEditor(input);
+  await new Promise(resolve => setTimeout(resolve, 5));
+  assert.equal(connection.getSnapshot().state.editMode, 'editing', 'removed editor cannot commit deferred composition');
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('Escape')), true, 'released composition cannot block navigation');
+  const replacement = new FakeInput();
+  connection.bindEditor(input, { id: 'root-name' }); connection.bindEditor(replacement, { id: 'root-name' });
+  connection.handleKeyboardEvent(keyboardEvent('Enter'));
+  input.emit('compositionstart'); connection.handleKeyboardEvent(keyboardEvent('Enter', { isComposing: true })); input.emit('compositionend');
+  replacement.emit('compositionstart'); connection.unbindEditor(input);
+  await new Promise(resolve => setTimeout(resolve, 5));
+  assert.equal(connection.getSnapshot().state.editMode, 'editing', 'a previous editor cannot commit the replacement composition');
+  replacement.emit('compositionend'); assert.equal(connection.handleKeyboardEvent(keyboardEvent('Escape')), true);
+  connection.bindEditor(input, { id: 'root-name' });
+  assert.equal(input.listeners.get('input')?.size, 1, 'released input can be bound again');
+  connection.disconnect(); connection.disconnect();
+  assert.equal(input.listeners.get('input')?.size ?? 0, 0);
+});
+
 test('DOM keys map onto tree-grid navigation and edit modes', () => {
   assert.equal(toTreeGridEvent({ key: 'ArrowDown' }), 'down');
   assert.equal(toTreeGridEvent({ key: 'ArrowRight', altKey: true }), 'expand');
@@ -121,6 +161,10 @@ test('DOM tree-grid delegates disclosure, cell click, and double-click editing',
   });
   const disclosure = new FakeElement();
   connection.setDisclosureAttributes(disclosure, 'root');
+  const button = new FakeElement(); button.tagName = 'BUTTON';
+  connection.setDisclosureAttributes(button, 'root');
+  assert.equal(disclosure.attributes.get('aria-hidden'), 'true'); assert.equal(button.attributes.has('aria-hidden'), false);
+  assert.equal(button.attributes.get('aria-expanded'), 'false');
   root.emit('click', { target: disclosure });
   assert.deepEqual(connection.getSnapshot().state.expansion.ids, ['root']);
   const cell = new FakeElement();

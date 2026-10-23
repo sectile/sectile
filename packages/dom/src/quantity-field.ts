@@ -3,6 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import type { Result } from '@sectile/core';
 import {
   applyQuantityFieldEvent,
+  getQuantityFieldDisplayUnits,
   tryCreateQuantityFieldState,
   type QuantityFieldCommand,
   type QuantityFieldEvent,
@@ -52,6 +53,8 @@ export function createStandardQuantityPolicies(
 export interface QuantityFieldOptions {
   readonly input: HTMLInputElement;
   readonly unitSelect?: HTMLSelectElement;
+  /** False when a rendering host owns the select's option nodes. Defaults to true. */
+  readonly manageUnitOptions?: boolean;
   readonly policies: QuantityFieldPolicies;
   readonly quantity?: QuantityValue | null;
   readonly defaultQuantity?: QuantityValue | null;
@@ -233,8 +236,8 @@ class DOMQuantityField implements QuantityFieldConnection {
         }
       }
       this.refresh();
-      this.#options.onUpdate?.();
     }
+    this.#options.onUpdate?.();
     return result.ok;
   }
 
@@ -247,7 +250,7 @@ class DOMQuantityField implements QuantityFieldConnection {
     this.#binding.render();
     const select = this.#options.unitSelect;
     if (select !== undefined) {
-      this.#populateUnits();
+      if (this.#options.manageUnitOptions !== false) this.#populateUnits();
       select.value = this.getDisplayUnit();
       select.disabled = this.#options.disabled ?? false;
       select.setAttribute('aria-disabled', String(select.disabled));
@@ -272,7 +275,7 @@ class DOMQuantityField implements QuantityFieldConnection {
     const select = this.#options.unitSelect;
     if (select === undefined) return;
     select.replaceChildren();
-    for (const unitID of this.#displayUnits()) {
+    for (const unitID of getQuantityFieldDisplayUnits(this.#options.policies, this.getDisplayUnit())) {
       const unit = this.#options.policies.registry.get(unitID);
       if (unit === null) continue;
       const option = select.ownerDocument.createElement('option');
@@ -282,14 +285,4 @@ class DOMQuantityField implements QuantityFieldConnection {
     }
   }
 
-  #displayUnits(): readonly string[] {
-    const policies = this.#options.policies;
-    const preferred = policies.unitSystem?.getUnits(policies.canonicalUnit) ?? [];
-    const compatible = preferred.length > 0
-      ? preferred
-      : policies.registry.units
-        .filter((unit) => policies.registry.compatible(policies.canonicalUnit, unit.id))
-        .map((unit) => unit.id);
-    return Object.freeze([...new Set([...compatible, this.getDisplayUnit()])]);
-  }
 }

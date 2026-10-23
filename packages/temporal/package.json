@@ -41,6 +41,16 @@
       "import": "./dist/fields/date-time.js",
       "default": "./dist/fields/date-time.js"
     },
+    "./date-time-range-field": {
+      "types": "./dist/fields/date-time-range.d.ts",
+      "import": "./dist/fields/date-time-range.js",
+      "default": "./dist/fields/date-time-range.js"
+    },
+    "./time-picker": {
+      "types": "./dist/pickers/time.d.ts",
+      "import": "./dist/pickers/time.js",
+      "default": "./dist/pickers/time.js"
+    },
     "./time-field": {
       "types": "./dist/fields/time.d.ts",
       "import": "./dist/fields/time.js",
@@ -104,6 +114,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "typecheck:public": "pnpm --silent run build && pnpm --silent run typecheck:public:prepared",
+    "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false",
     "build": "sectile-build production",
     "build:verification": "sectile-build verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",

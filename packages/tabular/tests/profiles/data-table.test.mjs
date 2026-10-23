@@ -13,6 +13,23 @@ const source = createClientTabularSource({
   getValue: (record, columnID) => record[columnID],
 });
 
+test('controlled columns reconcile against the accepted source schema', () => {
+  const table = createDataTable({ columns: [], controlled: { columnState: true },
+    initialValues: { columnState: { order: [], hidden: [], pinnedStart: [], pinnedEnd: [] } } });
+  try {
+    const request = table.getSnapshot().state.requestState.pendingRequest;
+    assert.equal(table.synchronizeView(resolveClientTabularRequest(source, request).value).ok, true);
+    const state = { order: ['score', 'name'], hidden: ['name'], pinnedStart: [], pinnedEnd: [] };
+    const accepted = table.syncControlledValues({ columnState: state });
+    assert.equal(accepted.ok, true, JSON.stringify(accepted));
+    assert.deepEqual(table.getProjection().columns, { start: [], center: ['score'], end: [] });
+    assert.deepEqual(table.getSnapshot().state.columnState, state);
+    const invalid = table.syncControlledValues({ columnState: { ...state, order: ['score', 'unknown'] } });
+    assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'invalid-controlled-shape');
+    assert.deepEqual(table.getSnapshot().state.columnState, state);
+  } finally { table.dispose(); }
+});
+
 test('ISSUE-136: response getter reentrancy cannot clear a newer request or commit after dispose', () => {
   for (const operation of ['requestView', 'dispose']) {
     const table = createDataTable({ columns });
@@ -138,13 +155,16 @@ test('TAB-TBL-05: controlled query proposes once and requests only after externa
   const proposals = [];
   const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
   const tableResult = tryCreateDataTable({
-    columns,
+    columns: [],
     controlled: { query: true },
     initialValues: { query },
     onQueryChange: (next) => proposals.push(next),
   });
   assert.equal(tableResult.ok, true);
   const table = tableResult.value;
+  const response = resolveClientTabularRequest(source, table.getSnapshot().state.requestState.pendingRequest);
+  assert.equal(response.ok, true);
+  assert.equal(table.synchronizeView(response.value).ok, true);
   const commands = [];
   table.subscribeCommands((command) => commands.push(command.type));
   const next = { ...query, sort: [{ id: 'name', columnID: 'name', direction: 'ascending', comparator: 'text' }] };

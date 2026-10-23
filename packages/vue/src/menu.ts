@@ -2,19 +2,27 @@ import {
   Fragment, computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowReactive, shallowRef, watch, type Component, type ComputedRef, type PropType, type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
-import { createMenu, type MenuConnection, type MenuItemDefinition, type MenuPolicies } from '@sectile/dom/menu';
-import { createMenuButton } from '@sectile/dom/menu-button';
-import { createMenubar } from '@sectile/dom/menubar';
-import { createNavigationMenu } from '@sectile/dom/navigation-menu';
+import { tryCreateMenu, type MenuConnection, type MenuItemDefinition, type MenuPolicies } from '@sectile/dom/menu';
+import { tryCreateMenuButton } from '@sectile/dom/menu-button';
+import { tryCreateContextMenu, type ContextMenuConnection } from '@sectile/dom/context-menu';
+import { tryCreateMenubar } from '@sectile/dom/menubar';
+import { tryCreateNavigationMenu } from '@sectile/dom/navigation-menu';
+import { unwrap } from '@sectile/core/result';
+import { stableIDElementToken } from '@sectile/dom/identity';
+import { createMenuModel, type MenuModel } from '@sectile/core/menu';
+import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
   PositionBoundary,
   PositionOptions,
   PositionPadding,
   PositionStrategy,
   PositionTracking,
+  PositionRect,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useHostDirection, useHostId } from './host-provider.js';
+import { provideHostLayerParent, useHostDirection, useHostId, useHostLayer } from './host-provider.js';
+import { usePopupPresentation } from './internal/popup-presentation.js';
+import { providePortalMove } from './internal/portal-move.js';
 import {
   invalidateItemProjection,
   reconcileCollectionState,
@@ -24,12 +32,7 @@ import {
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePresence } from './presence/presence.js';
 
-type MenuKind = 'menu' | 'menu-button' | 'menubar' | 'navigation-menu';
-type MenuRegistrationConnection = Omit<MenuConnection<string>, 'setItemAttributes' | 'setSubmenuAttributes'> & {
-  setItemAttributes(element: HTMLElement | undefined, id: string): void;
-  setSubmenuAttributes(element: HTMLElement | undefined, parentID: string): void;
-  refresh(parentID?: string | null): void;
-};
+type MenuKind = 'menu' | 'menu-button' | 'context-menu' | 'menubar' | 'navigation-menu';
 export interface MenuRootProps {
   readonly items: readonly MenuItemDefinition<string>[];
   readonly disabledItems?: readonly string[];
@@ -48,15 +51,24 @@ export interface MenuButtonRootProps extends MenuRootProps, Omit<PositionOptions
   readonly defaultOpen?: boolean;
   readonly position?: boolean;
 }
-export interface MenuRootSlotProps { readonly open: boolean; readonly highlightedValue: string | null; readonly openPath: readonly string[]; readonly disabled: boolean }
+export interface ContextMenuRootProps extends Omit<MenuButtonRootProps, 'as' | 'asChild'> {}
+export interface MenuRootSlotProps { readonly open: boolean; readonly highlightedValue: string | null; readonly openPath: readonly string[]; readonly disabled: boolean; readonly model: MenuModel<string>; readonly presentation: DOMLayerPresentationSnapshot | undefined }
 export interface MenuItemProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface MenuItemSlotProps { readonly value: string; readonly highlighted: boolean; readonly open: boolean; readonly disabled: boolean }
+export interface MenuItemSlotProps { readonly value: string; readonly highlighted: boolean; readonly open: boolean; readonly disabled: boolean; readonly branch: boolean }
 export interface MenuSubContentProps { readonly for: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface MenuPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 interface Context {
+  readonly active: Readonly<ShallowRef<boolean>>;
+  readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
+  registerPresence(present: ShallowRef<boolean>): () => void;
   readonly state: MenuRootSlotProps;
   readonly kind: MenuKind;
+  readonly contentID: string;
+  readonly triggerID: string;
+  submenuID(id: string): string;
+  itemID(id: string): string;
+  submenuControlID(id: string): string | undefined;
   readonly label: ComputedRef<string | undefined>;
   readonly direction: ComputedRef<'ltr' | 'rtl'>;
   readonly position: ComputedRef<boolean>;
@@ -65,6 +77,7 @@ interface Context {
   isItemHighlighted(id: string): boolean;
   isItemOpen(id: string): boolean;
   isItemDisabled(id: string): boolean;
+  isItemBranch(id: string): boolean;
   registerRoot(element?: HTMLElement): void;
   registerTrigger(element?: HTMLElement): void;
   registerItem(element: HTMLElement | undefined, id: string): void;
@@ -118,14 +131,22 @@ const menuButtonProps = {
   hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
   tracking: { type: String as PropType<PositionTracking>, default: 'events' },
 } as const;
+const { as: _contextAs, asChild: _contextAsChild, ...contextOwnerProps } = menuButtonProps;
+const contextMenuProps = {
+  ...contextOwnerProps,
+  align: { type: String as PropType<'start' | 'center' | 'end'>, default: undefined },
+  sideOffset: { type: Number, default: 0 },
+  strategy: { type: String as PropType<PositionStrategy>, default: 'fixed' },
+} as const;
 
-function createRoot<RootProps extends typeof commonProps | typeof menuButtonProps>(
+function createRoot<RootProps extends typeof commonProps | typeof menuButtonProps | typeof contextMenuProps>(
   kind: MenuKind,
   rootProps: RootProps,
   providerOnly = false,
 ) {
+  const popup = kind === 'menu-button' || kind === 'context-menu';
   return defineComponent({
-    name: kind === 'menu-button' ? 'SectileMenuButtonRoot' : kind === 'menubar' ? 'SectileMenubarRoot' : kind === 'navigation-menu' ? 'SectileNavigationMenuRoot' : 'SectileMenuRoot',
+    name: kind === 'context-menu' ? 'SectileContextMenuRoot' : kind === 'menu-button' ? 'SectileMenuButtonRoot' : kind === 'menubar' ? 'SectileMenubarRoot' : kind === 'navigation-menu' ? 'SectileNavigationMenuRoot' : 'SectileMenuRoot',
     inheritAttrs: false,
     props: rootProps,
     emits: { 'update:open': (_value: boolean): boolean => true, invoke: (_value: string): boolean => true },
@@ -133,30 +154,41 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
     setup(props, { attrs, emit, slots }) {
       const runtimeProps = props as unknown as ResolvedRootProps;
       const direction = useHostDirection();
+      const layerHost = useHostLayer();
       const baseID = useHostId();
-      const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLElement>(); const connection = shallowRef<MenuConnection<string>>();
+      const contentID = `sectile-menu-${baseID}-content`;
+      const triggerID = `sectile-menu-${baseID}-trigger`;
+      const submenuID = (id: string): string => `sectile-menu-${baseID}-submenu-${stableIDElementToken(id)}`;
+      const itemID = (id: string): string => `sectile-menu-${baseID}-item-${stableIDElementToken(id)}`;
+      const model = computed(() => createMenuModel(runtimeProps.items));
+      const root = shallowRef<HTMLElement>(); const trigger = shallowRef<HTMLElement>(); const connection = shallowRef<MenuConnection<string> | ContextMenuConnection<string>>();
+      providePortalMove(() => connection.value);
+      let currentAnchorRect: PositionRect | undefined;
       const controlled = useControlledStateInvariant(
-        'MenuButtonRoot',
+        kind === 'context-menu' ? 'ContextMenuRoot' : 'MenuButtonRoot',
         'open',
-        () => kind === 'menu-button' ? runtimeProps.open : undefined,
+        () => popup ? runtimeProps.open : undefined,
       );
-      let currentOpen = kind === 'menu-button' ? runtimeProps.open ?? runtimeProps.defaultOpen ?? false : true;
+      let currentOpen = popup ? runtimeProps.open ?? runtimeProps.defaultOpen ?? false : true;
       let currentHighlighted: string | null = runtimeProps.defaultHighlightedValue;
       let currentOpenPath: readonly string[] = [];
       let currentOpenPathSet = new Set<string>();
       let disabledItemSet = new Set(runtimeProps.disabledItems);
       const itemProjection = shallowReactive(new Map<string, true>());
       const state = shallowReactive({
-        open: kind === 'menu-button' && runtimeProps.open !== undefined ? runtimeProps.open : currentOpen,
+        get model(): MenuModel<string> { return model.value; },
+        get presentation(): DOMLayerPresentationSnapshot | undefined { return lifecycle.presentation.value; },
+        open: popup && runtimeProps.open !== undefined ? runtimeProps.open : currentOpen,
         highlightedValue: currentHighlighted,
         openPath: currentOpenPath,
         disabled: runtimeProps.disabled,
       });
-      const position = computed(() => kind === 'menu-button' ? runtimeProps.position ?? true : false);
-      const strategy = computed<PositionStrategy>(() => runtimeProps.strategy ?? 'absolute');
+      const lifecycle = usePopupPresentation({ connection, open: computed(() => state.open), connect: () => connect(), refresh: () => refresh() });
+      const position = computed(() => popup ? runtimeProps.position ?? true : false);
+      const strategy = computed<PositionStrategy>(() => runtimeProps.strategy ?? (kind === 'context-menu' ? 'fixed' : 'absolute'));
       const publishOpen = (value: boolean): void => {
         currentOpen = value;
-        const publicValue = kind === 'menu-button' && runtimeProps.open !== undefined
+        const publicValue = popup && runtimeProps.open !== undefined
           ? runtimeProps.open
           : value;
         if (state.open !== publicValue) state.open = publicValue;
@@ -194,6 +226,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       };
       const refresh = (): void => {
         const snapshot = connection.value?.getSnapshot().state; if (snapshot !== undefined) publishSnapshot(snapshot);
+        lifecycle.update();
       };
       const refreshParts = (): void => {
         if (root.value === undefined || connection.value === undefined) return;
@@ -201,9 +234,10 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         root.value.querySelectorAll<HTMLElement>('[data-sectile-submenu-for]').forEach((element) => { const id = element.dataset['sectileSubmenuFor']; if (id !== undefined) connection.value?.setSubmenuAttributes(element, id); });
       };
       const connect = (): void => {
-        connection.value?.disconnect();
+        const navigation = { defaultOpenPath: currentOpenPath };
+        disconnect();
         updateOwnerProjection();
-        if (root.value === undefined || (kind === 'menu-button' && trigger.value === undefined)) return;
+        if (root.value === undefined || (popup && trigger.value === undefined)) return;
         const reconciled = reconcileCollectionState(
           runtimeProps.items.map((item) => item.id),
           [],
@@ -214,15 +248,16 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         );
         publishHighlight(reconciled.current);
         const options = {
-          root: root.value, items: runtimeProps.items, disabledItems: runtimeProps.disabledItems, disabled: runtimeProps.disabled,
+          root: root.value, model: model.value, disabledItems: runtimeProps.disabledItems, disabled: runtimeProps.disabled,
           direction: direction.value, baseID, manageVisibility: false,
-          ...(kind === 'menu-button' ? {
+          ...(popup ? {
+            ...(layerHost.value === undefined ? {} : { layerHost: layerHost.value }),
             position: runtimeProps.position ?? true,
-            side: runtimeProps.side ?? 'bottom', align: runtimeProps.align ?? 'start', sideOffset: runtimeProps.sideOffset ?? 8,
+            side: runtimeProps.side ?? 'bottom', align: runtimeProps.align ?? (kind === 'context-menu' && direction.value === 'rtl' ? 'end' : 'start'), sideOffset: runtimeProps.sideOffset ?? (kind === 'context-menu' ? 0 : 8),
             collisionPadding: runtimeProps.collisionPadding ?? 8,
             ...(runtimeProps.collisionBoundary === undefined ? {} : { collisionBoundary: runtimeProps.collisionBoundary }),
             avoidCollisions: runtimeProps.avoidCollisions ?? true, hideWhenDetached: runtimeProps.hideWhenDetached ?? false,
-            strategy: runtimeProps.strategy ?? 'absolute', tracking: runtimeProps.tracking ?? 'events',
+            strategy: strategy.value, tracking: runtimeProps.tracking ?? 'events',
           } : {}),
           ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           defaultHighlightedValue: reconciled.current,
@@ -231,55 +266,81 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
           onOpenChange: (value: boolean) => { publishOpen(value); emit('update:open', value); },
           onInvoke: (value: string) => emit('invoke', value), onUpdate: refresh,
         };
-        connection.value = kind === 'menu-button'
-          ? createMenuButton({ ...options, trigger: trigger.value as HTMLElement, ...(controlled ? { open: runtimeProps.open as boolean } : { defaultOpen: currentOpen }) })
-          : kind === 'menubar' ? createMenubar(options) : kind === 'navigation-menu' ? createNavigationMenu(options) : createMenu(options);
+        const create = (retained: boolean) => {
+          const basis = { ...options, ...(retained ? navigation : { defaultHighlightedValue: null }) };
+          if (popup) {
+            const popupOptions = { ...basis, trigger: trigger.value as HTMLElement, ...(controlled ? { open: runtimeProps.open as boolean } : { defaultOpen: currentOpen }) };
+            return kind === 'context-menu'
+              ? tryCreateContextMenu({ ...popupOptions, ...(currentAnchorRect === undefined ? {} : { anchorRect: currentAnchorRect }) })
+              : tryCreateMenuButton(popupOptions);
+          }
+          return kind === 'menubar' ? tryCreateMenubar(basis) : kind === 'navigation-menu' ? tryCreateNavigationMenu(basis) : tryCreateMenu(basis);
+        };
+        const candidate = create(true);
+        connection.value = unwrap(!candidate.ok && (candidate.error.code === 'invalid-menu-open-path'
+          || candidate.error.code === 'disconnected-menu-open-path' || candidate.error.code === 'closed-menu-has-active-state'
+          || candidate.error.code === 'menu-cursor-hidden') ? create(false) : candidate);
         refreshParts(); refresh();
+      };
+      const disconnect = (): void => {
+        const owner = connection.value;
+        if (kind === 'context-menu' && owner !== undefined && 'getAnchorRect' in owner) currentAnchorRect = owner.getAnchorRect();
+        lifecycle.release();
+        try { connection.value?.disconnect(); } finally { connection.value = undefined; }
       };
       let mounted = false;
       let connectScheduled = false;
       const scheduleConnect = (): void => {
         if (!mounted || connectScheduled) return;
+        if (!lifecycle.availability.value) { lifecycle.invalidate(); return; }
         connectScheduled = true;
         void nextTick(() => {
           connectScheduled = false;
-          if (mounted) connect();
+          if (mounted) lifecycle.reconnect();
         });
       };
       const registerRoot = (element?: HTMLElement): void => {
         if (root.value === element) return;
         root.value = element;
         if (element === undefined) {
-          connection.value?.disconnect();
-          connection.value = undefined;
+          disconnect();
         } else scheduleConnect();
       };
       const registerTrigger = (element?: HTMLElement): void => {
         if (trigger.value === element) return;
         trigger.value = element;
         if (element === undefined) {
-          connection.value?.disconnect();
-          connection.value = undefined;
+          disconnect();
         } else scheduleConnect();
       };
       provide<Context>(key, {
-        state, kind, label: computed(() => runtimeProps.label), direction,
+        active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+        state, kind, contentID, triggerID, submenuID, itemID,
+        submenuControlID: (id) => connection.value === undefined ? submenuID(id) : connection.value.getSubmenuID(id),
+        label: computed(() => runtimeProps.label), direction,
         position, strategy, itemProjection,
         isItemHighlighted: (id) => currentHighlighted === id,
         isItemOpen: (id) => currentOpenPathSet.has(id),
         isItemDisabled: (id) => state.disabled || disabledItemSet.has(id),
+        isItemBranch: (id) => model.value.tree.isLeaf(id) === false,
         registerRoot, registerTrigger,
-        refresh: (parentID) => (connection.value as MenuRegistrationConnection | undefined)?.refresh(parentID ?? null),
-        registerItem: (element, id) => (connection.value as MenuRegistrationConnection | undefined)?.setItemAttributes(element, id),
-        registerSubmenu: (element, parent) => (connection.value as MenuRegistrationConnection | undefined)?.setSubmenuAttributes(element, parent),
+        refresh: (parentID) => connection.value?.refresh(parentID ?? null),
+        registerItem: (element, id) => connection.value?.setItemAttributes(element, id),
+        registerSubmenu: (element, parent) => {
+          const owner = connection.value, previous = owner?.getSubmenuID(parent);
+          owner?.setSubmenuAttributes(element, parent);
+          if (previous !== owner?.getSubmenuID(parent)) invalidateItemProjection(itemProjection, parent);
+        },
       });
-      onMounted(() => { mounted = true; connect(); });
-      onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
-      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset, () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions, () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking], connect);
+      onMounted(() => { mounted = true; lifecycle.reconnect(); });
+      onBeforeUnmount(() => { mounted = false; disconnect(); });
+      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset, () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions, () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking], lifecycle.reconnect);
+      if (popup) watch(layerHost, lifecycle.reconnect, { flush: 'post' });
       watch(() => runtimeProps.open, (value) => {
         if (!controlled || value === undefined) return;
         currentOpen = value;
         state.open = value;
+        lifecycle.prepareModelUpdate();
         if (connection.value === undefined) return;
         const result = connection.value.syncControlledValue(value);
         if (!result.ok) throw new TypeError(result.error.message);
@@ -291,6 +352,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
           as: runtimeProps.as, asChild: runtimeProps.asChild, elementRef: (node: unknown) => registerRoot(node instanceof HTMLElement ? node : undefined),
           role: kind === 'navigation-menu' ? 'navigation' : kind === 'menubar' ? 'menubar' : 'menu', 'aria-label': runtimeProps.label,
           dir: direction.value,
+          ...(!lifecycle.active.value ? { hidden: true, inert: true, 'aria-hidden': 'true' } : {}),
           'data-scope': kind === 'navigation-menu' ? 'navigation-menu' : kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'root', 'data-state': state.open ? 'open' : 'closed',
         }), { default: () => slots['default']?.(state) });
       };
@@ -298,10 +360,11 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
   });
 }
 
-export const MenuRoot = createRoot('menu', commonProps);
-export const MenubarRoot = createRoot('menubar', commonProps);
-export const NavigationMenuRoot = createRoot('navigation-menu', commonProps);
-export const MenuButtonRoot = createRoot('menu-button', menuButtonProps, true);
+export const MenuRoot = /* @__PURE__ */ createRoot('menu', commonProps);
+export const MenubarRoot = /* @__PURE__ */ createRoot('menubar', commonProps);
+export const NavigationMenuRoot = /* @__PURE__ */ createRoot('navigation-menu', commonProps);
+export const MenuButtonRoot = /* @__PURE__ */ createRoot('menu-button', menuButtonProps, true);
+export const ContextMenuRoot = /* @__PURE__ */ createRoot('context-menu', contextMenuProps, true);
 export type MenuOpenChangeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onUpdate:open']>;
 export type MenuInvokeHandler = NonNullable<InstanceType<typeof MenuRoot>['$props']['onInvoke']>;
 export type MenubarOpenChangeHandler = NonNullable<InstanceType<typeof MenubarRoot>['$props']['onUpdate:open']>;
@@ -310,38 +373,52 @@ export type NavigationMenuOpenChangeHandler = NonNullable<InstanceType<typeof Na
 export type NavigationMenuInvokeHandler = NonNullable<InstanceType<typeof NavigationMenuRoot>['$props']['onInvoke']>;
 export type MenuButtonOpenChangeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onUpdate:open']>;
 export type MenuButtonInvokeHandler = NonNullable<InstanceType<typeof MenuButtonRoot>['$props']['onInvoke']>;
+export type ContextMenuOpenChangeHandler = NonNullable<InstanceType<typeof ContextMenuRoot>['$props']['onUpdate:open']>;
+export type ContextMenuInvokeHandler = NonNullable<InstanceType<typeof ContextMenuRoot>['$props']['onInvoke']>;
 
-export const MenuButtonTrigger = defineComponent({
-  name: 'SectileMenuButtonTrigger', inheritAttrs: false,
+function createPopupTrigger(scope: 'menu-button' | 'context-menu') { return defineComponent({
+  name: scope === 'context-menu' ? 'SectileContextMenuTrigger' : 'SectileMenuButtonTrigger', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('MenuButtonTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot(scope === 'context-menu' ? 'ContextMenuTrigger' : 'MenuButtonTrigger'); return (): VNodeChild => {
+    const borrowed = scope === 'context-menu' && props.asChild;
+    if (borrowed && !root.label.value?.trim()) throw new TypeError('ContextMenuRoot requires a nonempty label when its trigger borrows a child.');
+    return h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLElement ? node : undefined),
-    type: props.as === 'button' ? 'button' : undefined, disabled: root.state.disabled,
-    'aria-haspopup': 'menu', 'aria-expanded': String(root.state.open), 'data-scope': 'menu-button', 'data-part': 'trigger',
-  }), { default: () => slots['default']?.(root.state) }); },
-});
+    ...(borrowed ? {} : { type: props.as === 'button' ? 'button' : undefined, disabled: root.state.disabled,
+    id: root.triggerID,
+    'aria-haspopup': 'menu', 'aria-expanded': String(root.state.open), 'aria-controls': root.contentID, 'data-scope': scope, 'data-part': 'trigger',
+    }),
+  }), { default: () => slots['default']?.(root.state) }); }; },
+}); }
+export const MenuButtonTrigger = /* @__PURE__ */ createPopupTrigger('menu-button');
+export const ContextMenuTrigger = /* @__PURE__ */ createPopupTrigger('context-menu');
 
-export const MenuButtonContent = defineComponent({
-  name: 'SectileMenuButtonContent', inheritAttrs: false, props: partProps,
+function createPopupContent(scope: 'menu-button' | 'context-menu') { return defineComponent({
+  name: scope === 'context-menu' ? 'SectileContextMenuContent' : 'SectileMenuButtonContent', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: MenuRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('MenuButtonContent');
+    const root = useRoot(scope === 'context-menu' ? 'ContextMenuContent' : 'MenuButtonContent');
     const element = shallowRef<HTMLElement>();
     const open = computed(() => root.state.open);
-    const present = useMenuPresence(open, element, root.refresh);
+    provideHostLayerParent({ element, open, active: root.active, presentation: root.presentation });
+    const present = useMenuPresence(open, element, root.refresh, root.active);
+    onBeforeUnmount(root.registerPresence(present));
     return (): VNodeChild => {
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerRoot(content); },
-        role: 'menu', hidden: !present.value, 'aria-label': root.label.value, dir: root.direction.value,
-        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        id: root.contentID, role: 'menu', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+        'aria-labelledby': root.label.value === undefined ? root.triggerID : undefined, dir: root.direction.value,
+        ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,
-        'data-scope': 'menu-button', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
+        'data-scope': scope, 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
       }), { default: () => slots['default']?.(root.state) });
     };
   },
-});
+}); }
+export const MenuButtonContent = /* @__PURE__ */ createPopupContent('menu-button');
+export const ContextMenuContent = /* @__PURE__ */ createPopupContent('context-menu');
 
 export const MenuItem = defineComponent({
   name: 'SectileMenuItem', inheritAttrs: false,
@@ -354,10 +431,14 @@ export const MenuItem = defineComponent({
       get highlighted() { root.itemProjection.get(props.value); return root.isItemHighlighted(props.value); },
       get open() { root.itemProjection.get(props.value); return root.isItemOpen(props.value); },
       get disabled() { root.itemProjection.get(props.value); return props.disabled || root.isItemDisabled(props.value); },
+      get branch() { return root.isItemBranch(props.value); },
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.registerItem(node instanceof HTMLElement ? node : undefined, props.value); },
       role: root.kind === 'navigation-menu' ? undefined : 'menuitem', 'aria-disabled': state.disabled ? 'true' : undefined, 'data-sectile-menu-id': props.value,
+      id: state.branch && root.kind !== 'navigation-menu' ? root.itemID(props.value) : undefined,
+      'aria-haspopup': state.branch && root.kind !== 'navigation-menu' ? 'menu' : undefined, 'aria-expanded': state.branch ? String(state.open) : undefined,
+      'aria-controls': state.branch ? root.submenuControlID(props.value) : undefined,
       'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : root.kind === 'menubar' ? 'menubar' : 'menu', 'data-part': 'item', 'data-highlighted': state.highlighted ? '' : undefined,
       'data-state': state.open ? 'open' : 'closed',
     }), { default: () => slots['default']?.(state) });
@@ -375,13 +456,14 @@ export const MenuSubContent = defineComponent({
       root.itemProjection.get(props.for);
       return root.state.open && root.isItemOpen(props.for);
     });
-    const present = useMenuPresence(open, element, () => root.refresh(props.for));
+    const present = useMenuPresence(open, element, () => root.refresh(props.for), root.active);
     return (): VNodeChild => {
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const submenu = node instanceof HTMLElement ? node : undefined; element.value = submenu; root.registerSubmenu(submenu, props.for); },
-        role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !present.value, dir: root.direction.value, 'data-sectile-submenu-for': props.for,
-        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        id: root.submenuID(props.for), role: root.kind === 'navigation-menu' ? undefined : 'menu', hidden: !root.active.value || !present.value, dir: root.direction.value, 'data-sectile-submenu-for': props.for,
+        'aria-labelledby': root.kind === 'navigation-menu' ? undefined : root.itemID(props.for),
+        ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         'data-scope': root.kind === 'navigation-menu' ? 'navigation-menu' : 'menu', 'data-part': 'sub-content', 'data-state': open.value ? 'open' : 'closed',
       }), { default: () => slots['default']?.(root.state) });
     };
@@ -397,14 +479,15 @@ function useMenuPresence(
   open: ComputedRef<boolean>,
   element: ShallowRef<HTMLElement | undefined>,
   refresh: () => void,
+  active: Readonly<ShallowRef<boolean>>,
 ): ShallowRef<boolean> {
   const retainedReopen = shallowRef(0);
-  const present = usePresence(open, element, () => { retainedReopen.value += 1; });
-  watch([present, retainedReopen], async (_next, _previous, onCleanup): Promise<void> => {
+  const present = usePresence(open, element, () => { retainedReopen.value += 1; }, active);
+  watch([present, retainedReopen, element, active], async (_next, _previous, onCleanup): Promise<void> => {
     let active = true;
     onCleanup(() => { active = false; });
     await nextTick();
-    // Retry pending host focus after Vue removes the exit quarantine.
+    // Retry geometry and pending focus after Vue attaches or reveals the surface.
     if (active) refresh();
   }, { flush: 'post' });
   return present;

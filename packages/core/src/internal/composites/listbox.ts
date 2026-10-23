@@ -8,6 +8,8 @@ import { createMachineUpdate } from '../kernel/machine.js';
 import {
   clearSelection,
   createSelectionState,
+  isCanonicalSelectionState,
+  reconcileSelection,
   selectOne,
   toggleMultipleSelection,
   type SelectionMode,
@@ -84,6 +86,29 @@ export function tryCreateListboxState<ID extends StableID>(
   const selection = createSelectionState(domain, selectionMode, input);
   if (!selection.ok) return selection;
   return ok(listboxState(domain, createCursorState(current), selection.value));
+}
+
+/** Owner-local domain replacement; intentional null cursors do not request focus. */
+export function rebaseListboxState<ID extends StableID>(
+  domain: Sequence<ID>, state: ListboxState<ID>,
+  selectionMode: SelectionMode,
+  policies: Pick<ListboxPolicies<ID>, 'eligible' | 'maxScan'> = {},
+): Result<ListboxState<ID>> {
+  let cursor = state.cursor;
+  const current = cursor.current;
+  const available = current === null || (domain.contains(current) && policies.eligible?.(current) !== false);
+  const canonical = hasCanonicalState(domain, state);
+  if (canonical && selectionMode === 'multiple' && available) return ok(state);
+  const selection = selectionMode === 'multiple' && isCanonicalSelectionState(state.selection, domain)
+    ? ok(state.selection) : reconcileSelection(state.selection, domain, selectionMode);
+  if (!selection.ok) return selection;
+  if (!available) {
+    const target = findEligibleFromEdge(domain, 1, policies);
+    if (!target.ok) return target;
+    cursor = createCursorState(target.value);
+  }
+  if (canonical && selection.value === state.selection && cursor === state.cursor) return ok(state);
+  return ok(listboxState(domain, cursor, selection.value));
 }
 
 export function applyListboxEvent<ID extends StableID>(

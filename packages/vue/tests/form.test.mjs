@@ -22,6 +22,18 @@ test('Vue defineFormSubmission keeps schema and handler atomic for v-bind', () =
   assert.equal(Object.isFrozen(submission), true);
 });
 
+test('field-default readers expose initial SSR flags without waiting for mounted metadata', async () => {
+  const { defineComponent } = await import('vue');
+  const { useFormFieldDefaults } = await import('../.verification-dist/form-boundary.js');
+  const Reader = defineComponent({ setup() { const defaults = useFormFieldDefaults();
+    return () => h('output', `${defaults.value.disabled}/${defaults.value.readonly}/${defaults.value.required}`);
+  } });
+  const html = await renderToString(createSSRApp({ render: () => h(FormRoot, {}, {
+    default: () => h(FormField, { name: 'amount', disabled: true, readonly: false, required: true }, { default: () => h(Reader) }),
+  }) }));
+  assert.ok(html.includes('<output>true/false/true</output>'));
+});
+
 test('Vue Form renders native semantics and stable compound part boundaries during SSR', async () => {
   const app = createSSRApp({
     render: () => h(FormRoot, { action: '/account', method: 'post' }, {

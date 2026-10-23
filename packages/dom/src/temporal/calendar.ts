@@ -38,6 +38,7 @@ export type {
 export type { DateValue } from '@sectile/temporal/date-field';
 
 export interface CalendarOptions {
+  readonly defaultState?: CalendarState;
   readonly root: HTMLElement;
   readonly grid?: HTMLElement;
   readonly policies?: CalendarPolicies;
@@ -65,6 +66,9 @@ export interface CalendarControlledValues {
 }
 
 export interface CalendarConnection {
+  getActive(): boolean;
+  suspend(): void;
+  resume(): void;
   getSnapshot(): RevisionSnapshot<CalendarState>;
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
@@ -94,9 +98,11 @@ function constructCalendar(options: CalendarOptions): DOMTemporalResult<Calendar
   const requestedValue = controls.value ? options.value : options.defaultValue;
   const requestedHighlight = controls.highlighted ? options.highlightedValue : options.defaultHighlightedValue;
   const initial = tryCreateCalendarState({
+    ...options.defaultState,
     referenceDate: options.referenceDate ?? currentReferenceDate(),
     ...(requestedValue === undefined ? {} : { value: requestedValue }),
     ...(requestedHighlight === undefined ? {} : { highlighted: requestedHighlight }),
+    ...(requestedHighlight !== undefined && options.defaultState !== undefined && compareDateValues(requestedHighlight, options.defaultState.highlighted) !== 0 ? { view: { year: requestedHighlight.year, month: requestedHighlight.month } } : {}),
   });
   const runtime = createDOMTemporalController<CalendarState, CalendarEvent, CalendarCommand, CalendarCommand>({
     initial,
@@ -133,10 +139,13 @@ class DOMCalendar implements CalendarConnection {
   readonly #runtime: DOMTemporalController<CalendarState, CalendarEvent, CalendarCommand>;
   readonly #controls: { readonly value: boolean; readonly highlighted: boolean };
   #active = true;
+  #disconnected = false;
+  #focusGeneration = 0;
   readonly #keydown = (event: KeyboardEvent): void => {
     if (this.handleKeyboardEvent(event)) event.preventDefault();
   };
   readonly #click = (event: MouseEvent): void => {
+    if (!this.#active) return;
     const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-calendar-id]') : null;
     if (target === null || !this.#grid.contains(target)) return;
     const parsed = parseDateValue(target.dataset['calendarId'] ?? '');
@@ -152,13 +161,25 @@ class DOMCalendar implements CalendarConnection {
     this.#grid = options.grid ?? options.root;
     this.#runtime = runtime;
     this.#controls = controls;
-    this.#grid.addEventListener('keydown', this.#keydown);
-    this.#grid.addEventListener('click', this.#click);
+    this.#bindNative();
     this.#grid.setAttribute('role', 'grid');
     setInteractionAttributes(this.#grid, options);
     this.refresh();
   }
 
+  public getActive(): boolean { return this.#active; }
+  public suspend(): void {
+    if (!this.#active) return;
+    this.#active = false; this.#focusGeneration += 1;
+    this.#grid.removeEventListener('keydown', this.#keydown); this.#grid.removeEventListener('click', this.#click);
+    this.#options.onUpdate?.();
+  }
+  public resume(): void {
+    if (this.#disconnected || this.#active) return;
+    this.#active = true;
+    try { this.#bindNative(); this.refresh(); this.#options.onUpdate?.(); }
+    catch (error) { try { this.suspend(); } catch { /* Preserve the resumption failure. */ } throw error; }
+  }
   public getSnapshot(): RevisionSnapshot<CalendarState> { return this.#runtime.getSnapshot(); }
   public getMonth(): readonly (readonly DateValue[])[] {
     return createCalendarMonth(this.getSnapshot().state.view, this.#options.policies?.weekStartsOn);
@@ -208,19 +229,22 @@ class DOMCalendar implements CalendarConnection {
     if (!result.ok) return false;
     this.refresh();
     this.#options.onUpdate?.();
-    if (result.commands.some((command) => command.type === 'highlight-changed')) {
-      queueMicrotask(() => { if (this.#active) this.focusCurrent(); });
+    if (this.#active && result.commands.some((command) => command.type === 'highlight-changed')) {
+      const generation = this.#focusGeneration;
+      queueMicrotask(() => { if (this.#active && generation === this.#focusGeneration) this.focusCurrent(); });
     }
     return true;
   }
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
+    if (!this.#active) return false;
     const semantic = toCalendarEvent(event);
     return semantic !== null && this.handleEvent(semantic);
   }
   public focusCurrent(): void {
-    focusDatePickerEntry(this.#grid);
+    if (this.#active) focusDatePickerEntry(this.#grid);
   }
   public refresh(): void {
+    if (this.#disconnected) return;
     const state = this.getSnapshot().state;
     if (this.#options.label === undefined) this.#grid.removeAttribute('aria-label');
     else this.#grid.setAttribute('aria-label', this.#options.label);
@@ -234,9 +258,11 @@ class DOMCalendar implements CalendarConnection {
     });
   }
   public disconnect(): void {
-    this.#active = false;
-    this.#grid.removeEventListener('keydown', this.#keydown);
-    this.#grid.removeEventListener('click', this.#click);
+    if (this.#disconnected) return;
+    this.#disconnected = true; this.suspend();
+  }
+  #bindNative(): void {
+    this.#grid.addEventListener('keydown', this.#keydown); this.#grid.addEventListener('click', this.#click);
   }
 }
 

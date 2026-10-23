@@ -2,7 +2,8 @@ import {
   computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
-import { createTagsInput, type TagsInputConnection, type TagsInputPolicies } from '@sectile/dom/tags-input';
+import { createTagsInput, type TagsInputConnection, type TagsInputPolicies, type TagsInputRemoveLabelResolver } from '@sectile/dom/tags-input';
+export type { TagsInputRemoveLabelResolver } from '@sectile/dom/tags-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
@@ -20,6 +21,7 @@ export interface TagsInputRootProps {
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly label?: string;
+  readonly removeLabel?: TagsInputRemoveLabelResolver;
   readonly name?: string;
   readonly form?: string;
   readonly required?: boolean;
@@ -35,6 +37,7 @@ export interface TagsInputPartProps { readonly as?: PrimitiveAs; readonly asChil
 interface RootContext {
   readonly state: ComputedRef<TagsInputRootSlotProps>;
   readonly label: ComputedRef<string>;
+  readonly removeLabel: ComputedRef<TagsInputRemoveLabelResolver | undefined>;
   registerRoot(element?: HTMLElement): void;
   registerInput(element?: HTMLInputElement): void;
   registerDelete(element: HTMLElement, index: number): void;
@@ -56,6 +59,7 @@ export const TagsInputRoot = defineComponent({
     inputValue: { type: String, default: undefined }, defaultInputValue: { type: String, default: '' },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false },
     label: { type: String, default: 'Tags' }, name: { type: String, default: undefined },
+    removeLabel: { type: Function as PropType<TagsInputRemoveLabelResolver>, default: undefined },
     form: { type: String, default: undefined }, required: { type: Boolean, default: false },
     policies: { type: Object as PropType<TagsInputPolicies>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
@@ -118,7 +122,10 @@ export const TagsInputRoot = defineComponent({
         ...(valueControlled ? { value: props.modelValue as readonly string[] } : {}),
         ...(inputControlled ? { inputValue: props.inputValue as string } : {}),
       });
-      if (!result.ok) throw new TypeError(result.error.message);
+      if (!result.ok) {
+        if (result.error.code === 'invalid-tags-input-current') { requestConnect(); return; }
+        throw new TypeError(result.error.message);
+      }
       refresh();
     };
     const connect = (): void => {
@@ -127,6 +134,7 @@ export const TagsInputRoot = defineComponent({
       if (!mounted || root.value === null || input.value === null) return;
       connection.value = createTagsInput({
         root: root.value, input: input.value, direction: direction.value,
+        removeLabel: (value, index) => props.removeLabel?.(value, index),
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value: props.modelValue as readonly string[] } : { defaultValue: localTags.value }),
         ...(inputControlled
@@ -169,6 +177,7 @@ export const TagsInputRoot = defineComponent({
     };
     provide<RootContext>(rootKey, {
       state, label: computed(() => props.label),
+      removeLabel: computed(() => props.removeLabel),
       registerRoot: (element) => { root.value = element ?? null; }, registerInput: (element) => { input.value = element ?? null; },
       registerDelete: (element, index) => connection.value?.setTagAttributes(element, index),
       setInputComposing,
@@ -185,6 +194,7 @@ export const TagsInputRoot = defineComponent({
       connection.value = undefined;
     });
     watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], requestConnect);
+    watch(() => props.removeLabel, refreshDeletes, { flush: 'post' });
     watch([() => props.modelValue, () => props.inputValue], () => {
       proposedInputValue = null;
       syncControlledValues();
@@ -247,6 +257,7 @@ export const TagsInputItemDelete = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
       elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDelete(node, item.state.value.index); },
+      'aria-label': root.removeLabel.value?.(item.state.value.value, item.state.value.index) ?? attrs['aria-label'],
       'data-sectile-tags-delete': item.state.value.index, 'data-scope': 'tags-input', 'data-part': 'item-delete',
       disabled: item.state.value.disabled || item.state.value.readonly,
     }), { default: () => slots['default']?.(item.state.value) });

@@ -4,7 +4,7 @@ import {
   type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
 import type { TextEditingState } from '@sectile/core/text';
-import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from '../form/control.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl, useFormMetadataPresence, useFormSubmissionProps } from '../form/control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
@@ -27,6 +27,8 @@ interface RangeFieldSlotProps<Value> {
 }
 
 interface RangeFieldProps<Value, Policies> {
+  readonly name?: string | undefined;
+  readonly form?: string | undefined;
   readonly modelValue: Value | null | undefined;
   readonly defaultValue: Value | null;
   readonly policies: Policies | undefined;
@@ -39,13 +41,14 @@ interface RangeFieldProps<Value, Policies> {
   readonly asChild: boolean;
 }
 
-interface RangeFieldOptions<Value, Policies> {
+interface RangeFieldOptions<Value, Policies, State = never> {
   readonly startInput: HTMLInputElement;
   readonly endInput: HTMLInputElement;
   readonly value?: Value | null;
   readonly defaultValue?: Value | null;
   readonly defaultStartInputState?: TextEditingState;
   readonly defaultEndInputState?: TextEditingState;
+  readonly defaultState?: State;
   readonly policies?: Policies;
   readonly disabled: boolean;
   readonly readOnly: boolean;
@@ -65,19 +68,30 @@ interface RangeFieldConnection<Value, State> {
   disconnect(): void;
 }
 
-export interface NativeRangeFieldConfig<Value, Policies, State extends RangeFieldState<Value>> {
+export interface NativeRangePresentation<Value, Policies, State extends RangeFieldState<Value>> {
+  readonly inputMode?: 'numeric' | 'text';
+  readonly placeholder?: string;
+  initial(options: { readonly value: Value | null }): RangeResult<State>;
+  create(options: RangeFieldOptions<Value, Policies, State>): RangeFieldConnection<Value, State>;
+  rebase?(state: State, start: TextEditingState, end: TextEditingState): RangeResult<State>;
+}
+export interface NativeRangeFieldConfig<Value, Policies, State extends RangeFieldState<Value>> extends NativeRangePresentation<Value, Policies, State> {
   readonly name: string;
   readonly scope: string;
   readonly contextKey: symbol;
   readonly reset?: boolean;
-  initial(options: { readonly value: Value | null }): RangeResult<State>;
-  create(options: RangeFieldOptions<Value, Policies>): RangeFieldConnection<Value, State>;
+  usePresentation?(): ComputedRef<NativeRangePresentation<Value, Policies, State> | undefined>;
 }
 
 interface RangeFieldContext<Value> {
   readonly slotProps: ComputedRef<RangeFieldSlotProps<Value>>;
+  readonly required: boolean;
   readonly startInput: ShallowRef<HTMLInputElement | null>;
   readonly endInput: ShallowRef<HTMLInputElement | null>;
+  readonly placeholder: ComputedRef<string | undefined>;
+  readonly inputMode: ComputedRef<'numeric' | 'text'>;
+  readonly submissionProps: Readonly<Record<'start' | 'end', ComputedRef<Readonly<Record<string, unknown>>>>>;
+  isInputComposing(endpoint: 'start' | 'end'): boolean;
   setInputComposing(endpoint: 'start' | 'end', composing: boolean): void;
 }
 
@@ -89,7 +103,9 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
   }, SlotsType<{ default: (props: RangeFieldSlotProps<Value>) => VNodeChild }>>,
 ): () => VNodeChild {
   const controlled = useControlledStateInvariant(config.name, 'modelValue', () => props.modelValue);
-  const initial = config.initial({ value: controlled ? props.modelValue as Value | null : props.defaultValue });
+  const requested = config.usePresentation?.();
+  const presentation = shallowRef<NativeRangePresentation<Value, Policies, State>>(requested?.value ?? config);
+  const initial = presentation.value.initial({ value: controlled ? props.modelValue as Value | null : props.defaultValue });
   if (!initial.ok) throw new TypeError(initial.error.message);
   const snapshot = shallowRef<State>(initial.value);
   const startInput = shallowRef<HTMLInputElement | null>(null);
@@ -97,30 +113,60 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
   const root = shallowRef<HTMLElement | null>(null);
   let mounted = false;
   let connection: RangeFieldConnection<Value, State> | null = null;
+  const submissions = [
+    { element: startInput, relativeName: 'start', capabilities: hiddenInputSubmissionCapabilities },
+    { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },
+  ] as const;
+  const explicit = useFormMetadataPresence();
+  const endpointSubmissionProps = (endpoint: 'start' | 'end', index: 0 | 1) => {
+    const inherited = useFormSubmissionProps(submissions[index]);
+    return computed<Readonly<Record<string, unknown>>>(() => {
+      const attributes = { ...inherited.value };
+      if (explicit.value.includes('name')) {
+        const name = props.name;
+        // Native names are opaque namespaces; FormField owns domain path encoding.
+        attributes['name'] = name === undefined || name === '' ? name : `${name}.${endpoint}`;
+      }
+      if (explicit.value.includes('form')) attributes['form'] = props.form;
+      return attributes;
+    });
+  };
+  const submissionProps = { start: endpointSubmissionProps('start', 0), end: endpointSubmissionProps('end', 1) };
   const participation = useCompositeFormControl({
     root,
     focusTarget: startInput,
-    submissions: () => [
-      { element: startInput, relativeName: 'start', capabilities: hiddenInputSubmissionCapabilities },
-      { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },
-    ],
-    ...(config.reset ? { reset: () => queueMicrotask(() => {
-      if (!controlled) snapshot.value = initial.value;
-      mount();
-    }) } : {}),
+    submissions,
+    ...(config.reset ? { reset: () => resetTask?.schedule() } : {}),
   });
-  const refresh = (): void => { if (connection !== null) snapshot.value = connection.getSnapshot().state; };
-  const mount = (preserveNative = false): void => {
+  const refresh = (): void => {
+    if (connection !== null) snapshot.value = connection.getSnapshot().state;
+    if ((requested?.value ?? config) !== presentation.value) presentationTask?.schedule();
+  };
+  const mount = (preserveNative = false, convertedState?: State): void => {
     if (!mounted || startInput.value === null || endInput.value === null) return;
-    const startState = preserveNative && connection !== null
+    let startState = preserveNative && connection !== null
       ? captureNativeTextState(startInput.value, snapshot.value.start.inputState.snapshot.text)
       : undefined;
-    const endState = preserveNative && connection !== null
+    let endState = preserveNative && connection !== null
       ? captureNativeTextState(endInput.value, snapshot.value.end.inputState.snapshot.text)
       : undefined;
-    connection?.disconnect();
+    const wanted = requested?.value ?? config;
+    let next = presentation.value;
+    let restored = snapshot.value;
+    if (wanted !== next && startState !== undefined && endState !== undefined) {
+      const converted = convertedState === undefined
+        ? wanted.rebase?.(snapshot.value, startState, endState)
+        : { ok: true as const, value: convertedState };
+      if (converted?.ok) { next = wanted; restored = converted.value; startState = restored.start.inputState; endState = restored.end.inputState; }
+    } else if (!preserveNative) {
+      next = wanted;
+      const converted = next.initial({ value: controlled ? props.modelValue as Value | null : snapshot.value.value });
+      if (!converted.ok) throw new TypeError(converted.error.message);
+      restored = converted.value;
+    }
+    connection?.disconnect(); presentation.value = next;
     const fieldOptions: {
-      -readonly [Key in keyof RangeFieldOptions<Value, Policies>]: RangeFieldOptions<Value, Policies>[Key];
+      -readonly [Key in keyof RangeFieldOptions<Value, Policies, State>]: RangeFieldOptions<Value, Policies, State>[Key];
     } = {
       startInput: startInput.value,
       endInput: endInput.value,
@@ -132,19 +178,31 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     };
     if (controlled) fieldOptions.value = props.modelValue as Value | null;
     else fieldOptions.defaultValue = snapshot.value.value;
+    fieldOptions.defaultState = restored;
     if (startState !== undefined) fieldOptions.defaultStartInputState = startState;
     if (endState !== undefined) fieldOptions.defaultEndInputState = endState;
     const { policies, startLabel, endLabel } = props;
     if (policies !== undefined) fieldOptions.policies = policies;
     if (startLabel !== undefined) fieldOptions.startLabel = startLabel;
     if (endLabel !== undefined) fieldOptions.endLabel = endLabel;
-    connection = config.create(fieldOptions);
+    connection = next.create(fieldOptions);
     refresh();
   };
   const mountTask = useNextTickTask(() => mount(true));
+  const resetTask = config.reset ? useNextTickTask(() => {
+    if (!controlled) snapshot.value = initial.value;
+    mount();
+  }) : undefined;
   let composingInputs = 0;
   let reconnectPending = false;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  const settlePresentation = (): void => {
+    if (!mounted || composingInputs !== 0 || (requested?.value ?? config) === presentation.value || startInput.value === null || endInput.value === null) return;
+    const wanted = requested?.value ?? config;
+    const converted = wanted.rebase?.(snapshot.value, captureNativeTextState(startInput.value, snapshot.value.start.inputState.snapshot.text), captureNativeTextState(endInput.value, snapshot.value.end.inputState.snapshot.text));
+    if (converted?.ok) mount(true, converted.value);
+  };
+  const presentationTask = requested === undefined ? undefined : useNextTickTask(settlePresentation);
   const requestMount = (): void => {
     if (composingInputs !== 0) { reconnectPending = true; return; }
     mountTask.schedule();
@@ -153,6 +211,7 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     const bit = endpoint === 'start' ? 1 : 2;
     if (composing) composingInputs |= bit;
     else composingInputs &= ~bit;
+    if (composingInputs === 0 && (requested?.value ?? config) !== presentation.value) presentationTask?.schedule();
     if (composingInputs !== 0 || !reconnectPending || reconnectTimer !== null) return;
     reconnectTimer = setTimeout(() => {
       reconnectTimer = null;
@@ -168,7 +227,7 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     reconnectTimer = null;
     reconnectPending = false;
     composingInputs = 0;
-    mountTask.cancel();
+    mountTask.cancel(); resetTask?.cancel(); presentationTask?.cancel();
     connection?.disconnect();
     connection = null;
   });
@@ -177,9 +236,11 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     const result = connection.syncControlledValues({ value });
     if (!result.ok) throw new TypeError(result.error.message);
     snapshot.value = result.value.state;
+    if ((requested?.value ?? config) !== presentation.value) presentationTask?.schedule();
   });
   watch([() => props.policies, () => props.disabled, () => props.readonly,
     () => props.required, () => props.startLabel, () => props.endLabel], requestMount);
+  if (requested !== undefined) watch(requested, settlePresentation);
   const slotProps = computed<RangeFieldSlotProps<Value>>(() => Object.freeze({
     value: snapshot.value.value,
     startText: snapshot.value.start.inputState.snapshot.text,
@@ -188,7 +249,14 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     disabled: props.disabled,
     readonly: props.readonly,
   }));
-  provide<RangeFieldContext<Value>>(config.contextKey, { slotProps, startInput, endInput, setInputComposing });
+  provide<RangeFieldContext<Value>>(config.contextKey, {
+    slotProps, startInput, endInput, setInputComposing,
+    get required() { return props.required; },
+    isInputComposing: (endpoint) => (composingInputs & (endpoint === 'start' ? 1 : 2)) !== 0,
+    placeholder: computed(() => presentation.value.placeholder),
+    inputMode: computed(() => presentation.value.inputMode ?? 'numeric'),
+    submissionProps,
+  });
   return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, {
     as: props.as, asChild: props.asChild,
     elementRef: (element: unknown) => { root.value = element as HTMLElement | null; },
@@ -206,11 +274,13 @@ export function createNativeRangeFieldInput(
     setup(_props, { attrs }) {
       const context = inject<RangeFieldContext<unknown>>(contextKey);
       if (context === undefined) throw new TypeError(`${name} must be used inside ${rootName}.`);
-      return (): VNodeChild => h('input', mergeProps(attrs, {
+      return (): VNodeChild => h('input', mergeProps(context.submissionProps[endpoint].value, attrs, {
         ref: (element: unknown) => { context[endpoint === 'start' ? 'startInput' : 'endInput'].value = element as HTMLInputElement | null; },
-        type: 'text', inputmode: 'numeric', placeholder,
-        value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText,
-        disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly,
+        type: 'text', inputmode: context.inputMode.value, placeholder: context.placeholder.value ?? placeholder,
+        value: context.isInputComposing(endpoint)
+          ? context[endpoint === 'start' ? 'startInput' : 'endInput'].value?.value
+          : endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText,
+        disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly, required: context.required,
         onCompositionstart: () => context.setInputComposing(endpoint, true),
         onCompositionend: () => context.setInputComposing(endpoint, false),
         'aria-disabled': String(context.slotProps.value.disabled),

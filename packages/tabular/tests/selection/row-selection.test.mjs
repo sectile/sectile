@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createTabularModel } from '../../.verification-dist/model/state.js';
+import { createDataTable, getAllMatchingSelectionState } from '../../.verification-dist/profiles/table.js';
 import {
   createExplicitRowSelection,
   createGroupLeafSelectionTarget,
@@ -13,6 +14,77 @@ import {
 } from '../../.verification-dist/model/selection.js';
 
 const limits = createTabularModel({ columns: [] }).limits;
+
+function bulkSnapshot(selection, total, rows = [{ kind: 'leaf', id: 'a', cells: { name: 'A' } }, { kind: 'leaf', id: 'b', cells: { name: 'B' } }], stale = false) {
+  const table = createDataTable({ columns: [{ id: 'name' }], initialValues: { rowSelection: selection,
+    accessState: { kind: 'page', page: 1, itemsPerPage: Math.max(1, rows.length), visibleRowCount: null, pagination: null },
+  } });
+  try {
+    if (total !== 'no-view') {
+      const request = table.getSnapshot().state.requestState.pendingRequest;
+      assert.notEqual(request, null);
+      assert.equal(table.synchronizeView({ ...request, viewRevision: 1,
+        matchingLeafCount: total === 'unknown' ? { kind: 'unknown' } : { kind: 'known', value: total },
+        visibleRowCount: { kind: 'known', value: rows.length }, rows,
+        columnSchema: { revision: request.columnSchemaRevision, columns: [{ id: 'name' }], headers: [] }, removedRowIDs: [],
+      }).ok, true);
+    }
+    if (stale) assert.equal(table.requestView().ok, true);
+    return table.getSnapshot();
+  } finally { table.dispose(); }
+}
+
+test('TAB-SEL-09: all-matching state distinguishes matching totals, visibility and exclusions', () => {
+  const explicit = rowIDs => ({ kind: 'explicit-rows', rowIDs });
+  const all = excludedRowIDs => ({ kind: 'all-matching', sourceGeneration: 0, queryRevision: 0, excludedRowIDs });
+  const cases = [
+    ['no selection', explicit([]), 2, 'unchecked'],
+    ['partial visible selection', explicit(['a']), 2, 'indeterminate'],
+    ['complete matching result', explicit(['a', 'b']), 2, 'checked'],
+    ['off-page only selection', explicit(['elsewhere']), 2, 'unchecked'],
+    ['visible page is not the whole result', explicit(['a', 'b']), 5, 'indeterminate'],
+    ['unknown matching total', explicit(['a', 'b']), 'unknown', 'indeterminate'],
+    ['all matching', all([]), 2, 'checked'],
+    ['one exclusion', all(['a']), 2, 'indeterminate'],
+    ['all excluded', all(['a', 'b']), 2, 'unchecked'],
+    ['unknown total with exclusions', all(['a', 'b']), 'unknown', 'indeterminate'],
+    ['no view with explicit selection', explicit(['a']), 'no-view', 'unchecked'],
+    ['no view with all matching', all([]), 'no-view', 'checked'],
+    ['no view with exclusions', all(['a']), 'no-view', 'indeterminate'],
+  ];
+  for (const [label, selection, total, expected] of cases)
+    assert.equal(getAllMatchingSelectionState(bulkSnapshot(selection, total)), expected, label);
+  for (const selection of [explicit(['a']), all([])])
+    assert.equal(getAllMatchingSelectionState(bulkSnapshot(selection, 0, [])), 'unchecked', 'known empty overrides selection mode');
+  const grouped = bulkSnapshot(explicit(['a', 'b']), 2, [
+    { kind: 'group', id: 'team', parentGroupID: null, depth: 0, expanded: true, cells: { name: 'Team' } },
+    { kind: 'leaf', id: 'a', cells: { name: 'A' } }, { kind: 'leaf', id: 'b', cells: { name: 'B' } },
+  ]);
+  assert.equal(getAllMatchingSelectionState(grouped), 'checked', 'group rows do not inflate the matching leaf count');
+  const stale = bulkSnapshot(explicit(['a', 'b']), 2, undefined, true);
+  assert.equal(stale.state.acceptedViewState.kind, 'stale');
+  assert.equal(getAllMatchingSelectionState(stale), 'checked', 'retained stale view keeps its display contract');
+});
+
+test('TAB-SEL-10: detached selection normalization does not multiply by visible rows', t => {
+  const counts = [];
+  for (const visible of [1, 1_000]) {
+    const ids = Array.from({ length: 128 }, (_, index) => `row-${index}`);
+    const snapshot = bulkSnapshot({ kind: 'explicit-rows', rowIDs: ids }, visible,
+      Array.from({ length: visible }, (_, index) => ({ kind: 'leaf', id: `row-${index}`, cells: { name: String(index) } })));
+    let reads = 0;
+    const detachedIDs = ids.map((_, index) => `row-${index}`);
+    for (let index = 0; index < detachedIDs.length; index += 1) Object.defineProperty(detachedIDs, index, {
+      enumerable: true, get() { reads += 1; return `row-${index}`; },
+    });
+    const detached = { ...snapshot, state: { ...snapshot.state, rowSelection: { kind: 'explicit-rows', rowIDs: Object.freeze(detachedIDs) } } };
+    assert.equal(getAllMatchingSelectionState(detached), visible === 1 ? 'checked' : 'indeterminate');
+    counts.push(reads);
+  }
+  assert.ok(counts[0] > 0, 'the detached normalization path is exercised');
+  assert.equal(counts[1], counts[0], 'selected-ID reads stay independent of visible row cardinality');
+  t.diagnostic(JSON.stringify({ selectionIDs: 128, visibleRows: [1, 1_000], selectedIDReads: counts }));
+});
 
 test('TAB-SEL-01: explicit selection toggles without depending on current visibility', () => {
   const initial = createExplicitRowSelection(['off-page', 'visible'], limits);

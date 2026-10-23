@@ -20,6 +20,8 @@ import {
 
 export interface TreeGridRootProps {
   readonly rows: readonly TreeGridRowInput<string, string>[];
+  /** Column labels rendered by TreeGridHeader; data row indexes remain one-based. */
+  readonly headers?: readonly string[];
   readonly getCellValue: (id: string) => string;
   readonly setCellValue: (id: string, value: string) => void;
   readonly modelValue?: string | null;
@@ -43,17 +45,23 @@ export interface TreeGridRootSlotProps { readonly value: string | null; readonly
 export interface TreeGridRowSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly expanded: boolean }
 export interface TreeGridCellSlotProps extends TreeGridRootSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly editing: boolean }
 export interface TreeGridPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface TreeGridHeaderCellProps extends TreeGridPartProps { readonly columnIndex: number }
+export interface TreeGridHeaderCellSlotProps { readonly columnIndex: number; readonly label: string }
+export interface TreeGridGroupProps extends TreeGridPartProps, ConditionalPresenceProps { readonly for: string }
 export interface TreeGridEditorProps extends ConditionalPresenceProps { readonly for: string; readonly label?: string }
 
 interface Context {
   readonly state: ComputedRef<TreeGridRootSlotProps>;
   readonly expandedRows: ComputedRef<ReadonlySet<string>>;
+  readonly headers: ComputedRef<readonly string[]>;
+  readonly headerCount: ComputedRef<number>;
   registerRow(element: HTMLElement, rowIndex: number, level: number, expanded: boolean | undefined): void;
   registerCell(element: HTMLElement, id: string, columnIndex: number): void;
   registerDisclosure(element: HTMLElement, id: string): void;
   registerEditor(element: HTMLInputElement, id: string, label: string | undefined): void;
-  setEditorFocused(focused: boolean): void;
-  setEditorComposing(composing: boolean): void;
+  unregisterEditor(element: HTMLInputElement): void;
+  setEditorFocused(element: HTMLInputElement, focused: boolean): void;
+  setEditorComposing(element: HTMLInputElement, composing: boolean): void;
   handleEditorKeydown(event: KeyboardEvent): void;
 }
 interface TreeGridConnectionOwner {
@@ -71,6 +79,7 @@ export const TreeGridRoot = defineComponent({
   name: 'SectileTreeGridRoot', inheritAttrs: false,
   props: {
     rows: { type: Array as PropType<readonly TreeGridRowInput<string, string>[]>, required: true },
+    headers: { type: Array as PropType<readonly string[]>, default: () => [] },
     getCellValue: { type: Function as PropType<TreeGridCellValueResolver>, required: true }, setCellValue: { type: Function as PropType<TreeGridCellValueSetter>, required: true },
     modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
     expandedValue: { type: Array as PropType<readonly string[]>, default: undefined }, defaultExpandedValue: { type: Array as PropType<readonly string[]>, default: () => [] },
@@ -82,6 +91,15 @@ export const TreeGridRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:expandedValue': (_value: readonly string[]): boolean => true, 'update:highlightedValue': (_value: string | null): boolean => true, 'update:editMode': (_value: TreeGridEditMode): boolean => true },
   slots: Object as SlotsType<{ default: (props: TreeGridRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const dataColumnCount = computed(() => maxTreeGridColumnCount(props.rows));
+    const headers = computed(() => props.headers);
+    const headerCount = computed(() => headers.value.length === 0 ? 0 : 1);
+    const columnCount = computed(() => {
+      if (headerCount.value && headers.value.length < dataColumnCount.value) {
+        throw new TypeError('TreeGrid headers must label every data column.');
+      }
+      return Math.max(dataColumnCount.value, headers.value.length);
+    });
     const element = shallowRef<HTMLElement>(); const connection = shallowRef<TreeGridConnection<string, string>>();
     let connectionOwner: TreeGridConnectionOwner | undefined;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
@@ -106,10 +124,10 @@ export const TreeGridRoot = defineComponent({
     const refreshParts = (): void => {
       if (element.value === undefined || connection.value === undefined) return;
       connection.value.setGridAttributes(
-        props.rows.length,
-        maxTreeGridColumnCount(props.rows),
+        props.rows.length + headerCount.value,
+        columnCount.value,
       );
-      element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-row]').forEach((node) => connection.value?.setRowAttributes(node, { rowIndex: numberData(node.dataset['rowIndex'], 1), level: numberData(node.dataset['level'], 1), ...(node.dataset['expandable'] === undefined ? {} : { expanded: node.dataset['expanded'] !== undefined }) }));
+      element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-row]').forEach((node) => connection.value?.setRowAttributes(node, { rowIndex: numberData(node.dataset['rowIndex'], 1) + headerCount.value, level: numberData(node.dataset['level'], 1), ...(node.dataset['expandable'] === undefined ? {} : { expanded: node.dataset['expanded'] !== undefined }) }));
       element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-cell]').forEach((node) => { const id = node.dataset['sectileTreeGridCell']; if (id !== undefined) connection.value?.setCellAttributes(node, { id, columnIndex: numberData(node.dataset['columnIndex'], 1) }); });
       element.value.querySelectorAll<HTMLElement>('[data-sectile-tree-grid-disclosure]').forEach((node) => { const id = node.dataset['sectileTreeGridDisclosure']; if (id !== undefined) connection.value?.setDisclosureAttributes(node, id); });
       element.value.querySelectorAll<HTMLInputElement>('[data-sectile-tree-grid-editor]').forEach((node) => { const id = node.dataset['sectileTreeGridEditor']; if (id !== undefined) connection.value?.bindEditor(node, { id, ...(node.getAttribute('aria-label') === null ? {} : { label: node.getAttribute('aria-label') as string }) }); });
@@ -174,11 +192,11 @@ export const TreeGridRoot = defineComponent({
       refreshParts(); refresh();
     };
     let mounted = false;
-    let editorFocused = false;
-    let editorComposing = false;
+    let editorFocused: HTMLInputElement | undefined;
+    let editorComposing: HTMLInputElement | undefined;
     let reconnectPending = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    const editorActive = (): boolean => editorFocused || editorComposing;
+    const editorActive = (): boolean => editorFocused !== undefined || editorComposing !== undefined;
     const requestConnect = (): void => {
       if (editorActive()) {
         reconnectPending = true;
@@ -195,18 +213,26 @@ export const TreeGridRoot = defineComponent({
         connect();
       }, 0);
     };
-    const setEditorFocused = (focused: boolean): void => {
-      editorFocused = focused;
+    const setEditorFocused = (node: HTMLInputElement, focused: boolean): void => {
+      if (focused) editorFocused = node;
+      else if (editorFocused === node) editorFocused = undefined;
       schedulePendingConnect();
     };
-    const setEditorComposing = (composing: boolean): void => {
-      editorComposing = composing;
+    const setEditorComposing = (node: HTMLInputElement, composing: boolean): void => {
+      if (composing) editorComposing = node;
+      else if (editorComposing === node) editorComposing = undefined;
       schedulePendingConnect();
     };
     provide<Context>(key, {
-      state, expandedRows, registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex, level, ...(expanded === undefined ? {} : { expanded }) }),
+      state, expandedRows, headers, headerCount,
+      registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex: rowIndex + headerCount.value, level, ...(expanded === undefined ? {} : { expanded }) }),
       registerCell: (node, id, columnIndex) => connection.value?.setCellAttributes(node, { id, columnIndex }), registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       registerEditor: (node, id, label) => connection.value?.bindEditor(node, { id, ...(label === undefined ? {} : { label }) }),
+      unregisterEditor: (node) => {
+        connection.value?.unbindEditor(node);
+        setEditorFocused(node, false);
+        setEditorComposing(node, false);
+      },
       setEditorFocused,
       setEditorComposing,
       handleEditorKeydown: (event) => {
@@ -224,17 +250,21 @@ export const TreeGridRoot = defineComponent({
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
       reconnectPending = false;
-      editorFocused = false;
-      editorComposing = false;
+      editorFocused = undefined;
+      editorComposing = undefined;
       connection.value?.disconnect();
     });
     watch([() => props.rows, () => props.getCellValue, () => props.setCellValue, () => props.disabled, () => props.readonly, () => props.policies], requestConnect);
+    watch(headers, refreshParts, { flush: 'post' });
     watch([() => props.modelValue, () => props.expandedValue, () => props.highlightedValue, () => props.editMode], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({ ...(controlled.value ? { value: props.modelValue } : {}), ...(controlled.expanded ? { expandedValue: props.expandedValue } : {}), ...(controlled.highlighted ? { highlightedValue: props.highlightedValue } : {}), ...(controlled.editMode ? { editMode: props.editMode } : {}) });
       if (!result.ok) throw new TypeError(result.error.message); refresh();
     });
-    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; }, 'data-scope': 'tree-grid', 'data-part': 'root', 'data-edit-mode': state.value.editMode }), { default: () => slots['default']?.(state.value) });
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
+      role: 'treegrid', 'aria-rowcount': props.rows.length + headerCount.value, 'aria-colcount': columnCount.value, 'data-column-count': columnCount.value,
+      'data-scope': 'tree-grid', 'data-part': 'root', 'data-edit-mode': state.value.editMode,
+    }), { default: () => slots['default']?.(state.value) });
   },
 });
 
@@ -243,15 +273,63 @@ export type TreeGridExpandedValueChangeHandler = (value: readonly string[]) => v
 export type TreeGridHighlightedValueChangeHandler = (value: string | null) => void;
 export type TreeGridEditModeChangeHandler = (value: TreeGridEditMode) => void;
 
+/** Authored alongside data rows; the root owns the count and data-index offset. */
+export const TreeGridHeader = defineComponent({
+  name: 'SectileTreeGridHeader', inheritAttrs: false, props: partProps,
+  slots: Object as SlotsType<{ default: (props: { readonly headers: readonly string[] }) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeGridHeader');
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild, role: 'row', 'aria-rowindex': 1, hidden: root.headerCount.value === 0,
+      'data-scope': 'tree-grid', 'data-part': 'header',
+    }), { default: () => slots['default']?.({ headers: root.headers.value })
+      ?? root.headers.value.map((_label, index) => h(TreeGridHeaderCell, { key: index, columnIndex: index + 1 })) });
+  },
+});
+
+export const TreeGridHeaderCell = defineComponent({
+  name: 'SectileTreeGridHeaderCell', inheritAttrs: false,
+  props: { columnIndex: { type: Number, required: true }, ...partProps },
+  slots: Object as SlotsType<{ default: (props: TreeGridHeaderCellSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeGridHeaderCell');
+    return (): VNodeChild => {
+      const label = root.headers.value[props.columnIndex - 1] ?? '';
+      return h(Primitive, mergeProps(attrs, {
+        as: props.as, asChild: props.asChild, role: 'columnheader', 'aria-colindex': props.columnIndex,
+        'data-scope': 'tree-grid', 'data-part': 'headerCell',
+      }), { default: () => slots['default']?.({ columnIndex: props.columnIndex, label }) ?? label });
+    };
+  },
+});
+
 export const TreeGridRow = defineComponent({
   name: 'SectileTreeGridRow', inheritAttrs: false,
   props: { value: { type: String, required: true }, rowIndex: { type: Number, required: true }, level: { type: Number, default: 1 }, expandable: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('TreeGridRow'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.value, expanded: root.expandedRows.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerRow(node, props.rowIndex, props.level, props.expandable ? state.value.expanded : undefined); },
+    role: 'row', 'aria-rowindex': props.rowIndex + root.headerCount.value, 'aria-level': props.level,
+    'aria-expanded': props.expandable ? state.value.expanded : undefined,
     'data-sectile-tree-grid-row': props.value, 'data-row-index': props.rowIndex, 'data-level': props.level, 'data-expandable': props.expandable ? '' : undefined,
     'data-expanded': props.expandable && state.value.expanded ? '' : undefined, 'data-scope': 'tree-grid', 'data-part': 'row',
   }), { default: () => slots['default']?.(state.value) }); },
+});
+
+/** Rowgroup visibility borrows the root expansion owner and the shared Presence lifecycle. */
+export const TreeGridGroup = defineComponent({
+  name: 'SectileTreeGridGroup', inheritAttrs: false,
+  props: { for: { type: String, required: true }, ...partProps, ...conditionalPresenceProps },
+  slots: Object as SlotsType<{ default: (props: TreeGridRootSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeGridGroup'), expanded = computed(() => root.expandedRows.value.has(props.for));
+    const presence = useConditionalPresence(expanded, computed(() => props.forcePresent));
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild, elementRef: presence.register, role: 'rowgroup', hidden: presence.hidden.value,
+      ...(!expanded.value && presence.present.value ? { inert: true, 'aria-hidden': 'true' } : {}),
+      'data-scope': 'tree-grid', 'data-part': 'group', 'data-state': expanded.value ? 'open' : 'closed',
+    }), { default: () => slots['default']?.(root.state.value) });
+  },
 });
 
 export const TreeGridCell = defineComponent({
@@ -260,6 +338,7 @@ export const TreeGridCell = defineComponent({
   slots: Object as SlotsType<{ default: (props: TreeGridCellSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('TreeGridCell'); const state = computed<TreeGridCellSlotProps>(() => ({ ...root.state.value, value: props.value, selected: root.state.value.value === props.value, highlighted: root.state.value.highlightedValue === props.value, editing: root.state.value.highlightedValue === props.value && root.state.value.editMode === 'editing' })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerCell(node, props.value, props.columnIndex); },
+    role: 'gridcell', 'aria-colindex': props.columnIndex, 'aria-selected': state.value.selected,
     'data-sectile-tree-grid-cell': props.value, 'data-column-index': props.columnIndex, 'data-scope': 'tree-grid', 'data-part': 'cell',
     'data-selected': state.value.selected ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined, 'data-editing': state.value.editing ? '' : undefined,
   }), { default: () => slots['default']?.(state.value) }); },
@@ -275,20 +354,35 @@ export const TreeGridEditor = defineComponent({
     const editing = computed(() => root.state.value.highlightedValue === props.for && root.state.value.editMode === 'editing');
     const forcePresent = computed(() => props.forcePresent);
     const presence = useConditionalPresence(editing, forcePresent);
+    let registeredInput: HTMLInputElement | undefined;
+    const register = (node: unknown): void => {
+      const element = presence.register(node);
+      const input = element?.tagName === 'INPUT' ? element as HTMLInputElement : undefined;
+      if (registeredInput !== undefined && registeredInput !== input) root.unregisterEditor(registeredInput);
+      registeredInput = input;
+      if (input !== undefined) root.registerEditor(input, props.for, props.label);
+    };
+    const setFocused = (focused: boolean): void => {
+      if (registeredInput !== undefined) root.setEditorFocused(registeredInput, focused);
+    };
+    const setComposing = (composing: boolean): void => {
+      if (registeredInput !== undefined) root.setEditorComposing(registeredInput, composing);
+    };
+    onBeforeUnmount(() => {
+      if (registeredInput !== undefined) root.unregisterEditor(registeredInput);
+      registeredInput = undefined;
+    });
     return (): VNodeChild => {
       const inactivePresent = !editing.value && presence.present.value;
       return h('input', mergeProps(attrs, {
-        ref: (node: unknown) => {
-          const element = presence.register(node);
-          if (element?.tagName === 'INPUT') root.registerEditor(element as HTMLInputElement, props.for, props.label);
-        },
+        ref: register,
         hidden: presence.hidden.value,
         tabindex: inactivePresent ? -1 : undefined,
         onKeydown: root.handleEditorKeydown,
-        onFocus: () => root.setEditorFocused(true),
-        onBlur: () => root.setEditorFocused(false),
-        onCompositionstart: () => root.setEditorComposing(true),
-        onCompositionend: () => root.setEditorComposing(false),
+        onFocus: () => setFocused(true),
+        onBlur: () => setFocused(false),
+        onCompositionstart: () => setComposing(true),
+        onCompositionend: () => setComposing(false),
         ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
         disabled: root.state.value.disabled,
         readonly: root.state.value.readonly,

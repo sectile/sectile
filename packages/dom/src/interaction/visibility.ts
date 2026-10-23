@@ -1,5 +1,5 @@
 export interface HiddenBinding {
-  setHidden(hidden: boolean): void;
+  setHidden(hidden: boolean, isCurrent?: () => boolean): void;
   disconnect(): void;
 }
 
@@ -8,11 +8,13 @@ export function createHiddenBinding(element: HTMLElement): HiddenBinding {
   let applied: string | null | undefined;
   let active = true;
   return Object.freeze({
-    setHidden(hidden: boolean): void {
-      if (!active) return;
+    setHidden(hidden: boolean, isCurrent?: () => boolean): void {
+      if (!active || isCurrent?.() === false) return;
       element.hidden = hidden;
+      if (!active || isCurrent?.() === false) return;
       if (hidden) element.setAttribute('hidden', '');
       else element.removeAttribute('hidden');
+      if (!active || isCurrent?.() === false) return;
       applied = hiddenAttribute(element);
     },
     disconnect(): void {

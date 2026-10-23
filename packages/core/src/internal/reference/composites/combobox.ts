@@ -15,6 +15,7 @@ import {
   referenceCommitTextComposition,
   referenceIsWellFormedPlainText,
   referenceReplaceTextState,
+  referenceSelectTextState,
   referenceStartTextComposition,
   referenceUpdateTextComposition,
 } from '../editing/text.js';
@@ -111,6 +112,7 @@ export function referenceApplyComboboxEvent<ID extends StableID>(
   if (typeof event === 'object' && event !== null && event.type === 'text') {
     const text = referenceApplyTextEvent(state.text, event.event);
     if (typeof text === 'string') return rejected(text);
+    if (event.event.type === 'select') return accepted(referenceState(text, state.popupOpen, state.cursor.current, state.selection), []);
     const previousQuery = referenceCommittedQuery(state.text);
     const nextQuery = referenceCommittedQuery(text);
     const eligible = referenceEligible(domain, labels, nextQuery, policies.matches);
@@ -166,6 +168,8 @@ function referenceApplyTextEvent(
 ): TextEditingState | string {
   try {
     switch (event.type) {
+      case 'select':
+        return referenceSelectTextState(state, event.selection);
       case 'replace':
         return referenceReplaceTextState(
           state,
@@ -190,6 +194,12 @@ function referenceApplyTextEvent(
         return referenceCancelTextComposition(state);
     }
   } catch {
+    if (event.type === 'select') {
+      const selection = event.selection;
+      if (typeof selection !== 'object' || selection === null) return 'invalid-text-selection';
+      if ([selection.anchorCodeUnitOffset, selection.focusCodeUnitOffset].some(offset => !Number.isSafeInteger(offset) || offset < 0 || offset > state.snapshot.text.length)) return 'invalid-text-offset';
+      return 'surrogate-boundary';
+    }
     if (event.type === 'replace' || event.type === 'composition-start') {
       return state.composition === null ? 'invalid-text-event' : 'composition-active';
     }

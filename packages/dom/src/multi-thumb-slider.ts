@@ -4,7 +4,7 @@ import type { Result, StableID } from '@sectile/core';
 import { tryCreateBoundedRange, type BoundedRangeInput, type QuantizedRange } from '@sectile/core/range';
 import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { applyMultiThumbSliderEvent, tryCreateMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
+import { applyMultiThumbSliderEvent, getMultiThumbSliderThumbBounds, tryCreateMultiThumbSliderState, type MultiThumbSliderCommand, type MultiThumbSliderEvent, type MultiThumbSliderPolicies, type MultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
 export type { MultiThumbSliderPolicies } from '@sectile/core/multi-thumb-slider';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction/attributes.js';
@@ -34,12 +34,30 @@ export type MultiThumbSliderUpdateHandler<ID extends StableID = StableID> = NonN
 export interface MultiThumbSliderControlledValues<ID extends StableID = StableID> { readonly values: readonly number[]; readonly highlightedValue?: ID | null }
 export interface MultiThumbSliderConnection<ID extends StableID = StableID> {
   readonly range: QuantizedRange;
+  readonly domain: Sequence<ID>;
   getSnapshot(): RevisionSnapshot<MultiThumbSliderState<ID>>;
   getValues(): readonly string[];
   syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>>;
   setThumbAttributes(element: HTMLElement, id: ID): void;
   handleEvent(event: MultiThumbSliderEvent<ID>): boolean;
   disconnect(): void;
+}
+
+export interface MultiThumbSliderThumbAttributeOptions<ID extends StableID = StableID> {
+  readonly domain: Sequence<ID>; readonly range: QuantizedRange; readonly state: MultiThumbSliderState<NoInfer<ID>>; readonly id: NoInfer<ID>;
+  readonly policies?: MultiThumbSliderPolicies; readonly orientation?: 'horizontal' | 'vertical'; readonly disabled?: boolean; readonly readOnly?: boolean;
+  readonly label?: string; readonly formatValue?: (value: string, id: NoInfer<ID>) => string;
+}
+
+/** Shared native and SSR projection; bounds belong to the portable Core owner. */
+export function getMultiThumbSliderThumbAttributes<ID extends StableID>(options: MultiThumbSliderThumbAttributeOptions<ID>): Readonly<Record<string, string | number | undefined>> {
+  const bounds = unwrap(getMultiThumbSliderThumbBounds(options.domain, options.range, options.state, options.id, options.policies));
+  const value = options.range.valueAt(bounds.tick) as string;
+  return Object.freeze({ role: 'slider', tabindex: options.disabled ? -1 : 0, 'aria-valuemin': options.range.valueAt(bounds.lowerTick) as string,
+    'aria-valuemax': options.range.valueAt(bounds.upperTick) as string, 'aria-valuenow': value,
+    'aria-valuetext': options.formatValue?.(value, options.id) ?? value, 'aria-orientation': options.orientation ?? 'horizontal',
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
+    'aria-disabled': options.disabled ? 'true' : undefined, 'aria-readonly': options.readOnly ? 'true' : undefined });
 }
 
 export function createMultiThumbSlider<ID extends StableID>(options: MultiThumbSliderOptions<ID>): FacadeConnection<MultiThumbSliderConnection<ID>> {
@@ -73,8 +91,8 @@ function tryCreateMultiThumbSliderConnection<ID extends StableID>(options: Multi
 
 class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnection<ID> {
   public readonly range: QuantizedRange;
+  public readonly domain: Sequence<ID>;
   readonly #options: MultiThumbSliderOptions<ID>;
-  readonly #thumbs: Sequence<ID>;
   readonly #runtime: SemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>>;
   readonly #elements = new Map<ID, HTMLElement>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
@@ -82,10 +100,11 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
   readonly #handlePointerUp: (event: PointerEvent) => void;
   readonly #handleFocus: (event: FocusEvent) => void;
   #draggingThumb: ID | null = null;
+  #pointerId: number | null = null;
 
   public constructor(options: MultiThumbSliderOptions<ID>, thumbs: Sequence<ID>, range: QuantizedRange, runtime: SemanticController<MultiThumbSliderState<ID>, MultiThumbSliderEvent<ID>, MultiThumbSliderCommand<ID>>) {
     this.#options = options;
-    this.#thumbs = thumbs;
+    this.domain = thumbs;
     this.range = range;
     this.#runtime = runtime;
     this.#handleKeydown = (event): void => {
@@ -93,6 +112,9 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
       if (semantic !== null && this.handleEvent(semantic)) event.preventDefault();
     };
     this.#handlePointer = (event): void => {
+      if (event.type === 'pointerdown') {
+        if (event.button !== 0 || options.disabled || options.readOnly || this.#pointerId !== null) return;
+      } else if (event.pointerId !== this.#pointerId) return;
       const rect = (options.track ?? options.root).getBoundingClientRect();
       const orientation = options.orientation ?? 'horizontal';
       const extent = orientation === 'horizontal' ? rect.width : rect.height;
@@ -103,9 +125,10 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
       const ratio = Math.max(0, Math.min(1, rawRatio));
       const tick = Math.round(ratio * range.count);
       if (event.type === 'pointerdown') {
-        const id = this.#thumbForTarget(event.target) ?? this.#nearestThumb(tick);
+        const id = this.#thumbForPointer(event, tick);
         if (id === null) return;
         this.#draggingThumb = id;
+        this.#pointerId = event.pointerId;
         (options.track ?? options.root).setPointerCapture?.(event.pointerId);
         this.#elements.get(id)?.focus();
       } else if (this.#draggingThumb === null) {
@@ -114,9 +137,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
       if (this.#draggingThumb !== null && this.handleEvent({ type: 'set-tick', id: this.#draggingThumb, tick })) event.preventDefault();
     };
     this.#handlePointerUp = (event): void => {
-      if (this.#draggingThumb === null) return;
-      this.#draggingThumb = null;
-      (options.track ?? options.root).releasePointerCapture?.(event.pointerId);
+      if (event.pointerId === this.#pointerId) this.#endDrag();
     };
     this.#handleFocus = (event): void => {
       for (const [id, element] of this.#elements) if (event.target === element) { this.handleEvent({ type: 'focus', id }); return; }
@@ -127,6 +148,7 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     (options.track ?? options.root).addEventListener('pointermove', this.#handlePointer);
     (options.track ?? options.root).addEventListener('pointerup', this.#handlePointerUp);
     (options.track ?? options.root).addEventListener('pointercancel', this.#handlePointerUp);
+    (options.track ?? options.root).addEventListener('lostpointercapture', this.#handlePointerUp);
     options.root.setAttribute('role', 'group');
     setInteractionAttributes(options.root, options);
     if (options.label !== undefined) options.root.setAttribute('aria-label', options.label);
@@ -135,53 +157,78 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
   public getValues(): readonly string[] { return Object.freeze(this.getSnapshot().state.ticks.map((tick) => this.range.valueAt(tick) as string)); }
   public syncControlledValues(values: MultiThumbSliderControlledValues<ID>): Result<RevisionSnapshot<MultiThumbSliderState<ID>>> {
     if (this.#options.values === undefined) return { ok: false, error: { class: 'construction', code: 'not-controlled', message: 'Only a controlled multi-thumb slider can be synchronized.' } };
-    const result = this.#runtime.replace(tryCreateMultiThumbSliderState(this.#thumbs, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
+    const result = this.#runtime.replace(tryCreateMultiThumbSliderState(this.domain, this.range, values.values, values.highlightedValue ?? this.getSnapshot().state.cursor.current, this.#options.policies));
     if (result.ok) this.#refreshAttributes();
     return result;
   }
-  public setThumbAttributes(element: HTMLElement, id: ID): void { if (this.#thumbs.indexOf(id) !== null) { this.#elements.set(id, element); this.#refreshAttributes(); } }
+  public setThumbAttributes(element: HTMLElement, id: ID): void {
+    if (this.domain.indexOf(id) === null) return;
+    this.#elements.set(id, element); this.#applyThumbAttributes(element, id, this.getSnapshot().state);
+    if (element.ownerDocument?.activeElement === element && this.getSnapshot().state.cursor.current !== id) this.handleEvent({ type: 'focus', id });
+  }
   public handleEvent(event: MultiThumbSliderEvent<ID>): boolean { const result = this.#runtime.handle(event); if (result.ok) { this.#refreshAttributes(); this.#options.onUpdate?.(); } return result.ok; }
-  public disconnect(): void { this.#options.root.removeEventListener('keydown', this.#handleKeydown); this.#options.root.removeEventListener('focusin', this.#handleFocus); (this.#options.track ?? this.#options.root).removeEventListener('pointerdown', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointermove', this.#handlePointer); (this.#options.track ?? this.#options.root).removeEventListener('pointerup', this.#handlePointerUp); (this.#options.track ?? this.#options.root).removeEventListener('pointercancel', this.#handlePointerUp); this.#elements.clear(); }
+  public disconnect(): void {
+    this.#options.root.removeEventListener('keydown', this.#handleKeydown);
+    this.#options.root.removeEventListener('focusin', this.#handleFocus);
+    const target = this.#options.track ?? this.#options.root;
+    target.removeEventListener('pointerdown', this.#handlePointer);
+    target.removeEventListener('pointermove', this.#handlePointer);
+    target.removeEventListener('pointerup', this.#handlePointerUp);
+    target.removeEventListener('pointercancel', this.#handlePointerUp);
+    target.removeEventListener('lostpointercapture', this.#handlePointerUp);
+    this.#endDrag(); this.#elements.clear();
+  }
+  #endDrag(): void {
+    const pointerId = this.#pointerId;
+    this.#pointerId = null; this.#draggingThumb = null;
+    const target = this.#options.track ?? this.#options.root;
+    if (pointerId !== null && target.hasPointerCapture?.(pointerId)) target.releasePointerCapture?.(pointerId);
+  }
   #thumbForTarget(target: EventTarget | null): ID | null {
-    for (const [id, element] of this.#elements) if (element === target) return id;
+    for (const [id, element] of this.#elements) {
+      if (element === target || (target !== null && typeof (target as Node).nodeType === 'number' && element.contains(target as Node))) return id;
+    }
     return null;
   }
-  #nearestThumb(tick: number): ID | null {
+  #thumbForPointer(event: PointerEvent, tick: number): ID | null {
+    const pressed = this.#thumbForTarget(event.target);
+    const nearest = this.#nearestThumb(tick, pressed);
+    if (pressed === null || nearest === pressed) return nearest;
+    // Expanded targets can overlap: preserve direct presses outside the overlap,
+    // but let the closer thumb receive a press inside both targets.
+    const bounds = nearest === null ? undefined : this.#elements.get(nearest)?.getBoundingClientRect();
+    return bounds !== undefined && event.clientX >= bounds.left && event.clientX < bounds.right
+      && event.clientY >= bounds.top && event.clientY < bounds.bottom ? nearest : pressed;
+  }
+  #nearestThumb(tick: number, preferred: ID | null = null): ID | null {
     const state = this.getSnapshot().state;
-    let nearest = state.cursor.current;
-    let distance = nearest === null ? Number.POSITIVE_INFINITY : Math.abs((state.ticks[this.#thumbs.indexOf(nearest) as number] as number) - tick);
+    let nearest = preferred ?? state.cursor.current;
+    let distance = nearest === null ? Number.POSITIVE_INFINITY : Math.abs((state.ticks[this.domain.indexOf(nearest) as number] as number) - tick);
     for (let index = 0; index < state.ticks.length; index += 1) {
       const candidateDistance = Math.abs((state.ticks[index] as number) - tick);
       if (candidateDistance >= distance) continue;
-      nearest = this.#thumbs.at(index);
+      nearest = this.domain.at(index);
       distance = candidateDistance;
     }
     return nearest;
   }
   #refreshAttributes(): void {
     const state = this.getSnapshot().state;
-    for (const [id, element] of this.#elements) {
-      const index = this.#thumbs.indexOf(id);
-      if (index === null) continue;
-      const tick = state.ticks[index] as number;
-      const gap = this.#options.policies?.minGap ?? 0;
-      const lowerTick = this.#options.policies?.allowCross || index === 0
-        ? 0
-        : (state.ticks[index - 1] as number) + gap;
-      const upperTick = this.#options.policies?.allowCross || index === state.ticks.length - 1
-        ? this.range.count
-        : (state.ticks[index + 1] as number) - gap;
-      const value = this.range.valueAt(tick) as string;
-      element.setAttribute('role', 'slider');
-      setInteractionAttributes(element, this.#options, false, true);
-      element.setAttribute('aria-valuemin', this.range.valueAt(lowerTick) as string);
-      element.setAttribute('aria-valuemax', this.range.valueAt(upperTick) as string);
-      element.setAttribute('aria-valuenow', value);
-      element.setAttribute('aria-valuetext', this.#options.formatValue?.(value, id) ?? value);
-      element.setAttribute('aria-orientation', this.#options.orientation ?? 'horizontal');
-      const label = this.#options.getThumbLabel?.(id);
-      if (label !== undefined) element.setAttribute('aria-label', label);
-      element.tabIndex = 0;
+    for (const [id, element] of this.#elements) this.#applyThumbAttributes(element, id, state);
+  }
+  #applyThumbAttributes(element: HTMLElement, id: ID, state: MultiThumbSliderState<ID>): void {
+    setInteractionAttributes(element, this.#options, false, true);
+    const attributes = getMultiThumbSliderThumbAttributes({ domain: this.domain, range: this.range, state, id,
+      ...(this.#options.policies === undefined ? {} : { policies: this.#options.policies }),
+      ...(this.#options.orientation === undefined ? {} : { orientation: this.#options.orientation }),
+      ...(this.#options.disabled === undefined ? {} : { disabled: this.#options.disabled }),
+      ...(this.#options.readOnly === undefined ? {} : { readOnly: this.#options.readOnly }),
+      ...(this.#options.getThumbLabel === undefined ? {} : { label: this.#options.getThumbLabel(id) }),
+      ...(this.#options.formatValue === undefined ? {} : { formatValue: this.#options.formatValue }),
+    });
+    for (const [name, value] of Object.entries(attributes)) {
+      if (name === 'tabindex') element.tabIndex = Number(value);
+      else if (value !== undefined) element.setAttribute(name, String(value));
     }
   }
 }

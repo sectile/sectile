@@ -4,3 +4,5 @@ export type * from './path.js';
 export type * from './values.js';
 export type * from './state.js';
 export type * from './schema.js';
+export type * from './files.js';
+export type * from './uploads.js';

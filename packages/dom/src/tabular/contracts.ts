@@ -1,9 +1,11 @@
 import type {
+  TabularBulkSelectionState,
   TabularColumnID,
   TabularResult,
   TabularWireValue,
   TabularCellAddress,
   TabularHeaderNodeID,
+  TabularHeaderLayout,
   TabularRowID,
 } from '@sectile/tabular';
 
@@ -37,19 +39,14 @@ export interface TabularDOMEditorOptions {
   readonly cell: TabularCellAddress;
   readonly parseValue?: TabularDOMEditorValueParser;
   readonly commitOnBlur?: boolean;
+  readonly commitOnChange?: boolean;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
+  /** Optional override; omission preserves the authored native accessible name. */
   readonly label?: string;
 }
 
-export interface TabularHeaderMetrics {
-  readonly headerNodeID: TabularHeaderNodeID;
-  readonly columnID: TabularColumnID | null;
-  readonly columnIndex: number;
-  readonly colSpan: number;
-  readonly rowSpan: number;
-  readonly depth: number;
-}
+export type TabularHeaderMetrics = TabularHeaderLayout;
 
 export type TabularDOMHeaderReference =
   | { readonly columnID: TabularColumnID; readonly headerNodeID?: never }
@@ -60,7 +57,7 @@ export interface ResolvedTabularHeaderReference {
   readonly metric: TabularHeaderMetrics | undefined;
 }
 
-export type TabularDOMBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
+export type TabularDOMBulkSelectionState = TabularBulkSelectionState;
 
 export interface TabularDOMRowSelectionAnchor {
   readonly rowID: TabularRowID;

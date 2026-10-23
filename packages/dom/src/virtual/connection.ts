@@ -30,6 +30,7 @@ import {
 } from './scroll-host.js';
 import { normalizeViewportInsets, sameOverscan, sameInsets, sameRect } from './viewport.js';
 import { unwrap, SectileResultError } from '@sectile/core/result';
+import { pointDelta } from '@sectile/core/geometry';
 import {
   toVirtualViewport,
   toScrollportPoint,
@@ -51,6 +52,13 @@ type ItemRegistration<ID extends StableID> = readonly [
   element: HTMLElement,
   token: object,
 ];
+
+interface MeasuredScrollTarget<ID extends StableID> {
+  readonly id: ID;
+  readonly alignment: VirtualScrollAlignment;
+  x: number;
+  y: number;
+}
 
 export function createVirtualizer<
   State,
@@ -104,6 +112,7 @@ class DOMVirtualizer<
   #scheduleGeneration = 0;
   #dirty = 0;
   #disconnected = false;
+  #scrollTarget: MeasuredScrollTarget<ID> | null = null;
 
   public constructor(
     options: VirtualizerOptions<State, ID, Measurement, Mutation>,
@@ -206,6 +215,7 @@ class DOMVirtualizer<
       this.#overscan,
       this.#viewportInsets,
       true,
+      !Object.is(state, this.#state),
     );
   }
 
@@ -408,6 +418,9 @@ class DOMVirtualizer<
     );
     if (!scrolled.ok) return scrolled;
     const [plan, finalViewport] = scrolled.value;
+    this.#scrollTarget = this.#measure === undefined ? null : {
+      id, alignment, x: finalViewport.x, y: finalViewport.y,
+    };
     this.#commitFrame(
       state,
       !Object.is(state, this.#state),
@@ -449,6 +462,7 @@ class DOMVirtualizer<
     this.#itemIDs.clear();
     this.#pendingEntries.clear();
     this.#placementByID.clear();
+    this.#scrollTarget = null;
     this.#dirty = 0;
   }
 
@@ -594,14 +608,38 @@ class DOMVirtualizer<
     overscan: number | Partial<VirtualInsets> | undefined,
     viewportInsets: VirtualInsets,
     forceQuery: boolean,
+    replaceTarget = false,
   ): DOMVirtualResult<VirtualLayoutPlan<ID>> {
-    const frameDelta = this.#plan.anchor === null
+    const retainedTarget = this.#scrollTarget;
+    let target = replaceTarget ? null : retainedTarget;
+    let targetDelta: VirtualPoint | undefined;
+    if (target !== null) {
+      if (prepared[2].x !== target.x || prepared[2].y !== target.y) {
+        // Native movement supersedes the last imperative target, including focus scrolling.
+        this.#scrollTarget = null;
+        target = null;
+      } else {
+        const viewport = this.#tryVirtual(() => toVirtualViewport(prepared[2], prepared[1]));
+        if (!viewport.ok) return viewport;
+        const requested = this.#strategy.tryScrollTarget(state, target.id, viewport.value, target.alignment);
+        if (!requested.ok) {
+          if (requested.error.code !== 'virtual-layout-scroll-target-invalid') return this.#report(requested);
+          target = null;
+        } else {
+          const physical = this.#tryVirtual(() => toScrollportPoint(requested.value, prepared[1]));
+          if (!physical.ok) return physical;
+          targetDelta = pointDelta(prepared[2], physical.value);
+        }
+      }
+    }
+    const frameDelta = targetDelta !== undefined || this.#plan.anchor === null
       ? { ok: true as const, value: ZERO_POINT }
       : this.#tryVirtual(() => surfaceFrameScrollDelta(prepared[0], prepared[1]));
     if (!frameDelta.ok) return frameDelta;
-    const combined = this.#tryAddPoints(scrollDelta, frameDelta.value);
+    const combined = this.#tryAddPoints(targetDelta ?? scrollDelta, frameDelta.value);
     if (!combined.ok) return combined;
     let plan: DOMVirtualResult<VirtualLayoutPlan<ID>>;
+    let settledViewport = prepared[2];
     if (combined.value.x !== 0 || combined.value.y !== 0) {
       const target = this.#tryAddPoints(
         { x: prepared[2].x, y: prepared[2].y },
@@ -617,6 +655,7 @@ class DOMVirtualizer<
       );
       if (!scrolled.ok) return scrolled;
       plan = { ok: true, value: scrolled.value[0] };
+      settledViewport = scrolled.value[1];
     } else {
       const viewport = this.#tryVirtual(() =>
         toVirtualViewport(prepared[2], prepared[1]));
@@ -636,6 +675,12 @@ class DOMVirtualizer<
         ...(overscan === undefined ? {} : { overscan }),
       });
       if (!plan.ok) return this.#report(plan);
+    }
+    if (target !== null && this.#scrollTarget === target) {
+      target.x = settledViewport.x;
+      target.y = settledViewport.y;
+    } else if (this.#scrollTarget === retainedTarget) {
+      this.#scrollTarget = null;
     }
     this.#commitFrame(
       state,

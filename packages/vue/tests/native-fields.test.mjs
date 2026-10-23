@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
-import { createSSRApp, h } from 'vue';
+import { createSSRApp, defineComponent, h } from 'vue';
 import { DateField } from '../.verification-dist/temporal/date-field.js';
 import { DateTimeField } from '../.verification-dist/temporal/date-time-field.js';
 import { NumberField } from '../.verification-dist/number-field.js';
 import { TimeField } from '../.verification-dist/temporal/time-field.js';
+import { FormRoot, FormField, provideFormControlOwner } from '../.verification-dist/form.js';
 
 async function render(component, props) {
   return renderToString(createSSRApp({ render: () => h(component, props) }));
@@ -26,6 +27,25 @@ test('Vue native fields preserve native input attributes during SSR', async () =
   assert.match(html, /required/);
   assert.match(html, /aria-label="Amount"/);
   assert.match(html, /data-scope="number-field"/);
+  const inField = (component, attributes) => renderToString(createSSRApp({
+    render: () => h(FormRoot, { id: 'delivery-form' }, { default: () => h(FormField, { name: 'delivery', form: 'delivery-form' }, {
+      default: () => h(component, attributes),
+    }) }),
+  }));
+  for (const component of [NumberField, DateField, TimeField, DateTimeField]) {
+    const inherited = await inField(component, {});
+    assert.match(inherited, /<input\b[^>]*\bname="delivery"/u);
+    assert.match(inherited, /<input\b[^>]*\bform="delivery-form"/u);
+  }
+  const authored = await inField(DateField, { name: 'caller', form: 'caller-form' });
+  assert.match(authored, /<input\b[^>]*\bname="caller"/u);
+  assert.match(authored, /<input\b[^>]*\bform="caller-form"/u);
+  const suppressed = await inField(DateField, { name: undefined, form: undefined });
+  const input = suppressed.match(/<input\b[^>]*>/u)[0];
+  assert.doesNotMatch(input, /\b(?:name|form)=/u, 'authored undefined suppresses inherited submission metadata');
+  const Owned = defineComponent({ setup() { provideFormControlOwner(); return () => h(DateField); } });
+  const owned = (await inField(Owned, {})).match(/<input\b[^>]*>/u)[0];
+  assert.doesNotMatch(owned, /\b(?:name|form)=/u, 'a composite owner retains submission ownership of its internal field');
 });
 
 test('Vue civil fields serialize timezone-free values without Date conversion', async () => {

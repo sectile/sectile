@@ -23,7 +23,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { Teleport, createApp, defineComponent, h, mergeProps, nextTick, ref, shallowRef } = await import('vue');
+const { KeepAlive, Teleport, createApp, createSSRApp, defineComponent, h, mergeProps, nextTick, ref, shallowRef } = await import('vue');
 const {
   FormDescription,
   FormField,
@@ -46,7 +46,7 @@ const {
 const { CheckboxRoot } = await import('../.verification-dist/checkbox.js');
 const { CheckboxGroupRoot } = await import('../.verification-dist/checkbox-group.js');
 const { CalendarContent, CalendarGrid, CalendarInput, CalendarRoot } = await import('../.verification-dist/temporal/calendar.js');
-const { ColorPickerRoot } = await import('../.verification-dist/color-picker.js');
+const { ColorPickerRoot, ColorPickerTextInput, ColorPickerChannelInput, ColorPickerFormatTrigger, ColorPickerCoordinateInput, ColorPickerNativeInput, ColorPickerHueSlider, ColorPickerAlphaSlider, ColorPickerArea, ColorPickerAreaSurface, ColorPickerSwatch } = await import('../.verification-dist/color-picker.js');
 const { DateRangeFieldEndInput, DateRangeFieldRoot, DateRangeFieldStartInput } = await import('../.verification-dist/temporal/date-range-field.js');
 const {
   DateRangePickerContent,
@@ -56,10 +56,15 @@ const {
   DateRangePickerTrigger,
 } = await import('../.verification-dist/temporal/date-range-picker.js');
 const { EditableInput, EditablePreview, EditableRoot } = await import('../.verification-dist/editable.js');
-const { ListboxRoot } = await import('../.verification-dist/listbox.js');
-const { MultiThumbSliderRoot } = await import('../.verification-dist/multi-thumb-slider.js');
+const { ComboboxRoot, ComboboxInput, ComboboxContent, ComboboxItem } = await import('../.verification-dist/combobox.js');
+const { ListboxRoot, ListboxItem } = await import('../.verification-dist/listbox.js');
+const { CascadeListRoot, CascadeListColumn, CascadeListItem } = await import('../.verification-dist/cascade-list.js');
+const { CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectContent, CascadeSelectColumn, CascadeSelectItem } = await import('../.verification-dist/cascade-select.js');
+const { MultiThumbSliderRoot, MultiThumbSliderThumb } = await import('../.verification-dist/multi-thumb-slider.js');
 const { PinInputInput, PinInputRoot } = await import('../.verification-dist/pin-input.js');
-const { RadioGroupRoot } = await import('../.verification-dist/radio-group.js');
+const { RadioGroupRoot, RadioGroupItem } = await import('../.verification-dist/radio-group.js');
+const { RatingRoot, RatingItem, RatingClear } = await import('../.verification-dist/rating.js');
+const { provideFormControlReset } = await import('../.verification-dist/form/control.js');
 const {
   SelectContent,
   SelectItem,
@@ -67,14 +72,486 @@ const {
   SelectTrigger,
   SelectValue,
 } = await import('../.verification-dist/select.js');
-const { SliderRoot } = await import('../.verification-dist/slider.js');
+const { SliderRoot, SliderThumb, SliderTrack } = await import('../.verification-dist/slider.js');
 const { SpinButtonInput, SpinButtonRoot } = await import('../.verification-dist/spin-button.js');
 const { SwitchRoot } = await import('../.verification-dist/switch.js');
-const { TagsInputInput, TagsInputRoot } = await import('../.verification-dist/tags-input.js');
+const { TagsInputInput, TagsInputRoot, TagsInputItem, TagsInputItemDelete } = await import('../.verification-dist/tags-input.js');
 const { TextField } = await import('../.verification-dist/text.js');
 const { TimeRangeFieldEndInput, TimeRangeFieldRoot, TimeRangeFieldStartInput } = await import('../.verification-dist/temporal/time-range-field.js');
-const { ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
+const { ToggleGroupRoot, ToggleGroupItem } = await import('../.verification-dist/toggle-group.js');
 const { formValueControlInventory } = await import('../.verification-dist/form/control-inventory.js');
+
+for (const controlled of [false, true]) test(`ColorPicker retains achromatic intent through owner sync and topology, and resets uncontrolled intent (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const surfaceKey = shallowRef(0), options = shallowRef({ ...(controlled ? { modelValue: '#000000' } : { defaultValue: '#000000' }) });
+  const proposals = []; let state;
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'accent' }, {
+    default: () => h(ColorPickerRoot, { ...options.value, 'onUpdate:modelValue': value => proposals.push(value) }, {
+      default: current => { state = current; return [h(ColorPickerHueSlider), h(ColorPickerArea, {}, { default: () => h(ColorPickerAreaSurface, { key: surfaceKey.value }) }), h(ColorPickerTextInput)]; },
+    }),
+  }) }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); let hue = host.querySelector('[data-part="hue-slider"]');
+    hue.value = '120'; hue.dispatchEvent(new Event('input', { bubbles: true })); await drain();
+    assert.equal(state.area.hue, 120); assert.equal(hue.value, '120'); assert.equal(proposals.length, 0);
+    if (controlled) { options.value = { ...options.value, format: 'hsv' }; await drain(); assert.equal(state.area.hue, 120); }
+    surfaceKey.value++; await drain(); assert.equal(state.area.hue, 120);
+    host.querySelector('[data-part="area-surface"]').getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 });
+    const area = host.querySelector('[data-part="area"]'), event = new Event('pointerdown', { bubbles: true });
+    Object.assign(event, { button: 0, pointerId: 1, clientX: 33.3333, clientY: 54.3211 }); area.dispatchEvent(event); await drain();
+    if (controlled) { assert.equal(state.area.y, 0); options.value = { ...options.value, modelValue: proposals.at(-1) }; await drain(); }
+    assert.ok(Math.abs(state.area.x - 0.333333) < 1e-12); assert.ok(Math.abs(state.area.y - 0.456789) < 1e-12); assert.equal(state.area.hue, 120);
+    const count = proposals.length; host.querySelector('form').reset(); await drain();
+    assert.equal(state.area.hue, controlled ? 120 : 0); assert.equal(proposals.length, count);
+    app.unmount(); hue.value = '240'; hue.dispatchEvent(new Event('input', { bubbles: true })); await drain(); assert.equal(proposals.length, count);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
+});
+
+test('ColorPicker measures the current surface through replacement and falls back after removal', async () => {
+  const host = document.createElement('div'); document.body.append(host); const surfaceKey = shallowRef(0), visible = shallowRef(true); let state;
+  const app = createApp({ render: () => h(ColorPickerRoot, { defaultValue: '#ff0000' }, { default: current => { state = current; return h(ColorPickerArea, {}, {
+    default: () => visible.value ? h(ColorPickerAreaSurface, { key: surfaceKey.value }) : null,
+  }); } }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const point = () => { const event = new Event('pointerdown', { bubbles: true }); Object.assign(event, { button: 0, pointerId: 1, clientX: 50, clientY: 30 }); return event; };
+  let unmounted = false;
+  try {
+    app.mount(host); await drain(); const area = host.querySelector('[data-part="area"]'); area.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100 });
+    const first = host.querySelector('[data-part="area-surface"]'); first.getBoundingClientRect = () => ({ left: 20, top: 10, width: 60, height: 40 });
+    area.dispatchEvent(point()); await drain(); assert.deepEqual(state.value, { red: 128, green: 64, blue: 64, alpha: 255 });
+    surfaceKey.value++; await drain(); const second = host.querySelector('[data-part="area-surface"]'); assert.notEqual(second, first); second.getBoundingClientRect = () => ({ left: 40, top: 20, width: 20, height: 20 });
+    first.getBoundingClientRect = () => { throw Error('retired surface must not be measured'); }; area.dispatchEvent(point()); await drain(); assert.equal(state.value.red, 128);
+    visible.value = false; await drain(); second.getBoundingClientRect = () => { throw Error('removed surface must not be measured'); }; area.dispatchEvent(point()); await drain(); assert.deepEqual(state.value, { red: 179, green: 89, blue: 89, alpha: 255 });
+    app.unmount(); unmounted = true; area.getBoundingClientRect = () => { throw Error('unmounted area must not be measured'); }; area.dispatchEvent(point()); await drain();
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+test('ColorPicker client projection preserves composing native text through accepted owner updates', async () => {
+  const host = document.createElement('div'); document.body.append(host); const options = shallowRef({ modelValue: '#ff0000', draft: null });
+  const app = createApp({ render: () => h(ColorPickerRoot, options.value, { default: () => h(ColorPickerTextInput) }) });
+  try {
+    app.mount(host); await nextTick(); const input = host.querySelector('[data-part="text-input"]');
+    input.dispatchEvent(new Event('compositionstart', { bubbles: true })); input.value = '編集中';
+    options.value = { ...options.value, modelValue: '#00ff00' }; await nextTick(); await nextTick(); assert.equal(input.value, '編集中');
+    input.dispatchEvent(new Event('compositionend', { bubbles: true })); await nextTick(); await nextTick(); assert.equal(input.value, '#00ff00');
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('ColorPicker keeps caller localized names through updates, reconnect and labelledby changes', async () => {
+  const host = document.createElement('div'); document.body.append(host); const locale = shallowRef('ko'), labelled = shallowRef(false), options = shallowRef({ modelValue: '#ff0000', disabled: false });
+  const parts = [ColorPickerChannelInput, ColorPickerCoordinateInput, ColorPickerArea, ColorPickerHueSlider, ColorPickerAlphaSlider, ColorPickerSwatch];
+  const app = createApp({ render: () => h(ColorPickerRoot, { ...options.value, 'aria-label': '브랜드 색상' }, { default: () => parts.map((part, index) => h(part, {
+    ...(index === 0 ? { channel: 'red' } : index === 1 ? { format: 'rgb', coordinate: 'red' } : {}),
+    ...(labelled.value ? { 'aria-labelledby': 'color-label' } : { 'aria-label': `${locale.value}-${index}` }), 'aria-valuetext': `${locale.value}-value-${index}`,
+  })) }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const nodes = [...host.querySelectorAll('[data-part]')].filter(node => node.dataset.part !== 'root');
+    const check = () => nodes.forEach((node, index) => {
+      assert.equal(node.getAttribute('aria-label'), `${locale.value}-${index}`);
+      if (index === 2) {
+        assert.equal(node.getAttribute('role'), 'group');
+        assert.equal(node.getAttribute('aria-description'), `${locale.value}-value-${index}`);
+        assert.equal(node.getAttribute('aria-valuetext'), null);
+      } else assert.equal(node.getAttribute('aria-valuetext'), `${locale.value}-value-${index}`);
+    });
+    check(); assert.equal(host.querySelector('[data-part="root"]').getAttribute('aria-label'), '브랜드 색상');
+    options.value = { ...options.value, modelValue: '#00ff00' }; locale.value = 'en'; await drain(); check();
+    options.value = { ...options.value, disabled: true }; await drain(); check();
+    labelled.value = true; await drain(); options.value = { ...options.value, disabled: false }; await drain();
+    for (const node of nodes) { assert.equal(node.getAttribute('aria-label'), null); assert.equal(node.getAttribute('aria-labelledby'), 'color-label'); }
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('ColorPicker rebuilds changed part topology once and releases retired native inputs', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const visible = shallowRef(true), channel = shallowRef('red'), coordinate = shallowRef({ format: 'rgb', coordinate: 'red' }), title = shallowRef('first');
+  const updates = []; let state;
+  const app = createApp({ render: () => h(ColorPickerRoot, { defaultValue: '#ff0000', title: title.value, 'onUpdate:modelValue': value => updates.push(value), 'onUpdate:draft': value => updates.push(value) }, {
+    default: current => { state = current; return [h(ColorPickerTextInput), ...(visible.value ? [h(ColorPickerNativeInput), h(ColorPickerChannelInput, { channel: channel.value }), h(ColorPickerCoordinateInput, coordinate.value), h(ColorPickerHueSlider), h(ColorPickerAlphaSlider)] : [])]; },
+  }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const text = host.querySelector('[data-part="text-input"]'); text.focus(); let connects = 0;
+    const originalAdd = text.addEventListener; text.addEventListener = function (type, ...args) { if (type === 'input') connects++; return originalAdd.call(this, type, ...args); };
+    title.value = 'second'; await drain(); assert.equal(connects, 0, 'unchanged native identities do not reconnect'); assert.equal(document.activeElement, text);
+    channel.value = 'blue'; coordinate.value = { format: 'hsl', coordinate: 'lightness' }; await drain();
+    assert.equal(connects, 1, 'descriptor changes share one reconnect'); assert.equal(host.querySelector('[data-part="coordinate-input"]').max, '100');
+    const old = [...host.querySelectorAll('input')].filter(input => input !== text); visible.value = false; await drain(); assert.equal(connects, 2);
+    const count = updates.length, accepted = state.value;
+    for (const input of old) { input.value = input.type === 'color' ? '#00ff00' : '30'; input.dispatchEvent(new Event('input', { bubbles: true })); }
+    await drain(); assert.equal(updates.length, count); assert.deepEqual(state.value, accepted);
+    for (let turn = 0; turn < 3; turn++) { visible.value = true; await drain(); visible.value = false; await drain(); }
+    assert.equal(connects, 8, 'each completed topology generation reconnects once'); assert.equal(document.activeElement, text);
+  } finally { app.unmount(); host.remove(); }
+});
+test('ColorPicker defers topology rebuild through composition and releases removed composing text', async () => {
+  const host = document.createElement('div'); document.body.append(host); const extra = shallowRef(false), showText = shallowRef(true); let state;
+  const app = createApp({ render: () => h(ColorPickerRoot, { defaultValue: '#ff0000' }, { default: current => { state = current; return [
+    ...(showText.value ? [h(ColorPickerTextInput)] : []), h(ColorPickerChannelInput, { channel: 'blue' }), ...(extra.value ? [h(ColorPickerCoordinateInput, { format: 'rgb', coordinate: 'red' })] : []),
+  ]; } }) });
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const input = host.querySelector('[data-part="text-input"]'), channel = host.querySelector('[data-part="channel-input"]'); let connects = 0;
+    const originalAdd = channel.addEventListener; channel.addEventListener = function (type, ...args) { if (type === 'input') connects++; return originalAdd.call(this, type, ...args); };
+    input.dispatchEvent(new Event('compositionstart', { bubbles: true })); input.value = 'unfinished'; extra.value = true; await drain(); assert.equal(connects, 0); assert.equal(input.value, 'unfinished');
+    input.dispatchEvent(new Event('compositionend', { bubbles: true })); await new Promise(resolve => setTimeout(resolve, 5)); await drain(); assert.equal(connects, 1); assert.equal(state.draft, 'unfinished');
+    input.dispatchEvent(new Event('compositionstart', { bubbles: true })); showText.value = false; await drain(); await new Promise(resolve => setTimeout(resolve, 5)); await drain(); assert.equal(connects, 2);
+    const draft = state.draft; input.value = 'stale'; input.dispatchEvent(new Event('input', { bubbles: true })); await drain(); assert.equal(state.draft, draft);
+    extra.value = false; app.unmount(); await drain(); assert.equal(connects, 2, 'unmount cancels scheduled topology work');
+  } finally { if (host.firstChild !== null) app.unmount(); host.remove(); }
+});
+
+for (const shape of ['none', 'value', 'draft', 'format', 'all']) test(`ColorPicker registered reset restores independent mount axes (${shape})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const controlledValue = shape === 'value' || shape === 'all', controlledDraft = shape === 'draft' || shape === 'all', controlledFormat = shape === 'format' || shape === 'all';
+  const options = shallowRef({ defaultValue: '#ff0000', defaultFormat: 'hex', ...(controlledValue ? { modelValue: '#ff0000' } : {}),
+    ...(controlledDraft ? { draft: null } : {}), ...(controlledFormat ? { format: 'hex' } : {}) });
+  const updates = [], errors = []; let state;
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'accent' }, { default: () => h(ColorPickerRoot, {
+    ...options.value, 'onUpdate:modelValue': value => updates.push(value), 'onUpdate:draft': value => updates.push(value), 'onUpdate:format': value => updates.push(value),
+  }, { default: current => { state = current; return [h(ColorPickerTextInput), h(ColorPickerChannelInput, { channel: 'green' }), h(ColorPickerFormatTrigger, { format: 'rgb' })]; } }) }) }) });
+  app.config.errorHandler = error => errors.push(error);
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const channel = host.querySelector('[data-part="channel-input"]'); channel.value = '200'; channel.dispatchEvent(new Event('input', { bubbles: true }));
+    host.querySelector('[data-part="format-trigger"]').click(); await drain();
+    options.value = { ...options.value, ...(controlledValue ? { modelValue: '#00ff00' } : {}), ...(controlledDraft ? { draft: 'controlled draft' } : {}), ...(controlledFormat ? { format: 'rgb' } : {}) }; await drain();
+    const input = host.querySelector('[data-part="text-input"]');
+    if (!controlledDraft) { input.value = 'invalid draft'; input.dispatchEvent(new Event('input', { bubbles: true })); await drain(); }
+    let connects = 0; const originalAdd = input.addEventListener;
+    input.addEventListener = function (type, ...args) { if (type === 'input') connects += 1; return originalAdd.call(this, type, ...args); };
+    const count = updates.length, form = host.querySelector('form'); form.reset(); form.reset(); form.reset(); await drain();
+    assert.deepEqual(state.value, controlledValue ? { red: 0, green: 255, blue: 0, alpha: 255 } : { red: 255, green: 0, blue: 0, alpha: 255 });
+    assert.equal(state.draft, controlledDraft ? 'controlled draft' : null); assert.equal(state.format, controlledFormat ? 'rgb' : 'hex'); assert.equal(updates.length, count);
+    assert.equal(connects, 1, 'synchronous reset requests share one native reconnect');
+    if (!controlledDraft) assert.deepEqual(new FormData(form).getAll('accent'), [controlledFormat ? 'rgb(255, 0, 0)' : controlledValue ? '#00ff00' : '#ff0000']);
+    assert.deepEqual(errors, []);
+  } finally { app.unmount(); host.remove(); }
+});
+test('ColorPicker keeps accepted color separate from an invalid draft when native policy reconnects', async () => {
+  const host = document.createElement('div'); document.body.append(host); const options = shallowRef({ defaultValue: '#ff0000', disabled: false });
+  const errors = []; let state;
+  const app = createApp({ render: () => h(ColorPickerRoot, options.value, { default: current => { state = current; return h(ColorPickerTextInput); } }) });
+  app.config.errorHandler = error => errors.push(error);
+  try {
+    app.mount(host); await nextTick(); const input = host.querySelector('input'); input.value = 'invalid draft'; input.dispatchEvent(new Event('input', { bubbles: true })); await nextTick();
+    options.value = { ...options.value, disabled: true }; await nextTick(); options.value = { ...options.value, disabled: false }; await nextTick();
+    assert.deepEqual(errors, []); assert.deepEqual(state.value, { red: 255, green: 0, blue: 0, alpha: 255 }); assert.equal(state.draft, 'invalid draft'); assert.equal(input.value, 'invalid draft');
+  } finally { app.unmount(); host.remove(); }
+});
+test('ColorPicker model projections follow accepted color generations independently of display format', async () => {
+  const host = document.createElement('div'); document.body.append(host); const options = shallowRef({ modelValue: '#ff0000', format: 'rgb' }); let state;
+  const app = createApp({ render: () => h(ColorPickerRoot, options.value, { default: current => { state = current; return [
+    h(ColorPickerCoordinateInput, { format: 'rgb', coordinate: 'red' }), h(ColorPickerCoordinateInput, { format: 'hsv', coordinate: 'hue' }),
+  ]; } }) });
+  try {
+    app.mount(host); await nextTick(); assert.equal(state.coordinates.find(value => value.coordinate === 'red').value, 255);
+    options.value = { ...options.value, modelValue: '#00ff00' }; await nextTick(); await nextTick();
+    assert.equal(state.coordinates.find(value => value.coordinate === 'red').value, 0);
+    options.value = { ...options.value, format: 'hsv' }; await nextTick(); await nextTick();
+    assert.equal(state.coordinates.find(value => value.coordinate === 'hue').value, 120);
+    assert.equal(host.querySelector('[data-coordinate="red"]').value, '0'); assert.equal(host.querySelector('[data-coordinate="hue"]').value, '120');
+  } finally { app.unmount(); host.remove(); }
+});
+test('ColorPicker cancels queued reset work and native handlers when unmounted before reset flush', async () => {
+  const host = document.createElement('div'); document.body.append(host); const updates = [];
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'color' }, { default: () => h(ColorPickerRoot, {
+    defaultValue: '#ff0000', 'onUpdate:draft': value => updates.push(value),
+  }, { default: () => h(ColorPickerTextInput) }) }) }) });
+  let unmounted = false;
+  try {
+    app.mount(host); await nextTick(); await nextTick(); const input = host.querySelector('[data-part="text-input"]'); let connects = 0;
+    const originalAdd = input.addEventListener; input.addEventListener = function (type, ...args) { if (type === 'input') connects += 1; return originalAdd.call(this, type, ...args); };
+    host.querySelector('form').reset(); app.unmount(); unmounted = true; await nextTick(); await nextTick();
+    input.value = 'stale'; input.dispatchEvent(new Event('input', { bubbles: true })); assert.equal(connects, 0); assert.deepEqual(updates, []);
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+for (const [Root, Item, initial, changed, stateAttribute] of [
+  [RatingRoot, RatingItem, 'a', 'b', 'aria-checked'],
+  [ToggleGroupRoot, ToggleGroupItem, ['a'], ['b'], 'aria-pressed'],
+  [RadioGroupRoot, RadioGroupItem, 'a', 'b', 'aria-checked'],
+  [SwitchRoot, null, true, false, 'aria-checked'],
+]) for (const controlled of [false, true]) test(`${Root.name} registered reset retains mount baseline and controlled ownership (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({ items: ['a', 'b'], defaultValue: initial, ...(controlled ? { modelValue: initial } : {}) });
+  const updates = [];
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'choice' }, {
+    default: () => h(Root, { ...options.value, ...(Root === RatingRoot ? { clearable: true } : {}), 'onUpdate:modelValue': value => updates.push(value) },
+      Item ? { default: () => [...options.value.items.map(value => h(Item, { value }, () => value)), ...(Root === RatingRoot ? [h(RatingClear, {}, () => 'Clear')] : [])] } : {}),
+  }) }) });
+  try {
+    app.mount(host); await nextTick(); await nextTick();
+    const form = host.querySelector('form');
+    const controls = [...host.querySelectorAll(Item ? '[data-part="item"]' : '[role="switch"]')];
+    controls[Item ? 1 : 0].click(); await nextTick();
+    assert.equal(controls[0].getAttribute(stateAttribute), controlled ? 'true' : 'false');
+    if (controlled) { options.value = { ...options.value, modelValue: changed }; await nextTick(); }
+    options.value = { ...options.value, defaultValue: changed }; await nextTick();
+    const count = updates.length; form.reset(); await nextTick(); await nextTick();
+    assert.equal(controls[0].getAttribute(stateAttribute), controlled ? 'false' : 'true');
+    assert.equal(updates.length, count, 'reset does not emit a selection proposal');
+    assert.deepEqual(new FormData(form).getAll('choice'), controlled ? Item ? ['b'] : [] : Item ? ['a'] : ['on']);
+    if (Root === RatingRoot) {
+      host.querySelector('[data-part="clear"]').click(); await nextTick();
+      assert.deepEqual(new FormData(form).getAll('choice'), controlled ? ['b'] : []);
+      const count = updates.length; form.reset(); await nextTick(); await nextTick();
+      assert.deepEqual(new FormData(form).getAll('choice'), controlled ? ['b'] : ['a']); assert.equal(updates.length, count);
+    }
+    if (Item && !controlled) {
+      options.value = { ...options.value, items: ['b'] }; await nextTick();
+      form.reset(); await nextTick(); await nextTick();
+      assert.deepEqual(new FormData(form).getAll('choice'), [], 'removed baseline identities are reconciled against the current domain');
+    }
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('TextField edit snapshots use one native Form value and retire after reset', async () => {
+  const host = document.createElement('div'); document.body.append(host); let field;
+  const updates = [], app = createApp({ render: () => h(FormRoot, {}, {
+    default: () => h(FormField, { name: 'query' }, { default: () => h(TextField, {
+      defaultValue: 'Address', ref: value => { if (value) field = value; }, 'onUpdate:modelValue': value => updates.push(value),
+    }) }),
+  }) });
+  const drain = async () => { for (let turn = 0; turn < 6; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const form = host.querySelector('form');
+    const result = await field.replaceText({ snapshot: field.getTextSnapshot(), startCodeUnitOffset: 0, endCodeUnitOffset: 7, text: 'Ada' });
+    assert.equal(result.status, 'accepted'); assert.deepEqual(new FormData(form).getAll('query'), ['Ada']);
+    assert.deepEqual(updates, ['Ada']); form.reset(); await drain();
+    assert.deepEqual(new FormData(form).getAll('query'), ['Address']); assert.deepEqual(updates, ['Ada']);
+    const stale = await field.replaceText({ snapshot: result.snapshot, startCodeUnitOffset: 0, endCodeUnitOffset: 3, text: 'Other' });
+    assert.equal(stale.reason, 'stale'); assert.deepEqual(new FormData(form).getAll('query'), ['Address']);
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('derived Form reset stays within its originating field and unregisters with its control', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const visible = shallowRef(true); let resets = 0;
+  const Wrapped = defineComponent({ setup() {
+    provideFormControlReset(() => { resets += 1; });
+    return () => [h(TextField, { defaultValue: 'Primary' }), h(FormField, { name: 'nested' }, { default: () => h(TextField, { defaultValue: 'Nested' }) })];
+  } });
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'primary' }, { default: () => visible.value ? h(Wrapped) : null }) }) });
+  try {
+    app.mount(host); await nextTick(); await nextTick(); const form = host.querySelector('form');
+    form.reset(); await nextTick(); await nextTick(); assert.equal(resets, 1);
+    assert.deepEqual(new FormData(form).getAll('primary'), ['Primary']); assert.deepEqual(new FormData(form).getAll('nested'), ['Nested']);
+    visible.value = false; await nextTick(); form.reset(); await nextTick(); assert.equal(resets, 1);
+  } finally { app.unmount(); host.remove(); }
+});
+
+for (const selectionMode of ['single', 'multiple']) test(`Listbox disabled submission follows its native owner while readonly preserves the selected value (${selectionMode})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const flags = shallowRef({ disabled: false, readonly: true }), proposals = [];
+  const app = createApp({ render: () => h('form', {}, [h(ListboxRoot, {
+    items: ['a', 'b'], selectionMode, defaultValue: selectionMode === 'single' ? 'b' : ['b'],
+    name: 'selection', ...flags.value, 'onUpdate:modelValue': value => proposals.push(value),
+  }, { default: () => ['a', 'b'].map(value => h(ListboxItem, { value }, () => value)) })]) });
+  try {
+    app.mount(host); await nextTick(); const form = host.querySelector('form'), select = host.querySelector('select');
+    assert.equal(select.multiple, selectionMode === 'multiple'); assert.deepEqual(new FormData(form).getAll('selection'), ['b']);
+    flags.value = { disabled: true, readonly: false }; await nextTick();
+    // Happy DOM does not omit disabled selects from FormData; inspect the real target flag.
+    assert.equal(select.disabled, true); assert.equal(select.value, 'b');
+    flags.value = { disabled: false, readonly: true }; await nextTick();
+    assert.equal(select.disabled, false); assert.deepEqual(new FormData(form).getAll('selection'), ['b']);
+    assert.equal(host.querySelector('select'), select); assert.deepEqual(proposals, []);
+  } finally { app.unmount(); host.remove(); }
+});
+
+for (const selectionMode of ['single', 'multiple']) for (const controlled of [false, true]) test(`Listbox registered reset reconciles its mount baseline against the current domain (${selectionMode}/${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const initial = selectionMode === 'single' ? 'a' : ['a', 'b'];
+  const options = shallowRef({ items: ['a', 'b'], selectionMode, required: true, defaultValue: initial, ...(controlled ? { modelValue: initial } : {}) });
+  const updates = []; let state, unmounted = false;
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'choice' }, {
+    default: () => h(ListboxRoot, { ...options.value, 'onUpdate:modelValue': value => updates.push(value) }, {
+      default: current => { state = current; return options.value.items.map(value => h(ListboxItem, { value }, () => value)); },
+    }),
+  }) }) });
+  try {
+    app.mount(host); await nextTick(); await nextTick(); const form = host.querySelector('form');
+    if (controlled) { options.value = { ...options.value, modelValue: selectionMode === 'single' ? 'b' : ['b'] }; await nextTick(); }
+    options.value = { ...options.value, items: ['b'], defaultValue: selectionMode === 'single' ? 'b' : [] }; await nextTick();
+    const proposals = updates.length; form.reset(); await nextTick(); await nextTick();
+    const expected = selectionMode === 'single' && !controlled ? [''] : ['b'];
+    assert.deepEqual(new FormData(form).getAll('choice'), expected);
+    assert.equal(host.querySelector('select').checkValidity(), !(selectionMode === 'single' && !controlled));
+    assert.deepEqual(state.value, selectionMode === 'single' ? expected[0] ?? '' : expected);
+    assert.equal(state.highlightedValue, 'b'); assert.equal(updates.length, proposals);
+    host.querySelector('[role="option"]').click(); await nextTick();
+    const retainedValue = state.value;
+    form.reset(); app.unmount(); unmounted = true; await nextTick();
+    assert.deepEqual(state.value, retainedValue, 'queued reset cannot publish after its owner unmounts');
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+for (const controlled of [0, 2, 5, 7]) test(`Combobox registered reset retains mount defaults and independent controlled axes (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const items = [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }];
+  const options = shallowRef({ items, defaultValue: 'a', defaultInputValue: 'Alpha', defaultOpen: false,
+    ...(controlled & 1 ? { modelValue: 'a' } : {}), ...(controlled & 2 ? { inputValue: 'Alpha' } : {}), ...(controlled & 4 ? { open: false } : {}) });
+  const events = []; let state, unmounted = false;
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'service' }, {
+    default: () => h(ComboboxRoot, { ...options.value, position: false, label: 'Service',
+      'onUpdate:modelValue': value => events.push(['value', value]), 'onUpdate:inputValue': value => events.push(['input', value]),
+      'onUpdate:open': value => events.push(['open', value]),
+    }, { default: current => { state = current; return [h(ComboboxInput), h(ComboboxContent, {}, {
+      default: () => options.value.items.map(item => h(ComboboxItem, { value: item.id }, () => item.label)),
+    })]; } }),
+  }) }) });
+  try {
+    app.mount(host); await drain(); const form = host.querySelector('form'), input = host.querySelector('input');
+    options.value = { ...options.value, defaultValue: 'b', defaultInputValue: 'Later default', defaultOpen: true,
+      ...(controlled & 1 ? { modelValue: 'b' } : {}), ...(controlled & 2 ? { inputValue: 'Beta' } : {}), ...(controlled & 4 ? { open: true } : {}) }; await drain();
+    input.value = 'Beta'; input.setSelectionRange(4, 4); input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' })); await drain();
+    input.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })); await drain();
+    host.querySelectorAll('[role="option"]')[1].click(); await drain();
+    const count = events.length; form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : 'a'); assert.equal(state.inputValue, controlled & 2 ? 'Beta' : 'Alpha');
+    assert.equal(state.open, Boolean(controlled & 4)); assert.equal(input.value, state.inputValue);
+    assert.deepEqual(new FormData(form).getAll('service'), [state.inputValue]); assert.equal(events.length, count, 'reset does not propose new controlled values');
+    options.value = { ...options.value, items: [items[1]] }; await drain(); form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : null, 'removed mount identities are reconciled against the current domain');
+    form.reset(); const retained = input.value; app.unmount(); unmounted = true; await drain(); assert.equal(input.value, retained);
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+for (const [initial, expected] of [[{ defaultValue: 'b' }, 'b'], [{ modelValue: 'b', defaultValue: 'a' }, 'b'], [{ modelValue: null, defaultValue: 'a' }, '']]) {
+  test(`Select SSR encodes initial native selection for ${JSON.stringify(initial)}`, async () => {
+    const { renderToString } = await import('vue/server-renderer');
+    const html = await renderToString(createSSRApp({ render: () => h(SelectRoot, { ...initial, items: ['a', 'b'], name: 'service', label: 'Service', position: false }, {
+      default: () => [h(SelectTrigger, {}, () => 'Choose'), h(SelectContent, {}, { default: () => ['a', 'b'].map(value => h(SelectItem, { value }, () => value)) })],
+    }) }));
+    const form = document.createElement('form'); form.innerHTML = html;
+    // Verify encoded defaults; physical initial FormData remains maintainer-owned.
+    assert.equal(form.querySelector('select').getAttribute('name'), 'service');
+    assert.equal(form.querySelector('option[selected]').getAttribute('value'), expected);
+    assert.equal(form.querySelectorAll('select').length, 1); assert.equal(form.querySelectorAll('option[selected]').length, 1);
+  });
+}
+
+for (const unmountOnExit of [false, true]) for (const controlled of [0, 1, 2, 3]) test(`Select registered reset preserves mount defaults and independent controlled axes (${controlled}/${unmountOnExit})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({ items: ['a', 'b'], defaultValue: 'a', defaultOpen: false,
+    ...(controlled & 1 ? { modelValue: 'a' } : {}), ...(controlled & 2 ? { open: false } : {}) });
+  const events = []; let state, unmounted = false;
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'service' }, {
+    default: () => h(SelectRoot, { ...options.value, unmountOnExit, label: 'Service', position: false,
+      'onUpdate:modelValue': value => events.push(['value', value]), 'onUpdate:open': value => events.push(['open', value]),
+    }, { default: current => { state = current; return [h(SelectTrigger, {}, () => 'Choose'), h(SelectContent, {}, {
+      default: () => options.value.items.map(value => h(SelectItem, { value }, () => value)),
+    })]; } }),
+  }) }) });
+  try {
+    app.mount(host); await drain(); const form = host.querySelector('form'), trigger = host.querySelector('button'), select = host.querySelector('select');
+    options.value = { ...options.value, defaultValue: 'b', defaultOpen: true,
+      ...(controlled & 1 ? { modelValue: 'b' } : {}), ...(controlled & 2 ? { open: true } : {}) }; await drain();
+    trigger.click(); await drain(); host.querySelectorAll('[role=option]')[1].click(); await drain();
+    assert.deepEqual(new FormData(form).getAll('service'), ['b']);
+    const count = events.length; form.reset(); form.reset(); form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : 'a'); assert.equal(state.open, Boolean(controlled & 2));
+    assert.deepEqual(new FormData(form).getAll('service'), [controlled & 1 ? 'b' : 'a']); assert.equal(events.length, count, 'reset does not propose controlled state changes');
+    assert.equal(host.querySelector('select') === select, true); assert.equal(host.querySelector('button') === trigger, true);
+    options.value = { ...options.value, items: ['b'] }; await drain(); form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : null, 'the existing reconciliation owner removes unavailable mount identities');
+    const retained = state.value; form.reset(); app.unmount(); unmounted = true; await drain(); assert.equal(state.value, retained);
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+for (const popup of [false, true]) for (const controlled of popup ? [0, 1, 2, 3] : [0, 1]) test(`Cascade registered reset preserves mount defaults and controlled ownership (${popup}/${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const nodes = [{ id: 'branch', parentID: null }, { id: 'a', parentID: 'branch' }, { id: 'b', parentID: 'branch' }];
+  const options = shallowRef({ nodes, defaultValue: 'a', defaultOpen: false,
+    ...(controlled & 1 ? { modelValue: 'a' } : {}), ...(controlled & 2 ? { open: false } : {}) });
+  const Root = popup ? CascadeSelectRoot : CascadeListRoot;
+  const Column = popup ? CascadeSelectColumn : CascadeListColumn;
+  const Item = popup ? CascadeSelectItem : CascadeListItem;
+  const events = []; let state, unmounted = false;
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  const columns = current => current.columns.map((_, depth) => h(Column, { depth, label: `Level ${depth + 1}` }, {
+    default: ({ items }) => items.map(value => h(Item, { value }, () => value)),
+  }));
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'choice' }, {
+    default: () => h(Root, { ...options.value, position: false, label: 'Choice',
+      'onUpdate:modelValue': value => events.push(['value', value]), 'onUpdate:open': value => events.push(['open', value]),
+    }, { default: current => { state = current; return popup
+      ? [h(CascadeSelectTrigger, {}, () => 'Choose'), h(CascadeSelectContent, {}, { default: columns })]
+      : columns(current); } }),
+  }) }) });
+  try {
+    app.mount(host); await drain(); const form = host.querySelector('form');
+    options.value = { ...options.value, defaultValue: 'b', defaultOpen: true,
+      ...(controlled & 1 ? { modelValue: 'b' } : {}), ...(controlled & 2 ? { open: true } : {}) }; await drain();
+    if (popup && !(controlled & 2)) { host.querySelector('[data-part="trigger"]').click(); await drain(); }
+    host.querySelector(`[data-sectile-cascade-${popup ? 'select' : 'list'}-id="b"]`).click(); await drain();
+    if (popup && !state.open) { host.querySelector('[data-part="trigger"]').click(); await drain(); }
+    const count = events.length; form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : 'a');
+    if (popup) assert.equal(state.open, Boolean(controlled & 2));
+    assert.deepEqual(new FormData(form).getAll('choice'), [state.value]);
+    assert.equal(events.length, count, 'reset does not emit value/open proposals');
+    options.value = { ...options.value, nodes: nodes.filter(node => node.id !== 'a') }; await drain();
+    const beforeDomainReset = events.length; form.reset(); await drain();
+    assert.equal(state.value, controlled & 1 ? 'b' : null);
+    assert.deepEqual(new FormData(form).getAll('choice'), [state.value ?? '']);
+    assert.equal(events.length, beforeDomainReset);
+    const retained = state; form.reset(); app.unmount(); unmounted = true; await drain();
+    assert.equal(state, retained, 'queued reset cannot publish after unmount');
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+for (const controlled of [false, true]) test(`PinInput registered reset restores native cells without taking controlled ownership (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({ length: 4, defaultValue: '12', ...(controlled ? { modelValue: '12' } : {}) });
+  const values = [], completions = []; let state, unmounted = false;
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'code' }, {
+    default: () => h(PinInputRoot, { ...options.value, label: 'Code', 'onUpdate:modelValue': value => values.push(value), onComplete: value => completions.push(value) }, {
+      default: current => { state = current; return Array.from({ length: options.value.length }, (_, index) => h(PinInputInput, { index, key: index })); },
+    }),
+  }) }) });
+  try {
+    app.mount(host); await drain(); const form = host.querySelector('form'), inputs = [...host.querySelectorAll('[data-part="input"]')];
+    inputs[2].focus(); inputs[2].value = '3'; inputs[2].dispatchEvent(new Event('input', { bubbles: true })); await drain();
+    options.value = { ...options.value, defaultValue: '34', ...(controlled ? { modelValue: '34' } : {}) }; await drain();
+    assert.deepEqual(inputs.map(input => input.value), controlled ? ['3', '4', '', ''] : ['1', '2', '3', '']);
+    const beforeValues = values.length, beforeComplete = completions.length; form.reset(); await drain();
+    assert.equal(state.value, controlled ? '34' : '12');
+    assert.deepEqual(inputs.map(input => input.value), controlled ? ['3', '4', '', ''] : ['1', '2', '', '']);
+    assert.deepEqual(new FormData(form).getAll('code'), [state.value]);
+    assert.equal(values.length, beforeValues); assert.equal(completions.length, beforeComplete);
+    form.reset(); const retained = inputs.map(input => input.value); app.unmount(); unmounted = true; await drain();
+    assert.deepEqual(inputs.map(input => input.value), retained, 'queued reset cannot rewrite retired inputs');
+  } finally { if (!unmounted) app.unmount(); host.remove(); }
+});
+
+test('TagsInput updates localized removal names without reconnecting native input or changing values', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({ defaultValue: ['서울', '부산'], removeLabel: (value, index) => `${index + 1}번째 ${value} 삭제` });
+  const values = [], app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'places' }, {
+    default: () => h(TagsInputRoot, { ...options.value, label: 'Places', 'onUpdate:modelValue': value => values.push(value) }, {
+      default: state => [h(TagsInputInput), ...state.value.map((value, index) => h(TagsInputItem, { index, key: index }, { default: () => h(TagsInputItemDelete, {}, () => value) }))],
+    }),
+  }) }) });
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const input = host.querySelector('[data-part="input"]'), form = host.querySelector('form');
+    let connections = 0; const originalAdd = input.addEventListener;
+    input.addEventListener = function (type, ...args) { if (type === 'input') connections += 1; return originalAdd.call(this, type, ...args); };
+    const buttons = [...host.querySelectorAll('button')]; assert.equal(buttons[0].getAttribute('aria-label'), '1번째 서울 삭제');
+    buttons[0].focus(); options.value = { ...options.value, removeLabel: value => `Delete ${value}` }; await drain();
+    assert.equal(buttons[0].getAttribute('aria-label'), 'Delete 서울'); assert.equal(connections, 0); assert.ok(document.activeElement === buttons[0]);
+    assert.deepEqual(new FormData(form).getAll('places'), ['서울', '부산']); assert.deepEqual(values, []);
+    buttons[0].click(); await drain(); assert.deepEqual(values, [['부산']]);
+    assert.equal(host.querySelector('[data-part="item-delete"]').getAttribute('aria-label'), 'Delete 부산');
+  } finally { app.unmount(); host.remove(); }
+});
 
 test('native and composite Form callback slots are captured once', async () => {
   for (const composite of [false, true]) {
@@ -96,6 +573,89 @@ test('native and composite Form callback slots are captured once', async () => {
     assert.deepEqual(reads, { reset: 1, getValue: 1, isValueEqual: 1 });
     app.unmount();
   }
+});
+
+test('a scoped inactive FormField retains registration and pauses its observer beneath an active Form', async () => {
+  const { HostProvider } = await import('../.verification-dist/host-provider.js');
+  const host = document.createElement('div'); document.body.append(host);
+  const available = shallowRef(true), name = shallowRef('email'), errors = [], liveObservers = new Set();
+  const NativeObserver = globalThis.MutationObserver;
+  globalThis.MutationObserver = class extends NativeObserver {
+    observe(...args) { super.observe(...args); liveObservers.add(this); }
+    disconnect() { super.disconnect(); liveObservers.delete(this); }
+  };
+  let controller;
+  const Observer = defineComponent({ setup() { controller = useFormFieldController('email'); return () => null; } });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => [h(Observer),
+    h(HostProvider, { active: available }, { default: () => h(FormField, { id: 'email', name: name.value }, { default: () => h('input') }) }),
+  ] }) });
+  app.config.errorHandler = error => errors.push(error); app.mount(host);
+  try {
+    await drain(); const input = host.querySelector('input'), field = host.querySelector('[data-part=field]');
+    input.value = 'accepted'; input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('blur')); await drain();
+    controller.upsertIssue({ id: 'retained', source: 'server', fieldId: 'email', message: 'Retained' }); await drain();
+    for (let cycle = 0; cycle < 3; cycle++) {
+      const accepted = controller.state.value; assert.equal(liveObservers.size, 1);
+      available.value = false; await drain(); assert.equal(liveObservers.size, 0); assert.equal(field.inert, true);
+      input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('blur')); await drain();
+      assert.equal(controller.state.value, accepted);
+      name.value = `email${cycle}`; await drain(); assert.equal(liveObservers.size, 0);
+      available.value = true; await drain(); assert.equal(liveObservers.size, 1); assert.equal(field.inert, false);
+      assert.equal(host.querySelector('input'), input); assert.equal(controller.state.value.dirty, true); assert.equal(controller.state.value.touched, true);
+      assert.equal(controller.state.value.issues[0].id, 'retained'); assert.equal(controller.state.value.name, `email${cycle}`);
+    }
+    available.value = false; await drain(); const query = field.querySelectorAll, failure = new Error('Field discovery failed');
+    field.querySelectorAll = () => { throw failure; };
+    try { available.value = true; await drain(); assert.equal(errors[0], failure); assert.equal(field.inert, true); assert.equal(liveObservers.size, 0); }
+    finally { field.querySelectorAll = query; }
+    available.value = false; await drain(); available.value = true; await drain(); assert.equal(liveObservers.size, 1); assert.equal(field.inert, false);
+    input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); await drain(); assert.equal(controller.state.value.dirty, false);
+    available.value = false; await drain(); app.unmount(); assert.equal(liveObservers.size, 0);
+  } finally { app.unmount(); globalThis.MutationObserver = NativeObserver; host.remove(); }
+});
+
+test('cached Form retains field baselines while validators and selectors pause and resume current data', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const shown = shallowRef(true), api = shallowRef(), pending = [], signals = [], errors = [];
+  let selected, constructed = 0;
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  const validate = (_values, context) => { signals.push(context.signal); return new Promise(resolve => pending.push(resolve)); };
+  const Observer = defineComponent({ setup() { constructed++; selected = useFormSelector(state => state); return () => h('span', selected.value.allIssues.length); } });
+  const Cached = defineComponent({ render: () => h(FormRoot, { ref: api, validate, validateOn: ['input'] }, { default: () => [
+    h(FormField, { id: 'email', name: 'email' }, { default: () => h('input') }), h(Observer),
+  ] }) });
+  const Empty = defineComponent({ render: () => null });
+  const app = createApp({ render: () => h(KeepAlive, {}, { default: () => shown.value ? h(Cached) : h(Empty) }) });
+  app.config.errorHandler = error => errors.push(error);
+  app.mount(host);
+  try {
+    await drain(); const input = host.querySelector('input'), form = host.querySelector('form');
+    for (let cycle = 0; cycle < 3; cycle++) {
+      input.value = `accepted-${cycle}`; input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('blur')); await drain();
+      assert.equal(selected.value.dirty, true); assert.equal(selected.value.touched, true);
+      input.value = `accepted-${cycle}-pending`; input.dispatchEvent(new Event('input', { bubbles: true })); await drain();
+      assert.equal(selected.value.validation.status, 'validating'); assert.equal(signals.at(-1).aborted, false);
+      shown.value = false; await drain(); assert.equal(signals.at(-1).aborted, true);
+      const paused = selected.value, action = api.value;
+      action.replaceIssues('form', [{ id: 'paused', source: 'form', message: `Paused ${cycle}` }]); await drain();
+      assert.equal(selected.value, paused, 'inactive selector owns no native subscription');
+      const count = pending.length;
+      input.dispatchEvent(new Event('input', { bubbles: true })); input.dispatchEvent(new Event('blur')); await drain(); assert.equal(pending.length, count);
+      for (const resolve of pending) resolve({ issues: [{ message: 'Stale validation' }] }); await drain();
+      shown.value = true; await drain(); assert.equal(host.querySelector('input'), input); assert.equal(constructed, 1);
+      assert.equal(selected.value.allIssues[0].message, `Paused ${cycle}`); assert.equal(selected.value.dirty, true); assert.equal(selected.value.touched, true);
+    }
+    input.value = ''; input.dispatchEvent(new Event('input', { bubbles: true })); await drain(); assert.equal(selected.value.dirty, false, 'reactivation retains the original field baseline');
+    shown.value = false; await drain(); const add = form.addEventListener, failure = new Error('Form observation failed');
+    form.addEventListener = function(type, ...args) { if (type === 'blur') throw failure; return add.call(this, type, ...args); };
+    try {
+      shown.value = true; await drain(); assert.equal(errors[0], failure); assert.equal(form.inert, true);
+    } finally { form.addEventListener = add; }
+    shown.value = false; await drain(); shown.value = true; await drain(); assert.equal(form.inert, false); assert.equal(host.querySelector('input'), input);
+    shown.value = false; await drain(); app.unmount(); assert.equal(signals.every(signal => signal.aborted), true);
+  } finally { app.unmount(); host.remove(); }
 });
 
 test('nested Form controls mount without a reactive render loop', () => {
@@ -121,6 +681,7 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
     'ListboxRoot',
     'SelectRoot',
     'ComboboxRoot',
+    'TreeSelectRoot',
     'CascadeListRoot',
     'CascadeSelectRoot',
     'RatingRoot',
@@ -130,6 +691,7 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
     'PinInputRoot',
     'SpinButtonRoot',
     'QuantityFieldRoot',
+    'FileInputRoot',
     'DateField',
     'DateTimeField',
     'TimeField',
@@ -457,6 +1019,7 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   const host = document.createElement('div');
   document.body.append(host);
   const controlledUpdates = [];
+  const controlledTextValue = shallowRef('controlled-default');
   const rootRef = ref(null);
   let state;
   const app = createApp({
@@ -470,6 +1033,12 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
         }),
         h(FormField, { name: 'text' }, {
           default: () => h(TextField, { defaultValue: 'sectile-default' }),
+        }),
+        h(FormField, { name: 'controlledText' }, {
+          default: () => h(TextField, { modelValue: controlledTextValue.value }),
+        }),
+        h(FormField, { name: 'textarea' }, {
+          default: () => h(TextField, { multiline: true, defaultValue: 'textarea-default' }),
         }),
         h(FormField, { name: 'uncontrolled' }, {
           default: () => h(CheckboxRoot, { defaultValue: true }),
@@ -491,9 +1060,16 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
 
   const native = host.querySelector('input[name="native"]');
   const text = host.querySelector('input[name="text"]');
+  const controlledText = host.querySelector('input[name="controlledText"]');
+  const textarea = host.querySelector('textarea[name="textarea"]');
   const checkboxRoots = [...host.querySelectorAll('[data-scope="checkbox"][data-part="root"]')];
   assert.ok(native instanceof HTMLInputElement);
   assert.ok(text instanceof HTMLInputElement);
+  assert.ok(controlledText instanceof HTMLInputElement);
+  assert.ok(textarea instanceof window.HTMLTextAreaElement);
+  assert.equal(text.defaultValue, 'sectile-default');
+  assert.equal(controlledText.defaultValue, 'controlled-default');
+  assert.equal(textarea.defaultValue, 'textarea-default');
   assert.equal(checkboxRoots.length, 2);
 
   native.value = 'changed-native';
@@ -534,11 +1110,18 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   checkboxRoots[0].click();
   await nextTick();
 
+  textarea.value = 'changed-textarea';
+  textarea.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+  controlledTextValue.value = 'controlled-latest';
+  await nextTick();
+  assert.equal(controlledText.defaultValue, 'controlled-latest');
   host.querySelector('[data-part="reset"]').click();
   await Promise.resolve();
   await nextTick();
   assert.equal(native.value, 'native-default');
   assert.equal(text.value, 'sectile-default');
+  assert.equal(textarea.value, 'textarea-default');
+  assert.equal(controlledText.value, 'controlled-latest');
   assert.equal(checkboxRoots[0].getAttribute('data-state'), 'checked');
   assert.equal(checkboxRoots[1].getAttribute('data-state'), 'checked');
   assert.deepEqual(controlledUpdates, [false]);
@@ -1736,6 +2319,88 @@ test('TextField and Select remain editable inside a reactive FormField', async (
   host.remove();
 });
 
+for (const controlled of [false, true]) test(`Select selected Form options retain accepted values and registered reset (${controlled})`, async () => {
+  const items = shallowRef(['a', 'b']), mode = shallowRef('selected'), disabled = shallowRef(false), proposals = [], errors = [];
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'service', required: true, disabled: disabled.value }, {
+    default: () => h(SelectRoot, { items: items.value, formOptions: mode.value, ...(controlled ? { modelValue: 'a' } : { defaultValue: 'a' }),
+      position: false, disabled: disabled.value, label: 'Service', 'onUpdate:modelValue': value => proposals.push(value) }, {
+      default: () => [h(SelectTrigger), h(SelectContent, null, { default: () => ['a', 'b'].filter(id => items.value.includes(id)).map(id => h(SelectItem, { value: id }, () => id)) })],
+    }),
+  }) }) });
+  app.config.errorHandler = error => errors.push(error);
+  const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain();
+    const form = host.querySelector('form'), select = host.querySelector('select'), trigger = host.querySelector('[data-part=trigger]'), content = host.querySelector('[data-part=content]');
+    assert.equal(select.options.length, 2); assert.equal(select.required, true); assert.deepEqual(new FormData(form).getAll('service'), ['a']);
+    trigger.click(); await drain(); host.querySelector('[data-sectile-select-id=b]').click(); await drain();
+    assert.deepEqual(proposals, ['b']); assert.deepEqual(new FormData(form).getAll('service'), [controlled ? 'a' : 'b']);
+    assert.equal(select.options.length, 2);
+    mode.value = 'all'; await drain(); assert.equal(select.options.length, 3);
+    mode.value = 'selected'; await drain(); assert.equal(select.options.length, 2);
+    assert.equal(host.querySelector('[data-part=trigger]'), trigger); assert.equal(host.querySelector('[data-part=content]'), content);
+    form.reset(); await drain(); assert.deepEqual(new FormData(form).getAll('service'), ['a']);
+    items.value = ['b']; await drain(); assert.equal(select.options.length, 1); assert.deepEqual(new FormData(form).getAll('service'), ['']);
+    disabled.value = true; await drain();
+    assert.equal(select.disabled, true, select.outerHTML);
+    // Happy DOM serializes disabled SELECT elements; native successful-control
+    // exclusion remains part of maintainer-owned physical acceptance.
+    assert.deepEqual(errors, []);
+  } finally { app.unmount(); host.remove(); }
+});
+
+async function defaultsReaderFixture() {
+  const { useFormFieldDefaults, provideFormBoundary } = await import('../.verification-dist/form-boundary.js');
+  const flags = shallowRef({ disabled: true, readonly: true, required: true }), name = shallowRef(['amount']), readers = {};
+  const Reader = defineComponent({ props: { location: String }, setup(props) {
+    const defaults = useFormFieldDefaults(); readers[props.location] = defaults;
+    return () => h('output', { 'data-defaults': props.location }, defaults === undefined ? 'none' : String(defaults.value.disabled));
+  } });
+  const Owner = defineComponent({ setup() { provideFormControlOwner(); return () => h(Reader, { location: 'owned' }); } });
+  const Boundary = defineComponent({ setup() { provideFormBoundary(); return () => h(Reader, { location: 'boundary' }); } });
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => [h(Reader, { location: 'outside' }),
+    h(FormField, { name: name.value, ...flags.value }, { default: () => [
+      h(Reader, { location: 'inside' }), h(TextField, { defaultValue: 'a' }), h(Owner), h(Boundary),
+    ] }),
+  ] }) });
+  app.mount(host); await nextTick(); await nextTick();
+  return { host, flags, name, readers, dispose() { app.unmount(); host.remove(); } };
+}
+
+test('Form field defaults are scoped readonly scalar snapshots without another control registration', async () => {
+  const fixture = await defaultsReaderFixture();
+  const view = fixture.readers.inside;
+  try {
+    assert.equal(fixture.readers.outside, undefined); assert.equal(fixture.readers.owned, undefined); assert.equal(fixture.readers.boundary, undefined);
+    assert.deepEqual(view.value, { disabled: true, readonly: true, required: true }); assert.equal(Object.isFrozen(view.value), true);
+    assert.equal(Reflect.set(view.value, 'disabled', false), false);
+    const input = fixture.host.querySelector('input'); assert.equal(input.name, 'amount'); assert.equal(fixture.host.querySelectorAll('input').length, 1);
+    const original = view.value;
+    fixture.flags.value = { disabled: true, readonly: true, required: true }; await nextTick(); await nextTick();
+    assert.equal(view.value, original, 'equivalent defaults preserve snapshot identity');
+    fixture.flags.value = { disabled: false, readonly: false, required: false }; await nextTick(); await nextTick();
+    assert.deepEqual(view.value, fixture.flags.value); assert.notEqual(view.value, original);
+    assert.deepEqual(new FormData(fixture.host.querySelector('form')).getAll('amount'), ['a']);
+    const retired = view.value; fixture.dispose();
+    fixture.flags.value = { disabled: true, readonly: true, required: true }; await nextTick();
+    assert.equal(view.value, retired, 'a retained view keeps only the last retired scalar snapshot');
+  } finally { if (fixture.host.isConnected) fixture.dispose(); }
+});
+
+test('a retained field-default view does not retain disposed field metadata', { skip: typeof global.gc !== 'function' }, async () => {
+  let fixture = await defaultsReaderFixture();
+  const view = fixture.readers.inside, borrowedName = new WeakRef(fixture.name.value);
+  fixture.dispose(); fixture.name.value = undefined; fixture = null;
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await new Promise(resolve => setImmediate(resolve)); global.gc();
+    await new Promise(resolve => setImmediate(resolve));
+    if (borrowedName.deref() === undefined) break;
+  }
+  assert.equal(borrowedName.deref(), undefined); assert.deepEqual(view.value, { disabled: true, readonly: true, required: true });
+});
+
 test('explicit control metadata wins over inherited FormField defaults', async () => {
   const host = document.createElement('div');
   document.body.append(host);
@@ -2001,6 +2666,7 @@ test('compound picker inputs inherit endpoint paths without duplicating the fiel
   assert.ok(content instanceof HTMLElement);
   assert.ok(start instanceof HTMLInputElement);
   assert.ok(end instanceof HTMLInputElement);
+  assert.equal(start.getAttribute('aria-labelledby'), 'booking-dates-label');
   assert.equal(content.getAttribute('aria-labelledby'), 'booking-dates-label');
   assert.equal(start.name, 'booking.dates.start');
   assert.equal(end.name, 'booking.dates.end');
@@ -2031,6 +2697,62 @@ const mountCompoundField = async ({ id, name, label, control }) => {
   return { app, host };
 };
 
+for (const controlled of [false, true]) test(`Slider registered reset restores mount baseline without proposals (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host); const updates = [];
+  const options = shallowRef({ defaultValue: 40, ...(controlled ? { modelValue: 40 } : {}) });
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'volume' }, {
+    default: () => h(SliderRoot, { ...options.value, 'onUpdate:modelValue': value => updates.push(value) }, { default: () => [h(SliderTrack), h(SliderThumb)] }),
+  }) }) });
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const thumb = host.querySelector('[data-part="thumb"]');
+    thumb.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain();
+    assert.equal(updates.at(-1), '41');
+    if (controlled) { options.value = { ...options.value, modelValue: 50 }; await drain(); }
+    options.value = { ...options.value, defaultValue: 70 }; await drain();
+    const count = updates.length; host.querySelector('form').reset(); await drain();
+    assert.deepEqual(new FormData(host.querySelector('form')).getAll('volume'), [controlled ? '50' : '40']);
+    assert.equal(updates.length, count);
+    host.querySelector('form').reset(); app.unmount(); await drain();
+    thumb.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain(); assert.equal(updates.length, count);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
+});
+
+test('Slider reconnects live orientation, range and track without retaining retired pointer targets', async () => {
+  const host = document.createElement('div'); document.body.append(host); const updates = [], trackKey = shallowRef(0);
+  const options = shallowRef({ defaultValue: 40, orientation: 'horizontal', label: 'Before', min: 0, max: 100, step: 1 });
+  const app = createApp({ render: () => h(SliderRoot, { ...options.value, 'onUpdate:modelValue': value => updates.push(value) }, {
+    default: () => [h(SliderTrack, { key: trackKey.value }), h(SliderThumb)],
+  }) });
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  const pointer = (target, x, y) => { const event = new Event('pointerdown', { bubbles: true }); Object.assign(event, { pointerId: 1, clientX: x, clientY: y }); target.dispatchEvent(event); };
+  const bounds = { left: 0, top: 0, bottom: 100, width: 100, height: 100 };
+  try {
+    app.mount(host); await drain(); const oldTrack = host.querySelector('[data-part="track"]'); oldTrack.getBoundingClientRect = () => bounds;
+    options.value = { ...options.value, orientation: 'vertical', label: 'After' }; await drain(); pointer(oldTrack, 90, 75); await drain();
+    assert.equal(updates.at(-1), '25'); assert.equal(host.querySelector('[data-part="thumb"]').getAttribute('aria-label'), 'After');
+    trackKey.value++; await drain(); const track = host.querySelector('[data-part="track"]'); track.getBoundingClientRect = () => bounds;
+    pointer(track, 80, 60); await drain(); assert.equal(updates.at(-1), '40'); const count = updates.length;
+    pointer(oldTrack, 0, 0); await drain(); assert.equal(updates.length, count);
+    options.value = { ...options.value, max: 200, step: 2 }; await drain();
+    const thumb = host.querySelector('[data-part="thumb"]'); thumb.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain();
+    assert.equal(updates.at(-1), '42'); assert.equal(thumb.getAttribute('aria-valuemax'), '200');
+    app.unmount(); const finalCount = updates.length; pointer(track, 100, 0); thumb.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain(); assert.equal(updates.length, finalCount);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
+});
+
+test('Slider settles simultaneous controlled range and value updates against the new exact range', async () => {
+  const host = document.createElement('div'); document.body.append(host); const updates = [];
+  const options = shallowRef({ modelValue: 40, min: 0, max: 100, step: 1 });
+  const app = createApp({ render: () => h(SliderRoot, { ...options.value, 'onUpdate:modelValue': value => updates.push(value) }, { default: () => h(SliderThumb) }) });
+  try {
+    app.mount(host); await nextTick(); options.value = { modelValue: 150, min: 0, max: 200, step: 2 }; await nextTick(); await nextTick();
+    const thumb = host.querySelector('[data-part="thumb"]'); assert.equal(thumb.getAttribute('aria-valuenow'), '150'); assert.equal(thumb.getAttribute('aria-valuemax'), '200');
+    thumb.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await nextTick();
+    assert.deepEqual(updates, ['152']); assert.equal(thumb.getAttribute('aria-valuenow'), '150');
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('slider submits a scalar value through a FormField path', async () => {
   const { app, host } = await mountCompoundField({
     id: 'traffic',
@@ -2048,6 +2770,33 @@ test('slider submits a scalar value through a FormField path', async () => {
 
   app.unmount();
   host.remove();
+});
+
+for (const controlled of [false, true]) test(`MultiThumbSlider registered reset restores its mount vector without proposals (${controlled})`, async () => {
+  const host = document.createElement('div'); document.body.append(host); const updates = [], thumbs = ['low', 'high'];
+  const options = shallowRef({ defaultValue: [20, 80], ...(controlled ? { modelValue: [20, 80] } : {}) }); let state;
+  const app = createApp({ render: () => h(FormRoot, {}, { default: () => h(FormField, { name: 'limits' }, {
+    default: () => h(MultiThumbSliderRoot, { thumbs, ...options.value, 'onUpdate:modelValue': values => updates.push([...values]) }, {
+      default: current => { state = current; return thumbs.map(value => h(MultiThumbSliderThumb, { value })); },
+    }),
+  }) }) });
+  const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const low = host.querySelector('[data-sectile-multi-thumb="low"]');
+    low.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain();
+    assert.deepEqual(updates.at(-1), ['21', '80']);
+    if (controlled) { options.value = { ...options.value, modelValue: [30, 70] }; await drain(); }
+    options.value = { ...options.value, defaultValue: [40, 60] }; await drain();
+    const count = updates.length; host.querySelector('form').reset(); await drain();
+    const expected = controlled ? ['30', '70'] : ['20', '80'];
+    assert.deepEqual(state.values, expected);
+    assert.equal(low.getAttribute('aria-valuenow'), expected[0]);
+    assert.deepEqual([...new FormData(host.querySelector('form')).values()], expected);
+    assert.equal(updates.length, count);
+    const retained = state; host.querySelector('form').reset(); app.unmount(); await drain();
+    low.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true })); await drain();
+    assert.equal(state, retained); assert.equal(updates.length, count);
+  } finally { if (host.querySelector('[data-part="root"]')) app.unmount(); host.remove(); }
 });
 
 test('multi-thumb slider submits indexed values through a FormField path', async () => {

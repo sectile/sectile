@@ -20,7 +20,7 @@ import { findDelegatedStableID } from './identity/delegated-event.js';
 import { stableIDElementToken, stableIDToken } from './identity.js';
 import { createDisabledItems } from './choice/disabled-items.js';
 import { setInteractionAttributes } from './interaction/attributes.js';
-import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
+import { horizontalArrow, printableKey, repeatedTypeahead, type ReadingDirection } from './interaction/keyboard.js';
 
 export { DEFAULT_LISTBOX_SELECTION_MODE } from '@sectile/core/listbox';
 
@@ -717,19 +717,6 @@ function listboxIntent<ID extends StableID>(event: ListboxEvent<ID>): 'navigate'
   return event === 'next' || event === 'previous' || event === 'first' || event === 'last'
     ? 'navigate'
     : 'mutate';
-}
-
-function printableKey(input: KeyboardInput): string | null {
-  return input.altKey === true || input.ctrlKey === true || input.metaKey === true
-    || Array.from(input.key).length !== 1
-    ? null
-    : input.key;
-}
-
-function repeatedTypeahead(buffer: string, next: string): string {
-  return buffer.length > 0 && Array.from(buffer).every((character) => character === next)
-    ? next
-    : `${buffer}${next}`;
 }
 
 function controlledInputError<ID extends StableID>(

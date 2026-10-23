@@ -625,6 +625,10 @@ const ChartRootRuntime = /* @__PURE__ */ defineComponent({
     watch(() => props.dom?.accessibilityLabel, (label) => {
       connection.value?.setAccessibilityLabel(label);
     }, { flush: 'post' });
+    watch(() => props.dom?.renderStyle, (style) => {
+      const result = connection.value?.setRenderStyle(style ?? {});
+      if (result && !result.ok) report(new TypeError(`${result.error.code}: ${result.error.message}`));
+    }, { deep: false, flush: 'post' });
 
     onMounted(() => {
       mounted = true;

@@ -135,6 +135,26 @@ test('bounds enforce explicit input ceilings', () => {
   assert.throws(() => boundsOfRects([rectAt(0)], { maxRects: Number.NaN }), { code: 'invalid-boundary' });
 });
 
+test('nearest rectangle clamping preserves covering positions and moves only to the nearest feasible edge', () => {
+  const boundary = { x: 10, y: 20, width: 100, height: 80 };
+  for (const [input, expected] of [
+    [{ x: 25, y: 35, width: 20, height: 10 }, { x: 25, y: 35 }],
+    [{ x: -15, y: 95, width: 20, height: 10 }, { x: 10, y: 90 }],
+    [{ x: -40, y: -10, width: 200, height: 160 }, { x: -40, y: -10 }],
+    [{ x: 40, y: 50, width: 200, height: 160 }, { x: 10, y: 20 }],
+    [{ x: -120, y: -100, width: 200, height: 160 }, { x: -90, y: -60 }],
+  ]) {
+    const output = clampRect(input, boundary, undefined, 'nearest');
+    assert.deepEqual(output, { ...input, ...expected });
+    assert.equal(Object.isFrozen(output), true);
+  }
+  const oversized = { x: -40, y: -10, width: 200, height: 160 };
+  assert.deepEqual(clampRect(oversized, boundary), { ...oversized, x: 10, y: 20 }, 'Existing default start alignment remains unchanged');
+  const inset = { top: 5, right: 10, bottom: 15, left: 20 };
+  assert.deepEqual(clampRect({ x: -140, y: -100, width: 200, height: 160 }, boundary, inset, 'nearest'), { x: -100, y: -75, width: 200, height: 160 });
+  assert.deepEqual(clampRect({ x: -1, y: -2, width: 10, height: 10 }, { x: 0, y: 0, width: 0, height: 0 }, undefined, 'nearest'), { x: -1, y: -2, width: 10, height: 10 });
+});
+
 function rectAt(index) {
   return { x: (index % 8) - 4.5, y: Math.floor(index / 8) - 3.25, width: index % 5, height: (index * 3) % 7 };
 }

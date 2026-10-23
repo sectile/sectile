@@ -8,6 +8,7 @@ import {
   type Component,
   type ComputedRef,
   type InjectionKey,
+  type ShallowRef,
 } from 'vue';
 import {
   connectDataTable,
@@ -46,10 +47,10 @@ import type {
   TabularWireValue,
 } from '@sectile/tabular';
 import type { PrimitiveAs } from '../primitive.js';
-import { createTabularParts, type HostConnection } from './parts.js';
+import { createTabularHost, createTabularParts, type HostConnection, type TabularHost } from './parts.js';
 import {
   createTabularComponentSuite,
-  type TabularBodyComponent,
+  type TabularAutomaticBodyProps, type TabularBodyComponent,
   type TabularComponent,
 } from './components.js';
 import { controlledValues, aliasVueProfileController, createVueProfileController, semanticController, type VueProfileController } from './controller.js';
@@ -117,16 +118,11 @@ declare const dataTableSchema: unique symbol;
 export interface DataTableController<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> extends VueProfileController<TabularSnapshot, DataTableEvent, SemanticDataTableCommand>, SourceReturn<DataTableSourceResolver<LeafCells, GroupCells>> {
   readonly [dataTableSchema]?: { readonly leaf: LeafCells; readonly group: GroupCells };
   readonly acceptedViewState: ComputedRef<DataTableAcceptedViewState<LeafCells, GroupCells>>;
+  readonly columnSizes: Readonly<ShallowRef<Readonly<Record<string, number>>>>;
   getProjection(): DataTableProjection;
 }
 
-interface HostOptions {
-  readonly columnSizes?: Readonly<Record<string, number>>;
-  readonly defaultColumnSizes?: Readonly<Record<string, number>>;
-  readonly onColumnSizesChange?: DataTableColumnSizeChangeHandler;
-}
-const hosts = new WeakMap<object, HostOptions>();
-const activeConnections = new WeakMap<object, HostConnection>();
+const hosts = new WeakMap<object, TabularHost>();
 
 export function useDataTable<
   const Source extends SourceResolver,
@@ -166,13 +162,14 @@ export function useDataTable<
   };
   const semantic = createDataTable(semanticOptions);
   const base = createVueProfileController(semantic);
-  const controller = Object.freeze({ ...base, getProjection: () => semantic.getProjection() });
-  aliasVueProfileController(controller, base);
-  hosts.set(controller, Object.freeze({
+  const host = createTabularHost(Object.freeze({
     ...(options.columnSizeState === undefined ? {} : { columnSizes: options.columnSizeState.value }),
     ...(options.defaultColumnSizeState === undefined ? {} : { defaultColumnSizes: options.defaultColumnSizeState }),
     ...(options.onColumnSizeStateChange === undefined ? {} : { onColumnSizesChange: options.onColumnSizeStateChange }),
   }));
+  const controller = Object.freeze({ ...base, columnSizes: host.columnSizes, getProjection: () => semantic.getProjection() });
+  aliasVueProfileController(controller, base);
+  hosts.set(controller, host);
   if (options.initialView !== undefined) unwrapResult(controller.synchronizeView(options.initialView));
   const source = useProfileSource(controller, options.source, {
     ...(options.onSourceError === undefined ? {} : { onError: options.onSourceError }),
@@ -193,11 +190,9 @@ export function useDataTable<
     dispose: () => { for (const stop of stops.splice(0)) stop(); source.dispose(); dispose(); },
   }) as DataTableController<LeafCells, GroupCells>;
   aliasVueProfileController(wrapped, controller);
-  hosts.set(wrapped, hosts.get(controller) ?? {});
+  hosts.set(wrapped, host);
   if (options.columnSizeState !== undefined) stops.push(watch(() => options.columnSizeState!.value, (value) => {
-    hosts.set(wrapped, Object.freeze({ ...hosts.get(wrapped), columnSizes: value }));
-    const result = activeConnections.get(wrapped)?.syncControlledValues?.({ ...controlledValues(options), columnSizes: value });
-    if (result !== undefined && !result.ok) throw new TypeError('Controlled DataTable column sizes failed to synchronize.');
+    host.synchronizeColumnSizes(value, controlledValues(options));
   }, { deep: false }));
   if (getCurrentScope() !== undefined) onScopeDispose(wrapped.dispose);
   return wrapped;
@@ -213,11 +208,11 @@ const parts = createTabularParts({
   connect: (element, controller, callbacks) => connectDataTable({
     controller: semanticController(controller) as SemanticDataTableController,
     table: element as HTMLTableElement,
-    ...hosts.get(controller),
+    ...hosts.get(controller)?.getOptions(),
     ...(callbacks.onCommand === undefined ? {} : { onCommand: callbacks.onCommand as DataTableCommandHandler }),
     onSnapshotChange: callbacks.onSnapshotChange,
   }) as HostConnection,
-  connectionChanged: (controller, connection) => { if (connection === null) activeConnections.delete(controller); else activeConnections.set(controller, connection); },
+  connectionChanged: (controller, connection) => hosts.get(controller)?.connectionChanged(connection),
 });
 
 export interface DataTableProviderProps {}
@@ -244,7 +239,7 @@ export interface DataTableBodySlotProps<LeafCells extends object = TabularCellRe
 export type DataTableProviderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>;
 export type DataTableCaptionProps = DataTablePartProps;
 export type DataTableHeaderProps = DataTablePartProps;
-export interface DataTableBodyProps extends DataTablePartProps { readonly manual?: boolean }
+export interface DataTableBodyProps extends DataTablePartProps, TabularAutomaticBodyProps {}
 export type DataTableCaptionSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableHeaderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableHeaderRowSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableColumnHeaderSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableSortTriggerSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableFilterControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableColumnResizeHandleSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableRowSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableSelectionControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableBulkSelectionControlSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTableRootSlotProps<LeafCells, GroupCells>; export type DataTableDisclosureSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableCellSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>; export type DataTableEditorSlotProps<LeafCells extends object = TabularCellRecord, GroupCells extends object = LeafCells> = DataTablePartSlotProps<LeafCells, GroupCells>;
 
 export interface DataTableComponents<LeafCells extends object, GroupCells extends object = LeafCells> {

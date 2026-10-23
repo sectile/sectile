@@ -195,6 +195,32 @@ test('Canvas2D consumes all six semantic profiles in data space with per-primiti
   assert.equal(calls.some(([name, value]) => name === 'set:fillStyle' && String(value).includes('255, 0, 0')), true);
 });
 
+test('renderer style updates preserve immutable fallback paint and retained geometry', () => {
+  for (const [mode, make] of [['canvas2d', fixture], ['webgl2', webglFixture]]) {
+    const { calls, canvas } = make(), renderer = createChartRenderer(canvas, { mode }), frame = projection();
+    frame.dataBatches = frame.dataBatches.map(batch => ({ ...batch, colors: undefined }));
+    renderer.render(frame);
+    const color = [1, 0, 0, 1], style = { color, pointRadius: 5, lineWidth: 4 };
+    assert.deepEqual(renderer.setStyle(style), { ok: true, value: true });
+    color[0] = 0;
+    assert.deepEqual(renderer.setStyle({ color: [1, 0, 0, 1], pointRadius: 5, lineWidth: 4 }), { ok: true, value: false });
+    assert.equal(renderer.setStyle({ color: [1, , 0, 1] }).ok, false);
+    assert.equal(renderer.setStyle({ get color() { throw Error('external getter'); } }).ok, false);
+    assert.equal(renderer.setStyle({ pointRadius: 0 }).ok, false);
+    calls.length = 0; renderer.render(frame);
+    if (mode === 'canvas2d') {
+      assert.ok(calls.some(([name, value]) => name === 'set:fillStyle' && value === 'rgba(255, 0, 0, 1)'));
+      assert.ok(calls.some(([name, value]) => name === 'set:lineWidth' && value === 4));
+    } else {
+      assert.ok(calls.some(([name, , red, green, blue, alpha]) => name === 'vertexAttrib4f' && red === 1 && green === 0 && blue === 0 && alpha === 1));
+      assert.equal(renderer.getDiagnostics().uploadedBytes, 0);
+      assert.equal(renderer.getDiagnostics().reusedGeometryBuffers, 6);
+    }
+    renderer.disconnect(); assert.equal(renderer.setStyle(style).ok, false);
+    assert.equal(renderer.getDiagnostics().liveResources, 0);
+  }
+});
+
 test('renderer disconnect is idempotent and leaves zero live resources', () => {
   const { canvas } = fixture();
   const renderer = createChartRenderer(canvas, { mode: 'canvas2d' });

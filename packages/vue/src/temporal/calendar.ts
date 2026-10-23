@@ -69,6 +69,7 @@ export const CalendarRoot = /* @__PURE__ */ defineComponent({
     defaultValue: { type: Object as PropType<DateValue | null>, default: null },
     highlightedValue: { type: Object as PropType<DateValue>, default: undefined },
     defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
+    referenceDate: { type: Object as PropType<DateValue>, default: undefined },
     defaultView: { type: String as PropType<CalendarViewMode>, default: 'month' },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },

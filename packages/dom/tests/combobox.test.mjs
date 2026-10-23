@@ -12,6 +12,107 @@ import {
   toComboboxTextEvent,
 } from '../.verification-dist/combobox.js';
 
+test('DOM combobox borrows external text while owning only candidate navigation and presentation', () => {
+  const input = new FakeTextElement(), popup = new FakeElement(), accepted = [];
+  let composing = false, inspected = 0;
+  for (const property of ['value', 'selectionStart', 'selectionEnd', 'selectionDirection', 'disabled', 'readOnly']) {
+    Object.defineProperty(input, property, { configurable: true,
+      get() { throw Error('External editor owns ' + property); }, set() { throw Error('External editor owns ' + property); } });
+  }
+  const connection = createCombobox({ input, popup, items: items(), presentation: 'inline', manageText: false,
+    defaultInputState: createTextEditingState('al', selection(2)), defaultOpen: true, defaultHighlightedValue: 'a',
+    policies: fixture().policies, isInputComposing: () => { inspected++; return composing; }, onAccept: id => accepted.push(id) });
+  try {
+    assert.equal(input.attributes.get('role'), 'combobox'); assert.equal(popup.attributes.get('role'), 'listbox');
+    assert.deepEqual([...input.listeners].filter(([, listeners]) => listeners.size).map(([name]) => name), ['keydown']);
+    assert.equal(connection.handleBeforeInput({ inputType: 'insertText', data: 'unowned' }), false);
+    const snapshot = connection.getSnapshot(); input.emit('input', { inputType: 'insertText' }); assert.equal(connection.getSnapshot(), snapshot);
+    inspected = 0; assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true); assert.equal(inspected, 1);
+    assert.equal(connection.getSnapshot().state.cursor.current, 'c');
+    composing = true; assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false); assert.deepEqual(accepted, []);
+    composing = false; assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true); assert.deepEqual(accepted, ['c']);
+    assert.equal(connection.getSnapshot().state.text.snapshot.text, 'Alpine');
+    connection.suspend(); for (const listeners of input.listeners.values()) assert.equal(listeners.size, 0);
+    for (const listeners of popup.listeners.values()) assert.equal(listeners.size, 0);
+    connection.resume(); connection.render(); assert.equal(input.listeners.get('keydown').size, 1);
+  } finally { connection.disconnect(); }
+  for (const listeners of input.listeners.values()) assert.equal(listeners.size, 0);
+  for (const listeners of popup.listeners.values()) assert.equal(listeners.size, 0);
+});
+
+test('DOM combobox rendered publication leaves full-domain navigation and semantic revisions intact', () => {
+  const input = new FakeTextElement(), popup = new FakeElement(), accepted = [];
+  let visible = new Set(['a']), reads = 0, identities = 0;
+  const connection = createCombobox({ input, popup, items: items(), presentation: 'inline', defaultOpen: true,
+    defaultHighlightedValue: 'a', isItemRendered: id => { reads++; return visible.has(id); },
+    getItemElementID: id => { identities++; return 'option-' + id; }, onAccept: id => accepted.push(id) });
+  try {
+    assert.equal(input.attributes.get('aria-activedescendant'), 'option-a');
+    connection.handleEvent('next'); assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+    assert.equal(input.attributes.has('aria-activedescendant'), false);
+    const snapshot = connection.getSnapshot(); reads = 0; identities = 0;
+    connection.setInputAttributes(); assert.equal(reads, 1); assert.equal(identities, 0);
+    visible = new Set(['b']); connection.setInputAttributes();
+    assert.equal(input.attributes.get('aria-activedescendant'), 'option-b'); assert.equal(connection.getSnapshot(), snapshot);
+    visible.clear(); connection.setInputAttributes(); assert.equal(input.attributes.has('aria-activedescendant'), false);
+    assert.equal(connection.getSnapshot(), snapshot);
+    connection.handleEvent('accept'); assert.deepEqual(accepted, ['b']);
+  } finally { connection.disconnect(); }
+});
+
+test('DOM combobox releases rendered-publication payload with a disconnected facade held', { skip: typeof global.gc !== 'function' }, async () => {
+  function disconnected() {
+    const payload = { visible: new Set(['a']) };
+    const connection = createCombobox({ input: new FakeTextElement(), popup: new FakeElement(), items: items(),
+      presentation: 'inline', defaultOpen: true, defaultHighlightedValue: 'a',
+      isItemRendered: id => payload.visible.has(id), manageText: false, isInputComposing: () => payload.visible.size === 0 });
+    connection.disconnect();
+    connection.disconnect();
+    return { connection, payload: new WeakRef(payload) };
+  }
+  const held = disconnected();
+  for (let attempt = 0; attempt < 24; attempt++) {
+    await new Promise(resolve => setImmediate(resolve));
+    global.gc();
+  }
+  assert.equal(held.connection.getActive(), false);
+  assert.equal(held.payload.deref(), undefined);
+});
+
+test('DOM combobox delegates live candidate eligibility for navigation and acceptance', () => {
+  const input = new FakeTextElement(), popup = new FakeElement(), accepted = [];
+  let allowed = 'b';
+  const connection = createCombobox({ input, popup, items: items(), defaultOpen: true, defaultHighlightedValue: 'a',
+    policies: { eligible: id => id === allowed }, onAccept: id => accepted.push(id) });
+  try {
+    assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false);
+    assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true); assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+    assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true); assert.deepEqual(accepted, ['b']);
+    allowed = 'none'; assert.equal(connection.handleEvent({ type: 'accept', id: 'b' }), false); assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false);
+    connection.handleKeyboardEvent(keyboardEvent('ArrowDown')); assert.equal(connection.getSnapshot().state.cursor.current, null);
+  } finally { connection.disconnect(); }
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), false);
+});
+
+test('DOM inline Combobox keeps text, navigation and listbox ARIA while its enclosing host owns dismissal', () => {
+  const input = new FakeTextElement(), popup = new FakeElement(), accepted = [];
+  popup.id = 'inline-commands';
+  const connection = createCombobox({ input, popup, presentation: 'inline', defaultOpen: true, items: items(), policies: fixture().policies, onAccept: id => accepted.push(id) });
+  try {
+    connection.setInputAttributes('Commands'); connection.setPopupAttributes('Commands');
+    assert.equal(connection.getLayerOrder(), null); assert.equal(input.attributes.get('aria-controls'), 'inline-commands');
+    assert.equal(input.attributes.get('role'), 'combobox'); assert.equal(popup.attributes.get('role'), 'listbox');
+    assert.equal(connection.handleKeyboardEvent(keyboardEvent('Escape')), false); assert.equal(connection.getSnapshot().state.popupOpen, true);
+    input.value = 'al'; input.selectionStart = 2; input.selectionEnd = 2; input.emit('input', { inputType: 'insertText' });
+    assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true); assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), true);
+    assert.deepEqual(accepted, ['c']); assert.equal(input.value, 'Alpine');
+    assert.equal(connection.handleEvent('close'), true); assert.equal(connection.getSnapshot().state.popupOpen, false);
+  } finally { connection.disconnect(); }
+  assert.equal(connection.getActive(), false); assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), false);
+  const invalid = tryCreateCombobox({ input, popup, items: items(), presentation: 'floating' });
+  assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'dom.combobox-presentation');
+});
+
 test('DOM combobox facade owns construction, native text input, ARIA, navigation, and acceptance', async () => {
   const input = new FakeTextElement();
   const popup = new FakeElement();
@@ -36,6 +137,9 @@ test('DOM combobox facade owns construction, native text input, ARIA, navigation
   input.selectionEnd = 2;
   input.emit('input', { inputType: 'insertText' });
   assert.equal(connection.getSnapshot().state.cursor.current, 'a');
+  const beforeCancelledKey = connection.getSnapshot();
+  assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown', { defaultPrevented: true })), false);
+  assert.equal(connection.getSnapshot(), beforeCancelledKey);
   assert.equal(connection.handleKeyboardEvent(keyboardEvent('ArrowDown')), true);
   assert.equal(input.attributes.get('aria-activedescendant'), 'sectile-combobox-s%3Ac');
   const item = new FakeElement();
@@ -96,6 +200,72 @@ test('DOM combobox restores exact popup hidden ownership on disconnect', () => {
   assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
   rendererOwned.disconnect();
   assert.equal(unmanaged.getAttribute('hidden'), 'until-found');
+});
+
+test('native Combobox pauses input resources without replacing accepted state and drains failures', async () => {
+  for (const withPopup of [false, true]) {
+    const input = new FakeTextElement(), popup = withPopup ? new FakeElement() : undefined;
+    const requests = [], accepted = [];
+    let failUpdate = false;
+    const failure = new Error('Combobox projection failed');
+    const connection = createCombobox({ input, ...(popup ? { popup } : {}), items: items(), policies: fixture().policies, open: true,
+      onOpenChange: ({ value }) => requests.push(value), onAccept: id => accepted.push(id),
+      onUpdate: () => { if (failUpdate) throw failure; },
+    });
+    try {
+      input.emit('compositionstart', {});
+      input.value = 'be'; input.selectionStart = 2; input.selectionEnd = 2;
+      input.emit('input', { inputType: 'insertCompositionText' });
+      input.emit('compositionend', {});
+      const snapshot = connection.getSnapshot();
+      connection.suspend(); connection.suspend();
+      await Promise.resolve();
+      assert.equal(connection.getSnapshot(), snapshot);
+      assert.equal(connection.getActive(), false);
+      for (const listeners of input.listeners.values()) assert.equal(listeners.size, 0);
+      if (popup) { assert.equal(popup.hidden, true); for (const listeners of popup.listeners.values()) assert.equal(listeners.size, 0); }
+      input.value = 'unobserved'; input.emit('input', { inputType: 'insertText' });
+      assert.equal(connection.handleKeyboardEvent(keyboardEvent('Enter')), false);
+      assert.deepEqual(accepted, []);
+      connection.resume(); connection.resume();
+      assert.equal(input.value, 'be');
+      assert.equal(connection.getSnapshot().state.text.composition, null);
+      assert.equal(connection.getSnapshot().state.cursor.current, 'b');
+      assert.equal(connection.getActive(), true);
+      for (let cycle = 0; cycle < 3; cycle++) {
+        connection.suspend(); connection.render();
+        assert.equal(connection.getSnapshot().state.popupOpen, true);
+        connection.resume();
+        for (const listeners of input.listeners.values()) assert.equal(listeners.size, 1);
+      }
+      assert.deepEqual(requests, []);
+      if (popup) {
+        let paint;
+        assert.equal(connection.subscribeLayerPresentation(next => { paint = next; }).ok, true);
+        const generation = paint.generation;
+        connection.suspend(); assert.equal(paint.phase, 'closed');
+        connection.resume();
+        assert.equal(connection.subscribeLayerPresentation(next => { paint = next; }).ok, true);
+        assert.ok(paint.generation > generation); assert.equal(paint.phase, 'active');
+      }
+      if (!popup) {
+        assert.equal(connection.getLayerOrder(), null);
+        assert.equal(connection.subscribeLayerPresentation(() => {}).ok, false);
+        assert.equal(connection.syncLayerParent(null).ok, false);
+      }
+      failUpdate = true;
+      assert.throws(() => connection.suspend(), error => error === failure);
+      for (const listeners of input.listeners.values()) assert.equal(listeners.size, 0);
+      assert.equal(connection.getActive(), false);
+      failUpdate = false; connection.resume();
+      failUpdate = true;
+      assert.throws(() => connection.disconnect(), error => error === failure);
+      connection.resume(); connection.render(); connection.disconnect();
+      assert.equal(connection.getActive(), false);
+      for (const listeners of input.listeners.values()) assert.equal(listeners.size, 0);
+      assert.deepEqual(requests, []);
+    } finally { failUpdate = false; connection.destroy(); }
+  }
 });
 
 test('DOM keyboard and text inputs map onto combobox semantics', () => {

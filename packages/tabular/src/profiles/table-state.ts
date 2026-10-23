@@ -51,7 +51,7 @@ export function prepareControlledDataTableState(
   let next = current;
   let requestNeeded = false;
   if (values.query !== undefined && values.query !== current.query) {
-    const query = canonicalizeTabularStateQuery(model, values.query);
+    const query = canonicalizeTabularStateQuery(model, values.query, current);
     if (!query.ok) return query;
     const queryRevision = nextRevision(next.queryRevision);
     if (!queryRevision.ok) return queryRevision;

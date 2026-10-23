@@ -6,23 +6,30 @@ import {
   mergeProps,
   onBeforeUnmount,
   onMounted,
+  watch,
   provide,
+  shallowRef,
   type Component,
   type ComputedRef,
   type InjectionKey,
   type PropType,
+  type ShallowRef,
   type SlotsType,
   type VNodeChild,
 } from 'vue';
-import type { TabularCellAddress, TabularColumnID, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID } from '@sectile/tabular';
+import type { TabularCellAddress, TabularColumnID, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID, TabularSnapshot } from '@sectile/tabular';
+import { getAllMatchingSelectionState, rowSelectionContains } from '@sectile/tabular/data-table';
+import type { DataGridState } from '@sectile/tabular/data-grid';
+import type { DataTableConnectionOptions, DataTableColumnSizeState } from '@sectile/dom/tabular';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { provideProfile, useProfile, type ProfileContext } from './context.js';
-import { refreshVueProfileController, stateOf, type VueProfileController } from './controller.js';
+import { refreshVueProfileController, snapshotOf, stateOf, type VueProfileController } from './controller.js';
 
 export interface HostConnection {
   disconnect(): void;
   refresh(): void;
   getProjection(): { readonly generation: number };
+  getColumnSizeState(): DataTableColumnSizeState;
   setHeaderCellAttributes?(element: HTMLTableCellElement, options: HeaderReference): void;
   setColumnHeaderAttributes?(element: HTMLElement, options: HeaderReference): void;
   registerRow(element: HTMLElement, options: { readonly rowID: TabularRowID | TabularGroupID; readonly expectedProjectionGeneration?: number }): { readonly ok: boolean; readonly value?: () => void };
@@ -37,6 +44,35 @@ export interface HostConnection {
   bindEditor(element: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement, options: unknown): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: unknown): () => void;
   syncControlledValues?(values: Readonly<Record<string, unknown>>): { readonly ok: boolean };
+}
+
+type HostColumnSizeOptions = Pick<DataTableConnectionOptions, 'columnSizes' | 'defaultColumnSizes' | 'onColumnSizesChange'>;
+
+export interface TabularHost {
+  readonly columnSizes: Readonly<ShallowRef<Readonly<Record<string, number>>>>;
+  getOptions(): HostColumnSizeOptions;
+  connectionChanged(connection: HostConnection | null): void;
+  synchronizeColumnSizes(values: Readonly<Record<string, number>>, controlled: object): void;
+}
+
+export function createTabularHost(initialOptions: HostColumnSizeOptions): TabularHost {
+  let options = initialOptions;
+  let connection: HostConnection | null = null;
+  const columnSizes = shallowRef(options.columnSizes ?? options.defaultColumnSizes ?? Object.freeze({}));
+  return {
+    columnSizes,
+    getOptions: () => options,
+    connectionChanged: (value) => {
+      connection = value;
+      if (value !== null) columnSizes.value = value.getColumnSizeState().values;
+    },
+    synchronizeColumnSizes: (values, controlled) => {
+      const result = connection?.syncControlledValues?.({ ...controlled, columnSizes: values });
+      if (result !== undefined && !result.ok) throw new TypeError('Controlled Tabular column sizes failed to synchronize.');
+      options = Object.freeze({ ...options, columnSizes: values });
+      if (connection === null) columnSizes.value = values;
+    },
+  };
 }
 
 type HeaderReference =
@@ -91,6 +127,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     props: Record<string, unknown>,
     bind: (connection: HostConnection, element: HTMLElement, values: Readonly<Record<string, unknown>>) => (() => void) | undefined,
     rowAware = false,
+    seedAttributes?: (values: Readonly<Record<string, unknown>>, snapshot: TabularSnapshot, as: PrimitiveAs | undefined, profile: State) => Readonly<Record<string, unknown>>,
   ): Component => defineComponent({
     name: `Sectile${config.prefix}${suffix}`,
     inheritAttrs: false,
@@ -106,21 +143,41 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         return Object.freeze({ ...resolved, rowID: row.id });
       };
       let release: (() => void) | undefined;
-      onBeforeUnmount(() => release?.());
-      const elementRef = (value: unknown): void => {
+      let element: HTMLElement | null = null;
+      const rebind = (): void => {
         release?.();
         release = undefined;
-        if (!(value instanceof HTMLElement) || context.connection.value === null) return;
-        release = bind(context.connection.value, value, values());
+        if (element === null || context.connection.value === null) return;
+        release = bind(context.connection.value, element, values());
       };
-      return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-        as: runtimeProps.as,
-        asChild: runtimeProps.asChild,
-        elementRef,
-        'data-scope': config.profile,
-        'data-part': part,
-        role: config.profile === 'data-table' ? undefined : part === 'row' ? 'row' : part === 'column-header' ? 'columnheader' : part === 'cell' ? 'gridcell' : undefined,
-      }), { default: () => slots['default']?.(partSlot(context, inheritedRow)) });
+      const elementRef = (value: unknown): void => {
+        element = value instanceof HTMLElement ? value : null;
+        rebind();
+      };
+      // Children mount before Root connects. Reconfigure only when the host,
+      // identity or authored binding options change, not on every row snapshot.
+      watch([context.connection,
+        ...Object.keys(props).map(key => () => (runtimeProps as Readonly<Record<string, unknown>>)[key]),
+        ...(rowAware ? [() => inheritedRow?.value.id] : []),
+        ...(suffix === 'ColumnHeader' ? [context.snapshot] : []),
+      ], rebind, { flush: 'post' });
+      onBeforeUnmount(() => { element = null; release?.(); release = undefined; });
+      // Seed SSR/hydration semantics without per-row selection subscriptions.
+      // The existing DOM connection publishes live control state.
+      return (): VNodeChild => {
+        const profile = seedAttributes && (suffix === 'BulkSelectionControl' || suffix === 'Editor' || runtimeProps.as === 'input' && !runtimeProps.asChild)
+          ? context.controller.getSnapshot() : undefined;
+        return h(Primitive, mergeProps(attrs, {
+          ...(seedAttributes && profile !== undefined
+            ? seedAttributes(values(), snapshotOf(profile), runtimeProps.asChild ? undefined : runtimeProps.as, profile) : undefined),
+          as: runtimeProps.as,
+          asChild: runtimeProps.asChild,
+          elementRef,
+          'data-scope': config.profile,
+          'data-part': part,
+          role: suffix === 'BulkSelectionControl' ? 'checkbox' : config.profile === 'data-table' ? undefined : part === 'row' ? 'row' : part === 'column-header' ? 'columnheader' : part === 'cell' ? 'gridcell' : undefined,
+        }), { default: () => slots['default']?.(partSlot(context, inheritedRow)) });
+      };
     },
   });
 
@@ -145,6 +202,9 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     setup(props, { attrs, expose, slots }) {
       const context = usePrivate('Root');
       let element: HTMLElement | null = null;
+      // External controlled values and accepted source responses publish through
+      // Vue; refresh registered DOM recipients after their render has committed.
+      watch(context.snapshot, () => context.connection.value?.refresh(), { flush: 'post' });
       const connect = (): void => {
         config.connectionChanged?.(context.controller, null);
         context.connection.value?.disconnect();
@@ -153,7 +213,10 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         try {
           context.connection.value = config.connect(element, context.controller, {
             ...(props.onCommand === undefined ? {} : { onCommand: props.onCommand }),
-            onSnapshotChange: () => refreshVueProfileController(context.controller),
+            onSnapshotChange: () => {
+              config.connectionChanged?.(context.controller, context.connection.value);
+              refreshVueProfileController(context.controller);
+            },
           });
           config.connectionChanged?.(context.controller, context.connection.value);
         } catch (error: unknown) {
@@ -205,21 +268,24 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   });
   const AutomaticRow = defineComponent({
     name: `Sectile${config.prefix}AutomaticRow`,
+    inheritAttrs: false,
     props: { row: { type: Object as PropType<TabularRow>, required: true } },
-    setup(props, { slots }) {
+    setup(props, { attrs, slots }) {
       provide(rowKey, computed(() => props.row));
-      return (): VNodeChild => h(Row, {
+      return (): VNodeChild => h(Row, mergeProps(attrs, {
+        as: table ? 'tr' : 'div',
+        asChild: false,
         rowID: props.row.id,
         'data-row-id': props.row.id,
         'data-row-kind': props.row.kind,
-        ...(props.row.kind === 'group' && props.row.contextOnly === true ? { 'data-context-only': '' } : {}),
-      }, { default: () => slots['default']?.() });
+        'data-context-only': props.row.kind === 'group' && props.row.contextOnly === true ? '' : undefined,
+      }), { default: () => slots['default']?.() });
     },
   });
   const Body = defineComponent({
     name: `Sectile${config.prefix}Body`,
     inheritAttrs: false,
-    props: { manual: { type: Boolean, default: false }, as: { ...asProp, default: table ? 'tbody' : 'div' }, asChild: asChildProp },
+    props: { manual: { type: Boolean, default: false }, rowAttributes: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined }, as: { ...asProp, default: table ? 'tbody' : 'div' }, asChild: asChildProp },
     slots: Object as SlotsType<{
       default: (props: TabularAutomaticBodySlotProps) => VNodeChild;
       empty: (props: Readonly<Record<string, unknown>>) => VNodeChild;
@@ -237,7 +303,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         if (props.manual) return (slots['default'] as ((props: Readonly<Record<string, unknown>>) => VNodeChild) | undefined)?.(root);
         const rows = root['rows'] as readonly TabularRow[];
         if (rows.length === 0) return slots['empty']?.(root);
-        return rows.map((row, rowIndex) => h(AutomaticRow, { key: row.id, row }, {
+        return rows.map((row, rowIndex) => h(AutomaticRow, { ...props.rowAttributes, key: row.id, row }, {
           default: () => slots['default']?.(Object.freeze({ ...root, row, rowIndex, isGroup: row.kind === 'group' })),
         }));
       } });
@@ -262,10 +328,25 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     const rowID = String(props['rowID']);
     const options = { rowID, name: String(props['name']), value: props['value'] === undefined ? rowID : String(props['value']), ...(typeof props['form'] === 'string' ? { form: props['form'] } : {}), disabled: props['disabled'] === true };
     return table ? connection.bindSelectionControl?.(element, options) : connection.bindRowSelectionControl?.(element, options);
-  }, true);
+  }, true, (props, snapshot) => ({
+    type: 'checkbox', checked: rowSelectionContains(snapshot.state.rowSelection, String(props['rowID'])),
+    name: snapshot.state.rowSelection.kind === 'explicit-rows' ? String(props['name']) : undefined,
+    value: props['value'] === undefined ? String(props['rowID']) : String(props['value']),
+    form: props['form'], disabled: props['disabled'] === true,
+  }));
   const BulkSelectionControl = boundPart('BulkSelectionControl', 'bulk-selection-control', 'button', {
     target: { type: Object as PropType<{ readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: string }>, required: true }, disabled: { type: Boolean, default: false },
-  }, (connection, element, props) => connection.bindBulkSelectionControl(element, { target: props['target'], disabled: props['disabled'] === true }));
+  }, (connection, element, props) => connection.bindBulkSelectionControl(element, { target: props['target'], disabled: props['disabled'] === true }), false,
+  (props, snapshot, as) => {
+    const state = (props['target'] as { readonly kind: string }).kind === 'all-matching'
+      ? getAllMatchingSelectionState(snapshot) : 'unchecked';
+    const disabled = props['disabled'] === true;
+    return { role: 'checkbox', 'aria-checked': state === 'indeterminate' ? 'mixed' : String(state === 'checked'),
+      'aria-disabled': String(disabled), 'data-state': state,
+      ...(as === 'input' ? { type: 'checkbox', checked: state === 'checked', indeterminate: state === 'indeterminate', disabled }
+        : as === 'button' ? { type: 'button', disabled } : as === undefined ? { disabled } : { tabindex: disabled ? -1 : 0 }),
+    };
+  });
   const Disclosure = boundPart(config.profile === 'data-tree-grid' ? 'RowDisclosure' : 'Disclosure', 'disclosure', 'button', {
     rowID: { type: String, default: undefined }, disabled: { type: Boolean, default: false },
   }, (connection, element, props) => config.profile === 'data-tree-grid' ? connection.bindRowDisclosure?.(element, { rowID: String(props['rowID']), disabled: props['disabled'] === true }) : connection.bindDisclosure?.(element, { rowID: String(props['rowID']), disabled: props['disabled'] === true }), true);
@@ -273,7 +354,11 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     ...identityProps,
     parseValue: { type: Function as PropType<(value: string) => unknown>, default: undefined },
     commitOnChange: { type: Boolean, default: false },
-  }, (connection, element, props) => element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement ? connection.bindEditor(element, { cell: { rowID: String(props['rowID']), columnID: String(props['column']) }, ...(typeof props['parseValue'] === 'function' ? { parseValue: props['parseValue'] } : {}), commitOnChange: props['commitOnChange'] === true }) : undefined, true);
+  }, (connection, element, props) => element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement ? connection.bindEditor(element, { cell: { rowID: String(props['rowID']), columnID: String(props['column']) }, ...(typeof props['parseValue'] === 'function' ? { parseValue: props['parseValue'] } : {}), commitOnChange: props['commitOnChange'] === true }) : undefined, true,
+  table ? undefined : (props, _snapshot, _as, profile) => {
+    const edit = (profile as Pick<DataGridState, 'edit'>).edit;
+    return { hidden: edit.kind !== 'editing' || edit.cell.rowID !== String(props['rowID']) || edit.cell.columnID !== String(props['column']) };
+  });
 
   return Object.freeze({ Provider, Root, Caption, Header, HeaderRow, ColumnHeader, SortTrigger, FilterControl, ColumnResizeHandle, Body, Row, SelectionControl, BulkSelectionControl, Disclosure, Cell, Editor });
 }

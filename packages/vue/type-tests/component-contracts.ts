@@ -1,4 +1,113 @@
-import { h } from 'vue';
+import { h, useTemplateRef } from 'vue';
+import { ContextMenuRoot, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSubContent, ContextMenuSeparator,
+  type ContextMenuRootProps, type ContextMenuRootSlotProps, type ContextMenuOpenChangeHandler, type ContextMenuInvokeHandler } from '@sectile/vue/context-menu';
+const contextProps: ContextMenuRootProps = { items: [{ id: 'copy', parentID: null }], open: false, strategy: 'fixed', sideOffset: 0 };
+const updateContext: ContextMenuOpenChangeHandler = open => { const exact: boolean = open; void exact; };
+const invokeContext: ContextMenuInvokeHandler = value => { const exact: string = value; void exact; };
+h(ContextMenuRoot, { ...contextProps, 'onUpdate:open': updateContext, onInvoke: invokeContext }, {
+  default: (state: ContextMenuRootSlotProps) => [h(ContextMenuTrigger), h(ContextMenuContent, null, {
+    default: () => [h(ContextMenuItem, { value: state.highlightedValue ?? 'copy' }), h(ContextMenuSubContent, { for: 'copy' }), h(ContextMenuSeparator)],
+  })],
+});
+// @ts-expect-error Open events use booleans, not state names.
+const invalidContextHandler: ContextMenuOpenChangeHandler = (_open: string) => {}; void invalidContextHandler;
+// @ts-expect-error Vue delegates invocation geometry rather than exposing an unwired prop.
+const invalidContextGeometry: ContextMenuRootProps = { ...contextProps, anchorRect: { x: 10, y: 20, width: 0, height: 0 } }; void invalidContextGeometry;
+// @ts-expect-error Provider-only roots do not offer an ignored rendering target.
+const invalidContextWrapper: ContextMenuRootProps = { ...contextProps, as: 'section' }; void invalidContextWrapper;
+type _contextProviderHasNoRenderTarget = Assert<Equal<'as' extends keyof InstanceType<typeof ContextMenuRoot>['$props'] ? true : false, false>>;
+import { TextField, type TextFieldExpose, type TextFieldSnapshot, type TextFieldEditResult } from '@sectile/vue/text';
+import type { TextFieldExpose as RootTextFieldExpose, TextFieldReplacement as RootTextFieldReplacement } from '@sectile/vue';
+declare const textField: InstanceType<typeof TextField>;
+const textAction: TextFieldExpose = textField;
+const rootTextAction: RootTextFieldExpose = textAction;
+const clearAccepted: boolean = rootTextAction.clear();
+const textSnapshot: TextFieldSnapshot | null = textAction.getTextSnapshot();
+if (textSnapshot) {
+  const query = textAction.getTextQuery({ trigger: '@', maxQueryCodeUnits: 32 });
+  if (query.ok && query.value !== null) {
+    const querySnapshot: TextFieldSnapshot = query.value.snapshot; void querySnapshot;
+  }
+  const replacement: RootTextFieldReplacement = { snapshot: textSnapshot, startCodeUnitOffset: 0, endCodeUnitOffset: 0, text: '안녕' };
+  const pending: Promise<TextFieldEditResult> = textAction.replaceText(replacement);
+  void pending.then(result => result.status === 'accepted' ? result.snapshot.text : result.reason);
+  // @ts-expect-error Issued snapshot contents are immutable.
+  textSnapshot.text = 'Other text';
+  // @ts-expect-error Replacement text is plain text, not a numeric model value.
+  textAction.replaceText({ ...replacement, text: 150 });
+}
+// @ts-expect-error A replacement must name its field-issued snapshot.
+textAction.replaceText({ startCodeUnitOffset: 0, endCodeUnitOffset: 0, text: 'A' });
+// @ts-expect-error Snapshot identities cannot be constructed from plain text state.
+const forgedTextSnapshot: TextFieldSnapshot = { text: '', selection: { anchorCodeUnitOffset: 0, focusCodeUnitOffset: 0, startCodeUnitOffset: 0, endCodeUnitOffset: 0, direction: 'none' } };
+void forgedTextSnapshot;
+// @ts-expect-error Trigger queries require an explicit query ceiling.
+textAction.getTextQuery({ trigger: '@' });
+const priorTextValue: string | number | undefined = textField.modelValue;
+h(TextField, { modelValue: 'Address', 'onUpdate:modelValue': (value: string | number) => { void value; } });
+h(TextField, { onSnapshotChange: () => { textAction.getTextQuery({ trigger: '@', maxQueryCodeUnits: 32 }); } });
+void [clearAccepted, priorTextValue];
+// @ts-expect-error Clear requests empty text and does not accept replacement payloads.
+textAction.clear('Other text');
+import { useFormFieldDefaults, type FormFieldDefaults } from '@sectile/vue/form-boundary';
+const behaviorDefaults = useFormFieldDefaults();
+if (behaviorDefaults) {
+  const snapshot: FormFieldDefaults = behaviorDefaults.value;
+  const disabled: boolean = snapshot.disabled; void disabled;
+  // @ts-expect-error A defaults reader cannot replace the provider's snapshot.
+  behaviorDefaults.value = { disabled: false, readonly: false, required: false };
+  // @ts-expect-error Published defaults are immutable values, not a writer port.
+  snapshot.required = false;
+}
+import { Anchor, type AnchorProps, type AnchorExpose, type AnchorSlots } from '@sectile/vue/primitive';
+const anchorSlots: AnchorSlots = {
+  leading: state => { const disabled: boolean = state.disabled; return disabled ? 'Unavailable' : state.current; },
+  trailing: state => state.current === 'page' ? 'Current page' : null,
+  content: state => h('span', { 'aria-disabled': state.disabled }, [state.children]),
+};
+h(Anchor, { href: '/docs' }, { ...anchorSlots });
+const anchorOptions: AnchorProps = { href: '/docs', current: 'page', download: true, tabIndex: 0,
+  onClick: event => { const native: MouseEvent = event; native.preventDefault(); } };
+h(Anchor, anchorOptions);
+const anchor = useTemplateRef<InstanceType<typeof Anchor>>('anchor');
+const nativeAnchor: HTMLAnchorElement | null = anchor.value?.element ?? null;
+const anchorExpose: AnchorExpose | null = anchor.value;
+anchorExpose?.focus({ preventScroll: true }); void nativeAnchor;
+// @ts-expect-error Current is an ARIA location token, not router state.
+const invalidAnchor: AnchorProps = { current: 'selected' }; void invalidAnchor;
+// @ts-expect-error Anchor projects its actual native element as readonly.
+if (anchor.value) anchor.value.element = null;
+import { ColorPickerAreaSurface, type ColorPickerPartProps } from '@sectile/vue/color-picker';
+const colorSurface: ColorPickerPartProps = { as: 'section', asChild: false };
+h(ColorPickerAreaSurface, colorSurface);
+import { TagsInputRoot, type TagsInputRootProps } from '@sectile/vue/tags-input';
+const namedTags: TagsInputRootProps = { removeLabel: (value, index) => index ? undefined : `${value} 삭제` };
+h(TagsInputRoot, namedTags);
+// @ts-expect-error Native removal names remain text.
+const invalidTags: TagsInputRootProps = { removeLabel: () => 1 }; void invalidTags;
+import type { EditableInputExpose } from '@sectile/vue/editable';
+const editableInput = useTemplateRef<EditableInputExpose>('editor');
+const currentEditableInput: HTMLInputElement | HTMLTextAreaElement | null = editableInput.value?.element ?? null;
+void currentEditableInput;
+// @ts-expect-error A component owns its current native element identity.
+if (editableInput.value) editableInput.value.element = null;
+import { SequenceReorderHandle, SequenceReorderRoot, TreeReorderHandle, TreeReorderRoot, type ReorderHandleProps, type SequenceReorderRootProps, type TreeReorderRootProps } from '@sectile/vue/reorder';
+const controlledSequence: SequenceReorderRootProps = { items: ['a'], controlled: true };
+const controlledTree: TreeReorderRootProps = { nodes: [{ id: 'a', parentID: null }], controlled: true };
+h(SequenceReorderRoot, controlledSequence);
+h(TreeReorderRoot, controlledTree);
+const handle: ReorderHandleProps = { label: 'Move item', disabled: false };
+h(SequenceReorderHandle, handle);
+h(TreeReorderHandle, handle);
+// @ts-expect-error A handle needs a localized accessible name.
+const unnamedHandle: ReorderHandleProps = {};
+void unnamedHandle;
+import { getQuantityFieldDisplayUnits, type QuantityFieldPolicies } from '@sectile/core/quantity-field';
+import type { QuantityFieldOptions } from '@sectile/dom/quantity-field';
+declare const quantityPolicies: QuantityFieldPolicies;
+const displayUnits: readonly string[] = getQuantityFieldDisplayUnits(quantityPolicies, 'metre');
+const optionOwnership: Pick<QuantityFieldOptions, 'manageUnitOptions'> = { manageUnitOptions: false };
+void displayUnits; void optionOwnership;
 import {
   createForm as createDOMForm,
   defineFormSubmission as defineDOMFormSubmission,
@@ -35,20 +144,47 @@ import {
 } from '@sectile/vue/meter-group';
 import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '@sectile/vue/meter';
 import { NumberField, type NumberFieldProps } from '@sectile/vue/number-field';
-import { PopoverRoot } from '@sectile/vue/popover';
+import { PopoverRoot, type PopoverRootProps } from '@sectile/vue/popover';
+import type { DialogRootProps } from '@sectile/vue/dialog';
+import type { AlertDialogRootProps } from '@sectile/vue/alert-dialog';
+import type { DrawerRootProps } from '@sectile/vue/drawer';
+import type { TooltipRootProps } from '@sectile/vue/tooltip';
 import { AccordionContent } from '@sectile/vue/accordion';
-import { CarouselSlide } from '@sectile/vue/carousel';
+import { CarouselRoot, CarouselSlide } from '@sectile/vue/carousel';
+import { TreeGridGroup, TreeGridRoot, TreeGridHeader, TreeGridHeaderCell, type TreeGridGroupProps, type TreeGridHeaderCellProps } from '@sectile/vue/tree-grid';
 import { CheckboxIndicator } from '@sectile/vue/checkbox';
 import { DisclosureContent } from '@sectile/vue/disclosure';
 import { ListboxItemIndicator } from '@sectile/vue/listbox';
 import { NavigationMenuIndicator } from '@sectile/vue/navigation-menu';
 import { RadioGroupIndicator } from '@sectile/vue/radio-group';
 import { SelectItemIndicator, SelectRoot } from '@sectile/vue/select';
-import { ComboboxEmpty, ComboboxRoot } from '@sectile/vue/combobox';
+import { ComboboxEditor, ComboboxEmpty, ComboboxResults, ComboboxRoot, type ComboboxRootProps, type ComboboxResultsSlotProps } from '@sectile/vue/combobox';
+import { ComboboxEditor as RootComboboxEditor } from '@sectile/vue';
+const editorPart: typeof ComboboxEditor = RootComboboxEditor; void editorPart;
+h(ComboboxEditor, {}, { default: () => h(TextField, { defaultValue: '@Ad', multiline: true }) });
+h(ComboboxRoot, { items: [], anchor: 'caret' });
+// @ts-expect-error Caret anchoring does not accept arbitrary placement strings.
+const invalidCaretAnchor: ComboboxRootProps = { items: [], anchor: 'cursor' }; void invalidCaretAnchor;
+import { ComboboxResults as RootComboboxResults } from '@sectile/vue';
+const resultPart: typeof ComboboxResults = RootComboboxResults; void resultPart;
+const resultProjection: ComboboxResultsSlotProps = { items: [{ id: 'open', label: 'Open' }], value: null, inputValue: '',
+  highlightedValue: null, open: false, active: false, disabled: false, readonly: false };
+// @ts-expect-error Results borrow readonly records rather than providing a writable source.
+resultProjection.items.push({ id: 'other', label: 'Other' });
+const inlineComboboxProps: ComboboxRootProps = { items: [{ id: 'open', label: 'Open' }], renderedItems: ['open'], presentation: 'inline', itemId: id => 'option-' + id, policies: { eligible: id => id === 'open' } };
+// @ts-expect-error Rendered window IDs use the same native string vocabulary.
+const invalidRenderedItems: ComboboxRootProps = { items: [], renderedItems: [1] }; void invalidRenderedItems;
+// @ts-expect-error Option IDs remain DOM strings.
+const invalidComboboxItemId: ComboboxRootProps = { items: [], itemId: () => 1 }; void invalidComboboxItemId;
+// @ts-expect-error Host presentation cannot be an arbitrary display mode.
+const invalidComboboxPresentation: ComboboxRootProps = { items: [], presentation: 'floating' };
+void [inlineComboboxProps, invalidComboboxPresentation];
 import { CascadeListItemIndicator } from '@sectile/vue/cascade-list';
 import { CascadeSelectItemIndicator, CascadeSelectRoot } from '@sectile/vue/cascade-select';
 import {
   SpinButtonInput,
+  SpinButtonIncrement,
+  SpinButtonDecrement,
   SpinButtonRoot,
   type SpinButtonInputProps,
 } from '@sectile/vue/spin-button';
@@ -137,6 +273,12 @@ createDOMForm({ form: formElement, ...rawDOMSubmission });
 createDOMForm({ form: formElement, ...schemaDOMSubmission });
 
 h(SelectRoot, { items: [], modelValue: null, defaultValue: null });
+h(SelectRoot, { items: ['a'], formOptions: 'selected' });
+h(SelectRoot, { items: ['a'], renderedItems: ['a'] });
+// @ts-expect-error The native rendered window consists of string IDs.
+h(SelectRoot, { items: ['a'], renderedItems: [1] });
+// @ts-expect-error Native submission projection has only the two admitted modes.
+h(SelectRoot, { items: [], formOptions: 'visible' });
 h(CheckboxIndicator, { forcePresent: true });
 h(RadioGroupIndicator, { forcePresent: true });
 h(NavigationMenuIndicator, { open: false, forcePresent: true });
@@ -148,7 +290,18 @@ h(DisclosureContent, { forcePresent: true });
 h(AccordionContent, { forcePresent: true });
 h(TabsContent, { value: 'details', forcePresent: true });
 h(TreeViewGroup, { for: 'root', forcePresent: true });
+const treeGridGroup: TreeGridGroupProps = { for: 'root', forcePresent: true };
+h(TreeGridGroup, treeGridGroup);
+h(TreeGridRoot, { rows: [], headers: ['Name', 'Status'], getCellValue: () => '', setCellValue: () => {} });
+h(TreeGridHeader);
+const treeGridHeaderCell: TreeGridHeaderCellProps = { columnIndex: 1 };
+h(TreeGridHeaderCell, treeGridHeaderCell);
+// @ts-expect-error Header indexes are numeric grid coordinates.
+h(TreeGridHeaderCell, { columnIndex: 'name' });
 h(CarouselSlide, { value: 'slide-1', forcePresent: true });
+h(CarouselRoot, { slides: ['slide-1'], indicatorGroupLabel: '슬라이드 선택', getPauseLabel: paused => paused ? '재생' : '정지' });
+// @ts-expect-error Pause labels consume a boolean, not a slide identifier.
+h(CarouselRoot, { slides: ['slide-1'], getPauseLabel: (paused: string) => paused });
 h(FormMessage, { forcePresent: true });
 h(FormSummary, { forcePresent: true });
 h(ComboboxEmpty, { forcePresent: true });
@@ -181,6 +334,8 @@ h(CascadeSelectRoot, {
 });
 h(SpinButtonRoot, { min: 0, max: 10, draft: null, defaultDraft: null });
 h(SpinButtonInput, { name: 'quantity', form: 'order', required: true });
+h(SpinButtonIncrement, { label: 'Increase quantity' });
+h(SpinButtonDecrement, { label: 'Decrease quantity' });
 h(MenuRoot, { items: [] });
 h(MenuButtonRoot, {
   items: [], open: false, position: true, side: 'bottom', align: 'start', sideOffset: 8,
@@ -188,6 +343,29 @@ h(MenuButtonRoot, {
   hideWhenDetached: false, strategy: 'absolute', tracking: 'events',
 });
 h(PopoverRoot, { position: false });
+declare const popupGeometryAnchor: HTMLElement;
+h(PopoverRoot, { anchor: popupGeometryAnchor });
+h(PopoverRoot, { anchor: null });
+h(PopoverRoot, { restoreFocusTarget: popupGeometryAnchor });
+h(PopoverRoot, { restoreFocusTarget: null });
+// @ts-expect-error Explicit focus-return targets are elements, not selector strings.
+const invalidReturnTarget: Pick<PopoverRootProps, 'restoreFocusTarget'> = { restoreFocusTarget: '#opener' };
+void invalidReturnTarget;
+const popupAnchor: Pick<PopoverRootProps, 'anchor'> = { anchor: popupGeometryAnchor };
+// @ts-expect-error Geometry anchors are elements, not selectors or serialized config.
+const invalidPopupAnchor: Pick<PopoverRootProps, 'anchor'> = { anchor: '#cell-value' };
+void popupAnchor; void invalidPopupAnchor;
+const escapePolicy: Pick<PopoverRootProps, 'closeOnEscape'> = { closeOnEscape: false };
+void escapePolicy;
+// @ts-expect-error Escape policy is a boolean option.
+const invalidEscapePolicy: Pick<PopoverRootProps, 'closeOnEscape'> = { closeOnEscape: 'disabled' };
+void invalidEscapePolicy;
+const popupEscapePolicies: readonly [
+  DialogRootProps['closeOnEscape'], AlertDialogRootProps['closeOnEscape'],
+  DrawerRootProps['closeOnEscape'], PopoverRootProps['closeOnEscape'],
+  TooltipRootProps['closeOnEscape'],
+] = [false, true, undefined, false, true];
+void popupEscapePolicies;
 h(TooltipRoot, { position: false });
 h(MeterRoot, { value: '25', min: 0, max: '100', label: 'Quota' });
 // @ts-expect-error Meter value is required.
@@ -340,3 +518,6 @@ type _virtualRowValue = Assert<Equal<VirtualRowValue, VirtualRow>>;
 type _virtualGridValue = Assert<Equal<VirtualGridValue, VirtualRow>>;
 type _virtualMasonryValue = Assert<Equal<VirtualMasonryValue, VirtualRow>>;
 type _virtualSpatialValue = Assert<Equal<VirtualSpatialValue, VirtualRow>>;
+import { provideFormControlReset } from '@sectile/vue/form-boundary';
+const decorateNativeReset: (reset: () => void) => void = provideFormControlReset;
+void decorateNativeReset;

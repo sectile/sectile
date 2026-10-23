@@ -1,5 +1,5 @@
 import { createFacadeConnection, createSemanticController, type FacadeConnection, type SemanticController } from '@sectile/core/adapter-runtime';
-import { unwrap } from '@sectile/core/result';
+import { unwrap, failResult, okResult } from '@sectile/core/result';
 import type { Result, SectileError } from '@sectile/core';
 import {
   type RevisionResult,
@@ -19,6 +19,7 @@ import { DOMTextElementBinding } from './text/element-binding.js';
 import { setInteractionAttributes } from './interaction/attributes.js';
 
 export type { TextElement, TextInput } from './text/contracts.js';
+export { observeTextInk, type TextInkMetrics, type TextInkConnection } from './text/metrics.js';
 
 export interface TextValueChangeDetails {
   readonly value: TextEditingState;
@@ -90,6 +91,43 @@ export interface TextConnection {
 
 export type TextOptions = TextControllerOptions & Omit<TextConnectionOptions, 'controller'>;
 
+export interface ClipboardWriteOptions {
+  readonly document: Document;
+  readonly text: string;
+}
+export type ClipboardWriteErrorCode = 'dom.clipboard-invalid' | 'dom.clipboard-unavailable' | 'dom.clipboard-write-failed';
+
+function clipboardWriteCompleted(): Result<void, ClipboardWriteErrorCode> { return okResult<void, ClipboardWriteErrorCode>(undefined); }
+function clipboardWriteFailed(): Result<void, ClipboardWriteErrorCode> {
+  return failResult('resource-rejection', 'dom.clipboard-write-failed', 'The native clipboard write did not complete');
+}
+
+/** Invoke from the activating handler; fulfillment alone confirms the native write. */
+export function writeClipboardText(options: ClipboardWriteOptions): Promise<Result<void, ClipboardWriteErrorCode>> {
+  let document: Document, text: string;
+  try {
+    if (!options || typeof options !== 'object') throw new TypeError();
+    document = options.document; text = options.text;
+    if (!document || document.nodeType !== 9 || typeof text !== 'string') throw new TypeError();
+  } catch {
+    return Promise.resolve(failResult('construction', 'dom.clipboard-invalid', 'Clipboard writing requires a document and plain text'));
+  }
+  try {
+    const view = document.defaultView;
+    if (!view || view.closed || view.document !== document || view.isSecureContext !== true) {
+      return Promise.resolve(failResult('construction', 'dom.clipboard-unavailable', 'Clipboard writing requires an active secure document'));
+    }
+    const clipboard = view.navigator.clipboard, write = clipboard?.writeText;
+    if (typeof write !== 'function') {
+      return Promise.resolve(failResult('construction', 'dom.clipboard-unavailable', 'Native clipboard writing is unavailable'));
+    }
+    // Keep the call in this stack; settlement callbacks retain no host or text.
+    return write.call(clipboard, text).then(clipboardWriteCompleted, clipboardWriteFailed);
+  } catch {
+    return Promise.resolve(clipboardWriteFailed());
+  }
+}
+
 export function createTextController(options: TextControllerOptions = {}): Result<TextController> {
   const requested = options.value !== undefined ? options.value : options.defaultValue;
   const initial = requested === undefined
@@ -104,7 +142,7 @@ export function createTextController(options: TextControllerOptions = {}): Resul
     notify: (previous, proposed) => controller.notify(previous, proposed),
     toEffect: impossibleEffect,
     interaction: options,
-    interactionIntent: () => 'mutate',
+    interactionIntent: event => event.type === 'select' ? 'navigate' : 'mutate',
   });
   if (!runtime.ok) return runtime;
   controller = new DOMTextController(options, runtime.value);
@@ -131,6 +169,7 @@ export function connectText(options: TextConnectionOptions): TextConnection {
 
 export function toTextEvent(input: TextInput): TextEvent | null {
   if (typeof input !== 'object' || input === null) return null;
+  if (input.type === 'select') return Object.freeze({ type: 'select', selection: input.selection });
   if (input.type === 'input') {
     if (typeof input.inputType !== 'string' || typeof input.text !== 'string') return null;
     return Object.freeze({
@@ -193,6 +232,7 @@ class DOMTextConnection implements TextConnection {
     this.#onUpdate = options.onUpdate;
     this.#binding = new DOMTextElementBinding({
       element: options.element,
+      observeSelection: true,
       getState: () => this.#controller.getSnapshot().state,
       dispatch: (input) => this.#dispatch(input).ok,
     });
@@ -223,6 +263,8 @@ class DOMTextConnection implements TextConnection {
   }
 
   public handleEvent(input: TextInput): boolean {
+    if (input.type === 'input' && input.inputType === 'insertReplacementText'
+      && !this.#binding.acceptsReplacement(input)) return false;
     const result = this.#dispatch(input);
     if (result.ok) this.render();
     return result.ok;

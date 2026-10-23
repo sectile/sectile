@@ -54,7 +54,7 @@ export interface SpinButtonInputProps {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
-export interface SpinButtonTriggerProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
+export interface SpinButtonTriggerProps { readonly as?: PrimitiveAs; readonly asChild?: boolean; readonly label?: string }
 
 interface SpinButtonContext {
   readonly state: ComputedRef<SpinButtonSlotProps>;
@@ -71,6 +71,7 @@ interface SpinButtonContext {
 
 const spinButtonKey = Symbol('SectileSpinButtonRoot');
 const partProps = {
+  label: { type: String, default: undefined },
   as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' },
   asChild: { type: Boolean, default: false },
 };
@@ -300,7 +301,7 @@ function createTrigger(name: string, event: 'increment' | 'decrement') {
         asChild: props.asChild,
         type: props.as === 'button' ? 'button' : undefined,
         disabled: root.state.value.disabled || root.state.value.readonly,
-        'aria-label': name,
+        'aria-label': props.label ?? attrs['aria-label'] ?? name,
         'data-scope': 'spin-button',
         'data-part': event,
         onClick: (click: MouseEvent) => {

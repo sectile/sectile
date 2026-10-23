@@ -21,6 +21,7 @@ import {
   type CascadeListPolicies,
 } from '@sectile/dom/cascade-list';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useHostDirection } from './host-provider.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
 import {
@@ -103,9 +104,12 @@ export const CascadeListRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: CascadeListRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null);
     const submission = shallowRef<HTMLSelectElement | null>(null);
     const connection = shallowRef<CascadeListConnection<string>>();
+    const initialValue = props.modelValue !== undefined ? props.modelValue : props.defaultValue;
+    let mounted = false;
     const participation = useCompositeFormControl({
       root,
       focusTarget: root,
@@ -113,6 +117,15 @@ export const CascadeListRoot = defineComponent({
         element: submission,
         capabilities: hiddenSelectSubmissionCapabilities,
       }],
+      reset: () => {
+        queueMicrotask(() => {
+          if (!mounted) return;
+          localValue.value = valueControlled ? props.modelValue as string | null : initialValue;
+          highlighted.value = null;
+          connect();
+          if (submission.value !== null) submission.value.value = state.value.value ?? '';
+        });
+      },
     });
     provideFormControlOwner();
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
@@ -172,6 +185,7 @@ export const CascadeListRoot = defineComponent({
       if (valueControlled && requestedValue !== value) emit('update:modelValue', value);
       connection.value = createCascadeList({
         root: root.value,
+        direction: direction.value,
         nodes: props.nodes,
         disabledItems: props.disabledItems,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
@@ -207,8 +221,8 @@ export const CascadeListRoot = defineComponent({
       ),
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled),
     });
-    onMounted(connect);
-    onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(() => { mounted = true; connect(); });
+    onBeforeUnmount(() => { mounted = false; connection.value?.disconnect(); });
     watch([
       () => props.nodes,
       () => props.disabledItems,
@@ -216,6 +230,7 @@ export const CascadeListRoot = defineComponent({
       () => props.readonly,
       () => props.label,
       () => props.policies,
+      direction,
     ], connect);
     watch(() => props.modelValue, () => {
       if (connection.value === undefined || !valueControlled) return;
@@ -235,6 +250,7 @@ export const CascadeListRoot = defineComponent({
         'aria-readonly': props.readonly ? 'true' : undefined,
         'data-scope': 'cascade-list',
         'data-part': 'root',
+        dir: direction.value,
         'data-disabled': props.disabled ? '' : undefined,
         'data-readonly': props.readonly ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });

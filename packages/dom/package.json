@@ -21,6 +21,16 @@
   },
   "types": "./dist/index.d.ts",
   "exports": {
+    "./drag-drop": {
+      "types": "./dist/drag-drop.d.ts",
+      "import": "./dist/drag-drop.js",
+      "default": "./dist/drag-drop.js"
+    },
+    "./transfer": {
+      "types": "./dist/transfer.d.ts",
+      "import": "./dist/transfer.js",
+      "default": "./dist/transfer.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
@@ -30,6 +40,61 @@
       "types": "./dist/identity.d.ts",
       "import": "./dist/identity.js",
       "default": "./dist/identity.js"
+    },
+    "./fullscreen": {
+      "types": "./dist/fullscreen.d.ts",
+      "import": "./dist/fullscreen.js",
+      "default": "./dist/fullscreen.js"
+    },
+    "./media-gesture": {
+      "types": "./dist/media-gesture.d.ts",
+      "import": "./dist/media-gesture.js",
+      "default": "./dist/media-gesture.js"
+    },
+    "./image": {
+      "types": "./dist/image.d.ts",
+      "import": "./dist/image.js",
+      "default": "./dist/image.js"
+    },
+    "./scroll-spy": {
+      "types": "./dist/scroll-spy.d.ts",
+      "import": "./dist/scroll-spy.js",
+      "default": "./dist/scroll-spy.js"
+    },
+    "./attributes": {
+      "types": "./dist/attributes.d.ts",
+      "import": "./dist/attributes.js",
+      "default": "./dist/attributes.js"
+    },
+    "./stylesheet": {
+      "types": "./dist/stylesheet.d.ts",
+      "import": "./dist/stylesheet.js",
+      "default": "./dist/stylesheet.js"
+    },
+    "./layout-basis": {
+      "types": "./dist/layout-basis.d.ts",
+      "import": "./dist/layout-basis.js",
+      "default": "./dist/layout-basis.js"
+    },
+    "./focus-visibility": {
+      "types": "./dist/focus-visibility.d.ts",
+      "import": "./dist/focus-visibility.js",
+      "default": "./dist/focus-visibility.js"
+    },
+    "./layout-motion": {
+      "types": "./dist/layout-motion.d.ts",
+      "import": "./dist/layout-motion.js",
+      "default": "./dist/layout-motion.js"
+    },
+    "./appearance": {
+      "types": "./dist/appearance.d.ts",
+      "import": "./dist/appearance.js",
+      "default": "./dist/appearance.js"
+    },
+    "./layer-host": {
+      "types": "./dist/layer-host.d.ts",
+      "import": "./dist/layer-host.js",
+      "default": "./dist/layer-host.js"
     },
     "./listbox": {
       "types": "./dist/listbox.d.ts",
@@ -246,6 +311,11 @@
       "import": "./dist/navigation-menu.js",
       "default": "./dist/navigation-menu.js"
     },
+    "./context-menu": {
+      "types": "./dist/context-menu.d.ts",
+      "import": "./dist/context-menu.js",
+      "default": "./dist/context-menu.js"
+    },
     "./menu-button": {
       "types": "./dist/menu-button.d.ts",
       "import": "./dist/menu-button.js",
@@ -260,6 +330,16 @@
       "types": "./dist/feed.d.ts",
       "import": "./dist/feed.js",
       "default": "./dist/feed.js"
+    },
+    "./form/file-upload": {
+      "types": "./dist/form/file-upload.d.ts",
+      "import": "./dist/form/file-upload.js",
+      "default": "./dist/form/file-upload.js"
+    },
+    "./form/file-input": {
+      "types": "./dist/form/file-input/connection.d.ts",
+      "import": "./dist/form/file-input/connection.js",
+      "default": "./dist/form/file-input/connection.js"
     },
     "./form": {
       "types": "./dist/form/connection.d.ts",
@@ -281,10 +361,20 @@
       "import": "./dist/slider.js",
       "default": "./dist/slider.js"
     },
+    "./checkbox-tree": {
+      "types": "./dist/checkbox-tree.d.ts",
+      "import": "./dist/checkbox-tree.js",
+      "default": "./dist/checkbox-tree.js"
+    },
     "./tree-view": {
       "types": "./dist/tree-view.d.ts",
       "import": "./dist/tree-view.js",
       "default": "./dist/tree-view.js"
+    },
+    "./tree-select": {
+      "types": "./dist/tree-select.d.ts",
+      "import": "./dist/tree-select.js",
+      "default": "./dist/tree-select.js"
     },
     "./tree-grid": {
       "types": "./dist/tree-grid.d.ts",
@@ -316,6 +406,11 @@
       "import": "./dist/temporal/date-field.js",
       "default": "./dist/temporal/date-field.js"
     },
+    "./temporal/format": {
+      "types": "./dist/temporal/format.d.ts",
+      "import": "./dist/temporal/format.js",
+      "default": "./dist/temporal/format.js"
+    },
     "./temporal/date-range-field": {
       "types": "./dist/temporal/date-range-field.d.ts",
       "import": "./dist/temporal/date-range-field.js",
@@ -325,6 +420,11 @@
       "types": "./dist/temporal/date-time-field.d.ts",
       "import": "./dist/temporal/date-time-field.js",
       "default": "./dist/temporal/date-time-field.js"
+    },
+    "./temporal/date-time-range-field": {
+      "types": "./dist/temporal/date-time-range-field.d.ts",
+      "import": "./dist/temporal/date-time-range-field.js",
+      "default": "./dist/temporal/date-time-range-field.js"
     },
     "./temporal/time-field": {
       "types": "./dist/temporal/time-field.d.ts",

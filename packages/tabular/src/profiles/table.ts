@@ -44,7 +44,8 @@ import type {
   TabularWireValue,
 } from '../contracts.js';
 
-export { rowSelectionContains } from '../model/selection.js';
+export { rowSelectionContains, getAllMatchingSelectionState } from '../model/selection.js';
+export type { TabularBulkSelectionState } from '../contracts.js';
 
 export type DataTableState = TabularState;
 
@@ -433,7 +434,7 @@ function reduceDataTableEvent(
     return accessState.ok ? requestAfter(Object.freeze({ ...state, accessState: accessState.value })) : accessState;
   }
   if (event.type === 'set-query') {
-    const query = canonicalizeTabularStateQuery(model, event.query);
+    const query = canonicalizeTabularStateQuery(model, event.query, state);
     if (!query.ok) return query;
     const queryRevision = nextRevision(state.queryRevision);
     if (!queryRevision.ok) return queryRevision;

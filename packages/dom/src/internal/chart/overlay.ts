@@ -27,9 +27,13 @@ export class ChartOverlay<ID extends StableID> {
       svg = root.ownerDocument.createElementNS(SVG_NAMESPACE, 'svg');
       svg.setAttribute('aria-hidden', 'true');
       svg.setAttribute('focusable', 'false');
+      svg.setAttribute('preserveAspectRatio', 'none');
       svg.style.position = 'absolute';
       svg.style.pointerEvents = 'none';
       svg.style.overflow = 'visible';
+      // A presentation owner may bound its allocated viewport while a resize is
+      // pending. Bare DOM consumers retain unconstrained canvas geometry.
+      svg.style.maxInlineSize = 'var(--sectile-internal-chart-overlay-max-inline-size, none)';
       root.append(svg);
       this.#svg = svg;
     } catch (error) {
@@ -39,17 +43,22 @@ export class ChartOverlay<ID extends StableID> {
     }
   }
 
-  public render(projection: ChartProjection<ID>, state?: ChartState<ID>): void {
+  public synchronizeViewport(): void {
     if (!this.#active) return;
-    const { width, height } = projection.viewport;
     const rootRect = this.#root.getBoundingClientRect();
     const canvasRect = this.#canvas.getBoundingClientRect();
     const left = canvasRect.left - rootRect.left - this.#root.clientLeft + this.#root.scrollLeft;
     const top = canvasRect.top - rootRect.top - this.#root.clientTop + this.#root.scrollTop;
     this.#svg.style.left = `${left}px`;
     this.#svg.style.top = `${top}px`;
-    this.#svg.style.width = `${width}px`;
-    this.#svg.style.height = `${height}px`;
+    this.#svg.style.width = `${Math.max(1, canvasRect.width || this.#canvas.clientWidth || rootRect.width || 1)}px`;
+    this.#svg.style.height = `${Math.max(1, canvasRect.height || this.#canvas.clientHeight || rootRect.height || 1)}px`;
+  }
+
+  public render(projection: ChartProjection<ID>, state?: ChartState<ID>): void {
+    if (!this.#active) return;
+    const { width, height } = projection.viewport;
+    this.synchronizeViewport();
     this.#svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
     this.#svg.setAttribute('width', String(width));
     this.#svg.setAttribute('height', String(height));

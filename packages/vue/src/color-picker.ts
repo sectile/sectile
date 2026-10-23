@@ -1,5 +1,7 @@
-import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
-import { createColorPicker, formatColorValue, parseColorValue, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerPolicies, type ColorValue } from '@sectile/dom/color-picker';
+import { computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide, shallowRef, ssrContextKey, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild } from 'vue';
+import { createColorPicker, getColorPickerInputAttributes, formatColorValue, getColorAreaValue, getColorCoordinates, type ColorAreaValue, type ColorChannel, type ColorCoordinate, type ColorCoordinateValue, type ColorFormat, type ColorModel, type ColorPickerConnection, type ColorPickerInputAttributes, type ColorPickerInputPart, type ColorPickerPolicies, type ColorPickerAreaAxes, type ColorValue } from '@sectile/dom/color-picker';
+import { tryCreateColorPickerState, reconcileColorPickerState } from '@sectile/core/color-picker';
+import { unwrap } from '@sectile/core/result';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
@@ -32,12 +34,16 @@ export type ColorPickerCoordinateSliderProps = ColorPickerCoordinateInputProps;
 interface RootContext {
   readonly state: ComputedRef<ColorPickerRootSlotProps>;
   readonly allowAlpha: ComputedRef<boolean>;
+  coordinatesFor(format: ColorModel): readonly ColorCoordinateValue[];
+  inputAttributesFor(part: ColorPickerInputPart): ColorPickerInputAttributes;
   registerNative(element?: HTMLInputElement): void;
   registerText(element?: HTMLInputElement): void;
   registerChannel(element: HTMLInputElement | undefined, channel: ColorChannel): void;
   registerCoordinate(element: HTMLInputElement, format: ColorModel, coordinate: ColorCoordinate, kind: 'number' | 'range'): void;
   unregisterCoordinate(element: HTMLInputElement): void;
   registerArea(element?: HTMLElement): void;
+  registerAreaAxes(axes: ColorPickerAreaAxes | undefined): void;
+  registerAreaSurface(element?: HTMLElement): void;
   registerAreaThumb(element?: HTMLElement): void;
   registerHue(element?: HTMLInputElement): void;
   registerAlpha(element?: HTMLInputElement): void;
@@ -46,9 +52,11 @@ interface RootContext {
   setFormat(format: ColorFormat): void;
 }
 const rootKey = Symbol('SectileColorPickerRoot');
+interface AreaContext { register(element: HTMLInputElement | undefined, coordinate: 'saturation' | 'value'): void }
+const areaKey = Symbol('SectileColorPickerArea');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
-export const ColorPickerRoot = defineComponent({
+export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
   name: 'SectileColorPickerRoot', inheritAttrs: false,
   props: {
     modelValue: { type: String, default: undefined }, defaultValue: { type: String, default: '#5b6df6' }, draft: { type: String as PropType<string | null>, default: undefined }, defaultDraft: { type: String as PropType<string | null>, default: null },
@@ -59,15 +67,32 @@ export const ColorPickerRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true, 'update:draft': (_value: string | null): boolean => true, 'update:format': (_value: ColorFormat): boolean => true },
   slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
-    const root = shallowRef<HTMLElement>(); const connection = shallowRef<ColorPickerConnection>(); const native = shallowRef<HTMLInputElement>(); const text = shallowRef<HTMLInputElement>(); const swatch = shallowRef<HTMLElement>(); const areaElement = shallowRef<HTMLElement>(); const areaThumb = shallowRef<HTMLElement>(); const hue = shallowRef<HTMLInputElement>(); const alpha = shallowRef<HTMLInputElement>(); const channels = new Map<ColorChannel, HTMLInputElement>(); const coordinates = new Map<HTMLInputElement, readonly [ColorModel, ColorCoordinate, 'number' | 'range']>();
+    const root = shallowRef<HTMLElement>(); const connection = shallowRef<ColorPickerConnection>(); const native = shallowRef<HTMLInputElement>(); const text = shallowRef<HTMLInputElement>(); const swatch = shallowRef<HTMLElement>(); const areaElement = shallowRef<HTMLElement>(); const areaSurface = shallowRef<HTMLElement>(); const areaThumb = shallowRef<HTMLElement>(); const hue = shallowRef<HTMLInputElement>(); const alpha = shallowRef<HTMLInputElement>(); const channels = new Map<ColorChannel, HTMLInputElement>(); const coordinates = new Map<HTMLInputElement, readonly [ColorModel, ColorCoordinate, 'number' | 'range']>();
     const submission = shallowRef<HTMLInputElement>();
+    let areaAxes: ColorPickerAreaAxes | undefined;
+    let mounted = false, resetScheduled = false, connectScheduled = false;
     const participation = useCompositeFormControl({
       root: () => root.value ?? null,
-      focusTarget: () => text.value ?? native.value ?? areaElement.value ?? root.value ?? null,
+      focusTarget: () => text.value ?? native.value ?? areaAxes?.saturation ?? areaElement.value ?? root.value ?? null,
       submissions: [{
         element: () => submission.value ?? null,
         capabilities: hiddenInputSubmissionCapabilities,
       }],
+      reset: () => {
+        if (resetScheduled) return;
+        resetScheduled = true;
+        queueMicrotask(() => {
+          resetScheduled = false;
+          if (!mounted) return;
+          if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+          reconnectTimer = null; reconnectPending = false; textComposing = false; proposedDraft = noDraftProposal;
+          if (!valueControlled) value.value = initialState.value;
+          area.value = unwrap(getColorAreaValue(value.value, !valueControlled ? initialState.area : area.value));
+          if (!draftControlled) draft.value = initialState.draft;
+          if (!formatControlled) format.value = initialState.format;
+          connect();
+        });
+      },
     });
     const valueControlled = props.modelValue !== undefined; const draftControlled = props.draft !== undefined; const formatControlled = props.format !== undefined;
     const noDraftProposal = Symbol('no-draft-proposal');
@@ -75,9 +100,27 @@ export const ColorPickerRoot = defineComponent({
     let textComposing = false;
     let reconnectPending = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-    const initialValue = parseInitial(props.modelValue ?? props.defaultValue); const value = shallowRef<ColorValue>(initialValue); const draft = shallowRef<string | null>(props.draft !== undefined ? props.draft : props.defaultDraft); const format = shallowRef<ColorFormat>(props.format ?? props.defaultFormat); const channel = shallowRef<ColorChannel>('red'); const textValue = shallowRef(props.modelValue ?? props.defaultValue); const cssColor = shallowRef('rgb(91, 109, 246)'); const area = shallowRef<ColorAreaValue>({ x: 0.604, y: 0.965, hue: 233, alpha: initialValue.alpha / 255 }); const coordinateValues = shallowRef<readonly ColorCoordinateValue[]>([]); const revision = shallowRef(0);
+    const initialState = unwrap(tryCreateColorPickerState({ value: props.modelValue ?? props.defaultValue,
+      draft: props.draft !== undefined ? props.draft : props.defaultDraft, format: props.format ?? props.defaultFormat,
+    }, { allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep }));
+    const value = shallowRef<ColorValue>(initialState.value), draft = shallowRef<string | null>(initialState.draft);
+    const format = shallowRef<ColorFormat>(initialState.format), channel = shallowRef<ColorChannel>(initialState.channel);
+    const textValue = shallowRef(initialState.draft ?? unwrap(formatColorValue(initialState.value, initialState.format)));
+    const cssColor = shallowRef(unwrap(formatColorValue(initialState.value, 'rgb'))), area = shallowRef<ColorAreaValue>(unwrap(getColorAreaValue(initialState.value, initialState.area)));
+    const coordinateCache = new Map<ColorFormat, readonly ColorCoordinateValue[]>();
+    let coordinateColor: ColorValue | undefined;
+    let coordinateArea: ColorAreaValue | undefined;
+    const coordinatesFor = (model: ColorFormat): readonly ColorCoordinateValue[] => {
+      if (coordinateColor !== value.value || coordinateArea !== area.value) { coordinateCache.clear(); coordinateColor = value.value; coordinateArea = area.value; }
+      const cached = coordinateCache.get(model);
+      if (cached !== undefined) return cached;
+      const result = unwrap(getColorCoordinates(value.value, model, area.value));
+      coordinateCache.set(model, result);
+      return result;
+    };
+    const coordinateValues = shallowRef<readonly ColorCoordinateValue[]>(coordinatesFor(initialState.format)); const revision = shallowRef(0);
     const state = computed<ColorPickerRootSlotProps>(() => ({ value: value.value, text: textValue.value, cssColor: cssColor.value, draft: draft.value, format: format.value, channel: channel.value, area: area.value, coordinates: coordinateValues.value, disabled: props.disabled, readonly: props.readonly }));
-    const refresh = (): void => { const target = connection.value; if (target === undefined) return; const snapshot = target.getSnapshot(); revision.value = snapshot.revision; value.value = snapshot.state.value; draft.value = snapshot.state.draft; format.value = snapshot.state.format; channel.value = snapshot.state.channel; textValue.value = target.getText(); cssColor.value = target.getCSSColor(); area.value = target.getAreaValue(); coordinateValues.value = target.getCoordinates(); };
+    const refresh = (): void => { const target = connection.value; if (target === undefined) return; const snapshot = target.getSnapshot(); revision.value = snapshot.revision; value.value = snapshot.state.value; draft.value = snapshot.state.draft; format.value = snapshot.state.format; channel.value = snapshot.state.channel; textValue.value = target.getText(); cssColor.value = target.getCSSColor(); area.value = target.getAreaValue(); coordinateValues.value = coordinatesFor(snapshot.state.format); };
     const syncControlledValues = (): void => {
       const target = connection.value;
       if (target === undefined) return;
@@ -89,44 +132,99 @@ export const ColorPickerRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       refresh();
     };
-    const connectParts = (): void => { const target = connection.value; if (target === undefined) return; if (native.value !== undefined) target.setNativeInputAttributes(native.value); if (text.value !== undefined) target.setTextInputAttributes(text.value); if (swatch.value !== undefined) target.setSwatchAttributes(swatch.value); if (areaElement.value !== undefined) target.setAreaAttributes(areaElement.value); if (areaThumb.value !== undefined) target.setAreaThumbAttributes(areaThumb.value); if (hue.value !== undefined) target.setHueInputAttributes(hue.value); if (alpha.value !== undefined) target.setAlphaInputAttributes(alpha.value); for (const [name, element] of channels) target.setChannelInputAttributes(element, name); for (const [element, [model, name, kind]] of coordinates) { if (kind === 'range') target.setCoordinateSliderAttributes(element, model, name); else target.setCoordinateInputAttributes(element, model, name); } };
+    const connectParts = (): void => { const target = connection.value; if (target === undefined) return; if (native.value !== undefined) target.setNativeInputAttributes(native.value); if (text.value !== undefined) target.setTextInputAttributes(text.value); if (swatch.value !== undefined) target.setSwatchAttributes(swatch.value); if (areaElement.value !== undefined) target.setAreaAttributes(areaElement.value, areaSurface.value, areaAxes); if (areaThumb.value !== undefined) target.setAreaThumbAttributes(areaThumb.value); if (hue.value !== undefined) target.setHueInputAttributes(hue.value); if (alpha.value !== undefined) target.setAlphaInputAttributes(alpha.value); for (const [name, element] of channels) target.setChannelInputAttributes(element, name); for (const [element, [model, name, kind]] of coordinates) { if (element === areaAxes?.saturation || element === areaAxes?.brightness) continue; if (kind === 'range') target.setCoordinateSliderAttributes(element, model, name); else target.setCoordinateInputAttributes(element, model, name); } };
     const connect = (): void => {
-      connection.value?.disconnect(); if (root.value === undefined) return;
-      connection.value = createColorPicker({ root: root.value, ...(valueControlled ? { value: props.modelValue as string } : { defaultValue: textValue.value }), ...(draftControlled ? { draft: proposedDraft === noDraftProposal ? props.draft as string | null : proposedDraft } : { defaultDraft: draft.value }), ...(formatControlled ? { format: props.format as ColorFormat } : { defaultFormat: format.value }), allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => emit('update:modelValue', toHex(next)), onDraftChange: (next) => { emit('update:draft', next); if (!draftControlled) return; proposedDraft = next; const proposal = next; void nextTick(() => { if (connection.value === undefined || proposedDraft !== proposal) return; proposedDraft = noDraftProposal; syncControlledValues(); }); }, onFormatChange: (next) => emit('update:format', next), onUpdate: refresh });
+      connectScheduled = false; reconnectPending = false;
+      if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+      connection.value?.disconnect(); connection.value = undefined; if (!mounted || root.value === undefined) return;
+      const resumed = unwrap(reconcileColorPickerState({ value: value.value, area: area.value, draft: draft.value, format: format.value, channel: channel.value },
+        { value: props.modelValue ?? value.value }, { allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep }));
+      connection.value = createColorPicker({ root: root.value, ...(resumed.area === undefined ? {} : { area: resumed.area }), ...(valueControlled ? { value: props.modelValue as string } : { defaultValue: value.value }), ...(draftControlled ? { draft: proposedDraft === noDraftProposal ? props.draft as string | null : proposedDraft } : { defaultDraft: draft.value }), ...(formatControlled ? { format: props.format as ColorFormat } : { defaultFormat: format.value }), allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => emit('update:modelValue', toHex(next)), onDraftChange: (next) => { emit('update:draft', next); if (!draftControlled) return; proposedDraft = next; const proposal = next; void nextTick(() => { if (connection.value === undefined || proposedDraft !== proposal) return; proposedDraft = noDraftProposal; syncControlledValues(); }); }, onFormatChange: (next) => emit('update:format', next), onUpdate: refresh });
       connectParts(); refresh();
     };
     const requestConnect = (): void => {
-      if (textComposing) {
-        reconnectPending = true;
-        return;
-      }
-      connect();
+      if (!mounted) return;
+      if (textComposing || reconnectPending) { reconnectPending = true; return; }
+      if (connectScheduled) return;
+      connectScheduled = true;
+      void nextTick(() => {
+        if (!mounted || !connectScheduled) return;
+        connectScheduled = false;
+        if (textComposing) { reconnectPending = true; return; }
+        connect();
+      });
     };
     const setTextComposing = (composing: boolean): void => {
       textComposing = composing;
       if (composing || !reconnectPending || reconnectTimer !== null) return;
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
-        if (textComposing) return;
+        if (!mounted || textComposing) return;
         reconnectPending = false;
         connect();
       }, 0);
     };
-    provide<RootContext>(rootKey, { state, allowAlpha: computed(() => props.allowAlpha), registerNative: (element) => { native.value = element; if (element !== undefined) connection.value?.setNativeInputAttributes(element); }, registerText: (element) => { const changed = text.value !== element; text.value = element; if (changed && element !== undefined) connection.value?.setTextInputAttributes(element); }, registerChannel: (element, name) => { if (element === undefined) channels.delete(name); else { channels.set(name, element); connection.value?.setChannelInputAttributes(element, name); } }, registerCoordinate: (element, model, name, kind) => { coordinates.set(element, [model, name, kind]); if (kind === 'range') connection.value?.setCoordinateSliderAttributes(element, model, name); else connection.value?.setCoordinateInputAttributes(element, model, name); }, unregisterCoordinate: (element) => { coordinates.delete(element); }, registerArea: (element) => { areaElement.value = element; if (element !== undefined) connection.value?.setAreaAttributes(element); }, registerAreaThumb: (element) => { areaThumb.value = element; if (element !== undefined) connection.value?.setAreaThumbAttributes(element); }, registerHue: (element) => { hue.value = element; if (element !== undefined) connection.value?.setHueInputAttributes(element); }, registerAlpha: (element) => { alpha.value = element; if (element !== undefined) connection.value?.setAlphaInputAttributes(element); }, registerSwatch: (element) => { swatch.value = element; if (element !== undefined) connection.value?.setSwatchAttributes(element); }, setTextComposing, setFormat: (next) => { if (connection.value?.handleEvent({ type: 'set-format', format: next })) refresh(); } });
-    onMounted(connect);
+    const registerPart = <T extends HTMLElement>(slot: { value: T | undefined }, element: T | undefined): void => {
+      if (slot.value === element) return;
+      slot.value = element;
+      requestConnect();
+    };
+    provide<RootContext>(rootKey, {
+      state, coordinatesFor, allowAlpha: computed(() => props.allowAlpha),
+      inputAttributesFor: part => getColorPickerInputAttributes(state.value, { part, allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: props.disabled, readOnly: props.readonly }),
+      registerNative: element => registerPart(native, element),
+      registerText: element => {
+        if (text.value === element) return;
+        if (text.value !== undefined && textComposing) {
+          reconnectPending = true;
+          setTextComposing(false);
+        }
+        registerPart(text, element);
+      },
+      registerChannel: (element, name) => {
+        if (channels.get(name) === element) return;
+        if (element === undefined) channels.delete(name); else channels.set(name, element);
+        requestConnect();
+      },
+      registerCoordinate: (element, model, name, kind) => {
+        const current = coordinates.get(element);
+        if (current?.[0] === model && current[1] === name && current[2] === kind) return;
+        coordinates.set(element, [model, name, kind]);
+        requestConnect();
+      },
+      unregisterCoordinate: element => { if (coordinates.delete(element)) requestConnect(); },
+      registerArea: element => registerPart(areaElement, element),
+      registerAreaAxes: axes => {
+        if (areaAxes?.saturation === axes?.saturation && areaAxes?.brightness === axes?.brightness) return;
+        areaAxes = axes; requestConnect();
+      },
+      registerAreaSurface: element => registerPart(areaSurface, element),
+      registerAreaThumb: element => registerPart(areaThumb, element),
+      registerHue: element => registerPart(hue, element),
+      registerAlpha: element => registerPart(alpha, element),
+      registerSwatch: element => registerPart(swatch, element),
+      setTextComposing,
+      setFormat: next => { if (connection.value?.handleEvent({ type: 'set-format', format: next })) refresh(); },
+    });
+    onMounted(() => { mounted = true; connect(); });
     onBeforeUnmount(() => {
+      mounted = false; resetScheduled = false; connectScheduled = false;
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
       reconnectPending = false;
       proposedDraft = noDraftProposal;
       connection.value?.disconnect();
+      connection.value = undefined; channels.clear(); coordinates.clear(); coordinateCache.clear(); coordinateColor = undefined; coordinateArea = undefined;
+      root.value = undefined; native.value = undefined; text.value = undefined; swatch.value = undefined;
+      areaElement.value = undefined; areaSurface.value = undefined; areaThumb.value = undefined; areaAxes = undefined; hue.value = undefined; alpha.value = undefined; submission.value = undefined;
     });
     watch([() => props.allowAlpha, () => props.channelStep, () => props.alphaStep, () => props.disabled, () => props.readonly, () => props.label], requestConnect);
     watch([() => props.modelValue, () => props.draft, () => props.format], () => {
       proposedDraft = noDraftProposal;
       syncControlledValues();
     });
-    return (): VNodeChild => { const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { root.value = element instanceof HTMLElement ? element : undefined; }, role: 'group', 'aria-label': props.label, 'aria-disabled': String(props.disabled), 'aria-readonly': String(props.readonly), 'data-scope': 'color-picker', 'data-part': 'root', 'data-format': state.value.format, 'data-channel': state.value.channel, 'data-revision': String(revision.value) }), { default: () => slots['default']?.(state.value) }); if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual; return [visual, h('input', { ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; }, type: 'hidden', name: props.name, form: props.form, required: props.required, disabled: props.disabled, value: state.value.text })]; };
+    return (): VNodeChild => { const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { registerPart(root, element instanceof HTMLElement ? element : undefined); }, role: 'group', 'aria-label': props.label ?? attrs['aria-label'], 'aria-disabled': String(props.disabled), 'aria-readonly': undefined, 'data-readonly': props.readonly ? '' : undefined, 'data-scope': 'color-picker', 'data-part': 'root', 'data-format': state.value.format, 'data-channel': state.value.channel, 'data-revision': String(revision.value) }), { default: () => slots['default']?.(state.value) }); if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual; return [visual, h('input', { ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; }, type: 'hidden', name: props.name, form: props.form, required: props.required, disabled: props.disabled, value: state.value.text })]; };
   },
 });
 
@@ -134,26 +232,113 @@ export type ColorPickerValueChangeHandler = (value: string) => void;
 export type ColorPickerDraftChangeHandler = (value: string | null) => void;
 export type ColorPickerFormatChangeHandler = (value: ColorFormat) => void;
 
-export const ColorPickerLabel = simplePart('Label', 'label', 'label');
-export const ColorPickerControl = simplePart('Control', 'control', 'div');
-export const ColorPickerNativeInput = inputPart('NativeInput', 'native-input', (root, element) => root.registerNative(element));
-export const ColorPickerTextInput = inputPart('TextInput', 'text-input', (root, element) => root.registerText(element));
-export const ColorPickerChannelInput = defineComponent({ name: 'SectileColorPickerChannelInput', inheritAttrs: false, props: { channel: { type: String as PropType<ColorChannel>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerChannelInput'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerChannel(element instanceof HTMLInputElement ? element : undefined, props.channel), type: 'range', min: 0, max: 255, step: 1, value: root.state.value.value[props.channel], disabled: root.state.value.disabled || (props.channel === 'alpha' && !root.allowAlpha.value), 'aria-label': `${props.channel} channel`, 'data-scope': 'color-picker', 'data-part': 'channel-input', 'data-channel': props.channel }), { default: () => slots['default']?.(root.state.value) }); } });
-export const ColorPickerCoordinateInput = coordinatePart('CoordinateInput', 'coordinate-input', 'number');
-export const ColorPickerCoordinateSlider = coordinatePart('CoordinateSlider', 'coordinate-slider', 'range');
-export const ColorPickerArea = defineComponent({ name: 'SectileColorPickerArea', inheritAttrs: false, props: partProps, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerArea'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerArea(element instanceof HTMLElement ? element : undefined), tabindex: root.state.value.disabled ? -1 : 0, 'aria-label': 'Color saturation and brightness', 'aria-readonly': String(root.state.value.readonly), 'data-scope': 'color-picker', 'data-part': 'area', style: { '--sectile-color-area-hue': `hsl(${root.state.value.area.hue} 100% 50%)` } }), { default: () => slots['default']?.(root.state.value) }); } });
-export const ColorPickerAreaThumb = defineComponent({ name: 'SectileColorPickerAreaThumb', inheritAttrs: false, props: { ...partProps, as: { ...partProps.as, default: 'span' } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerAreaThumb'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerAreaThumb(element instanceof HTMLElement ? element : undefined), 'aria-hidden': 'true', 'data-scope': 'color-picker', 'data-part': 'area-thumb', style: { '--sectile-color-area-x': `${root.state.value.area.x * 100}%`, '--sectile-color-area-y': `${(1 - root.state.value.area.y) * 100}%`, backgroundColor: root.state.value.cssColor } }), { default: () => slots['default']?.(root.state.value) }); } });
-export const ColorPickerHueSlider = inputPart('HueSlider', 'hue-slider', (root, element) => root.registerHue(element));
-export const ColorPickerAlphaSlider = inputPart('AlphaSlider', 'alpha-slider', (root, element) => root.registerAlpha(element));
-export const ColorPickerSwatch = defineComponent({ name: 'SectileColorPickerSwatch', inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerSwatch'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerSwatch(element instanceof HTMLElement ? element : undefined), style: { backgroundColor: root.state.value.cssColor }, 'aria-label': root.state.value.text, 'data-scope': 'color-picker', 'data-part': 'swatch' }), { default: () => slots['default']?.(root.state.value) }); } });
-export const ColorPickerValueText = defineComponent({ name: 'SectileColorPickerValueText', inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerValueText'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'color-picker', 'data-part': 'value-text' }), { default: () => slots['default']?.(root.state.value) ?? root.state.value.text }); } });
-export const ColorPickerFormatTrigger = defineComponent({ name: 'SectileColorPickerFormatTrigger', inheritAttrs: false, props: { format: { type: String as PropType<ColorFormat>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerFormatTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled || root.state.value.readonly, 'aria-pressed': String(root.state.value.format === props.format), 'data-scope': 'color-picker', 'data-part': 'format-trigger', 'data-state': root.state.value.format === props.format ? 'active' : 'inactive', onClick: (event: MouseEvent) => { if (!event.defaultPrevented) root.setFormat(props.format); } }), { default: () => slots['default']?.(root.state.value) }); } });
+export const ColorPickerLabel = /* @__PURE__ */ simplePart('Label', 'label', 'label');
+export const ColorPickerControl = /* @__PURE__ */ simplePart('Control', 'control', 'div');
+export const ColorPickerNativeInput = /* @__PURE__ */ inputPart('NativeInput', 'native-input', (root, element) => root.registerNative(element));
+export const ColorPickerTextInput = /* @__PURE__ */ inputPart('TextInput', 'text-input', (root, element) => root.registerText(element));
+export const ColorPickerChannelInput = /* @__PURE__ */ defineComponent({ name: 'SectileColorPickerChannelInput', inheritAttrs: false, props: { channel: { type: String as PropType<ColorChannel>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerChannelInput'); let registered: HTMLInputElement | undefined, registeredChannel: ColorChannel | undefined; onBeforeUnmount(() => { if (registeredChannel !== undefined) root.registerChannel(undefined, registeredChannel); }); const register = (element: unknown): void => { const next = element instanceof HTMLInputElement ? element : undefined; if (registered === next && registeredChannel === props.channel) return; if (registeredChannel !== undefined) root.registerChannel(undefined, registeredChannel); registered = next; registeredChannel = next === undefined ? undefined : props.channel; if (next !== undefined) root.registerChannel(next, props.channel); }; return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: register, type: 'range', min: 0, max: 255, step: 1, value: root.state.value.value[props.channel], disabled: root.state.value.disabled || (props.channel === 'alpha' && !root.allowAlpha.value), 'aria-label': partLabel(attrs, `${props.channel} channel`), 'data-scope': 'color-picker', 'data-part': 'channel-input', 'data-channel': props.channel }), { default: () => slots['default']?.(root.state.value) }); } });
+export const ColorPickerCoordinateInput = /* @__PURE__ */ coordinatePart('CoordinateInput', 'coordinate-input', 'number');
+export const ColorPickerCoordinateSlider = /* @__PURE__ */ coordinatePart('CoordinateSlider', 'coordinate-slider', 'range');
+export const ColorPickerArea = /* @__PURE__ */ defineComponent({
+  name: 'SectileColorPickerArea', inheritAttrs: false, props: partProps,
+  slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('ColorPickerArea');
+    let saturation: HTMLInputElement | undefined, brightness: HTMLInputElement | undefined;
+    provide<AreaContext>(areaKey, { register(element, coordinate) {
+      if (coordinate === 'saturation') saturation = element; else brightness = element;
+      root.registerAreaAxes(saturation && brightness ? { saturation, brightness } : undefined);
+    } });
+    onBeforeUnmount(() => { root.registerAreaAxes(undefined); saturation = undefined; brightness = undefined; });
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerArea(element instanceof HTMLElement ? element : undefined),
+      role: 'group', tabindex: root.state.value.disabled ? -1 : attrs['tabindex'] ?? 0,
+      'aria-label': partLabel(attrs, 'Color saturation and brightness'),
+      'aria-description': attrs['aria-description'] ?? attrs['aria-valuetext'], 'aria-valuetext': undefined, 'aria-readonly': undefined,
+      'data-readonly': root.state.value.readonly ? '' : undefined, 'data-scope': 'color-picker', 'data-part': 'area',
+      style: { '--sectile-color-area-hue': `hsl(${root.state.value.area.hue} 100% 50%)` },
+    }), { default: () => slots['default']?.(root.state.value) });
+  },
+});
+export const ColorPickerAreaSurface = /* @__PURE__ */ defineComponent({
+  name: 'SectileColorPickerAreaSurface', inheritAttrs: false, props: partProps,
+  slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('ColorPickerAreaSurface');
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild,
+      elementRef: (element: unknown) => root.registerAreaSurface(element instanceof HTMLElement ? element : undefined),
+      'data-scope': 'color-picker', 'data-part': 'area-surface',
+    }), { default: () => slots['default']?.(root.state.value) });
+  },
+});
+export const ColorPickerAreaThumb = /* @__PURE__ */ defineComponent({ name: 'SectileColorPickerAreaThumb', inheritAttrs: false, props: { ...partProps, as: { ...partProps.as, default: 'span' } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerAreaThumb'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerAreaThumb(element instanceof HTMLElement ? element : undefined), 'aria-hidden': 'true', 'data-scope': 'color-picker', 'data-part': 'area-thumb', style: { '--sectile-color-area-x': `${root.state.value.area.x * 100}%`, '--sectile-color-area-y': `${(1 - root.state.value.area.y) * 100}%`, backgroundColor: root.state.value.cssColor } }), { default: () => slots['default']?.(root.state.value) }); } });
+export const ColorPickerHueSlider = /* @__PURE__ */ inputPart('HueSlider', 'hue-slider', (root, element) => root.registerHue(element));
+export const ColorPickerAlphaSlider = /* @__PURE__ */ inputPart('AlphaSlider', 'alpha-slider', (root, element) => root.registerAlpha(element));
+export const ColorPickerSwatch = /* @__PURE__ */ defineComponent({ name: 'SectileColorPickerSwatch', inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerSwatch'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => root.registerSwatch(element instanceof HTMLElement ? element : undefined), style: { backgroundColor: root.state.value.cssColor }, 'aria-label': partLabel(attrs, root.state.value.text), 'data-scope': 'color-picker', 'data-part': 'swatch' }), { default: () => slots['default']?.(root.state.value) }); } });
+export const ColorPickerValueText = /* @__PURE__ */ defineComponent({ name: 'SectileColorPickerValueText', inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerValueText'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'color-picker', 'data-part': 'value-text' }), { default: () => slots['default']?.(root.state.value) ?? root.state.value.text }); } });
+export const ColorPickerFormatTrigger = /* @__PURE__ */ defineComponent({ name: 'SectileColorPickerFormatTrigger', inheritAttrs: false, props: { format: { type: String as PropType<ColorFormat>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('ColorPickerFormatTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled || root.state.value.readonly, 'aria-pressed': String(root.state.value.format === props.format), 'data-scope': 'color-picker', 'data-part': 'format-trigger', 'data-state': root.state.value.format === props.format ? 'active' : 'inactive', onClick: (event: MouseEvent) => { if (!event.defaultPrevented) root.setFormat(props.format); } }), { default: () => slots['default']?.(root.state.value) }); } });
 
 function simplePart(name: string, part: string, as: PrimitiveAs) { return defineComponent({ name: `SectileColorPicker${name}`, inheritAttrs: false, props: { ...partProps, as: { ...partProps.as, default: as } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot(`ColorPicker${name}`); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'color-picker', 'data-part': part }), { default: () => slots['default']?.(root.state.value) }); } }); }
-function coordinatePart(name: string, part: string, kind: 'number' | 'range') { return defineComponent({ name: `SectileColorPicker${name}`, inheritAttrs: false, props: { format: { type: String as PropType<ColorModel>, required: true }, coordinate: { type: String as PropType<ColorCoordinate>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot(`ColorPicker${name}`); let registered: HTMLInputElement | undefined; onBeforeUnmount(() => { if (registered !== undefined) root.unregisterCoordinate(registered); }); return (): VNodeChild => { const entry = root.state.value.coordinates.find((item) => item.coordinate === props.coordinate); return h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { const next = element instanceof HTMLInputElement ? element : undefined; if (registered !== undefined && registered !== next) root.unregisterCoordinate(registered); registered = next; if (next !== undefined) root.registerCoordinate(next, props.format, props.coordinate, kind); }, type: kind, min: entry?.min, max: entry?.max, step: entry?.step, value: entry?.value, disabled: root.state.value.disabled || (props.coordinate === 'alpha' && !root.allowAlpha.value), readonly: kind === 'number' ? root.state.value.readonly : undefined, 'aria-readonly': String(root.state.value.readonly), 'aria-label': entry?.label ?? props.coordinate, 'aria-valuetext': entry === undefined ? undefined : `${entry.value}${entry.unit}`, 'data-scope': 'color-picker', 'data-part': part, 'data-coordinate': props.coordinate, 'data-format': props.format, style: { '--sectile-color-coordinate-color': root.state.value.cssColor } }), { default: () => slots['default']?.(root.state.value) }); }; } }); }
-function inputPart(name: string, part: string, register: (root: RootContext, element?: HTMLInputElement) => void) { return defineComponent({ name: `SectileColorPicker${name}`, inheritAttrs: false, props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot(`ColorPicker${name}`); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => register(root, element instanceof HTMLInputElement ? element : undefined), disabled: root.state.value.disabled, readonly: name === 'TextInput' ? root.state.value.readonly : undefined, 'aria-readonly': String(root.state.value.readonly), ...(name === 'TextInput' ? { onCompositionstart: () => root.setTextComposing(true), onCompositionend: () => root.setTextComposing(false) } : {}), 'data-scope': 'color-picker', 'data-part': part }), { default: () => slots['default']?.(root.state.value) }); } }); }
+function coordinatePart(name: string, part: string, kind: 'number' | 'range') {
+  return defineComponent({ name: `SectileColorPicker${name}`, inheritAttrs: false,
+    props: { format: { type: String as PropType<ColorModel>, required: true }, coordinate: { type: String as PropType<ColorCoordinate>, required: true },
+      as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
+    slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
+    setup(props, { attrs, slots }) {
+      const root = useRoot(`ColorPicker${name}`), area = inject<AreaContext | undefined>(areaKey, undefined);
+      const projection = computed(() => root.coordinatesFor(props.format));
+      let registered: HTMLInputElement | undefined, registeredAxis: 'saturation' | 'value' | undefined;
+      onBeforeUnmount(() => {
+        if (registered !== undefined) root.unregisterCoordinate(registered);
+        if (registeredAxis !== undefined) area?.register(undefined, registeredAxis);
+        registered = undefined; registeredAxis = undefined;
+      });
+      return (): VNodeChild => {
+        const entry = projection.value.find(item => item.coordinate === props.coordinate);
+        return h(Primitive, mergeProps(attrs, {
+          as: props.as, asChild: props.asChild,
+          elementRef: (element: unknown) => {
+            const next = element instanceof HTMLInputElement ? element : undefined;
+            const axis = area && kind === 'range' && props.format === 'hsv' && (props.coordinate === 'saturation' || props.coordinate === 'value') ? props.coordinate : undefined;
+            if (registered !== undefined && registered !== next) root.unregisterCoordinate(registered);
+            if (registeredAxis !== undefined && (registered !== next || registeredAxis !== axis)) area?.register(undefined, registeredAxis);
+            registered = next; registeredAxis = next === undefined ? undefined : axis;
+            if (next !== undefined) root.registerCoordinate(next, props.format, props.coordinate, kind);
+            if (registeredAxis !== undefined) area?.register(next, registeredAxis);
+          },
+          type: kind, min: entry?.min, max: entry?.max, step: entry?.step, value: entry?.value,
+          disabled: root.state.value.disabled || (props.coordinate === 'alpha' && !root.allowAlpha.value), readonly: kind === 'number' ? root.state.value.readonly : undefined,
+          'aria-readonly': String(root.state.value.readonly), 'aria-label': partLabel(attrs, entry?.label ?? props.coordinate),
+          'aria-valuetext': attrs['aria-valuetext'] ?? (entry === undefined ? undefined : `${entry.value}${entry.unit}`),
+          'data-scope': 'color-picker', 'data-part': part, 'data-coordinate': props.coordinate, 'data-format': props.format,
+          style: { '--sectile-color-coordinate-color': root.state.value.cssColor },
+        }), { default: () => slots['default']?.(root.state.value) });
+      };
+    },
+  });
+}
+function inputPart(name: string, part: ColorPickerInputPart, register: (root: RootContext, element?: HTMLInputElement) => void) {
+  return defineComponent({ name: `SectileColorPicker${name}`, inheritAttrs: false,
+    props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
+    slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
+    setup(props, { attrs, slots }) {
+      const root = useRoot(`ColorPicker${name}`), renderServerValue = inject(ssrContextKey, undefined) !== undefined;
+      return (): VNodeChild => {
+        const { value, ...attributes } = root.inputAttributesFor(part);
+        return h(Primitive, mergeProps(attrs, attributes, {
+          as: props.as, asChild: props.asChild,
+          elementRef: (element: unknown) => register(root, element instanceof HTMLInputElement ? element : undefined),
+          ...(renderServerValue ? { value } : {}),
+          ...(part === 'text-input' ? { onCompositionstart: () => root.setTextComposing(true), onCompositionend: () => root.setTextComposing(false) } : {}),
+          'data-scope': 'color-picker', 'data-part': part,
+        }), { default: () => slots['default']?.(root.state.value) });
+      };
+    },
+  });
+}
+function partLabel(attrs: Readonly<Record<string, unknown>>, fallback: string): unknown { return attrs['aria-label'] ?? (attrs['aria-labelledby'] === undefined ? fallback : undefined); }
 function useRoot(part: string): RootContext { const root = inject<RootContext>(rootKey); if (root === undefined) throw new TypeError(`${part} must be used inside ColorPickerRoot.`); return root; }
-function parseInitial(text: string): ColorValue { const result = parseColorValue(text); return result.ok ? result.value : Object.freeze({ red: 0, green: 0, blue: 0, alpha: 255 }); }
 function toHex(value: ColorValue): string { const result = formatColorValue(value, 'hex'); return result.ok ? result.value : '#000000'; }
 
 export type { ColorAreaValue, ColorChannel, ColorCoordinate, ColorCoordinateValue, ColorFormat, ColorModel, ColorPickerPolicies, ColorValue } from '@sectile/dom/color-picker';

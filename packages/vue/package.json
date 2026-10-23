@@ -71,6 +71,26 @@
       "import": "./dist/timer.js",
       "default": "./dist/timer.js"
     },
+    "./image": {
+      "types": "./dist/image.d.ts",
+      "import": "./dist/image.js",
+      "default": "./dist/image.js"
+    },
+    "./media-gesture": {
+      "types": "./dist/media-gesture.d.ts",
+      "import": "./dist/media-gesture.js",
+      "default": "./dist/media-gesture.js"
+    },
+    "./fullscreen": {
+      "types": "./dist/fullscreen.d.ts",
+      "import": "./dist/fullscreen.js",
+      "default": "./dist/fullscreen.js"
+    },
+    "./drag-drop": {
+      "types": "./dist/drag-drop.d.ts",
+      "import": "./dist/drag-drop.js",
+      "default": "./dist/drag-drop.js"
+    },
     "./meter": {
       "types": "./dist/meter.d.ts",
       "import": "./dist/meter.js",
@@ -186,10 +206,25 @@
       "import": "./dist/feed.js",
       "default": "./dist/feed.js"
     },
+    "./form/file-upload": {
+      "types": "./dist/form/file-upload.d.ts",
+      "import": "./dist/form/file-upload.js",
+      "default": "./dist/form/file-upload.js"
+    },
+    "./form/file-input": {
+      "types": "./dist/form/file-input.d.ts",
+      "import": "./dist/form/file-input.js",
+      "default": "./dist/form/file-input.js"
+    },
     "./form": {
       "types": "./dist/form.d.ts",
       "import": "./dist/form.js",
       "default": "./dist/form.js"
+    },
+    "./form-boundary": {
+      "types": "./dist/form-boundary.d.ts",
+      "import": "./dist/form-boundary.js",
+      "default": "./dist/form-boundary.js"
     },
     "./reorder": {
       "types": "./dist/reorder.d.ts",
@@ -221,6 +256,21 @@
       "import": "./dist/tree-grid.js",
       "default": "./dist/tree-grid.js"
     },
+    "./checkbox-tree": {
+      "types": "./dist/checkbox-tree.d.ts",
+      "import": "./dist/checkbox-tree.js",
+      "default": "./dist/checkbox-tree.js"
+    },
+    "./transfer": {
+      "types": "./dist/transfer.d.ts",
+      "import": "./dist/transfer.js",
+      "default": "./dist/transfer.js"
+    },
+    "./tree-select": {
+      "types": "./dist/tree-select.d.ts",
+      "import": "./dist/tree-select.js",
+      "default": "./dist/tree-select.js"
+    },
     "./tree-view": {
       "types": "./dist/tree-view.d.ts",
       "import": "./dist/tree-view.js",
@@ -230,6 +280,11 @@
       "types": "./dist/menu.d.ts",
       "import": "./dist/menu.js",
       "default": "./dist/menu.js"
+    },
+    "./context-menu": {
+      "types": "./dist/context-menu.d.ts",
+      "import": "./dist/context-menu.js",
+      "default": "./dist/context-menu.js"
     },
     "./menu-button": {
       "types": "./dist/menu-button.d.ts",
@@ -291,6 +346,11 @@
       "import": "./dist/window-splitter.js",
       "default": "./dist/window-splitter.js"
     },
+    "./component-handle": {
+      "types": "./dist/component-handle.d.ts",
+      "import": "./dist/component-handle.js",
+      "default": "./dist/component-handle.js"
+    },
     "./primitive": {
       "types": "./dist/primitive.d.ts",
       "import": "./dist/primitive.js",
@@ -351,10 +411,20 @@
       "import": "./dist/temporal/date-time-field.js",
       "default": "./dist/temporal/date-time-field.js"
     },
+    "./temporal/date-time-range-field": {
+      "types": "./dist/temporal/date-time-range-field.d.ts",
+      "import": "./dist/temporal/date-time-range-field.js",
+      "default": "./dist/temporal/date-time-range-field.js"
+    },
     "./temporal/time-field": {
       "types": "./dist/temporal/time-field.d.ts",
       "import": "./dist/temporal/time-field.js",
       "default": "./dist/temporal/time-field.js"
+    },
+    "./temporal/time-picker": {
+      "types": "./dist/temporal/time-picker.d.ts",
+      "import": "./dist/temporal/time-picker.js",
+      "default": "./dist/temporal/time-picker.js"
     },
     "./temporal/time-range-field": {
       "types": "./dist/temporal/time-range-field.d.ts",
@@ -436,7 +506,7 @@
     "@sectile/form": "workspace:^",
     "@sectile/tabular": "workspace:^",
     "@sectile/virtual": "workspace:^",
-    "vue": "^3.5.0",
+    "vue": "^3.5.41",
     "@sectile/temporal": "workspace:^"
   },
   "peerDependenciesMeta": {
@@ -462,12 +532,12 @@
     "@sectile/form": "workspace:*",
     "@sectile/tabular": "workspace:*",
     "@sectile/virtual": "workspace:*",
-    "@vue/server-renderer": "^3.5.0",
+    "@vue/server-renderer": "^3.5.41",
     "happy-dom": "^20.11.6",
     "typescript": "7.0.2",
     "typescript-sfc": "npm:typescript-native-bridge@6.0.3-bridge.15.tsgo.7.0.2",
     "vite": "5.4.21",
-    "vue": "^3.5.0",
+    "vue": "^3.5.41",
     "vue-tsc": "^3.0.6",
     "@sectile/temporal": "workspace:*"
   }

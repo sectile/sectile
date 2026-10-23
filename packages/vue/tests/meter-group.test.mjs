@@ -95,3 +95,20 @@ test('Vue MeterGroup keyed parts reject missing context and unavailable ids', as
     /id missing is unavailable/u,
   );
 });
+
+test('Vue MeterGroup repeated part projection has linear rather than quadratic search work', async () => {
+  const count = 128, items = Array.from({ length: count }, (_, index) => ({ id: 'scan-' + index, value: '1', label: 'Item ' + index }));
+  const original = Array.prototype.find; let visits = 0;
+  try {
+    Array.prototype.find = function (predicate, thisArg) {
+      if (this.length !== count || this[0]?.id !== 'scan-0') return original.call(this, predicate, thisArg);
+      return original.call(this, (value, index, array) => { visits++; return predicate.call(thisArg, value, index, array); });
+    };
+    const html = await renderToString(createSSRApp({ render: () => h(MeterGroupRoot, { items, max: String(count), label: 'Scan' }, {
+      default: state => [h(MeterGroupTrack, {}, { default: () => state.segments.map(segment => h(MeterGroupSegment, { id: segment.id }, { default: () => h(MeterGroupIndicator) })) }),
+        h(MeterGroupList, {}, { default: () => state.segments.map(segment => h(MeterGroupItem, { id: segment.id }, { default: () => h(MeterGroupItemLabel) })) })],
+    }) }));
+    assert.equal((html.match(/role="meter"/gu) ?? []).length, count);
+    assert.ok(visits <= count * 8, 'part fanout must not rescan canonical or projected segment domains');
+  } finally { Array.prototype.find = original; }
+});

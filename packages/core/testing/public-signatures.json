@@ -107,6 +107,10 @@
       "types": "dist/interaction.d.ts"
     },
     {
+      "subpath": "./json",
+      "types": "dist/structures/json.d.ts"
+    },
+    {
       "subpath": "./layer-stack",
       "types": "dist/layer-stack.d.ts"
     },
@@ -263,12 +267,20 @@
       "types": "dist/tooltip.d.ts"
     },
     {
+      "subpath": "./transfer",
+      "types": "dist/transfer.d.ts"
+    },
+    {
       "subpath": "./tree",
       "types": "dist/structures/tree.d.ts"
     },
     {
       "subpath": "./tree-grid",
       "types": "dist/tree-grid.d.ts"
+    },
+    {
+      "subpath": "./tree-select",
+      "types": "dist/tree-select.d.ts"
     },
     {
       "subpath": "./tree-view",
@@ -283,7 +295,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "b1ccd4739c636464f4d398c6a01c85b75f8f1dfc8dd5fe7769df650ae2d0b7f8",
+  "fingerprint": "54f581c8e7c986a895acee5ab6842b62317ea35a8b8018989ab69bc7ff411088",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -291,7 +303,7 @@
     },
     {
       "path": "dist/adapter-runtime.d.ts",
-      "sha256": "ccd5219747689d27fda2633c7dbb90ae1df51f5432c8cd810472615c51fdac54"
+      "sha256": "58a09d6175f12599d9a8ce89dc6c3b2f706510888d2e61ffa35eef982191bcdb"
     },
     {
       "path": "dist/alert-dialog.d.ts",
@@ -323,7 +335,7 @@
     },
     {
       "path": "dist/color-picker.d.ts",
-      "sha256": "15563773a9b330385f027793b6dc6153766743241b92d658c44b072e7ca3c1b7"
+      "sha256": "1a88326790ad4f4d067773726dcff6afbfbe653536f9888c6b445c3bb03e129b"
     },
     {
       "path": "dist/combobox.d.ts",
@@ -351,7 +363,7 @@
     },
     {
       "path": "dist/error-code.d.ts",
-      "sha256": "b3aa3cc0bf8ed253d2d3f8f27261622dfa0b03e1857cc2cb3c62fa0cc1b14a45"
+      "sha256": "1688ccfe5c0099aa9a9af2875d80ef874f29ce06e9f4cadd67fad2f291abf242"
     },
     {
       "path": "dist/feed.d.ts",
@@ -371,7 +383,7 @@
     },
     {
       "path": "dist/interaction.d.ts",
-      "sha256": "712472b49dbc3076f12d068bd800ce2251b7ac6f019fb809b82275c21dbbd400"
+      "sha256": "735d36dffd23aab6774b5d5f4b16accf8ce1b79fe36f84439615de359cc06fcd"
     },
     {
       "path": "dist/internal/composites/cascade-choice.d.ts",
@@ -379,7 +391,7 @@
     },
     {
       "path": "dist/internal/composites/combobox.d.ts",
-      "sha256": "0c34f44e8632ecfc5f87ae490be9c1833831b5dbfe7da029d8599e9fbda170df"
+      "sha256": "c466aa2c9c53a26b33bc0ba3bb3a0d57650b96d5cbc055130309f4dfc08291b3"
     },
     {
       "path": "dist/internal/composites/grid-control.d.ts",
@@ -395,11 +407,11 @@
     },
     {
       "path": "dist/internal/composites/listbox.d.ts",
-      "sha256": "f1cf2566aa46a3961cddfae58649cd1663e5de4e3d3a83e5d9223017ba369af2"
+      "sha256": "513080de5f34845ccdcee3e4b3b3ca276b57a3a21c82d8c3633608ae92ef8bd9"
     },
     {
       "path": "dist/internal/composites/menu.d.ts",
-      "sha256": "dfd78aae18b383d4591417f500bb27777fc12aeb937667766192bc6b83bf1eb3"
+      "sha256": "c4df16398bac8cb3a882adb11ab99280dd91c795e5e29d330e623e621e919720"
     },
     {
       "path": "dist/internal/composites/popup.d.ts",
@@ -414,12 +426,20 @@
       "sha256": "35a68497ee11d298bf1e143b9f838402eb8b9a69a366207cdf7bfba531745c2e"
     },
     {
+      "path": "dist/internal/composites/tree-select.d.ts",
+      "sha256": "f89f20aa346e35d7db17fe17a14df760365be03f5f2b5255e71ef6679ad64c8c"
+    },
+    {
+      "path": "dist/internal/composites/tree-selection.d.ts",
+      "sha256": "cc11f25f478ad96ff09d2dac70daf0e2c53194f656703b7b5f1d4144c920799f"
+    },
+    {
       "path": "dist/internal/composites/tree-view.d.ts",
-      "sha256": "1b5146fcbc1317e512ff0038f75c2562cef7e5ae072d332ea8d1a9134cd097de"
+      "sha256": "acaa57204de554271b0119e56e467519dd23f19ac7c603c6777370699be895d6"
     },
     {
       "path": "dist/internal/editing/text.d.ts",
-      "sha256": "c0797dd970231c37f54a464078ed29689821e2da733f2b0613c6cdb4b42ae70b"
+      "sha256": "f1c10598b2c05fa82b89196edcc17b09d3c65762b1a935491bc226fd0803b3e9"
     },
     {
       "path": "dist/internal/kernel/decimal.d.ts",
@@ -459,11 +479,11 @@
     },
     {
       "path": "dist/internal/state/selection.d.ts",
-      "sha256": "94941b7a1962e575b12be24e088e7ea499465fe4c8445a3b0ff048d9e163a64e"
+      "sha256": "1fead12beecaa18cc0643ef7a2a9b07a6aaa5f2102f9c13b46498b7fc7fdfdf2"
     },
     {
       "path": "dist/layer-stack.d.ts",
-      "sha256": "cb9f8d90d911da535f0e9c6f86df02b49e66ddfc877c34c58bfd05e791c7e336"
+      "sha256": "551f6524aabe72b9cbff965627a48a16ae973c14617b946227a9ecb01d285278"
     },
     {
       "path": "dist/listbox.d.ts",
@@ -491,7 +511,7 @@
     },
     {
       "path": "dist/multi-thumb-slider.d.ts",
-      "sha256": "8e409a327eafb6f3b3effee385283737a982675a1628ddbbe59b17705b1ec037"
+      "sha256": "31d61e472c85c7ffb41b54821ae9f1abeb4157fe1578ab0686e3cbe9917b9cd5"
     },
     {
       "path": "dist/navigation-menu.d.ts",
@@ -519,7 +539,7 @@
     },
     {
       "path": "dist/quantity-field.d.ts",
-      "sha256": "1efcb600839356180582c0018aed6614298ef59c69dc40666b64b7e5335cd0df"
+      "sha256": "51777c57d4c3daa9bd772df692710029dfaf74f3ab024d69327c81c02d48287e"
     },
     {
       "path": "dist/radio-group.d.ts",
@@ -531,7 +551,7 @@
     },
     {
       "path": "dist/reorder.d.ts",
-      "sha256": "5d810b4515672113348d6850cbfea059a9dab1cbf39a10b328c3f2aa22c04b18"
+      "sha256": "18a4128fdb29d98c27ed431246691a819a1c8d871cfe036e2aeb9170eb43f8c1"
     },
     {
       "path": "dist/result.d.ts",
@@ -575,7 +595,7 @@
     },
     {
       "path": "dist/structures/geometry.d.ts",
-      "sha256": "a9ad3b15f5d6c1564b8a6d4e17099172df8cbd35f01545564a115a0d00c69deb"
+      "sha256": "b5654e2c80214da80067a275dfdd7379fe0767b26d737f480f1b08780f843ac1"
     },
     {
       "path": "dist/structures/grid.d.ts",
@@ -584,6 +604,10 @@
     {
       "path": "dist/structures/index-span.d.ts",
       "sha256": "eb89590b7faabd19420e48422243b15ebbda7565907b3cb52d4d35abc35e1ff7"
+    },
+    {
+      "path": "dist/structures/json.d.ts",
+      "sha256": "2482bf0ed99bb770af406ee748522a98e1ac48c6ad8f5b80dc0dba5bbc5bcb12"
     },
     {
       "path": "dist/structures/metric-index.d.ts",
@@ -619,7 +643,7 @@
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "48e25d257b5e64755d699584b27ebdb5651ce1ba259e9dadb30379db1b9bf629"
+      "sha256": "6913ed65becce049b240b5b5b3b7e3e2f78172ed304321d9eb878f552f824991"
     },
     {
       "path": "dist/timer.d.ts",
@@ -627,7 +651,7 @@
     },
     {
       "path": "dist/toast.d.ts",
-      "sha256": "c114c202085ccad28cdb678150916892e4dc5f6bccf8de71f4d769066fafa340"
+      "sha256": "2da741fdc08845b59d7c9a8909d8f36e5e22bd4fd0bec424e9a50ca41d3ceebc"
     },
     {
       "path": "dist/toggle-button.d.ts",
@@ -646,12 +670,20 @@
       "sha256": "11dc54e46cb798c08539600222d3da65188fd21a6524102ba4b71d6ad027d5c0"
     },
     {
+      "path": "dist/transfer.d.ts",
+      "sha256": "622383f421d03d6b5d26c234c5ee71f4540c4c6c22fb2188510912b03be492b6"
+    },
+    {
       "path": "dist/tree-grid.d.ts",
       "sha256": "71727d5660d1c842e9976c499c7596aa5f77d832beb3ecce25562507e6c9e644"
     },
     {
+      "path": "dist/tree-select.d.ts",
+      "sha256": "78f54bc647420538f37376c6896da314273f4f94b1b31638572f5d9663b084c7"
+    },
+    {
       "path": "dist/tree-view.d.ts",
-      "sha256": "4c48857dad91222562124cd93430fe4767e48806c97f601f40fec5b77d895859"
+      "sha256": "a8e593dd4f76023cefa9c1a6eccc5e88f2a4aee00be3a424f27873ef1777028d"
     },
     {
       "path": "dist/units.d.ts",

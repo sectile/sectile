@@ -60,6 +60,7 @@ export function participantTargets<ID extends StableID>(
 export function validationTargets<ID extends StableID>(
   participant: FormParticipant<ID>,
 ): readonly HTMLElement[] {
+  if (participant.active === false) return [];
   const semantic = participant.semanticControl;
   const validation = participant.validationTarget;
   const submissions = participant.submissionElements ?? [];

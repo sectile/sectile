@@ -17,14 +17,23 @@ export function armMotionWait(
     if (event.target !== element || motion.now() < deadline) return;
     finish();
   };
+  const onCancel = (event: Event): void => {
+    // CSS mode changes can remove all motion before the original deadline.
+    // A remaining finite track keeps that deadline instead of restarting it.
+    if (event.target === element && motionWait(element).waitMs <= 0) finish();
+  };
   element.addEventListener('animationend', onEnd);
   element.addEventListener('transitionend', onEnd);
+  element.addEventListener('animationcancel', onCancel);
+  element.addEventListener('transitioncancel', onCancel);
   const fallbackDelay = Math.min(MAX_WAIT_MS, motion.waitMs + FALLBACK_SLACK_MS);
   timer = setTimeout(finish, fallbackDelay);
   return () => {
     if (timer !== undefined) clearTimeout(timer);
     element.removeEventListener('animationend', onEnd);
     element.removeEventListener('transitionend', onEnd);
+    element.removeEventListener('animationcancel', onCancel);
+    element.removeEventListener('transitioncancel', onCancel);
   };
 }
 
@@ -87,7 +96,7 @@ function iterationList(value: string): number[] {
   });
 }
 
-function timeMs(value: string): number {
+export function timeMs(value: string): number {
   const text = value.trim().toLowerCase();
   const parsed = Number.parseFloat(text);
   if (!Number.isFinite(parsed)) return Number.NaN;

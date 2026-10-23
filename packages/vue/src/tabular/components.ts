@@ -9,6 +9,12 @@ import {
 } from 'vue';
 import type { VueProfileController } from './controller.js';
 
+export interface TabularAutomaticBodyProps {
+  readonly manual?: boolean;
+  /** Attributes for each automatic row; canonical identity and semantics remain owned. */
+  readonly rowAttributes?: Readonly<Record<string, unknown>>;
+}
+
 export type TabularPublicProps<Props> = Props & VNodeProps & AllowedComponentProps & ComponentCustomProps;
 
 export interface TabularComponent<Props, SlotProps> {

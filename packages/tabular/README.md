@@ -1,6 +1,12 @@
 # @sectile/tabular
 
-Renderer-neutral tabular data and interaction semantics for Sectile.
+Renderer-neutral queries, row selection, cell editing and grid hierarchy.
 
-The package root is type-only. Runtime APIs are exposed through focused
-subpaths as their laws and integration evidence are completed.
+```sh
+pnpm add @sectile/tabular
+```
+
+Choose `@sectile/tabular/data-table`, `@sectile/tabular/data-grid` or
+`@sectile/tabular/data-tree-grid`. DOM and Vue provide the corresponding host
+integrations; the application owns transport and persistence. Virtualization
+uses the optional `@sectile/virtual` peer.

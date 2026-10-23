@@ -12,7 +12,7 @@ Object.assign(globalThis, {
   SVGElement: browserWindow.SVGElement,
 });
 
-const { createApp, createSSRApp, h, nextTick, ref } = await import('vue');
+const { createApp, createSSRApp, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const {
   MeterGroupIndicator,
@@ -98,4 +98,23 @@ test('Vue MeterGroup hydrates stable ids and reconciles later values', async () 
   assert.equal(host.querySelector('[role="meter"][data-id="b"]')?.getAttribute('data-start-percentage'), '33.333333333333');
   app.unmount();
   host.remove();
+});
+
+test('Vue MeterGroup releases projected snapshots after unmount even while its public instance is held', { skip: typeof global.gc !== 'function' }, async () => {
+  const items = shallowRef([{ id: 'a', value: '10', label: 'Alpha' }]);
+  let retainedRoot, weak, renders = 0;
+  await new Promise(resolve => setImmediate(() => {
+    const host = document.createElement('div');
+    const app = createApp({ render: () => h(MeterGroupRoot, { items: items.value, label: 'Capacity', ref: value => { if (value) retainedRoot = value; } }, {
+      default: state => { renders++; weak = new WeakRef(state); return h('span', {}, state.total); },
+    }) });
+    app.mount(host); app.unmount(); host.remove(); resolve();
+  }));
+  const before = renders; items.value = [{ id: 'b', value: '20', label: 'Beta' }]; await nextTick();
+  assert.equal(renders, before); assert.equal(retainedRoot.$props.label, 'Capacity');
+  for (let i = 0; i < 24; i++) {
+    await new Promise(resolve => setImmediate(resolve)); global.gc();
+    if (weak.deref() === undefined) return;
+  }
+  assert.fail('A disposed root retained its old indexed snapshot through its computed cache or VNode content callback');
 });

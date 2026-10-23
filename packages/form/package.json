@@ -46,6 +46,16 @@
       "import": "./dist/state.js",
       "default": "./dist/state.js"
     },
+    "./files": {
+      "types": "./dist/files.d.ts",
+      "import": "./dist/files.js",
+      "default": "./dist/files.js"
+    },
+    "./uploads": {
+      "types": "./dist/uploads.d.ts",
+      "import": "./dist/uploads.js",
+      "default": "./dist/uploads.js"
+    },
     "./schema": {
       "types": "./dist/schema.d.ts",
       "import": "./dist/schema.js",
@@ -57,6 +67,8 @@
     "build": "sectile-build production",
     "build:verification": "sectile-build verification",
     "typecheck": "tsc --project tsconfig.json --pretty false",
+    "typecheck:public": "pnpm --silent run build && pnpm --silent run typecheck:public:prepared",
+    "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false",
     "test": "pnpm --silent run build:verification && node --test --test-concurrency=1 tests/*/*.test.mjs",
     "check:laws": "node scripts/check-laws.mjs",
     "check:package": "node scripts/check-package.mjs",

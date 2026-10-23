@@ -5,8 +5,9 @@ import { createTimeValue, formatTimeValue } from '@sectile/temporal/time-field';
 import { createTimeRange } from '@sectile/temporal/time-range-field';
 import { createDateTimeRange, createDateTimeValue, formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
 import { createDateField } from '../.verification-dist/temporal/date-field.js';
+import { createTemporalFormatter } from '../.verification-dist/temporal/format.js';
 import { createDateRangeField } from '../.verification-dist/temporal/date-range-field.js';
-import { createDateTimeField } from '../.verification-dist/temporal/date-time-field.js';
+import { createDateTimeField, getDateTimeFieldPlaceholder } from '../.verification-dist/temporal/date-time-field.js';
 import { createDatePicker } from '../.verification-dist/temporal/date-picker.js';
 import { createMonthPicker } from '../.verification-dist/temporal/month-picker.js';
 import { createYearPicker } from '../.verification-dist/temporal/year-picker.js';
@@ -16,8 +17,294 @@ import { createMonthRangePicker } from '../.verification-dist/temporal/month-ran
 import { createYearRangePicker } from '../.verification-dist/temporal/year-range-picker.js';
 import { createDateTimePicker } from '../.verification-dist/temporal/date-time-picker.js';
 import { createDateTimeRangePicker } from '../.verification-dist/temporal/date-time-range-picker.js';
-import { createTimeField } from '../.verification-dist/temporal/time-field.js';
+import { createTimeField, getTimeFieldPlaceholder } from '../.verification-dist/temporal/time-field.js';
 import { createTimeRangeField } from '../.verification-dist/temporal/time-range-field.js';
+import { createDateTimeRangeField, tryCreateDateTimeRangeField } from '../.verification-dist/temporal/date-time-range-field.js';
+
+const dateTimeAt = (day, hour, minute = 0) => createDateTimeValue(createDateValue(2026, 10, day), createTimeValue(hour, minute));
+const liveRangeListeners = (...inputs) => inputs.reduce((count, input) => count + [...input.listeners.values()].reduce((sum, values) => sum + values.size, 0), 0);
+
+test('all native range adapters preserve accepted partial endpoints through uncontrolled synchronization', () => {
+  for (const [create, value] of [
+    [createDateRangeField, createDateValue(2026, 10, 14)],
+    [createTimeRangeField, createTimeValue(23, 30)],
+    [createDateTimeRangeField, dateTimeAt(14, 23, 30)],
+  ]) {
+    const startInput = new FakeInput(), endInput = new FakeInput();
+    const field = create({ startInput, endInput });
+    try {
+      assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value } }), true);
+      assert.equal(field.getValue(), null);
+      const text = startInput.value;
+      assert.equal(field.syncControlledValues({}).ok, true);
+      assert.deepEqual(field.getSnapshot().state.start.value, value);
+      field.handleEvent('cancel');
+      assert.equal(startInput.value, text);
+      assert.equal(endInput.value, '');
+    } finally { field.disconnect(); }
+    assert.equal(liveRangeListeners(startInput, endInput), 0);
+  }
+});
+
+test('DOM date-time range fields propose chronological values and adopt controlled values without moving the caret', () => {
+  const startInput = new FakeInput(), endInput = new FakeInput(), proposals = [];
+  const initial = { start: dateTimeAt(14, 23), end: dateTimeAt(15, 1) };
+  const field = createDateTimeRangeField({ startInput, endInput, value: initial, startLabel: 'Departure', endLabel: 'Arrival',
+    onValueChange: value => proposals.push(value),
+  });
+  try {
+    assert.equal(startInput.type, 'text');
+    assert.equal(startInput.getAttribute('aria-label'), 'Departure');
+    assert.equal(endInput.getAttribute('aria-label'), 'Arrival');
+    assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: dateTimeAt(14, 23, 15) } }), true);
+    assert.deepEqual(proposals.at(-1), { start: dateTimeAt(14, 23, 15), end: initial.end });
+    assert.deepEqual(field.getValue(), initial);
+    field.handleEvent('cancel');
+    assert.equal(startInput.value, '2026-10-14T23:00');
+    startInput.setSelectionRange(14, 16);
+    assert.equal(field.syncControlledValues({ value: { start: dateTimeAt(14, 23, 30), end: dateTimeAt(15, 2) } }).ok, true);
+    assert.deepEqual([startInput.value, endInput.value], ['2026-10-14T23:30', '2026-10-15T02:00']);
+    assert.deepEqual([startInput.selectionStart, startInput.selectionEnd], [14, 16]);
+    assert.equal(field.syncControlledValues({}).error.code, 'controlled-shape-mismatch');
+    assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: dateTimeAt(14, 22) } }), false);
+    assert.deepEqual(field.getValue().end, dateTimeAt(15, 2));
+  } finally { field.disconnect(); }
+  assert.equal(liveRangeListeners(startInput, endInput), 0);
+});
+
+test('DOM date-time range reconstruction retains formats, drafts and active IME across controlled adoption', () => {
+  const format = createTemporalFormatter({ locale: 'en-US', timeZone: 'UTC' }).dateTimeFieldFormat('minute').value;
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  const initial = { start: dateTimeAt(14, 9, 30), end: dateTimeAt(15, 17, 45) };
+  let field = createDateTimeRangeField({ startInput, endInput, defaultValue: initial, format });
+  try {
+    assert.equal(startInput.inputMode, 'text');
+    const committedStart = startInput.value, committedEnd = endInput.value;
+    replaceInput(endInput, '10/');
+    field.handleEvent({ type: 'focus', endpoint: 'end' });
+    const restored = field.getSnapshot().state;
+    field.disconnect();
+    field = createDateTimeRangeField({ startInput, endInput, defaultState: restored, value: initial });
+    assert.equal(endInput.value, '10/');
+    assert.equal(field.getSnapshot().state.active, 'end');
+    assert.equal(field.getSnapshot().state.end.format, format);
+    field.handleEvent('cancel');
+    assert.deepEqual([startInput.value, endInput.value], [committedStart, committedEnd]);
+    startInput.setSelectionRange(0, startInput.value.length);
+    startInput.emit('compositionstart');
+    compositionInput(startInput, '한', 1);
+    const composing = field.getSnapshot().state.start.inputState;
+    assert.notEqual(composing.composition, null);
+    const before = field.getValue();
+    startInput.emit('keydown', keyboard('Enter'));
+    assert.deepEqual(field.getValue(), before);
+    assert.equal(field.syncControlledValues({ value: { start: dateTimeAt(14, 10), end: initial.end } }).ok, true);
+    assert.deepEqual(field.getSnapshot().state.start.inputState, composing);
+    assert.equal(startInput.value, '한');
+  } finally { field.disconnect(); }
+  assert.equal(liveRangeListeners(startInput, endInput), 0);
+});
+
+test('shared native range connection bounds listeners, rejects retired callbacks and rolls back failed construction', () => {
+  for (let cycle = 0; cycle < 8; cycle++) {
+    const startInput = new FakeInput(), endInput = new FakeInput();
+    let updates = 0;
+    const field = createDateTimeRangeField({ startInput, endInput, onUpdate: () => { updates++; } });
+    assert.equal(liveRangeListeners(startInput, endInput), 14);
+    const stale = [...startInput.listeners.get('focus'), ...startInput.listeners.get('keydown')];
+    field.disconnect(); field.disconnect();
+    assert.equal(liveRangeListeners(startInput, endInput), 0);
+    const before = updates;
+    for (const listener of stale) listener({ key: 'Enter', preventDefault() { assert.fail('retired key listener consumed input'); } });
+    assert.equal(updates, before);
+  }
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  Object.defineProperty(endInput, 'value', { get() { throw new Error('native value unavailable'); } });
+  assert.throws(() => createDateTimeRangeField({ startInput, endInput }));
+  assert.equal(liveRangeListeners(startInput, endInput), 0);
+  const invalidStart = new FakeInput(), invalidEnd = new FakeInput();
+  assert.equal(tryCreateDateTimeRangeField({ startInput: invalidStart, endInput: invalidEnd,
+    value: { start: dateTimeAt(15, 1), end: dateTimeAt(14, 23) },
+  }).ok, false);
+  assert.equal(liveRangeListeners(invalidStart, invalidEnd), 0);
+});
+
+test('native picker reconstruction admits its retained state and completes an unfinished range', () => {
+  for (const [create, timed] of [[createDatePicker, false], [createMonthPicker, false], [createYearPicker, false],
+    [createDateRangePicker, false], [createRangeCalendar, false], [createMonthRangePicker, false], [createYearRangePicker, false],
+    [createDateTimePicker, true], [createDateTimeRangePicker, true]]) {
+    const options = () => ({ root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(), position: false, referenceDate: createDateValue(2026, 8, 1), defaultOpen: true });
+    let picker = create(options());
+    try {
+      assert.equal(picker.handleEvent({ type: timed ? 'select-date' : 'select', value: createDateValue(2026, 8, 1) }), true);
+      assert.equal(picker.handleEvent({ type: 'set-view-mode', value: 'year' }), true);
+      const state = picker.getSnapshot().state; picker.disconnect();
+      picker = create({ ...options(), defaultState: state, defaultOpen: (state.calendar ?? state).open });
+      assert.deepEqual(picker.getSnapshot().state, state);
+      if ('anchor' in state) {
+        assert.notEqual(state.anchor, null);
+        assert.equal(picker.handleEvent({ type: timed ? 'select-date' : 'select', value: createDateValue(2027, 9, 1) }), true);
+        assert.equal(picker.getSnapshot().state.anchor, null); assert.notEqual(picker.getSnapshot().state.value, null);
+      }
+    } finally { picker.disconnect(); }
+  }
+});
+
+test('editable picker reconstruction transfers recorded field drafts and settles detached IME through Core', () => {
+  for (const [create, roles] of [[createDatePicker, ['input']],
+    [createDateTimePicker, ['dateTime', 'date', 'time']], [createDateTimeRangePicker, ['startDate', 'endDate', 'startTime', 'endTime']]]) {
+    const inputs = Object.fromEntries(roles.map(role => [role, new FakeInput()]));
+    const options = { root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(), position: false,
+      ...Object.fromEntries(roles.map(role => [role === 'input' ? role : `${role}Input`, inputs[role]])) };
+    let picker = create(options);
+    try {
+      const state = picker.getSnapshot().state;
+      const drafts = Object.fromEntries(roles.map(role => [role, role === 'dateTime' ? '2026-08-18T10:' : role.toLowerCase().includes('time') ? '10:' : '2026-08-']));
+      for (const role of roles) { const input = inputs[role]; input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, drafts[role], drafts[role].length); }
+      picker.suspend(); for (const input of Object.values(inputs)) replaceInput(input, 'unobserved');
+      const fieldStates = picker.getFieldStates();
+      for (const role of roles) { assert.equal(fieldStates[role].inputState.composition, null); assert.equal(fieldStates[role].inputState.snapshot.text, drafts[role]); }
+      picker.disconnect(); picker = create({ ...options, defaultState: state, defaultFieldStates: fieldStates });
+      for (const role of roles) { assert.equal(inputs[role].value, drafts[role]); assert.equal(inputs[role].selectionStart, drafts[role].length); }
+      assert.deepEqual(picker.getSnapshot().state, state);
+      picker.disconnect();
+      const currentDate = createDateValue(2027, 9, 1), currentTime = createDateTimeValue(currentDate, createTimeValue(11, 45));
+      const current = create === createDatePicker ? currentDate : create === createDateTimePicker ? currentTime : createDateTimeRange(currentTime, currentTime);
+      picker = create({ ...options, defaultState: state, defaultFieldStates: fieldStates, value: current });
+      assert.deepEqual(picker.getSnapshot().state.value, current);
+      for (const role of roles) assert.equal(inputs[role].value, drafts[role]);
+      picker.disconnect();
+      assert.throws(() => create({ ...options, defaultFieldStates: { ...fieldStates, [roles[0]]: { ...fieldStates[roles[0]], inputState: {} } } }));
+      for (const input of Object.values(inputs)) assert.equal([...input.listeners.values()].reduce((sum, listeners) => sum + listeners.size, 0), 0);
+    } finally { picker.disconnect(); }
+  }
+});
+
+test('civil scalar fields suspend native observation and retain IME drafts through the shared text owner', async () => {
+  for (const [create, text] of [[createDateField, '2026-08-18'], [createTimeField, '09:30'], [createDateTimeField, '2026-08-18T09:30']]) {
+    const input = new FakeInput(), field = create({ input, label: 'Civil input' });
+    const listenerCount = () => [...input.listeners.values()].reduce((total, listeners) => total + listeners.size, 0);
+    try {
+      assert.equal(listenerCount(), 6);
+      for (let cycle = 0; cycle < 3; cycle++) {
+        const snapshot = field.getSnapshot(), staleKey = [...input.listeners.get('keydown')][0];
+        field.suspend(); field.suspend(); assert.equal(listenerCount(), 0); assert.equal(field.getActive(), false);
+        replaceInput(input, 'unobserved'); input.emit('blur'); staleKey.handleEvent({ type: 'keydown', ...keyboard('ArrowUp') });
+        assert.equal(field.getSnapshot(), snapshot);
+        field.resume(); field.resume(); assert.equal(field.getActive(), true); assert.equal(listenerCount(), 6);
+        assert.equal(input.value, field.getText());
+      }
+      input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, text, text.length);
+      field.suspend(); const composing = field.getSnapshot();
+      input.emit('compositionend'); replaceInput(input, 'unobserved'); await Promise.resolve();
+      assert.equal(field.getSnapshot(), composing); field.resume();
+      assert.equal(field.getSnapshot().state.inputState.composition, null); assert.equal(field.getText(), text); assert.equal(input.value, text);
+      input.emit('keydown', keyboard('Enter')); assert.notEqual(field.getValue(), null);
+      field.suspend(); const setAttribute = input.setAttribute, failure = new Error('Field projection failed');
+      input.setAttribute = () => { throw failure; };
+      assert.throws(() => field.resume(), error => error === failure); assert.equal(field.getActive(), false); assert.equal(listenerCount(), 0);
+      input.setAttribute = setAttribute; field.resume(); assert.equal(listenerCount(), 6);
+      field.disconnect(); field.disconnect(); field.resume(); assert.equal(field.getActive(), false); assert.equal(listenerCount(), 0);
+      const terminal = field.getSnapshot(); replaceInput(input, 'unobserved'); input.emit('blur'); assert.equal(field.getSnapshot(), terminal);
+    } finally { field.disconnect(); }
+  }
+});
+
+test('date picker suspends its editable field, rejects stale focus and drains projection failures', async () => {
+  const root = new FakeElement(), grid = new FakeElement(), trigger = new FakeElement(), input = new FakeInput();
+  let focuses = 0, failUpdate = false; const failure = new Error('Picker projection failed');
+  grid.querySelector = () => ({ focus: () => { focuses++; } });
+  const picker = createDatePicker({ root, grid, trigger, input, position: false, defaultOpen: true,
+    referenceDate: createDateValue(2026, 1, 1), onUpdate: () => { if (failUpdate) throw failure; } });
+  const listeners = () => [grid, trigger, input].reduce((sum, element) => sum + [...element.listeners.values()].reduce((total, values) => total + values.size, 0), 0);
+  try {
+    assert.equal(listeners(), 9);
+    picker.handleEvent('next-month'); const snapshot = picker.getSnapshot();
+    picker.suspend(); picker.resume(); await Promise.resolve(); assert.equal(focuses, 0, 'previous activation focus cannot replay');
+    for (let cycle = 0; cycle < 3; cycle++) {
+      picker.suspend(); picker.suspend(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+      replaceInput(input, 'unobserved'); trigger.emit('click'); grid.emit('keydown', keyboard('ArrowRight'));
+      picker.refresh(); assert.equal(picker.getSnapshot(), snapshot); assert.equal(root.hidden, true);
+      picker.resume(); picker.resume(); assert.equal(listeners(), 9); assert.equal(picker.getActive(), true); assert.equal(root.hidden, false);
+    }
+    input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, '2026-03-18', 10);
+    picker.suspend(); replaceInput(input, 'unobserved'); picker.resume(); assert.equal(input.value, '2026-03-18');
+    input.emit('keydown', keyboard('Enter')); assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-03-18');
+    failUpdate = true; assert.throws(() => picker.suspend(), error => error === failure); assert.equal(listeners(), 0);
+    assert.throws(() => picker.resume(), error => error === failure); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+    failUpdate = false; picker.resume(); assert.equal(listeners(), 9);
+    failUpdate = true; assert.throws(() => picker.disconnect(), error => error === failure);
+    picker.resume(); picker.refresh(); assert.equal(picker.getActive(), false); assert.equal(listeners(), 0);
+  } finally { failUpdate = false; picker.disconnect(); }
+});
+
+test('date range picker retains its incomplete endpoint anchor while native observation suspends', async () => {
+  const root = new FakeElement(), grid = new FakeElement(), trigger = new FakeElement();
+  let focuses = 0, failUpdate = false; const failure = new Error('Range projection failed');
+  grid.querySelector = () => ({ focus: () => { focuses++; } });
+  const picker = createDateRangePicker({ root, grid, trigger, position: false, defaultOpen: true,
+    referenceDate: createDateValue(2026, 1, 1), onUpdate: () => { if (failUpdate) throw failure; } });
+  const listeners = () => [grid, trigger].reduce((sum, element) => sum + [...element.listeners.values()].reduce((total, values) => total + values.size, 0), 0);
+  try {
+    picker.handleEvent({ type: 'select', value: createDateValue(2026, 3, 18) });
+    picker.handleEvent('next-day'); const snapshot = picker.getSnapshot(); assert.notEqual(snapshot.state.anchor, null);
+    picker.suspend(); picker.resume(); await Promise.resolve(); assert.equal(focuses, 0);
+    for (let cycle = 0; cycle < 3; cycle++) {
+      picker.suspend(); picker.suspend(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+      trigger.emit('click'); grid.emit('keydown', keyboard('ArrowRight')); picker.refresh(); assert.equal(picker.getSnapshot(), snapshot);
+      picker.resume(); picker.resume(); assert.equal(listeners(), 3); assert.equal(picker.getActive(), true); assert.equal(root.hidden, false);
+    }
+    picker.handleEvent({ type: 'select', value: createDateValue(2026, 3, 20) });
+    assert.equal(formatDateValue(picker.getSnapshot().state.value.start), '2026-03-18');
+    assert.equal(formatDateValue(picker.getSnapshot().state.value.end), '2026-03-20');
+    failUpdate = true; assert.throws(() => picker.suspend(), error => error === failure); assert.equal(listeners(), 0);
+    assert.throws(() => picker.resume(), error => error === failure); assert.equal(listeners(), 0);
+    failUpdate = false; picker.resume(); assert.equal(listeners(), 3);
+    failUpdate = true; assert.throws(() => picker.disconnect(), error => error === failure);
+    picker.resume(); picker.refresh(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+  } finally { failUpdate = false; picker.disconnect(); }
+});
+
+test('compound date-time pickers suspend every field and roll back partial native resumption', async () => {
+  for (const create of [createDateTimePicker, createDateTimeRangePicker]) {
+    const range = create === createDateTimeRangePicker;
+    const names = range ? ['startDateInput', 'endDateInput', 'startTimeInput', 'endTimeInput'] : ['dateTimeInput', 'dateInput', 'timeInput'];
+    const fields = Object.fromEntries(names.map(name => [name, new FakeInput()]));
+    const root = new FakeElement(), grid = new FakeElement(), trigger = new FakeElement();
+    const start = createDateTimeValue(createDateValue(2026, 8, 18), createTimeValue(9, 30));
+    const end = createDateTimeValue(createDateValue(2026, 8, 20), createTimeValue(10, 30));
+    let focuses = 0, failUpdate = false; const failure = new Error('Compound projection failed');
+    grid.querySelector = () => ({ focus: () => { focuses++; } });
+    const picker = create({ root, grid, trigger, ...fields, position: false, defaultOpen: true,
+      defaultValue: range ? createDateTimeRange(start, end) : start,
+      onUpdate: () => { if (failUpdate) throw failure; } });
+    const inputs = Object.values(fields), peak = 3 + 6 * inputs.length;
+    const listeners = () => [grid, trigger, ...inputs].reduce((sum, element) => sum + [...element.listeners.values()].reduce((total, values) => total + values.size, 0), 0);
+    try {
+      assert.equal(listeners(), peak); picker.handleEvent('next-day'); const snapshot = picker.getSnapshot();
+      picker.suspend(); picker.resume(); await Promise.resolve(); assert.equal(focuses, 0);
+      for (let cycle = 0; cycle < 3; cycle++) {
+        picker.suspend(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+        for (const input of inputs) { replaceInput(input, 'unobserved'); input.emit('blur'); }
+        grid.emit('keydown', keyboard('ArrowRight')); trigger.emit('click'); picker.refresh(); assert.equal(picker.getSnapshot(), snapshot);
+        picker.resume(); assert.equal(listeners(), peak); assert.equal(picker.getActive(), true);
+      }
+      const drafts = inputs.map(input => input.value.includes('-') ? input.value.replace('18', '19') : '10:45');
+      inputs.forEach((input, index) => { input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, drafts[index], drafts[index].length); });
+      picker.suspend(); inputs.forEach(input => replaceInput(input, 'unobserved')); picker.resume();
+      assert.deepEqual(inputs.map(input => input.value), drafts); assert.equal(picker.getSnapshot(), snapshot);
+      picker.suspend(); const last = inputs.at(-1), type = last.type;
+      Object.defineProperty(last, 'type', { configurable: true, get: () => type, set: () => { throw failure; } });
+      assert.throws(() => picker.resume(), error => error === failure); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+      Object.defineProperty(last, 'type', { configurable: true, writable: true, value: type });
+      picker.resume(); assert.equal(listeners(), peak);
+      failUpdate = true; assert.throws(() => picker.suspend(), error => error === failure); assert.equal(listeners(), 0);
+      assert.throws(() => picker.resume(), error => error === failure); assert.equal(listeners(), 0);
+      failUpdate = false; picker.resume(); failUpdate = true;
+      assert.throws(() => picker.disconnect(), error => error === failure); picker.resume(); picker.refresh(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
+    } finally { failUpdate = false; picker.disconnect(); }
+  }
+});
 
 test('DOM date field projects native interaction and caret segment stepping', () => {
   const input = new FakeInput();
@@ -27,6 +314,226 @@ test('DOM date field projects native interaction and caret segment stepping', ()
   assert.equal(formatDateValue(field.getValue()), '2024-02-29');
   assert.equal(input.inputMode, 'numeric');
   assert.equal(input.placeholder, 'YYYY-MM-DD');
+});
+
+test('locale date fields preserve format through stepping, controlled draft sync and teardown', () => {
+  const input = new FakeInput(), projected = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).dateFieldFormat();
+  assert.equal(projected.ok, true);
+  const field = createDateField({ input, value: createDateValue(2026, 10, 14), format: projected.value });
+  try {
+    assert.equal(input.value, '14/10/2026'); assert.equal(input.placeholder, 'DD/MM/YYYY');
+    input.setSelectionRange(0, 2);
+    assert.equal(field.syncControlledValues({ value: createDateValue(2026, 10, 15) }).ok, true);
+    assert.equal(input.value, '15/10/2026'); assert.deepEqual([input.selectionStart, input.selectionEnd], [0, 2]);
+    input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(field.getSnapshot().state.format, projected.value);
+    replaceInput(input, '16/10/');
+    assert.equal(field.syncControlledValues({ value: createDateValue(2026, 11, 20) }).ok, true);
+    assert.equal(input.value, '16/10/'); assert.equal(formatDateValue(field.getValue()), '2026-11-20');
+    field.handleEvent('cancel'); assert.equal(input.value, '20/11/2026');
+    input.setSelectionRange(3, 5); input.emit('compositionstart', { data: '' });
+    compositionInput(input, '20/구/2026', 4);
+    const composing = field.getSnapshot().state.inputState;
+    field.syncControlledValues({ value: createDateValue(2026, 12, 20) });
+    assert.deepEqual(field.getSnapshot().state.inputState, composing);
+  } finally { field.disconnect(); }
+  assert.equal([...input.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('non-native locale stepping uses logical segments while native date retains ISO projection', () => {
+  const format = createTemporalFormatter({ locale: 'en-US', timeZone: 'UTC' }).dateFieldFormat().value;
+  const input = new FakeInput(), nativeInput = new FakeInput();
+  const field = createDateField({ input, defaultValue: createDateValue(2026, 10, 14), format });
+  const native = createDateField({ input: nativeInput, defaultValue: createDateValue(2026, 10, 14), native: true, format });
+  try {
+    input.setSelectionRange(3, 3); input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(input.value, '10/15/2026'); assert.equal(formatDateValue(field.getValue()), '2026-10-15');
+    assert.deepEqual([input.selectionStart, input.selectionEnd], [3, 5]);
+    assert.equal(nativeInput.type, 'date'); assert.equal(nativeInput.value, '2026-10-14');
+    assert.equal(native.getSnapshot().state.format, undefined); assert.equal(nativeInput.placeholder, '');
+  } finally { field.disconnect(); native.disconnect(); }
+});
+
+test('locale time binding preserves controlled selection, drafts, IME and precision rejection', () => {
+  const format = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).timeFieldFormat().value;
+  const input = new FakeInput(), field = createTimeField({ input, value: createTimeValue(15, 24), format });
+  try {
+    assert.equal(input.value, '15:24'); assert.equal(input.placeholder, 'HH:mm');
+    input.setSelectionRange(3, 5);
+    assert.equal(field.syncControlledValues({ value: createTimeValue(15, 25) }).ok, true);
+    assert.equal(input.value, '15:25'); assert.deepEqual([input.selectionStart, input.selectionEnd], [3, 5]);
+    const previous = field.getSnapshot();
+    const invalid = field.syncControlledValues({ value: createTimeValue(15, 25, 1) });
+    assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'time-field-format-precision-loss');
+    assert.equal(field.getSnapshot(), previous); assert.equal(input.value, '15:25');
+    replaceInput(input, '15:');
+    assert.equal(field.syncControlledValues({ value: createTimeValue(16, 26) }).ok, true);
+    assert.equal(input.value, '15:'); assert.deepEqual(field.getValue(), createTimeValue(16, 26));
+    field.handleEvent('cancel'); assert.equal(input.value, '16:26');
+    input.setSelectionRange(3, 5); input.emit('compositionstart', { data: '' });
+    compositionInput(input, '16:구', 4);
+    const composing = field.getSnapshot().state.inputState;
+    assert.equal(field.syncControlledValues({ value: createTimeValue(17, 27) }).ok, true);
+    assert.deepEqual(field.getSnapshot().state.inputState, composing);
+  } finally { field.disconnect(); }
+  assert.equal([...input.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('locale half-day input exposes editable period while native input remains ISO', () => {
+  const format = createTemporalFormatter({ locale: 'en-US', timeZone: 'UTC' }).timeFieldFormat().value;
+  const input = new FakeInput(), nativeInput = new FakeInput();
+  const field = createTimeField({ input, defaultValue: createTimeValue(15, 24), format });
+  const native = createTimeField({ input: nativeInput, defaultValue: createTimeValue(15, 24), native: true, format });
+  try {
+    assert.equal(input.value, `03:24${format.literals[2]}PM`);
+    assert.equal(getTimeFieldPlaceholder(format), `hh:mm${format.literals[2]}AM/PM`);
+    assert.equal(input.inputMode, 'text');
+    input.setSelectionRange(input.value.length - 2, input.value.length);
+    input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(field.getValue().hour, 3); assert.equal(field.getSnapshot().state.format, format);
+    assert.equal(nativeInput.type, 'time'); assert.equal(nativeInput.value, '15:24');
+    assert.equal(native.getSnapshot().state.format, undefined); assert.equal(nativeInput.placeholder, '');
+  } finally { field.disconnect(); native.disconnect(); }
+  assert.equal([...input.listeners.values(), ...nativeInput.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('localized date range bindings retain both formats through controlled drafts and composition', () => {
+  const format = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).dateFieldFormat().value;
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  const field = createDateRangeField({ startInput, endInput, value: createDateRange(createDateValue(2026, 10, 14), createDateValue(2026, 11, 1)), format });
+  try {
+    assert.equal(startInput.value, '14/10/2026'); assert.equal(endInput.value, '01/11/2026'); assert.equal(endInput.placeholder, 'DD/MM/YYYY');
+    replaceInput(endInput, '01/11/'); startInput.setSelectionRange(0, 2);
+    field.syncControlledValues({ value: createDateRange(createDateValue(2026, 10, 15), createDateValue(2026, 11, 2)) });
+    assert.equal(startInput.value, '15/10/2026'); assert.deepEqual([startInput.selectionStart, startInput.selectionEnd], [0, 2]); assert.equal(endInput.value, '01/11/');
+    field.handleEvent('cancel'); assert.equal(endInput.value, '02/11/2026'); assert.equal(field.getSnapshot().state.end.format, format);
+    endInput.setSelectionRange(3, 5); endInput.emit('compositionstart', { data: '' }); compositionInput(endInput, '02/구/2026', 4);
+    const composing = field.getSnapshot().state.end.inputState;
+    field.syncControlledValues({ value: createDateRange(createDateValue(2026, 10, 16), createDateValue(2026, 12, 2)) });
+    assert.deepEqual(field.getSnapshot().state.end.inputState, composing); assert.equal(field.getSnapshot().state.start.format, format);
+  } finally { field.disconnect(); }
+  assert.equal([...startInput.listeners.values(), ...endInput.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('locale date-time input preserves controlled selection, draft, IME and precision rejection', () => {
+  const format = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).dateTimeFieldFormat().value;
+  const input = new FakeInput();
+  const initial = createDateTimeValue(createDateValue(2026, 10, 14), createTimeValue(15, 24));
+  const field = createDateTimeField({ input, value: initial, format });
+  try {
+    assert.equal(input.value, '14/10/2026, 15:24'); assert.equal(input.placeholder, 'DD/MM/YYYY, HH:mm');
+    input.setSelectionRange(12, 14);
+    assert.equal(field.syncControlledValues({ value: createDateTimeValue(initial.date, createTimeValue(16, 25)) }).ok, true);
+    assert.equal(input.value, '14/10/2026, 16:25'); assert.deepEqual([input.selectionStart, input.selectionEnd], [12, 14]);
+    const previous = field.getSnapshot();
+    const invalid = field.syncControlledValues({ value: createDateTimeValue(createDateValue(2026, 11, 15), createTimeValue(17, 30, 1)) });
+    assert.equal(invalid.ok, false); assert.equal(invalid.error.code, 'time-field-format-precision-loss'); assert.equal(field.getSnapshot(), previous);
+    assert.equal(input.value, '14/10/2026, 16:25');
+    replaceInput(input, '14/10/');
+    assert.equal(field.syncControlledValues({ value: createDateTimeValue(createDateValue(2026, 11, 15), createTimeValue(17, 30)) }).ok, true);
+    assert.equal(input.value, '14/10/'); field.handleEvent('cancel'); assert.equal(input.value, '15/11/2026, 17:30');
+    input.setSelectionRange(12, 14); input.emit('compositionstart', { data: '' }); compositionInput(input, '15/11/2026, 구:30', 13);
+    const composing = field.getSnapshot().state.inputState;
+    assert.equal(field.syncControlledValues({ value: createDateTimeValue(createDateValue(2026, 12, 15), createTimeValue(18, 30)) }).ok, true);
+    assert.deepEqual(field.getSnapshot().state.inputState, composing); assert.equal(field.getSnapshot().state.format, format);
+  } finally { field.disconnect(); }
+  assert.equal([...input.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('locale date-time placeholder composes owners while native mode retains ISO', () => {
+  const format = createTemporalFormatter({ locale: 'en-US', timeZone: 'UTC' }).dateTimeFieldFormat().value;
+  const input = new FakeInput(), nativeInput = new FakeInput();
+  const value = createDateTimeValue(createDateValue(2026, 10, 14), createTimeValue(15, 24));
+  const field = createDateTimeField({ input, defaultValue: value, format });
+  const native = createDateTimeField({ input: nativeInput, defaultValue: value, native: true, format });
+  try {
+    assert.equal(input.placeholder, getDateTimeFieldPlaceholder(format)); assert.match(input.placeholder, /AM\/PM/u);
+    input.setSelectionRange(input.value.length - 2, input.value.length); input.emit('keydown', keyboard('ArrowUp'));
+    assert.equal(field.getValue().time.hour, 3); assert.deepEqual(field.getValue().date, value.date);
+    assert.equal(field.getSnapshot().state.format, format);
+    assert.equal(nativeInput.type, 'datetime-local'); assert.equal(nativeInput.value, '2026-10-14T15:24');
+    assert.equal(nativeInput.placeholder, ''); assert.equal(native.getSnapshot().state.format, undefined);
+  } finally { field.disconnect(); native.disconnect(); }
+  assert.equal([...input.listeners.values(), ...nativeInput.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('locale time ranges retain controlled drafts and reject precision without partial mutation', () => {
+  const format = createTemporalFormatter({ locale: 'en-US', timeZone: 'UTC' }).timeFieldFormat().value;
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  const field = createTimeRangeField({ startInput, endInput, value: createTimeRange(createTimeValue(9, 30), createTimeValue(17, 45)), format });
+  try {
+    assert.equal(startInput.value, `09:30${format.literals[2]}AM`); assert.equal(endInput.value, `05:45${format.literals[2]}PM`);
+    assert.equal(startInput.inputMode, 'text'); assert.equal(endInput.placeholder, getTimeFieldPlaceholder(format));
+    replaceInput(endInput, '05:'); startInput.setSelectionRange(0, 2);
+    assert.equal(field.syncControlledValues({ value: createTimeRange(createTimeValue(10, 30), createTimeValue(18, 45)) }).ok, true);
+    assert.equal(startInput.value, `10:30${format.literals[2]}AM`); assert.deepEqual([startInput.selectionStart, startInput.selectionEnd], [0, 2]);
+    assert.equal(endInput.value, '05:'); field.handleEvent('cancel'); assert.equal(endInput.value, `06:45${format.literals[2]}PM`);
+    const previous = field.getSnapshot();
+    const rejected = field.syncControlledValues({ value: createTimeRange(createTimeValue(11, 0), createTimeValue(19, 0, 1)) });
+    assert.equal(rejected.ok, false); assert.equal(rejected.error.code, 'time-field-format-precision-loss'); assert.equal(field.getSnapshot(), previous);
+    assert.equal(startInput.value, `10:30${format.literals[2]}AM`); assert.equal(endInput.value, `06:45${format.literals[2]}PM`);
+    endInput.setSelectionRange(0, 2); endInput.emit('compositionstart', { data: '' }); compositionInput(endInput, '구:45', 1);
+    const composing = field.getSnapshot().state.end.inputState;
+    assert.equal(field.syncControlledValues({ value: createTimeRange(createTimeValue(11, 0), createTimeValue(19, 0)) }).ok, true);
+    assert.deepEqual(field.getSnapshot().state.end.inputState, composing); assert.equal(field.getSnapshot().state.start.format, format);
+  } finally { field.disconnect(); }
+  assert.equal([...startInput.listeners.values(), ...endInput.listeners.values()].reduce((total, set) => total + set.size, 0), 0);
+});
+
+test('restored localized partial time range survives input-state sync and preserves controlled priority', () => {
+  const format = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).timeFieldFormat().value;
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  let field = createTimeRangeField({ startInput, endInput, format });
+  try {
+    field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: createTimeValue(9, 30) } });
+    field.handleEvent({ type: 'focus', endpoint: 'end' });
+    const state = field.getSnapshot().state; field.disconnect();
+    field = createTimeRangeField({ startInput, endInput, defaultState: state });
+    assert.equal(field.syncControlledValues({}).ok, true); field.handleEvent('cancel');
+    assert.deepEqual([startInput.value, endInput.value], ['09:30', '']); assert.equal(field.getSnapshot().state.active, 'end');
+    assert.equal(field.getSnapshot().state.start.format, format); assert.equal(field.getSnapshot().state.end.format, format);
+    field.disconnect();
+    field = createTimeRangeField({ startInput, endInput, defaultState: state, value: createTimeRange(createTimeValue(10, 0), createTimeValue(18, 0)) });
+    field.handleEvent('cancel'); assert.deepEqual([startInput.value, endInput.value], ['10:00', '18:00']);
+  } finally { field.disconnect(); }
+});
+
+test('date range reconstruction restores partial endpoint values and formats while controlled values take priority', () => {
+  const format = createTemporalFormatter({ locale: 'en-GB', timeZone: 'UTC' }).dateFieldFormat().value;
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  let field = createDateRangeField({ startInput, endInput, format });
+  try {
+    field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: createDateValue(2026, 10, 14) } });
+    field.handleEvent({ type: 'focus', endpoint: 'end' });
+    const state = field.getSnapshot().state; field.disconnect();
+    field = createDateRangeField({ startInput, endInput, defaultState: state });
+    field.handleEvent('cancel');
+    assert.deepEqual([startInput.value, endInput.value], ['14/10/2026', '']);
+    assert.equal(field.getSnapshot().state.active, 'end');
+    assert.equal(field.getSnapshot().state.start.format, format);
+    field.disconnect();
+    field = createDateRangeField({ startInput, endInput, defaultState: state,
+      value: createDateRange(createDateValue(2026, 11, 1), createDateValue(2026, 11, 2)) });
+    field.handleEvent('cancel');
+    assert.deepEqual([startInput.value, endInput.value], ['01/11/2026', '02/11/2026']);
+  } finally { field.disconnect(); }
+  assert.equal([...startInput.listeners.values(), ...endInput.listeners.values()].reduce((total, listeners) => total + listeners.size, 0), 0);
+});
+
+test('time range reconstruction restores partial endpoint values while controlled values take priority', () => {
+  const startInput = new FakeInput(), endInput = new FakeInput();
+  let field = createTimeRangeField({ startInput, endInput });
+  try {
+    field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: createTimeValue(9, 30) } });
+    field.handleEvent({ type: 'focus', endpoint: 'end' });
+    const state = field.getSnapshot().state; field.disconnect();
+    field = createTimeRangeField({ startInput, endInput, defaultState: state });
+    field.handleEvent('cancel'); assert.deepEqual([startInput.value, endInput.value], ['09:30', '']);
+    assert.equal(field.getSnapshot().state.active, 'end'); field.disconnect();
+    field = createTimeRangeField({ startInput, endInput, defaultState: state, value: createTimeRange(createTimeValue(10, 30), createTimeValue(18, 30)) });
+    field.handleEvent('cancel'); assert.deepEqual([startInput.value, endInput.value], ['10:30', '18:30']);
+  } finally { field.disconnect(); }
+  assert.equal([...startInput.listeners.values(), ...endInput.listeners.values()].reduce((total, listeners) => total + listeners.size, 0), 0);
 });
 
 test('controlled DOM civil fields rebase clean inputs and preserve active selections', () => {
@@ -679,6 +1186,60 @@ test('picker display-only range inputs stay natively read-only', () => {
   assert.equal(startDateTimeInput.readOnly, true);
   assert.equal(endDateTimeInput.readOnly, true);
   assert.equal(startDateTimeInput.attributes.get('aria-readonly'), 'true');
+});
+
+test('inert temporal inputs preserve validity and state across keyboard editing and blur', () => {
+  for (const [create, value] of [
+    [createDateField, createDateValue(2026, 10, 16)],
+    [createTimeField, createTimeValue(9, 30, 38, 125)],
+    [createDateTimeField, createDateTimeValue(createDateValue(2026, 10, 16), createTimeValue(9, 30, 38, 125))],
+  ]) for (const native of [false, true]) for (const state of ['readOnly', 'disabled']) {
+    const input = new FakeInput(); let changes = 0, prevented = 0;
+    const field = create({ input, defaultValue: value, native, [state]: true, onValueChange: () => { changes++; } });
+    try {
+      const snapshot = field.getSnapshot(), text = input.value;
+      for (const key of ['ArrowUp', 'ArrowDown', 'Enter', 'Escape']) {
+        input.emit('keydown', { ...keyboard(key), preventDefault() { prevented++; } });
+      }
+      input.emit('blur');
+      assert.equal(field.getSnapshot(), snapshot); assert.equal(input.value, text); assert.deepEqual(field.getValue(), value);
+      assert.equal(changes, 0); assert.equal(prevented, 0);
+      assert.equal(input.validationMessage, ''); assert.notEqual(input.getAttribute('aria-invalid'), 'true');
+      input.setCustomValidity('Existing validation problem'); input.setAttribute('aria-invalid', 'true');
+      input.emit('blur');
+      assert.equal(input.validationMessage, 'Existing validation problem'); assert.equal(input.getAttribute('aria-invalid'), 'true');
+    } finally { field.disconnect(); }
+    assert.equal(liveRangeListeners(input), 0);
+  }
+});
+
+test('inert temporal ranges preserve endpoint navigation without manufacturing edit errors', () => {
+  for (const [create, value] of [
+    [createDateRangeField, createDateRange(createDateValue(2026, 10, 16), createDateValue(2026, 10, 20))],
+    [createTimeRangeField, createTimeRange(createTimeValue(9, 30), createTimeValue(17, 45))],
+    [createDateTimeRangeField, createDateTimeRange(dateTimeAt(16, 9, 30), dateTimeAt(20, 17, 45))],
+  ]) for (const state of ['readOnly', 'disabled']) {
+    const startInput = new FakeInput(), endInput = new FakeInput(); let changes = 0, prevented = 0;
+    const field = create({ startInput, endInput, defaultValue: value, [state]: true, onValueChange: () => { changes++; } });
+    try {
+      for (const [endpoint, input] of [['end', endInput], ['start', startInput]]) {
+        const beforeFocus = field.getSnapshot(); input.emit('focus');
+        if (state === 'readOnly') assert.equal(field.getSnapshot().state.active, endpoint);
+        else assert.equal(field.getSnapshot(), beforeFocus, 'disabled focus cannot navigate the owner');
+        const snapshot = field.getSnapshot(), text = input.value;
+        for (const key of ['ArrowUp', 'ArrowDown', 'Enter', 'Escape']) {
+          input.emit('keydown', { ...keyboard(key), preventDefault() { prevented++; } });
+        }
+        input.emit('blur');
+        assert.equal(field.getSnapshot(), snapshot); assert.equal(input.value, text); assert.deepEqual(field.getValue(), value);
+        assert.equal(changes, 0); assert.equal(prevented, 0);
+        assert.equal(input.validationMessage, ''); assert.notEqual(input.getAttribute('aria-invalid'), 'true');
+        input.setCustomValidity('Existing validation problem'); input.setAttribute('aria-invalid', 'true'); input.emit('blur');
+        assert.equal(input.validationMessage, 'Existing validation problem'); assert.equal(input.getAttribute('aria-invalid'), 'true');
+      }
+    } finally { field.disconnect(); }
+    assert.equal(liveRangeListeners(startInput, endInput), 0);
+  }
 });
 
 test('DOM date field exposes invalid drafts and restores the committed value on blur', () => {

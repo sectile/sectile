@@ -4,6 +4,7 @@ export {
   commitTextComposition,
   createTextEditingState,
   createTextSnapshot,
+  findTextQuery,
   isTextCodeUnitBoundary,
   isWellFormedPlainText,
   normalizeTextEditingState,
@@ -20,6 +21,8 @@ export {
   type TextSelectionDirection,
   type TextSelectionInput,
   type TextSnapshot,
+  type TextQuery,
+  type TextQueryOptions,
   type TextUpdate,
 } from './internal/editing/text.js';
 

@@ -111,6 +111,21 @@ test('DOM carousel autoplay pauses independently for hover and cleans up its tim
   assert.equal(scheduler.pending, 0);
 });
 
+test('DOM carousel localizes group and pause names through the attribute owner', () => {
+  const root = new FakeElement(), group = new FakeElement(), pause = new FakeElement();
+  const carousel = createCarousel({ root, slides: ['a', 'b'], indicatorGroup: group, pauseButton: pause,
+    indicatorGroupLabel: '슬라이드 선택', getPauseLabel: paused => paused ? '자동 재생' : '일시 정지' });
+  assert.equal(group.attributes.get('aria-label'), '슬라이드 선택');
+  assert.equal(pause.attributes.get('aria-label'), '일시 정지');
+  pause.emit('click');
+  assert.equal(pause.attributes.get('aria-label'), '자동 재생');
+  assert.equal(pause.attributes.get('aria-pressed'), 'true');
+  carousel.disconnect();
+  pause.emit('click');
+  assert.equal(pause.attributes.get('aria-label'), '자동 재생');
+  assert.equal([...root.listeners.values(), ...pause.listeners.values()].every(set => set.size === 0), true);
+});
+
 test('DOM carousel rejects a custom scheduler callback that races disconnect', () => {
   let scheduled;
   const scheduler = {

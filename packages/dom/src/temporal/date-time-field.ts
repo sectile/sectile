@@ -1,25 +1,35 @@
 import { unwrap } from '@sectile/core/result';
+import { permitsInteraction } from '@sectile/core/interaction';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   applyDateTimeFieldEvent,
-  formatDateTimeValue,
+  formatDateTimeFieldValue,
   tryCreateDateTimeFieldState,
   type DateTimeFieldCommand,
   type DateTimeFieldEvent,
   type DateTimeFieldPolicies,
   type DateTimeFieldState,
   type DateTimeValue,
+  type DateTimeFieldFormat,
 } from '@sectile/temporal/date-time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
+import { getDateFieldPlaceholder } from './date-field.js';
+import { getTimeFieldPlaceholder } from './time-field.js';
 
 export { formatDateTimeRange, formatDateTimeValue } from '@sectile/temporal/date-time-field';
 export type { DateTimeRange, DateTimeValue } from '@sectile/temporal/date-time-field';
+
+export function getDateTimeFieldPlaceholder(format?: DateTimeFieldFormat): string {
+  if (format === undefined) return 'YYYY-MM-DDTHH:mm';
+  const date = getDateFieldPlaceholder(format.date), time = getTimeFieldPlaceholder(format.time);
+  return format.order[0] === 'date' ? date + format.separator + time : time + format.separator + date;
+}
 
 export interface DateTimeFieldOptions {
   readonly input: HTMLInputElement;
@@ -33,6 +43,7 @@ export interface DateTimeFieldOptions {
   readonly required?: boolean;
   readonly label?: string;
   readonly native?: boolean;
+  readonly format?: DateTimeFieldFormat;
   readonly onValueChange?: (value: DateTimeValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
@@ -48,6 +59,9 @@ export interface DateTimeFieldControlledValues {
 }
 
 export interface DateTimeFieldConnection {
+  getActive(): boolean;
+  suspend(): void;
+  resume(): void;
   getSnapshot(): RevisionSnapshot<DateTimeFieldState>;
   getText(): string;
   getValue(): DateTimeValue | null;
@@ -72,6 +86,7 @@ export function tryCreateDateTimeField(
 function construct(options: DateTimeFieldOptions): DOMTemporalResult<DateTimeFieldConnection> {
   const valueControlled = options.value !== undefined;
   const inputControlled = options.inputState !== undefined;
+  const format = options.native === true ? undefined : options.format;
   const policies = Object.freeze({
     ...options.policies,
     ...(options.required === undefined ? {} : { required: options.required }),
@@ -85,11 +100,13 @@ function construct(options: DateTimeFieldOptions): DOMTemporalResult<DateTimeFie
     initial: tryCreateDateTimeFieldState(
       options.value !== undefined ? options.value : options.defaultValue ?? null,
       options.inputState !== undefined ? options.inputState : options.defaultInputState,
+      format,
     ),
     reducer: (state, event) => applyDateTimeFieldEvent(state, event, policies),
     reconcile: (previous, proposed) => tryCreateDateTimeFieldState(
       valueControlled ? previous.value : proposed.value,
       inputControlled ? previous.inputState : proposed.inputState,
+      format,
     ),
     notify: (previous, proposed) => {
       if (!sameTextEditingState(previous.inputState, proposed.inputState)) {
@@ -110,9 +127,10 @@ class DOMDateTimeField implements DateTimeFieldConnection {
   readonly #valueControlled: boolean;
   readonly #inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
+  readonly #editable: boolean;
 
   readonly #keydown = (event: KeyboardEvent): void => {
-    if (this.#binding.isComposing || event.isComposing) return;
+    if (!this.getActive() || !this.#editable || this.#binding.isComposing || event.isComposing) return;
     if (this.#options.native === true && (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End')) return;
     const semantic = event.key === 'ArrowUp'
       ? 'increment-segment'
@@ -132,7 +150,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
   };
 
   readonly #blur = (): void => {
-    if (!this.#binding.isComposing && !this.handleEvent('commit')) this.handleEvent('cancel');
+    if (this.getActive() && this.#editable && !this.#binding.isComposing && !this.handleEvent('commit')) this.handleEvent('cancel');
   };
 
   public constructor(
@@ -145,15 +163,18 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     this.#runtime = runtime;
     this.#valueControlled = valueControlled;
     this.#inputControlled = inputControlled;
+    this.#editable = permitsInteraction({ disabled: options.disabled ?? false, readOnly: options.readOnly ?? false }, 'mutate');
     this.#binding = new DOMTextElementBinding({
       element: options.input,
       getState: () => this.getSnapshot().state.inputState,
       dispatch: (input) => this.#text(input),
+      keydown: this.#keydown, blur: this.#blur,
     });
-    options.input.addEventListener('keydown', this.#keydown);
-    options.input.addEventListener('blur', this.#blur);
     this.refresh();
   }
+  public getActive(): boolean { return this.#binding.isActive; }
+  public suspend(): void { this.#binding.suspend(); }
+  public resume(): void { this.#binding.resume(); try { if (this.getActive()) this.refresh(); } catch (error) { this.suspend(); throw error; } }
 
   public getSnapshot(): RevisionSnapshot<DateTimeFieldState> {
     return this.#runtime.getSnapshot();
@@ -185,16 +206,20 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     }
     const state = this.getSnapshot().state;
     const value = this.#valueControlled ? values.value as DateTimeValue | null : state.value;
+    const admitted = tryCreateDateTimeFieldState(value, this.#inputControlled ? values.inputState : state.inputState, state.format);
+    if (!admitted.ok) return admitted;
+    const next = admitted.value.value;
     const inputState = this.#inputControlled
       ? values.inputState as TextEditingState
       : synchronizeControlledFieldInput(
         synchronizeFieldInputSelection(state.inputState, this.#options.input),
-        state.value === null ? '' : formatDateTimeValue(state.value),
-        value === null ? '' : formatDateTimeValue(value),
+        state.value === null ? '' : formatDateTimeFieldValue(state.value, state.format),
+        next === null ? '' : formatDateTimeFieldValue(next, state.format),
       );
     const result = this.#runtime.replace(tryCreateDateTimeFieldState(
-      value,
+      next,
       inputState,
+      state.format,
     ));
     if (result.ok) {
       this.refresh();
@@ -227,7 +252,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     const input = this.#options.input;
     input.type = this.#options.native === true ? 'datetime-local' : 'text';
     input.inputMode = this.#options.native === true ? '' : 'text';
-    input.placeholder = this.#options.native === true ? '' : 'YYYY-MM-DDTHH:mm';
+    input.placeholder = this.#options.native === true ? '' : getDateTimeFieldPlaceholder(this.getSnapshot().state.format);
     input.required = this.#options.required ?? this.#options.policies?.required ?? false;
     setInteractionAttributes(input, this.#options, true, true);
     if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label);
@@ -236,8 +261,6 @@ class DOMDateTimeField implements DateTimeFieldConnection {
 
   public disconnect(): void {
     this.#binding.disconnect();
-    this.#options.input.removeEventListener('keydown', this.#keydown);
-    this.#options.input.removeEventListener('blur', this.#blur);
   }
 
   #text(input: TextInput): boolean {

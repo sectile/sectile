@@ -11,21 +11,24 @@ export async function compactJavaScript(directory) {
       continue;
     }
     if (!entry.isFile() || !path.endsWith('.js')) continue;
-
-    const mapPath = `${path}.map`;
-    const sourceMap = await readFile(mapPath, 'utf8');
-    if (JSON.parse(sourceMap).sources.length === 0) continue;
-    const file = basename(path);
-    const source = await readFile(path, 'utf8');
-    // Esbuild consumes pure annotations during whitespace minification. Keep
-    // those modules on Terser so downstream bundlers retain tree-shaking proof.
-    const compacted = source.includes('@__PURE__')
-      ? await compactAnnotatedJavaScript(source, sourceMap, file, basename(mapPath))
-      : await compactPlainJavaScript(source, sourceMap, file, basename(mapPath));
-    if (compacted.map.sources.length === 0) continue;
-    await writeFile(path, compacted.code);
-    await writeFile(mapPath, JSON.stringify(compacted.map));
+    await compactJavaScriptModule(path);
   }
+}
+
+export async function compactJavaScriptModule(path) {
+  const mapPath = `${path}.map`;
+  const sourceMap = await readFile(mapPath, 'utf8');
+  if (JSON.parse(sourceMap).sources.length === 0) return;
+  const file = basename(path);
+  const source = await readFile(path, 'utf8');
+  // Esbuild consumes pure annotations during whitespace minification. Keep
+  // those modules on Terser so downstream bundlers retain tree-shaking proof.
+  const compacted = source.includes('@__PURE__')
+    ? await compactAnnotatedJavaScript(source, sourceMap, file, basename(mapPath))
+    : await compactPlainJavaScript(source, sourceMap, file, basename(mapPath));
+  if (compacted.map.sources.length === 0) return;
+  await writeFile(path, compacted.code);
+  await writeFile(mapPath, JSON.stringify(compacted.map));
 }
 
 async function compactAnnotatedJavaScript(source, sourceMap, file, mapFile) {
@@ -35,7 +38,7 @@ async function compactAnnotatedJavaScript(source, sourceMap, file, mapFile) {
     mangle: false,
     module: true,
     format: {
-      comments: false,
+      comments: 'some',
       keep_numbers: true,
       preserve_annotations: true,
       quote_style: 3,

@@ -5,9 +5,6 @@ import type {
   ChartRendererCapabilities,
   ChartRendererOptions,
   ChartRenderer,
-  ChartRenderStyle,
-  NormalizedChartRenderStyle,
-  ChartRGBA,
   DOMChartOptions,
   DOMChartConnection,
   ChartRenderPolicy,
@@ -18,6 +15,7 @@ import { WebGL2ChartRenderer } from './renderers/webgl2.js';
 import { DOMChart } from './connection.js';
 import { tryNormalizeDOMChartNavigation } from './navigation-options.js';
 import { invalidRenderer } from './result.js';
+import { normalizeRenderStyle } from './style.js';
 
 export function detectChartRendererCapabilities(canvas: HTMLCanvasElement): ChartRendererCapabilities {
   const probe = canvas.ownerDocument.createElement('canvas');
@@ -64,18 +62,6 @@ export function tryCreateChartRenderer(
   }
 }
 
-function normalizeRenderStyle(style: ChartRenderStyle = {}): Result<NormalizedChartRenderStyle> {
-  if (style === null || typeof style !== 'object') return invalidRenderer('Chart renderer style must be an object.');
-  const color = style.color ?? [0.12, 0.34, 0.92, 1];
-  const pointRadius = style.pointRadius ?? 3;
-  const lineWidth = style.lineWidth ?? 2.5;
-  if (!Array.isArray(color) || color.length !== 4 || color.some((channel) => !Number.isFinite(channel) || channel < 0 || channel > 1)
-    || !Number.isFinite(pointRadius) || pointRadius <= 0 || !Number.isFinite(lineWidth) || lineWidth <= 0) {
-    return invalidRenderer('Chart renderer style is invalid.');
-  }
-  return { ok: true, value: Object.freeze({ color: Object.freeze([...color]) as unknown as ChartRGBA, pointRadius, lineWidth }) };
-}
-
 export function createDOMChart<ID extends StableID>(options: DOMChartOptions<ID>): DOMChartConnection<ID> {
   return unwrap(tryCreateDOMChart(options));
 }
@@ -104,10 +90,17 @@ export function tryCreateDOMChart<ID extends StableID>(options: DOMChartOptions<
     if (!navigation.ok) return navigation;
     const rendererResult = borrowedRenderer
       ? { ok: true as const, value: options.renderer as ChartRenderer }
-      : tryCreateChartRenderer(options.canvas, { mode: options.renderer ?? 'auto' });
+      : tryCreateChartRenderer(options.canvas, { mode: options.renderer ?? 'auto',
+        ...(options.renderStyle === undefined ? {} : { style: options.renderStyle }) });
     if (!rendererResult.ok) return rendererResult;
     renderer = rendererResult.value;
     ownsRenderer = !borrowedRenderer;
+    if (borrowedRenderer && options.renderStyle !== undefined) {
+      const setter = renderer.setStyle;
+      if (typeof setter !== 'function') return invalidRenderer('Borrowed Chart renderer does not support the initial style.');
+      const styled = setter.call(renderer, options.renderStyle);
+      if (!styled.ok) return invalidRenderer(styled.error.message);
+    }
     return { ok: true, value: new DOMChart(options, renderer, ownsRenderer, policy.value, accessibilityLimit, view, navigation.value) };
   } catch (error) {
     if (ownsRenderer && renderer !== undefined) {

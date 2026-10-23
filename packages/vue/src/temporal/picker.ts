@@ -1,8 +1,8 @@
 import {
-  Fragment, Teleport, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
-  nextTick, provide, shallowRef, watch, type AllowedComponentProps, type Component,
+  Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, onUpdated,
+  nextTick, provide, shallowRef, ssrContextKey, watch, type AllowedComponentProps, type Component,
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
-  type VNodeProps,
+  type VNodeProps, type ShallowRef,
 } from 'vue';
 import type { CalendarPolicies } from '@sectile/dom/temporal/calendar';
 import type { DatePickerOptions, PickerPositionOptions, CalendarMonthValue, CalendarViewMode } from '@sectile/dom/temporal/date-picker';
@@ -11,18 +11,24 @@ import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-pick
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
-import { createCalendarMonth, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
-import { createDateValue, tryCreateDateValue } from '@sectile/temporal/date-field';
+import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
+import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';
 import type { FormSubmissionRegistration } from '../form/control.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
 } from '../form/control.js';
+import { visuallyHiddenInputStyle } from '../input/native-input.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
+import { useNextTickTask } from '../internal/scheduled-task.js';
 import { usePresence } from '../presence/presence.js';
-import { useHostPortalTarget } from '../host-provider.js';
-import { useTemporalReferenceDate } from './temporal-provider.js';
+import { HostPortal, provideHostLayerParent } from '../host-provider.js';
+import { usePopupPresentation } from '../internal/popup-presentation.js';
+import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
+import { useTemporalReferenceDate, useTemporalFormatter } from './temporal-provider.js';
+import { useHostLayer } from '../host-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
@@ -42,8 +48,11 @@ export type PickerInputPart = 'input' | 'start-input' | 'end-input' | 'date-time
 export type PickerNavigationUnit = 'week' | 'month' | 'year';
 export interface PickerYearValue { readonly year: number }
 export interface PickerRootSlotProps<Value extends PickerValue = PickerValue> { readonly value: Value; readonly highlightedValue: DateValue; readonly open: boolean; readonly dates: readonly (readonly DateValue[])[]; readonly months: readonly (readonly CalendarMonthValue[])[]; readonly years: readonly (readonly PickerYearValue[])[]; readonly view: { readonly year: number; readonly month: number }; readonly viewMode: CalendarViewMode; readonly disabled: boolean; readonly: boolean }
-export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
-export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly disabled: boolean }
+export interface PickerContentSlotProps<Value extends PickerValue = PickerValue> extends PickerRootSlotProps<Value> {
+  readonly presentation: DOMLayerPresentationSnapshot | undefined;
+}
+export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
+export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PickerPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
@@ -145,6 +154,12 @@ export interface PickerRootPartComponent<Kind extends PickerKind> {
     $slots: { default?: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild };
   };
 }
+export interface PickerContentPartComponent<Kind extends PickerKind> {
+  new (props: PickerRootPartPublicProps): {
+    $props: PickerRootPartPublicProps;
+    $slots: { default?: (props: PickerContentSlotProps<PickerValueFor<Kind>>) => VNodeChild };
+  };
+}
 
 type PickerConnection = PickerCapabilityConnection;
 interface Context {
@@ -152,10 +167,17 @@ interface Context {
   readonly scope: string;
   readonly granularity: 'day' | 'month' | 'year';
   readonly inline: boolean;
+  readonly labelledBy: string | undefined;
   readonly formatInput: PickerFamilyCapability<PickerKind>['formatInput'];
+  inputAttributes(part: string): Readonly<Record<string, string>> | undefined;
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<NonNullable<PickerPositionOptions['strategy']>>;
   readonly state: ComputedRef<PickerRootSlotProps>;
+  readonly rangeAnchor: Readonly<ShallowRef<DateValue | null>>;
+  readonly referenceDate: ComputedRef<DateValue>;
+  readonly active: Readonly<ShallowRef<boolean>>;
+  readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
+  registerPresence(present: ShallowRef<boolean>): () => void;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   setInputFocused(part: PickerInputPart, focused: boolean): void;
   setInputComposing(part: PickerInputPart, composing: boolean): void;
@@ -182,6 +204,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
   const defaultOpen = config.defaultOpen ?? false;
   const yearPageSize = config.yearPageSize ?? 12;
   const inline = config.inline ?? false;
+  const compositeConstraint = granularity !== 'day' || kind === 'calendar' || kind === 'date-range' || kind === 'date-time-range';
   const selectionEventType = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
   const component = defineComponent({
     name, inheritAttrs: false,
@@ -209,19 +232,33 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
     setup(props, { emit, slots }) {
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
+      const constraint = shallowRef<HTMLSelectElement | null>(null);
+      const constraintAttributes = useFormSubmissionProps({ element: constraint, capabilities: { form: true, required: true, disabled: true } });
       const hostReferenceDate = useTemporalReferenceDate();
+      const formatter = useTemporalFormatter();
+      const layerHost = useHostLayer();
+      const inputPresentation = computed(() => granularity === 'day' ? capability.presentation?.(formatter.value) : undefined);
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
+      const initialInputs = computed(() => capability.initialInputValues?.(referenceDate.value, runtimeProps.policies, formatter.value));
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
+      const rangeAnchor = shallowRef<DateValue | null>(null);
       const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
       const localHighlight = shallowRef<DateValue>(runtimeProps.highlightedValue ?? runtimeProps.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
       const periodReferenceYear = localHighlight.value.year;
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
-      const dates = shallowRef<readonly (readonly DateValue[])[]>(monthFor(localHighlight.value));
-      const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(yearFor(localHighlight.value.year));
+      const calendarPolicies = (): CalendarPolicies | undefined => kind === 'date-time' || kind === 'date-time-range'
+        ? (runtimeProps.policies as { readonly date?: CalendarPolicies } | undefined)?.date
+        : runtimeProps.policies as CalendarPolicies | undefined;
+      const weekStartsOn = calendarPolicies()?.weekStartsOn;
+      const dates = shallowRef<readonly (readonly DateValue[])[]>(runtimeProps.defaultView === 'week'
+        ? [createCalendarWeek(localHighlight.value, weekStartsOn)]
+        : runtimeProps.defaultView === 'month' ? monthFor(localHighlight.value, weekStartsOn) : []);
+      const months = shallowRef<readonly (readonly CalendarMonthValue[])[]>(runtimeProps.defaultView === 'year' ? yearFor(localHighlight.value.year) : []);
       const years = shallowRef<readonly (readonly PickerYearValue[])[]>(yearsFrom(yearPageStart.value, yearPageSize));
       const localView = shallowRef(Object.freeze({ year: localHighlight.value.year, month: localHighlight.value.month }));
       const localViewMode = shallowRef<CalendarViewMode>(runtimeProps.defaultView);
+      const fixedMonthView = granularity === 'month' && runtimeProps.defaultView === 'year';
       const controlled = {
         value: useControlledStateInvariant(`${kind}PickerRoot`, 'modelValue', () => runtimeProps.modelValue),
         open: useControlledStateInvariant(`${kind}PickerRoot`, 'open', () => runtimeProps.open),
@@ -239,11 +276,32 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           view: localView.value, viewMode: localViewMode.value, disabled: runtimeProps.disabled, readonly: runtimeProps.readonly,
         });
       });
-      useCompositeFormControl({
-        root: () => elements.get('content') ?? elements.get('grid') ?? null,
-        focusTarget: () => elements.get('trigger') ?? (kind === 'calendar' ? null : firstPickerInput(elements, kind)) ?? elements.get('grid') ?? null,
+      const lifecycle = usePopupPresentation({ connection, open: computed(() => inline || state.value.open), connect: () => connect(), refresh: () => refresh() });
+      const semanticTarget = (): HTMLElement | null => inline ? elements.get('content') ?? elements.get('grid') ?? null
+        : elements.get('anchor') ?? firstPickerInput(elements, kind) ?? elements.get('trigger') ?? elements.get('content') ?? elements.get('grid') ?? null;
+      const focusTarget = (): HTMLElement | null => lifecycle.active.value
+        ? elements.get('trigger') ?? (kind === 'calendar' ? null : firstPickerInput(elements, kind)) ?? elements.get('grid') ?? null : null;
+      const participation = useCompositeFormControl({
+        root: semanticTarget,
+        focusTarget,
+        validationTarget: () => constraint.value ?? semanticTarget(),
         submissions: () => pickerFormSubmissions(elements, kind),
+        reset: () => resetTask.schedule(),
       });
+      let baselinePending = false;
+      const valueTask = useNextTickTask(() => {
+        if (!mounted || !lifecycle.active.value) return;
+        participation.refreshValue?.(baselinePending ? 'baseline' : 'value');
+        baselinePending = false;
+      });
+      const syncConstraintForm = (): void => {
+        if (constraint.value === null) return;
+        const form = firstPickerInput(elements, kind)?.getAttribute('form') ?? constraintAttributes.value['form'];
+        if (typeof form === 'string') constraint.value.setAttribute('form', form);
+        else constraint.value.removeAttribute('form');
+      };
+      onMounted(syncConstraintForm);
+      onUpdated(syncConstraintForm);
       const periodAvailable = (value: CalendarMonthValue | PickerYearValue): boolean => {
         const policies = runtimeProps.policies as PeriodPolicies | undefined;
         if (granularity !== 'day') {
@@ -257,6 +315,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           .some((month) => monthAvailable({ year: value.year, month }, policies));
       };
       const refreshCells = (): void => {
+        if (!mounted || !lifecycle.active.value) return;
         const grid = elements.get('grid'); if (grid === undefined || connection.value === undefined) return;
         grid.querySelectorAll<HTMLElement>('[data-sectile-picker-date]').forEach((element) => {
           const parsed = parseDateValue(element.dataset['sectilePickerDate'] ?? '');
@@ -265,11 +324,11 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       };
       const refresh = (): void => {
         const raw = connection.value?.getSnapshot().state; if (raw === undefined) return;
-        const picked = extractState(kind, raw); localValue.value = picked.value; localHighlight.value = picked.highlighted;
+        const picked = extractState(kind, raw); localValue.value = picked.value; localHighlight.value = picked.highlighted; rangeAnchor.value = picked.anchor;
         localOpen.value = picked.open; localView.value = picked.view; localViewMode.value = picked.viewMode;
         if (connection.value !== undefined) {
           dates.value = picked.viewMode === 'week' ? [connection.value.getWeek()] : picked.viewMode === 'month' ? connection.value.getMonth() : [];
-          months.value = picked.viewMode === 'year' ? connection.value.getYear() : [];
+          months.value = picked.viewMode === 'year' || (fixedMonthView && picked.viewMode === 'month') ? connection.value.getYear() : [];
           if (granularity === 'year') {
             yearPageStart.value = pageStartContaining(picked.highlighted.year, yearPageStart.value, yearPageSize);
             years.value = yearsFrom(yearPageStart.value, yearPageSize);
@@ -277,12 +336,48 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         }
         refreshCells();
         void nextTick(refreshCells);
+        if (participation.participating) valueTask.schedule();
+        lifecycle.update();
       };
+      let retainedState: unknown;
+      let retainedFieldStates: unknown;
+      let initialState: unknown;
+      let initialFieldStates: unknown;
+      let restoringInitial = false;
+      const resetTask = useNextTickTask(() => {
+        if (!mounted || initialState === undefined) return;
+        pendingValue.value = noPendingPickerValue;
+        retainedState = initialState;
+        retainedFieldStates = controlled.value ? undefined : initialFieldStates;
+        restoringInitial = true;
+        focusedInputs.clear(); composingInputs.clear();
+        if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+        reconnectTimer = null; reconnectPending = false;
+        lifecycle.reconnect();
+      });
       const connect = (): void => {
-        connection.value?.disconnect();
+        if (!restoringInitial) {
+          retainedState = connection.value?.getSnapshot().state ?? retainedState;
+          retainedFieldStates = connection.value?.getFieldStates?.() ?? retainedFieldStates;
+        }
+        lifecycle.release();
+        try { connection.value?.disconnect(); } finally { connection.value = undefined; }
+        // Suspending/disconnecting the old owner can publish its last snapshot.
+        // Restore only after that publication, before constructing the new owner.
+        if (restoringInitial && retainedState !== undefined) {
+          const initial = extractState(kind, retainedState);
+          rangeAnchor.value = initial.anchor;
+          localValue.value = controlled.value ? runtimeProps.modelValue ?? null : initial.value;
+          localHighlight.value = controlled.highlighted ? runtimeProps.highlightedValue ?? initial.highlighted : initial.highlighted;
+          localOpen.value = controlled.open ? runtimeProps.open ?? initial.open : initial.open;
+          localViewMode.value = initial.viewMode;
+        }
+        const viewMode = localViewMode.value;
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
         if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
         const base: Record<string, unknown> = {
+          ...(retainedState === undefined ? {} : { defaultState: retainedState }),
+          ...(retainedFieldStates === undefined ? {} : { defaultFieldStates: retainedFieldStates }),
           root: content, grid, disabled: runtimeProps.disabled, readOnly: runtimeProps.readonly, required: runtimeProps.required,
           referenceDate: referenceDate.value,
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
@@ -290,13 +385,14 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
           onValueChange: (value: PickerValue) => {
             localValue.value = value;
-            if (controlled.value) pendingValue.value = value;
+            if (controlled.value && granularity === 'day') pendingValue.value = value;
             emit('update:modelValue', value as PickerValueFor<Kind>);
           },
           onHighlightedValueChange: (value: DateValue) => { localHighlight.value = value; emit('update:highlightedValue', value); },
           onUpdate: refresh,
         };
         if (kind !== 'calendar') {
+          if (layerHost.value !== undefined) base['layerHost'] = layerHost.value;
           base['trigger'] = trigger;
           const anchor = elements.get('anchor');
           if (anchor !== undefined) base['anchor'] = anchor;
@@ -313,13 +409,22 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
         }
         if (granularity === 'day') {
+          Object.assign(base, inputPresentation.value?.options);
           for (const part of inputParts(kind)) {
             const element = elements.get(part);
             if (element !== undefined) base[toDOMInputKey(part)] = element;
           }
         }
         connection.value = capability.connect(base);
-        if (runtimeProps.defaultView !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: runtimeProps.defaultView });
+        if (retainedState === undefined && viewMode !== 'month') connection.value.handleEvent({ type: 'set-view-mode', value: viewMode });
+        baselinePending ||= initialState === undefined || restoringInitial;
+        if (initialState === undefined) {
+          initialState = connection.value.getSnapshot().state;
+          initialFieldStates = connection.value.getFieldStates?.();
+        }
+        restoringInitial = false;
+        retainedState = undefined;
+        retainedFieldStates = undefined;
         refreshCells(); refresh();
       };
       let mounted = false;
@@ -330,11 +435,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
       const hasActiveInput = (): boolean => focusedInputs.size > 0 || composingInputs.size > 0;
       const requestConnect = (): void => {
+        if (!lifecycle.availability.value) { lifecycle.invalidate(); return; }
         if (hasActiveInput()) {
           reconnectPending = true;
           return;
         }
-        connect();
+        lifecycle.reconnect();
       };
       const schedulePendingConnect = (): void => {
         if (hasActiveInput() || !reconnectPending || reconnectTimer !== null) return;
@@ -342,15 +448,17 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           reconnectTimer = null;
           if (!mounted || hasActiveInput()) return;
           reconnectPending = false;
-          connect();
+          lifecycle.reconnect();
         }, 0);
       };
       const setInputFocused = (part: PickerInputPart, focused: boolean): void => {
+        if (!lifecycle.active.value) return;
         if (focused) focusedInputs.add(part);
         else focusedInputs.delete(part);
         schedulePendingConnect();
       };
       const setInputComposing = (part: PickerInputPart, composing: boolean): void => {
+        if (!lifecycle.active.value) return;
         if (composing) composingInputs.add(part);
         else composingInputs.delete(part);
         schedulePendingConnect();
@@ -364,6 +472,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         });
       };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
+        if (!lifecycle.active.value) return;
         const direction = delta < 0 ? -1 : 1;
         for (let index = 0; index < Math.abs(delta); index += 1) {
           connection.value?.handleEvent(`${direction < 0 ? 'previous' : 'next'}-${unit}`);
@@ -371,24 +480,30 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         refresh();
       };
       const selectMonth = (value: CalendarMonthValue): void => {
+        if (!lifecycle.active.value) return;
         connection.value?.handleEvent(granularity === 'month'
           ? { type: selectionEventType, value: createDateValue(value.year, value.month, 1) }
           : { type: 'select-month', value });
         refresh();
       };
       const selectYear = (value: PickerYearValue): void => {
+        if (!lifecycle.active.value) return;
         connection.value?.handleEvent({ type: selectionEventType, value: createDateValue(value.year, 1, 1) });
         refresh();
       };
       provide<Context>(key, {
-        kind, scope, granularity, inline, state,
+        kind, scope, granularity, inline, state, rangeAnchor, referenceDate, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+        get labelledBy() { const value = participation.controlProps.value['aria-labelledby']; return typeof value === 'string' ? value : undefined; },
         dayAvailable: (value) => isCalendarValueAvailable(
           value,
-          kind === 'date-time' || kind === 'date-time-range'
-            ? (runtimeProps.policies as { readonly date?: CalendarPolicies } | undefined)?.date
-            : runtimeProps.policies as CalendarPolicies | undefined,
+          calendarPolicies(),
         ),
-        periodAvailable, formatInput: capability.formatInput,
+        periodAvailable, formatInput: (granularity, part, inputValue) => {
+          const value = isPickerDisplayInput(part as PickerInputPart) && controlled.value ? runtimeProps.modelValue ?? null : inputValue;
+          return value === null ? initialInputs.value?.[part] ?? ''
+            : inputPresentation.value?.formatInput(part, value) ?? capability.formatInput(granularity, part, value);
+        },
+        inputAttributes: part => inputPresentation.value?.attributes[part],
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
@@ -400,6 +515,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         refresh: () => connection.value?.refresh(),
         registerCell: (element, value) => connection.value?.setCellAttributes(element, value),
         move: (unit, direction) => {
+          if (!lifecycle.active.value) return;
           if (granularity !== 'day' && unit === 'year') {
             connection.value?.handleEvent({
               type: 'navigate-period', unit: granularity,
@@ -411,6 +527,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           moveBy(unit, direction);
         },
         handleGridKey: (event) => {
+          if (!lifecycle.active.value) return;
           if ((granularity === 'day' && state.value.viewMode !== 'year') || event.altKey || event.ctrlKey || event.metaKey) return;
           const highlighted = state.value.highlightedValue;
           if (event.key === 'Enter' || event.key === ' ') {
@@ -446,8 +563,9 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           event.stopImmediatePropagation();
           if (movement.delta !== 0) moveBy(movement.unit, movement.delta);
         },
-        setViewMode: (value) => { connection.value?.handleEvent({ type: 'set-view-mode', value }); refresh(); },
+        setViewMode: (value) => { if (lifecycle.active.value) { connection.value?.handleEvent({ type: 'set-view-mode', value }); refresh(); } },
         selectDate: (value) => {
+          if (!lifecycle.active.value) return;
           connection.value?.handleEvent({ type: selectionEventType, value });
           refresh();
         },
@@ -456,24 +574,37 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       });
       onMounted(() => {
         mounted = true;
-        connect();
+        lifecycle.reconnect();
       });
       onBeforeUnmount(() => {
         mounted = false;
+        resetTask.cancel();
+        initialState = undefined; initialFieldStates = undefined; restoringInitial = false;
+        retainedState = undefined;
+        retainedFieldStates = undefined;
         connectQueued = false;
         if (reconnectTimer !== null) clearTimeout(reconnectTimer);
         reconnectTimer = null;
         reconnectPending = false;
         focusedInputs.clear();
         composingInputs.clear();
-        connection.value?.disconnect();
-        connection.value = undefined;
+        lifecycle.release();
+        try { connection.value?.disconnect(); } finally { connection.value = undefined; }
       });
+      watch(lifecycle.active, active => {
+        if (active) { void nextTick(refreshCells); return; }
+        if (reconnectPending) lifecycle.invalidate();
+        if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+        reconnectTimer = null; reconnectPending = false;
+        focusedInputs.clear(); composingInputs.clear();
+      }, { flush: 'sync' });
       watch([
         () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies,
         () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
         () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
         () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking,
+        () => kind !== 'calendar' ? layerHost.value : undefined,
+        () => inputPresentation.value,
       ], requestConnect);
       watch(referenceDate, (value) => {
         if (
@@ -484,6 +615,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         requestConnect();
       });
       watch([() => runtimeProps.modelValue, () => runtimeProps.open, () => runtimeProps.highlightedValue], (values, previousValues) => {
+        lifecycle.prepareModelUpdate();
         if (connection.value === undefined) return;
         if (values[0] !== previousValues[0]) pendingValue.value = noPendingPickerValue;
         const result = connection.value.syncControlledValues({
@@ -493,7 +625,16 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
       });
       return (): VNodeChild => {
-        return h(Fragment as Component, null, slots['default']?.(state.value as PickerRootSlotProps<PickerValueFor<Kind>>) ?? []);
+        const children: VNodeChild[] = [slots['default']?.(state.value as PickerRootSlotProps<PickerValueFor<Kind>>)];
+        const constraintValue = controlled.value && kind !== 'calendar' ? runtimeProps.modelValue ?? null : state.value.value;
+        if (compositeConstraint) children.push(h('select', {
+          ...constraintAttributes.value, ref: constraint,
+          required: runtimeProps.required || constraintAttributes.value['required'] === true,
+          disabled: !lifecycle.active.value || runtimeProps.disabled || runtimeProps.readonly || constraintAttributes.value['disabled'] === true,
+          value: constraintValue === null ? '' : 'selected', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
+          onInvalid: (event: Event) => { event.preventDefault(); focusTarget()?.focus(); },
+        }, [h('option', { value: '', selected: constraintValue === null }), h('option', { value: 'selected', selected: constraintValue !== null })]));
+        return h(Fragment as Component, null, children);
       };
     },
   });
@@ -521,23 +662,26 @@ export const PickerAnchor = /* @__PURE__ */ defineComponent({
 
 export const PickerContent = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerContent', inheritAttrs: false, props: partProps,
-  slots: Object as SlotsType<{ default: (props: PickerRootSlotProps) => VNodeChild }>,
+  slots: Object as SlotsType<{ default: (props: PickerContentSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('PickerContent');
     const element = shallowRef<HTMLElement>();
+    const state = computed<PickerContentSlotProps>(() => Object.freeze({ ...root.state.value, presentation: root.presentation.value }));
     const open = computed(() => root.inline || root.state.value.open);
-    const present = usePresence(open, element);
+    provideHostLayerParent({ element, open, inline: computed(() => root.inline), presentation: root.presentation, active: root.active });
+    const present = usePresence(open, element, undefined, root.active);
+    onBeforeUnmount(root.registerPresence(present));
     watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' });
     return (): VNodeChild => {
       const exiting = !root.inline && !open.value && present.value;
-      return h(Primitive, mergeProps(attrs, {
+      return h(Primitive, mergeProps({ 'aria-labelledby': root.labelledBy }, attrs, {
         as: props.as, asChild: props.asChild,
         elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.register('content', content); },
-        role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: root.inline ? false : !present.value,
-        ...(exiting ? { inert: true, 'aria-hidden': 'true' } : {}),
+        role: root.inline ? 'group' : 'dialog', 'aria-modal': root.inline ? undefined : 'false', hidden: !root.active.value || (!root.inline && !present.value),
+        ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         'data-scope': root.scope, 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
         style: !root.inline && root.position.value ? { position: root.strategy.value } : undefined,
-      }), { default: () => slots['default']?.(root.state.value) });
+      }), { default: () => slots['default']?.(state.value) });
     };
   },
 });
@@ -550,10 +694,7 @@ export const PickerPortal = /* @__PURE__ */ defineComponent({
   },
   setup(props, { slots }) {
     useRoot('PickerPortal');
-    const portalTarget = useHostPortalTarget();
-    return (): VNodeChild => h(Teleport as Component, {
-      to: props.to ?? portalTarget.value ?? 'body', disabled: props.disabled, defer: props.defer,
-    }, slots['default']?.());
+    return (): VNodeChild => h(HostPortal as Component, props, slots);
   },
 });
 
@@ -570,12 +711,13 @@ export const PickerCell = /* @__PURE__ */ defineComponent({
   name: 'SectilePickerCell', inheritAttrs: false,
   props: { value: { type: Object as PropType<DateValue>, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: PickerCellSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('PickerCell'); const state = computed<PickerCellSlotProps>(() => cellState(root.state.value, props.value, root.dayAvailable(props.value))); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('PickerCell'); const state = computed<PickerCellSlotProps>(() => cellState(root.state.value, props.value, root.dayAvailable(props.value), root.referenceDate.value, root.rangeAnchor.value)); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
     elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerCell(node, props.value); },
     disabled: state.value.disabled,
     onClick: (event: MouseEvent) => { event.stopPropagation(); root.selectDate(props.value); },
     role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange), 'aria-disabled': String(state.value.disabled), 'data-sectile-picker-date': formatDateValue(props.value),
+    'aria-current': state.value.current ? 'date' : undefined, 'data-current': state.value.current ? '' : undefined,
     'data-scope': root.scope, 'data-part': 'cell', 'data-selected': state.value.selected ? '' : undefined,
     'data-in-range': state.value.inRange ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
     'data-outside-month': state.value.outsideMonth ? '' : undefined,
@@ -591,9 +733,10 @@ export function createPickerMonthCell(part = 'month-cell', name = 'SectilePicker
       const root = useRoot(name);
       const state = computed<PickerMonthCellSlotProps>(() => ({
         value: props.value,
-        selected: monthContainsValue(root.state.value.value, props.value),
-        inRange: periodInRange(root.state.value.value, { ...props.value, day: 1 }, { ...props.value, day: 31 }),
+        selected: monthContainsValue(root.state.value.value, props.value) || monthContainsValue(root.rangeAnchor.value, props.value),
+        inRange: periodInRange(root.state.value.value, { ...props.value, day: 1 }, { ...props.value, day: daysInMonth(props.value.year, props.value.month) }),
         highlighted: root.state.value.highlightedValue.year === props.value.year && root.state.value.highlightedValue.month === props.value.month,
+        current: props.value.year === root.referenceDate.value.year && props.value.month === root.referenceDate.value.month,
         disabled: root.state.value.disabled || !root.periodAvailable(props.value),
       }));
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -602,6 +745,7 @@ export function createPickerMonthCell(part = 'month-cell', name = 'SectilePicker
         onClick: (event: MouseEvent) => { event.stopPropagation(); if (!state.value.disabled) root.selectMonth(props.value); },
         role: 'gridcell', 'aria-selected': String(state.value.selected || state.value.inRange),
         'aria-disabled': String(state.value.disabled),
+        'aria-current': state.value.current ? 'date' : undefined, 'data-current': state.value.current ? '' : undefined,
         'data-sectile-picker-month': `${String(props.value.year).padStart(4, '0')}-${String(props.value.month).padStart(2, '0')}`,
         'data-scope': root.scope, 'data-part': part, 'data-selected': state.value.selected ? '' : undefined,
         'data-in-range': state.value.inRange ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined,
@@ -617,13 +761,12 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
     slots: Object as SlotsType<{ default: (props: PickerYearCellSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
       const root = useRoot(name);
-      const currentYear = new Date().getFullYear();
       const state = computed<PickerYearCellSlotProps>(() => ({
         value: props.value,
-        selected: yearContainsValue(root.state.value.value, props.value),
+        selected: yearContainsValue(root.state.value.value, props.value) || yearContainsValue(root.rangeAnchor.value, props.value),
         inRange: periodInRange(root.state.value.value, { year: props.value.year, month: 1, day: 1 }, { year: props.value.year, month: 12, day: 31 }),
         highlighted: root.state.value.highlightedValue.year === props.value.year,
-        current: props.value.year === currentYear,
+        current: props.value.year === root.referenceDate.value.year,
         disabled: root.state.value.disabled || !root.periodAvailable(props.value),
       }));
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -651,18 +794,22 @@ export function createPickerInput(part: PickerInputPart, name: string, type: 'te
     props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
     setup(props, { attrs }) {
       const root = useRoot(name);
-      const renderServerValue = typeof window === 'undefined';
+      const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
+      const submissionAttributes = useFormSubmissionProps(pickerSubmission(part, () => null));
       const browserOwned = type === 'text'
         && root.granularity === 'day'
         && !isPickerDisplayInput(part);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
+        ...(renderServerValue ? root.inputAttributes(part) : {}),
         elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
-        type, name: props.name, form: props.form, disabled: root.state.value.disabled,
+        ...(renderServerValue ? submissionAttributes.value : {}),
+        type, name: props.name ?? (renderServerValue ? submissionAttributes.value['name'] : undefined),
+        form: props.form ?? (renderServerValue ? submissionAttributes.value['form'] : undefined), disabled: root.state.value.disabled,
         readOnly: root.granularity !== 'day' || root.state.value.readonly || isPickerDisplayInput(part),
-        required: false,
+        required: renderServerValue && submissionAttributes.value['required'] === true,
         ...(renderServerValue || !browserOwned
-          ? { value: root.state.value.value === null ? '' : root.formatInput(root.granularity, part, root.state.value.value) }
+          ? { value: root.formatInput(root.granularity, part, root.state.value.value) }
           : {}),
         onFocus: browserOwned ? () => root.setInputFocused(part, true) : undefined,
         onBlur: browserOwned ? () => root.setInputFocused(part, false) : undefined,
@@ -721,45 +868,57 @@ function pickerFormSubmissions(
 ): readonly FormSubmissionRegistration[] {
   const submission = (
     part: PickerInputPart,
-    relativeName?: string,
   ): FormSubmissionRegistration | null => {
     const element = elements.get(part);
     if (!(element instanceof HTMLInputElement)) return null;
-    return {
-      element: () => element,
-      ...(relativeName === undefined ? {} : { relativeName }),
-      capabilities: hiddenInputSubmissionCapabilities,
-    };
+    return pickerSubmission(part, () => element);
   };
   if (kind === 'calendar' || kind === 'date') return compactSubmissions(submission('input'));
   if (kind === 'date-range') {
     return compactSubmissions(
-      submission('start-input', 'start'),
-      submission('end-input', 'end'),
+      submission('start-input'),
+      submission('end-input'),
     );
   }
   if (kind === 'date-time') {
     const combined = submission('date-time-input');
     return combined === null
-      ? compactSubmissions(submission('date-input', 'date'), submission('time-input', 'time'))
+      ? compactSubmissions(submission('date-input'), submission('time-input'))
       : [combined];
   }
-  const combinedStart = submission('start-date-time-input', 'start');
-  const combinedEnd = submission('end-date-time-input', 'end');
+  const combinedStart = submission('start-date-time-input');
+  const combinedEnd = submission('end-date-time-input');
   return compactSubmissions(
-    combinedStart ?? submission('start-date-input', 'start.date'),
-    combinedStart === null ? submission('start-time-input', 'start.time') : null,
-    combinedEnd ?? submission('end-date-input', 'end.date'),
-    combinedEnd === null ? submission('end-time-input', 'end.time') : null,
+    combinedStart ?? submission('start-date-input'),
+    combinedStart === null ? submission('start-time-input') : null,
+    combinedEnd ?? submission('end-date-input'),
+    combinedEnd === null ? submission('end-time-input') : null,
   );
+}
+function pickerSubmission(part: PickerInputPart, element: () => HTMLInputElement | null): FormSubmissionRegistration {
+  const relativeName = pickerRelativeName(part);
+  return { element, ...(relativeName === undefined ? {} : { relativeName }), capabilities: hiddenInputSubmissionCapabilities };
+}
+function pickerRelativeName(part: PickerInputPart): string | undefined {
+  switch (part) {
+    case 'input': case 'date-time-input': return undefined;
+    case 'date-input': return 'date';
+    case 'time-input': return 'time';
+    case 'start-input': case 'start-date-time-input': return 'start';
+    case 'end-input': case 'end-date-time-input': return 'end';
+    case 'start-date-input': return 'start.date';
+    case 'start-time-input': return 'start.time';
+    case 'end-date-input': return 'end.date';
+    case 'end-time-input': return 'end.time';
+  }
 }
 function compactSubmissions(
   ...submissions: readonly (FormSubmissionRegistration | null)[]
 ): readonly FormSubmissionRegistration[] {
   return submissions.filter((submission): submission is FormSubmissionRegistration => submission !== null);
 }
-function monthFor(value: DateValue): readonly (readonly DateValue[])[] {
-  return createCalendarMonth({ year: value.year, month: value.month });
+function monthFor(value: DateValue, weekStartsOn?: CalendarPolicies['weekStartsOn']): readonly (readonly DateValue[])[] {
+  return createCalendarMonth({ year: value.year, month: value.month }, weekStartsOn);
 }
 function yearFor(year: number): readonly (readonly CalendarMonthValue[])[] {
   return createCalendarYear(year);
@@ -787,27 +946,23 @@ function monthAvailable(value: CalendarMonthValue, policies: PeriodPolicies | un
   }
   return false;
 }
-function daysInMonth(year: number, month: number): number {
-  if (month === 2) return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28;
-  return [4, 6, 9, 11].includes(month) ? 30 : 31;
-}
 function dateOf(value: PickerValue): DateValue | null { if (value === null) return null; if ('year' in value) return value; if ('date' in value) return value.date; const start = value.start; return 'date' in start ? start.date : start; }
-function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; highlighted: DateValue; open: boolean; view: { readonly year: number; readonly month: number }; viewMode: CalendarViewMode } {
+function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; anchor: DateValue | null; highlighted: DateValue; open: boolean; view: { readonly year: number; readonly month: number }; viewMode: CalendarViewMode } {
   const state = raw as Record<string, unknown>;
-  if (kind === 'calendar') return { value: state['value'] as PickerValue, highlighted: state['highlighted'] as DateValue, open: true, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
-  if (kind === 'date') return { value: state['value'] as PickerValue, highlighted: state['highlighted'] as DateValue, open: state['open'] as boolean, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
+  if (kind === 'calendar') return { value: state['value'] as PickerValue, anchor: null, highlighted: state['highlighted'] as DateValue, open: true, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
+  if (kind === 'date') return { value: state['value'] as PickerValue, anchor: null, highlighted: state['highlighted'] as DateValue, open: state['open'] as boolean, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
   const calendar = state['calendar'] as Record<string, unknown>;
-  return { value: state['value'] as PickerValue, highlighted: calendar['highlighted'] as DateValue, open: calendar['open'] as boolean, view: calendar['view'] as { readonly year: number; readonly month: number }, viewMode: calendar['viewMode'] as CalendarViewMode };
+  return { value: state['value'] as PickerValue, anchor: (state['anchor'] as DateValue | null | undefined) ?? null, highlighted: calendar['highlighted'] as DateValue, open: calendar['open'] as boolean, view: calendar['view'] as { readonly year: number; readonly month: number }, viewMode: calendar['viewMode'] as CalendarViewMode };
 }
-function compare(left: DateValue, right: DateValue): number { return left.year - right.year || left.month - right.month || left.day - right.day; }
-function cellState(state: PickerRootSlotProps, value: DateValue, available: boolean): PickerCellSlotProps {
+function cellState(state: PickerRootSlotProps, value: DateValue, available: boolean, referenceDate: DateValue, anchor: DateValue | null): PickerCellSlotProps {
   const selectedDate = dateOf(state.value); let selected = selectedDate !== null && compare(selectedDate, value) === 0; let inRange = false;
   if (state.value !== null && !('year' in state.value) && !('date' in state.value)) {
     const start = 'date' in state.value.start ? state.value.start.date : state.value.start;
     const end = 'date' in state.value.end ? state.value.end.date : state.value.end;
     inRange = compare(start, value) <= 0 && compare(value, end) <= 0; selected = compare(start, value) === 0 || compare(end, value) === 0;
   }
-  return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, disabled: state.disabled || !available, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
+  selected ||= anchor !== null && compare(anchor, value) === 0;
+  return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, current: compare(value, referenceDate) === 0, disabled: state.disabled || !available, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
 }
 function monthContainsValue(value: PickerValue, month: CalendarMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
 function yearContainsValue(value: PickerValue, year: PickerYearValue): boolean { const date = dateOf(value); return date !== null && date.year === year.year; }

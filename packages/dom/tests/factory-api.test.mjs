@@ -3,12 +3,12 @@ import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 import packageManifest from '../package.json' with { type: 'json' };
 
-const excludedSubpaths = new Set(['./package.json', './chart', './form', './identity', './position', './presence', './tabular', './virtual']);
+const excludedSubpaths = new Set(['./package.json', './appearance', './attributes', './chart', './drag-drop', './focus-visibility', './form', './fullscreen', './identity', './image', './layout-basis', './layout-motion', './layer-host', './media-gesture', './position', './presence', './scroll-spy', './stylesheet', './tabular', './virtual']);
 
 test('every public DOM component exposes direct and fallible factories', async () => {
   const rootModule = await import('../.verification-dist/index.js');
   for (const subpath of Object.keys(packageManifest.exports)) {
-    if (!subpath.startsWith('./') || excludedSubpaths.has(subpath) || subpath.startsWith('./temporal/')) continue;
+    if (!subpath.startsWith('./') || excludedSubpaths.has(subpath) || subpath.startsWith('./temporal/') || subpath.startsWith('./form/')) continue;
     const component = subpath.slice(2);
     const name = component === 'grid' ? 'GridControl' : component
       .split('-')
@@ -17,6 +17,8 @@ test('every public DOM component exposes direct and fallible factories', async (
     const module = await import(`../.verification-dist/${component}.js`);
     assert.equal(typeof module[`create${name}`], 'function', `${subpath} create factory`);
     assert.equal(typeof module[`tryCreate${name}`], 'function', `${subpath} tryCreate factory`);
+    // New composed families use focused entries rather than expanding the root barrel.
+    if (subpath === './checkbox-tree' || subpath === './tree-select' || subpath === './transfer') continue;
     assert.equal(typeof rootModule[`create${name}`], 'function', `root create${name} export`);
     assert.equal(typeof rootModule[`tryCreate${name}`], 'function', `root tryCreate${name} export`);
   }
@@ -42,6 +44,44 @@ test('identity encoding is exposed only through its focused utility subpath', as
   assert.equal(typeof identityModule.stableIDElementToken, 'function');
 });
 
+test('stylesheet effects use their focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.connectStylesheet, undefined);
+  const stylesheetModule = await import('../.verification-dist/stylesheet.js');
+  assert.equal(typeof stylesheetModule.connectStylesheet, 'function');
+});
+test('image observation uses its focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.connectImage, undefined);
+  const imageModule = await import('../.verification-dist/image.js');
+  assert.equal(typeof imageModule.connectImage, 'function');
+});
+test('media gesture capture uses its focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.connectMediaGesture, undefined);
+  const gestureModule = await import('../.verification-dist/media-gesture.js');
+  assert.deepEqual(Object.keys(gestureModule).sort(), ['connectMediaGesture', 'readMediaViewport']);
+  assert.equal(typeof gestureModule.connectMediaGesture, 'function');
+});
+test('fullscreen effects use their focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.connectFullscreen, undefined);
+  const fullscreenModule = await import('../.verification-dist/fullscreen.js');
+  assert.equal(typeof fullscreenModule.connectFullscreen, 'function');
+});
+test('external transfer admission and effects use their focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  const transferModule = await import('../.verification-dist/drag-drop.js');
+  assert.deepEqual(Object.keys(transferModule).sort(), ['connectDragSource', 'connectDropTarget', 'createDataTransferFormat', 'tryCreateDataTransferFormat']);
+  for (const name of Object.keys(transferModule)) assert.equal(rootModule[name], undefined);
+});
+test('data metadata effects use their focused resource subpath', async () => {
+  const rootModule = await import('../.verification-dist/index.js');
+  assert.equal(rootModule.connectDataAttributes, undefined);
+  const attributesModule = await import('../.verification-dist/attributes.js');
+  assert.equal(typeof attributesModule.connectDataAttributes, 'function');
+});
+
 test('Form is exposed only through its optional subpath', async () => {
   assert.equal(packageManifest.dependencies?.['@sectile/form'], undefined);
   assert.equal(packageManifest.peerDependencies?.['@sectile/form'], 'workspace:^');
@@ -49,9 +89,14 @@ test('Form is exposed only through its optional subpath', async () => {
 
   const rootModule = await import('../.verification-dist/index.js');
   assert.equal(rootModule.createForm, undefined);
+  assert.equal(rootModule.createFileInput, undefined);
 
   const formModule = await import('../.verification-dist/form/connection.js');
   assert.equal(typeof formModule.createForm, 'function');
+  const fileInputPath = packageManifest.exports['./form/file-input'].import.replace('./dist/', '../.verification-dist/');
+  const fileModule = await import(fileInputPath);
+  assert.equal(typeof fileModule.createFileInput, 'function');
+  assert.equal(typeof fileModule.tryCreateFileInput, 'function');
   const formSource = await readFile(new URL('../.verification-dist/form/connection.js', import.meta.url), 'utf8');
   assert.match(formSource, /@sectile\/form/);
 });
@@ -66,6 +111,9 @@ test('virtualization is exposed only through its optional subpath', async () => 
 
   const virtualModule = await import('../.verification-dist/virtual.js');
   assert.equal(typeof virtualModule.createVirtualizer, 'function');
+  const scrollSpyModule = await import('../.verification-dist/scroll-spy.js');
+  assert.equal(typeof scrollSpyModule.connectScrollSpy, 'function');
+  assert.equal(rootModule.connectScrollSpy, undefined);
 
   const virtualSource = await readFile(new URL('../.verification-dist/virtual.js', import.meta.url), 'utf8');
   assert.doesNotMatch(virtualSource, /(?:^|['"])@sectile\/virtual(?:['"]|$)/);

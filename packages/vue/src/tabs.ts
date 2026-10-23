@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, mergeProps, nextTick, provide, shallowRef, watch,
+  computed, defineComponent, h, mergeProps, onBeforeUnmount, provide, shallowRef, watch,
   type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
@@ -8,19 +8,21 @@ import {
   getTabsRootAttributes,
   getTabsTriggerAttributes,
 } from '@sectile/dom/tabs';
-import { stableIDElementToken } from '@sectile/dom/identity';
-import { createListboxControllerFromItems, type ListboxController, type ListboxEffect } from '@sectile/dom/listbox';
+import { stableIDToken } from '@sectile/dom/identity';
+import { tryCreateSequence } from '@sectile/core/sequence';
+import { createListboxController, type ListboxController, type ListboxEffect } from '@sectile/dom/listbox';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { usePartContract } from './internal/part-contract.js';
 import {
   tabsRootContextKey,
+  createTabsIDCache,
   useTabsRootContext,
-  type TabsIDs,
   type TabsRootContext,
 } from './internal/tabs-context.js';
 import { useHostDirection, useHostId } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 import {
   conditionalPresenceProps,
   useConditionalPresence,
@@ -43,7 +45,7 @@ export interface TabsRootProps {
 export interface TabsRootSlotProps { readonly value: string; readonly highlightedValue: string | null; readonly disabled: boolean; readonly: boolean }
 export interface TabsListProps { readonly label?: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsTriggerProps { readonly value: string; readonly disabled?: boolean; readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface TabsTriggerSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean }
+export interface TabsTriggerSlotProps { readonly value: string; readonly selected: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly position: number; readonly count: number }
 export interface TabsContentProps extends ConditionalPresenceProps { readonly value: string; readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface TabsContentSlotProps { readonly value: string; readonly selected: boolean }
 export interface TabsIndicatorProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
@@ -74,38 +76,51 @@ export const TabsRoot = defineComponent({
     const instanceID = useHostId();
     const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);
-    const idMap = new Map<string, TabsIDs>();
-    const ids = (value: string): TabsIDs => {
-      const found = idMap.get(value);
-      if (found !== undefined) return found;
-      const safe = stableIDElementToken(value);
-      const created = Object.freeze({ trigger: `sectile-tabs-${instanceID}-${safe}-trigger`, content: `sectile-tabs-${instanceID}-${safe}-content` });
-      idMap.set(value, created);
-      return created;
+    const domain = computed(() => {
+      const result = tryCreateSequence(props.items);
+      if (!result.ok) throw new TypeError(result.error.message);
+      return result.value;
+    });
+    const identities = createTabsIDCache(instanceID, () => domain.value);
+    const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
+    let alive = true, deliveringFocus = false, pendingFocusRoot: HTMLElement | null = null;
+    const focusTask = useNextTickTask(() => {
+      const root = pendingFocusRoot; pendingFocusRoot = null;
+      if (!alive || props.disabled || root === null || !root.isConnected) return;
+      deliveringFocus = true;
+      try { focusTrigger(root, controller.value.getSnapshot().state.cursor.current); }
+      finally { deliveringFocus = false; }
+    });
+    const scheduleFocus = (root: HTMLElement | null | undefined): void => {
+      if (!alive || root == null) return;
+      pendingFocusRoot = root; focusTask.schedule();
     };
+    onBeforeUnmount(() => { alive = false; pendingFocusRoot = null; rootElement.value = null; focusTask.cancel(); identities.dispose(); });
+    const followsFocus = (): boolean => props.activationMode === 'automatic' && !props.readonly;
     const makeController = (value: string, highlightedValue = value || null): ListboxController<string> => {
       const selected = value === '' ? [] : [value];
-      const result = createListboxControllerFromItems({
-        items: props.items,
+      const result = createListboxController({
+        domain: domain.value,
         selectionMode: 'single',
         disabledItems: props.disabledItems,
         disabled: props.disabled,
         readOnly: props.readonly,
         orientation: props.orientation,
         direction: direction.value,
-        policies: { selectionFollowsFocus: props.activationMode === 'automatic' },
+        policies: { selectionFollowsFocus: followsFocus() },
         ...(controlled ? { value: selected } : { defaultValue: selected }),
-        defaultHighlightedValue: highlightedValue ?? props.items.find((id) => !props.disabledItems.includes(id)) ?? null,
+        defaultHighlightedValue: highlightedValue ?? props.items.find((id) => !disabledItems.value.has(id)) ?? null,
         onValueChange: ({ value: next }) => emit('update:modelValue', next[0] ?? ''),
         onHighlightedValueChange: ({ value: next }) => emit('highlight', next),
       });
       if (!result.ok) throw new TypeError(result.error.message);
       return result.value;
     };
-    const initial = controlled ? props.modelValue as string : props.defaultValue || props.items.find((id) => !props.disabledItems.includes(id)) || '';
+    const initial = controlled ? props.modelValue as string : props.defaultValue || props.items.find((id) => !disabledItems.value.has(id)) || '';
     const controller = shallowRef(makeController(initial));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const rebuild = (): void => {
+      pendingFocusRoot = null; focusTask.cancel();
       const requested = controlled ? props.modelValue as string : snapshot.value.state.selection.selected[0] ?? '';
       const reconciled = reconcileCollectionState(
         props.items,
@@ -117,6 +132,7 @@ export const TabsRoot = defineComponent({
       const current = reconciled.selected[0] ?? reconciled.current ?? '';
       controller.value = makeController(current, reconciled.current);
       snapshot.value = controller.value.getSnapshot();
+      identities.reconcile();
       if (controlled && current !== requested) emit('update:modelValue', current);
     };
     watch(() => props.modelValue, (next) => {
@@ -131,28 +147,34 @@ export const TabsRoot = defineComponent({
     const disabled = computed(() => props.disabled);
     const readonly = computed(() => props.readonly);
     const orientation = computed(() => props.orientation);
-    const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const apply = (result: ReturnType<ListboxController<string>['handleEvent']>, root?: HTMLElement): boolean => {
-      if (!result.ok) return false;
+      if (!alive || !result.ok) return false;
       snapshot.value = result.snapshot;
       applyEffects(result.commands, emit);
-      if (root !== undefined) void nextTick(() => focusTrigger(root, result.snapshot.state.cursor.current));
+      scheduleFocus(root);
       return true;
     };
     const activateTarget = (target: string): boolean => {
+      if (!alive) return false;
       if (!apply(controller.value.handleEvent({ type: 'focus', id: target }))) return false;
       if (!apply(controller.value.handleEvent({ type: 'activate', id: target }))) return false;
-      void nextTick(() => {
-        if (rootElement.value !== null) focusTrigger(rootElement.value, target);
-      });
+      scheduleFocus(rootElement.value);
       return true;
     };
     const part = usePartContract('tabs', 'root');
     provide<TabsRootContext>(tabsRootContextKey, {
-      value, highlighted, disabled, readonly, orientation, direction, disabledItems,
-      items: computed(() => props.items), partContract: part, ids,
-      select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="tablist"]') as HTMLElement | undefined),
+      value, highlighted, disabled, readonly, orientation, direction, disabledItems, domain,
+      items: computed(() => props.items), partContract: part, ids: identities.get,
+      select: (id, target) => { if (alive) apply(controller.value.handleEvent({ type: 'activate', id }), target.closest<HTMLElement>('[role="tablist"]') ?? undefined); },
+      focus: (id) => {
+        if (alive && (highlighted.value !== id || followsFocus() && value.value !== id && !deliveringFocus)) {
+          apply(controller.value.handleEvent({ type: 'focus', id }));
+        }
+      },
       keydown: (event) => {
+        if (!alive || event.defaultPrevented || event.isComposing) return;
+        const target = (event.target as Element | null)?.closest<HTMLElement>('[data-tabs-id]');
+        if (!target || target.closest('[role="tablist"]') !== event.currentTarget || target.getAttribute('aria-disabled') === 'true') return;
         if (!apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) return;
         event.preventDefault();
       },
@@ -162,7 +184,7 @@ export const TabsRoot = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, getTabsRootAttributes(), {
       as: props.as,
       asChild: props.asChild,
-      elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
+      elementRef: (element: unknown) => { rootElement.value = alive ? element as HTMLElement | null : null; },
       'data-scope': part.scope,
     }), {
       default: () => slots['default']?.(slotProps.value),
@@ -212,6 +234,7 @@ export const TabsTrigger = defineComponent({
     const part = { scope: root.partContract.scope, part: root.partContract.parts['trigger'] ?? 'trigger' };
     const state = computed<TabsTriggerSlotProps>(() => ({
       value: props.value,
+      position: (root.domain.value.indexOf(props.value) ?? -1) + 1, count: root.domain.value.size,
       selected: root.value.value === props.value,
       highlighted: root.highlighted.value === props.value,
       disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value),
@@ -220,10 +243,14 @@ export const TabsTrigger = defineComponent({
       const ids = root.ids(props.value);
       return getTabsTriggerAttributes({ id: props.value, selected: state.value.selected, highlighted: state.value.highlighted, disabled: state.value.disabled, triggerID: ids.trigger, panelID: ids.content });
     });
+    const handleFocus = (event: FocusEvent): void => {
+      if (!state.value.disabled && (event.currentTarget as Element | null)?.matches(':focus')) root.focus(props.value);
+    };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, attributes.value as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       'data-scope': part.scope,
       'data-part': part.part,
+      onFocus: handleFocus,
       onClick: (event: MouseEvent) => {
         if (!event.defaultPrevented && !state.value.disabled) root.select(props.value, event.currentTarget as HTMLElement);
       },
@@ -293,12 +320,8 @@ function applyEffects(effects: readonly ListboxEffect<string>[], emit: (event: '
 }
 function focusTrigger(root: HTMLElement, id: string | null): void {
   if (id === null) return;
-  const token = getTabsTriggerAttributes({
-    id,
-    selected: false,
-    highlighted: false,
-  })['data-tabs-id'];
+  const token = stableIDToken(id);
   for (const item of root.querySelectorAll<HTMLElement>('[data-tabs-id]')) {
-    if (item.dataset['tabsId'] === token) item.focus();
+    if (item.dataset['tabsId'] === token) { item.focus(); return; }
   }
 }

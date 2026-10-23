@@ -1,76 +1,32 @@
 import { unwrap } from '@sectile/core/result';
-import type { ErrorClass } from '@sectile/core';
-import type { TemporalResult } from '../error.js';
-import { transitionFailure, fail, ok } from '../internal/foundation.js';
-import { createMachineUpdate } from '../internal/machine.js';
 import type { TextEditingState } from '@sectile/core/text';
-import {
-  applyDateFieldEvent,
-  createDateFieldState,
-  type DateFieldEvent,
-  type DateFieldPolicies,
-  type DateFieldState,
-  tryCreateDateFieldState,
-} from './date.js';
-import {
-  compareDateValues,
-  createDateRange,
-  type DateRange,
-  type DateValue,
-  tryCreateDateRange,
-} from '../values/date.js';
+import type { TemporalResult } from '../error.js';
+import { applyDateFieldEvent, tryCreateDateFieldState, reformatDateFieldState, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateFieldFormat } from './date.js';
+import { compareDateValues, tryCreateDateRange, type DateRange, type DateValue } from '../values/date.js';
+import { applyRangeFieldEvent, tryCreateRangeFieldState, reformatRangeFieldState,
+  type RangeFieldConstruction, type RangeFieldTransition, type RangeFieldPresentation } from '../internal/range-field.js';
 
 export type DateRangeFieldEndpoint = 'start' | 'end';
 export interface DateRangeFieldState { readonly value: DateRange | null; readonly start: DateFieldState; readonly end: DateFieldState; readonly active: DateRangeFieldEndpoint }
-export interface DateRangeFieldStateInput { readonly value?: DateRange | null; readonly startValue?: DateValue | null; readonly endValue?: DateValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly active?: DateRangeFieldEndpoint }
+export interface DateRangeFieldStateInput { readonly value?: DateRange | null; readonly startValue?: DateValue | null; readonly endValue?: DateValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly startFormat?: DateFieldFormat; readonly endFormat?: DateFieldFormat; readonly active?: DateRangeFieldEndpoint }
 export type DateRangeFieldEvent = { readonly type: 'field'; readonly endpoint: DateRangeFieldEndpoint; readonly event: DateFieldEvent } | { readonly type: 'focus'; readonly endpoint: DateRangeFieldEndpoint } | 'cancel';
 export type DateRangeFieldCommand = { readonly type: 'input-state-changed'; readonly endpoint: DateRangeFieldEndpoint; readonly value: TextEditingState } | { readonly type: 'range-committed'; readonly value: DateRange | null } | { readonly type: 'focus-endpoint'; readonly endpoint: DateRangeFieldEndpoint };
 export interface DateRangeFieldPolicies extends DateFieldPolicies {}
 export interface DateRangeFieldUpdate { readonly state: DateRangeFieldState; readonly commands: readonly DateRangeFieldCommand[] }
 
-export function createDateRangeFieldState(input: DateRangeFieldStateInput = {}): DateRangeFieldState {
-  return unwrap(tryCreateDateRangeFieldState(input));
-}
+const construction: RangeFieldConstruction<DateValue, DateRange, DateFieldState, DateFieldFormat> = {
+  createField: tryCreateDateFieldState, createRange: tryCreateDateRange,
+  endpointError: { code: 'invalid-date-range-field-endpoint', message: 'Date range field active endpoint must be start or end.' },
+  invertedError: { code: 'inverted-date-range-field', message: 'Date range field start must not be after end.' },
+};
+// Only private plain data is copied; unused editing/presentation records have no effects.
+const transition: RangeFieldTransition<DateValue, DateRange, DateFieldState, DateFieldFormat, DateFieldEvent, DateRangeFieldPolicies> = /* @__PURE__ */ Object.assign({}, construction, {
+  applyField: applyDateFieldEvent, compare: compareDateValues,
+  requiredError: { code: 'date-range-field-value-required' as const, message: 'Date range field requires a range.' },
+});
+const presentation: RangeFieldPresentation<DateValue, DateRange, DateFieldState, DateFieldFormat> = /* @__PURE__ */ Object.assign({}, construction, { reformatField: reformatDateFieldState });
 
-export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> {
-  const range = input.value === undefined || input.value === null ? ok<DateRange | null>(null) : completeRange(input.value.start, input.value.end, 'construction');
-  if (!range.ok) return range;
-  const startValue = input.startValue !== undefined ? input.startValue : range.value?.start ?? null;
-  const endValue = input.endValue !== undefined ? input.endValue : range.value?.end ?? null;
-  const start = tryCreateDateFieldState(startValue, input.startInputState); if (!start.ok) return start;
-  const end = tryCreateDateFieldState(endValue, input.endInputState); if (!end.ok) return end;
-  const value = completeRange(start.value.value, end.value.value, 'construction'); if (!value.ok) return value;
-  const active = input.active ?? 'start';
-  if (active !== 'start' && active !== 'end') return fail('construction', 'invalid-date-range-field-endpoint', 'Date range field active endpoint must be start or end.');
-  return ok(Object.freeze({ value: value.value, start: start.value, end: end.value, active }));
-}
-
-export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> {
-  const valid = tryCreateDateRangeFieldState({ startValue: state.start.value, endValue: state.end.value, startInputState: state.start.inputState, endInputState: state.end.inputState, active: state.active });
-  if (!valid.ok) return transitionFailure(valid);
-  if (event === 'cancel') {
-    const start = applyDateFieldEvent(valid.value.start, 'cancel', endpointPolicies(policies)); if (!start.ok) return start;
-    const end = applyDateFieldEvent(valid.value.end, 'cancel', endpointPolicies(policies)); if (!end.ok) return end;
-    return composeState(start.value.state, end.value.state, valid.value.active, [
-      { type: 'input-state-changed', endpoint: 'start', value: start.value.state.inputState },
-      { type: 'input-state-changed', endpoint: 'end', value: end.value.state.inputState },
-    ]);
-  }
-  if (event.type === 'focus') return createMachineUpdate(Object.freeze({ ...valid.value, active: event.endpoint }), [{ type: 'focus-endpoint', endpoint: event.endpoint }]);
-  const active = event.endpoint;
-  const changed = applyDateFieldEvent(active === 'start' ? valid.value.start : valid.value.end, event.event, endpointPolicies(policies));
-  if (!changed.ok) return changed;
-  const start = active === 'start' ? changed.value.state : valid.value.start;
-  const end = active === 'end' ? changed.value.state : valid.value.end;
-  const next = completeRange(start.value, end.value); if (!next.ok) return next;
-  const committing = event.event === 'commit' || typeof event.event === 'object' && event.event.type === 'set-value';
-  if (committing && policies.required === true && next.value === null) return fail('transition-rejection', 'date-range-field-value-required', 'Date range field requires a range.');
-  const commands: DateRangeFieldCommand[] = changed.value.commands.filter((command) => command.type === 'input-state-changed').map((command) => ({ type: 'input-state-changed', endpoint: active, value: command.value }));
-  if (committing && !sameRange(valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
-  return composeState(start, end, active, commands);
-}
-
-function composeState(start: DateFieldState, end: DateFieldState, active: DateRangeFieldEndpoint, commands: readonly DateRangeFieldCommand[]): TemporalResult<DateRangeFieldUpdate> { const value = completeRange(start.value, end.value); return value.ok ? createMachineUpdate(Object.freeze({ value: value.value, start, end, active }), commands) : value; }
-function completeRange(start: DateValue | null, end: DateValue | null, errorClass: ErrorClass = 'transition-rejection'): TemporalResult<DateRange | null> { if (start === null || end === null) return ok(null); const range = tryCreateDateRange(start, end); return range.ok ? ok(range.value) : fail(errorClass, 'inverted-date-range-field', 'Date range field start must not be after end.'); }
-function endpointPolicies(policies: DateRangeFieldPolicies): DateFieldPolicies { const { required: _required, ...rest } = policies; return rest; }
-function sameRange(left: DateRange | null, right: DateRange | null): boolean { return left === null || right === null ? left === right : compareDateValues(left.start, right.start) === 0 && compareDateValues(left.end, right.end) === 0; }
+export function createDateRangeFieldState(input: DateRangeFieldStateInput = {}): DateRangeFieldState { return unwrap(tryCreateDateRangeFieldState(input)); }
+export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> { return tryCreateRangeFieldState(construction, input); }
+export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> { return applyRangeFieldEvent(transition, state, event, policies); }
+export function reformatDateRangeFieldState(state: DateRangeFieldState, format?: DateFieldFormat): TemporalResult<DateRangeFieldState> { return reformatRangeFieldState(presentation, state, format); }

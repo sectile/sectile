@@ -9,6 +9,10 @@ export interface PresenceOptions {
 export interface PresenceConnection {
   getPresent(): boolean;
   update(open: boolean, element: HTMLElement | undefined): boolean;
+  /** Cancel presentation work without publishing closure or discarding retained state. */
+  suspend(): void;
+  /** Reconcile the current accepted model and target after suspension. */
+  resume(open: boolean, element: HTMLElement | undefined): boolean;
   disconnect(): void;
 }
 
@@ -44,6 +48,7 @@ class DOMPresence implements PresenceConnection {
   #cleanup: (() => void) | undefined;
   #generation = 0;
   #active = true;
+  #suspended = false;
 
   public constructor(options: PresenceOptions) {
     this.#open = options.open;
@@ -56,6 +61,7 @@ class DOMPresence implements PresenceConnection {
 
   public update(open: boolean, element: HTMLElement | undefined): boolean {
     if (!this.#active) return this.#present;
+    if (this.#suspended) { this.#open = open; return this.#present; }
     const previousOpen = this.#open;
     const elementChanged = element !== this.#element;
     if (elementChanged) {
@@ -80,6 +86,23 @@ class DOMPresence implements PresenceConnection {
       return this.#present;
     }
     this.#arm(element, motion);
+    return this.#present;
+  }
+
+  public suspend(): void {
+    if (!this.#active || this.#suspended) return;
+    this.#suspended = true;
+    this.#cancelPending();
+    this.#element = undefined;
+  }
+
+  public resume(open: boolean, element: HTMLElement | undefined): boolean {
+    if (!this.#active) return this.#present;
+    if (!this.#suspended) return this.update(open, element);
+    this.#suspended = false;
+    this.#open = open;
+    this.#element = element;
+    this.#publish(open);
     return this.#present;
   }
 

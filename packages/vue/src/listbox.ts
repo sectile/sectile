@@ -5,6 +5,7 @@ import {
   inject,
   mergeProps,
   nextTick,
+  onBeforeUnmount,
   provide,
   shallowReactive,
   shallowReadonly,
@@ -46,6 +47,8 @@ export type ListboxValue = string | readonly string[];
 
 export interface ListboxRootProps {
   readonly items: readonly string[];
+  /** Rendered window only; omitted means the caller renders the full domain. */
+  readonly renderedItems?: readonly string[] | undefined;
   readonly selectionMode?: ListboxSelectionMode;
   readonly modelValue?: ListboxValue;
   readonly defaultValue?: ListboxValue;
@@ -96,6 +99,8 @@ interface ListboxRootContext {
   readonly itemProjection: ItemProjection;
   readonly indicatorPresence: ConditionalPresenceRegistry;
   itemID(id: string): string;
+  readonly itemCount: number | undefined;
+  itemPosition(id: string): number | undefined;
   isSelected(id: string): boolean;
   isHighlighted(id: string): boolean;
   isItemDisabled(id: string): boolean;
@@ -135,6 +140,7 @@ export const ListboxRoot = defineComponent({
   inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true },
+    renderedItems: { type: Array as PropType<readonly string[] | undefined>, default: undefined },
     selectionMode: { type: String as PropType<ListboxSelectionMode>, default: DEFAULT_LISTBOX_SELECTION_MODE },
     modelValue: { type: [String, Array] as PropType<ListboxValue>, default: undefined },
     defaultValue: { type: [String, Array] as PropType<ListboxValue>, default: undefined },
@@ -166,7 +172,9 @@ export const ListboxRoot = defineComponent({
       direction: direction.value,
     });
     const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
-    const initialValue = toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode);
+    const initialValue = Object.freeze([...toIDs(controlled ? props.modelValue : props.defaultValue, props.selectionMode)]);
+    let disposed = false;
+    onBeforeUnmount(() => { disposed = true; });
     const controller = shallowRef(createController(
       controlled,
       initialValue,
@@ -183,7 +191,11 @@ export const ListboxRoot = defineComponent({
     let currentSelectionMode = props.selectionMode;
     let currentHighlighted = snapshot.value.state.cursor.current;
     let disabledItemSet = new Set(controllerProps.disabledItems);
-    let submissionIndex = new Map(controllerProps.items.map((id, index) => [id, index] as const));
+    let itemIndex = new Map(controllerProps.items.map((id, index) => [id, index] as const));
+    const renderedItems = computed(() => props.renderedItems === undefined ? undefined : new Set(props.renderedItems));
+    const activeDescendantID = (): string | undefined => currentHighlighted === null
+      || (renderedItems.value !== undefined && !renderedItems.value.has(currentHighlighted))
+      ? undefined : itemID(currentHighlighted);
     const mutableState = shallowReactive({
       value: fromIDs(selectedIDs.value, props.selectionMode),
       highlightedValue: currentHighlighted,
@@ -192,23 +204,29 @@ export const ListboxRoot = defineComponent({
     });
     const state: ListboxRootSlotProps = shallowReadonly(mutableState);
     const syncActiveDescendant = (): void => {
+      if (disposed) return;
       const element = rootElement.value;
       if (
         element === null
         || typeof element.setAttribute !== 'function'
         || typeof element.removeAttribute !== 'function'
       ) return;
-      if (currentHighlighted === null) element.removeAttribute('aria-activedescendant');
-      else element.setAttribute('aria-activedescendant', itemID(currentHighlighted));
+      const id = activeDescendantID();
+      if (id === undefined) element.removeAttribute('aria-activedescendant');
+      else element.setAttribute('aria-activedescendant', id);
     };
     const syncSubmissionSelection = (changedIDs: Iterable<string>): void => {
       const element = submissionElement.value;
       if (element === null) return;
       for (const id of changedIDs) {
-        const index = submissionIndex.get(id);
+        const index = itemIndex.get(id);
         if (index === undefined) continue;
-        const option = element.options.item(index);
+        const option = element.options.item(index + (props.selectionMode === 'single' ? 1 : 0));
         if (option !== null && option.value === id) option.selected = currentSelectedSet.has(id);
+      }
+      if (props.selectionMode === 'single') {
+        const empty = element.options.item(0);
+        if (empty !== null) empty.selected = currentSelectedSet.size === 0;
       }
     };
     const publishSnapshot = (
@@ -253,20 +271,23 @@ export const ListboxRoot = defineComponent({
       } else mutableState.disabled = nextControllerProps.disabled;
       mutableState.readonly = nextControllerProps.readonly;
       disabledItemSet = nextDisabledItems;
-      submissionIndex = new Map(nextControllerProps.items.map((id, index) => [id, index] as const));
+      itemIndex = new Map(nextControllerProps.items.map((id, index) => [id, index] as const));
     };
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
       reset: () => {
         queueMicrotask(() => {
+          if (disposed) return;
           const next = controlled
             ? toIDs(props.modelValue, props.selectionMode)
             : initialValue;
+          const reconciled = reconcileCollectionState(controllerProps.items, next, next[0] ?? null,
+            controllerProps.disabledItems, props.selectionMode);
           controller.value = createController(
             controlled,
-            next,
-            next[0] ?? firstEnabledItem(controllerProps) ?? null,
+            reconciled.selected,
+            reconciled.current,
             controllerProps,
             emit,
           );
@@ -317,6 +338,7 @@ export const ListboxRoot = defineComponent({
         () => props.disabled, () => props.readonly, () => props.orientation, () => props.textValue, direction],
       rebuild,
     );
+    watch(() => props.renderedItems, syncActiveDescendant, { flush: 'post' });
     const applyResult = (
       result: ReturnType<ListboxController<string>['handleEvent']>,
       root?: HTMLElement,
@@ -343,19 +365,29 @@ export const ListboxRoot = defineComponent({
       itemProjection,
       indicatorPresence,
       itemID,
+      get itemCount() { return props.renderedItems === undefined ? undefined : props.items.length; },
+      itemPosition(id) {
+        if (props.renderedItems === undefined) return undefined;
+        // Track domain replacement while reusing its existing canonical index.
+        void props.items;
+        const index = itemIndex.get(id);
+        return index === undefined ? undefined : index + 1;
+      },
       isSelected: (id) => currentSelectedSet.has(id),
       isHighlighted: (id) => currentHighlighted === id,
       isItemDisabled: (id) => disabledItemSet.has(id),
       select,
     });
     return (): VNodeChild => {
+      const activeID = activeDescendantID();
       const rootAttributes = getListboxRootAttributes({
+        ...(typeof attrs['aria-label'] === 'string' ? { label: attrs['aria-label'] } : {}),
         selectionMode: props.selectionMode,
         orientation: props.orientation,
         direction: direction.value,
         disabled: props.disabled,
         readOnly: props.readonly,
-        ...(currentHighlighted === null ? {} : { activeDescendantID: itemID(currentHighlighted) }),
+        ...(activeID === undefined ? {} : { activeDescendantID: activeID }),
       });
       const root = h(Primitive, mergeProps(
         attrs,
@@ -367,19 +399,19 @@ export const ListboxRoot = defineComponent({
         participation.controlProps.value,
       ), { default: () => slots['default']?.(state) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return root;
+      const options = props.selectionMode === 'single' ? [h('option', { value: '', selected: currentSelectedSet.size === 0 })] : [];
+      for (const id of props.items) options.push(h('option', { value: id, selected: currentSelectedSet.has(id) }, id));
       return [root, h('select', {
         ref: submissionElement,
         name: props.name,
         form: props.form,
         required: props.required,
         multiple: props.selectionMode === 'multiple',
+        disabled: props.disabled,
         tabindex: -1,
         'aria-hidden': 'true',
         style: visuallyHiddenInputStyle,
-      }, props.items.map((id) => h('option', {
-        value: id,
-        selected: currentSelectedSet.has(id),
-      }, id)))];
+      }, options)];
     };
   },
 });
@@ -428,7 +460,8 @@ export const ListboxItem = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(
       attrs,
       attributes.value as Record<string, unknown>,
-      { as: props.as, asChild: props.asChild, onClick: handleClick },
+      { as: props.as, asChild: props.asChild, onClick: handleClick,
+        ...(root.itemCount === undefined ? {} : { 'aria-setsize': root.itemCount, 'aria-posinset': root.itemPosition(props.value) }) },
     ), { default: () => slots['default']?.(slotProps) });
   },
 });

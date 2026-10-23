@@ -38,11 +38,12 @@ export interface ToggleGroupItemAttributesOptions<ID extends StableID = StableID
 export function getToggleGroupRootAttributes(options: ToggleGroupRootAttributesOptions = {}): Readonly<Record<string, string | undefined>> {
   return Object.freeze({
     role: 'group',
-    'aria-orientation': options.orientation ?? 'horizontal',
+    'aria-orientation': undefined,
+    'data-orientation': options.orientation ?? 'horizontal',
     dir: options.direction,
     'aria-label': options.label,
     'aria-disabled': options.disabled === true ? 'true' : undefined,
-    'aria-readonly': options.readOnly === true ? 'true' : undefined,
+    'aria-readonly': undefined,
     'data-scope': 'toggle-group',
     'data-part': 'root',
     'data-disabled': options.disabled === true ? '' : undefined,
@@ -122,5 +123,5 @@ function setRootAttributes<ID extends StableID>(root: HTMLElement, options: Togg
 }
 
 function clearRootAttributes(root: HTMLElement): void {
-  for (const name of ['role', 'aria-orientation', 'aria-label', 'data-scope', 'data-part']) root.removeAttribute(name);
+  for (const name of ['role', 'aria-orientation', 'aria-label', 'data-orientation', 'data-scope', 'data-part']) root.removeAttribute(name);
 }

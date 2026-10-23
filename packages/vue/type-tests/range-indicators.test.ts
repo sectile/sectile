@@ -1,6 +1,16 @@
 import * as Meter from '@sectile/vue/meter';
 import * as Progress from '@sectile/vue/progress';
 import * as Group from '@sectile/vue/meter-group';
+import * as Timer from '@sectile/vue/timer';
+const timerProps: Timer.TimerRootProps = { label: 'Delivery time', startMs: 90000, targetMs: 0, countdown: true, autoStart: false, intervalMs: 100 };
+const forwardedTimerDefaults: Timer.TimerRootProps = { startMs: undefined, autoStart: undefined, intervalMs: undefined }; void forwardedTimerDefaults;
+declare const timerSlot: Timer.TimerSlotProps;
+const timerProgress: number | null = timerSlot.progress;
+const timerValue: number = timerSlot.valueMs;
+timerSlot.start(); timerSlot.pause(); timerSlot.resume(); timerSlot.reset(); timerSlot.restart();
+// @ts-expect-error Canonical slot data is readonly.
+timerSlot.running = false;
+void [Timer.TimerRoot, Timer.TimerItem, Timer.TimerActionTrigger, timerProps, timerProgress, timerValue];
 
 const meterProps: Meter.MeterRootProps = { value: '25' };
 const meterPart: Meter.MeterPartProps = {};

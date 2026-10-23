@@ -4,6 +4,8 @@ import type {
   TextSelection,
   TextSelectionInput,
   TextSnapshot,
+  TextQuery,
+  TextQueryOptions,
 } from '../../editing/text.js';
 
 export function referenceIsWellFormedPlainText(text: string): boolean {
@@ -51,6 +53,22 @@ export function createReferenceTextEditingState(
   },
 ): TextEditingState {
   return referenceState(referenceSnapshot(text, selection));
+}
+
+export function referenceSelectTextState(state: TextEditingState, selection: TextSelectionInput): TextEditingState {
+  return Object.freeze({ snapshot: referenceSnapshot(state.snapshot.text, selection), composition: state.composition });
+}
+
+export function referenceFindTextQuery(state: TextEditingState, options: TextQueryOptions): TextQuery | null {
+  if (state.composition !== null || state.snapshot.selection.anchorCodeUnitOffset !== state.snapshot.selection.focusCodeUnitOffset) return null;
+  const end = state.snapshot.selection.focusCodeUnitOffset;
+  const prefix = state.snapshot.text.slice(0, end), token = /\S*$/u.exec(prefix)![0];
+  const offset = options.allowInline ? token.lastIndexOf(options.trigger) : token.startsWith(options.trigger) ? 0 : -1;
+  if (offset < 0) return null;
+  const query = token.slice(offset + options.trigger.length);
+  return query.length > options.maxQueryCodeUnits ? null : Object.freeze({
+    trigger: options.trigger, query, startCodeUnitOffset: end - token.length + offset, endCodeUnitOffset: end,
+  });
 }
 
 export function referenceReplaceTextState(

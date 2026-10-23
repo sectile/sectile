@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Window } from 'happy-dom';
 import { createChartController } from '@sectile/chart/controller';
-import { createDOMChart, tryCreateDOMChart, tryNormalizeDOMChartNavigation } from '../.verification-dist/chart.js';
+import { createChartRenderer, createDOMChart, tryCreateDOMChart, tryNormalizeDOMChartNavigation } from '../.verification-dist/chart.js';
 
 function fixture(profile = 'point', data = [
   { id: 1, x: 0, y: 0 }, { id: '1', x: 1, y: 1 },
@@ -40,8 +40,14 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.deepEqual(connection.getViewport(), { width: 100, height: 100, devicePixelRatio: 1 });
   assert.equal(value.root.getAttribute('role'), 'region');
   assert.equal(value.root.getAttribute('aria-label'), 'Revenue chart');
+  const list = value.root.querySelector('[role="listbox"]');
+  assert.equal(list.getAttribute('aria-label'), 'Revenue chart');
   connection.setAccessibilityLabel('Quarterly revenue chart');
   assert.equal(value.root.getAttribute('aria-label'), 'Quarterly revenue chart');
+  assert.equal(list.getAttribute('aria-label'), 'Quarterly revenue chart');
+  connection.setAccessibilityLabel();
+  assert.equal(value.root.getAttribute('aria-label'), 'Chart');
+  assert.equal(list.getAttribute('aria-label'), 'Chart');
   const options = [...value.root.querySelectorAll('[role="option"]')];
   assert.equal(options.length, 2);
   assert.notEqual(options[0].id, options[1].id);
@@ -52,16 +58,83 @@ test('DOM Chart projects synchronously and exposes a bounded mixed-ID accessibil
   assert.equal(value.disconnected(), 0, 'borrowed renderer remains caller-owned');
 });
 
+test('DOM Chart applies initial paint before the first owned or explicitly borrowed draw', () => {
+  for (const borrowed of [false, true]) {
+    const value = fixture(), context = { setTransform() {}, clearRect() {}, beginPath() {}, arc() {}, fill() {} };
+    value.canvas.getContext = kind => kind === '2d' ? context : null;
+    const renderer = borrowed ? createChartRenderer(value.canvas, { mode: 'canvas2d' }) : 'canvas2d';
+    const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller: value.controller, renderer,
+      renderStyle: { color: [1, 0, 0, 1] } });
+    try { assert.equal(context.fillStyle, 'rgba(255, 0, 0, 1)'); }
+    finally { connection.disconnect(); if (borrowed) renderer.disconnect(); value.controller.dispose(); value.window.happyDOM.abort(); }
+    assert.equal(connection.getRendererDiagnostics().liveResources, 0);
+  }
+  const value = fixture();
+  try {
+    const result = tryCreateDOMChart({ root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer, renderStyle: {} });
+    assert.equal(result.ok, false); assert.equal(value.renders.length, 0); assert.equal(value.disconnected(), 0);
+    assert.equal(value.root.querySelector('[role="listbox"]'), null);
+  } finally { value.controller.dispose(); value.window.happyDOM.abort(); }
+});
+
+test('DOM Chart paint updates reuse the canonical projection and recover failed draws without queries', () => {
+  const value = fixture(); let queries = 0, measures = 0, publications = 0, draws = 0, fail = false;
+  const originalProject = value.controller.project.bind(value.controller);
+  value.controller.project = input => { queries++; return originalProject(input); };
+  const bounds = value.canvas.getBoundingClientRect;
+  value.canvas.getBoundingClientRect = () => { measures++; return bounds(); };
+  const context = { setTransform() {}, clearRect() {}, beginPath() {}, arc() {}, fill() {} };
+  value.canvas.getContext = kind => kind === '2d' ? context : null;
+  const renderer = createChartRenderer(value.canvas, { mode: 'canvas2d' }), draw = renderer.render.bind(renderer);
+  renderer.render = projection => { draws++; if (fail) throw Error('draw boundary'); draw(projection); };
+  const connection = createDOMChart({ root: value.root, canvas: value.canvas, controller: value.controller, renderer,
+    onProjectionChange: () => publications++ });
+  try {
+    const projection = connection.getProjection(), before = [queries, measures, publications], firstDraws = draws;
+    const style = { color: [1, 0, 0, 1] };
+    assert.deepEqual(connection.setRenderStyle(style), { ok: true, value: true });
+    assert.equal(context.fillStyle, 'rgba(255, 0, 0, 1)'); assert.equal(draws, firstDraws + 1);
+    assert.ok(connection.getProjection() === projection); assert.deepEqual([queries, measures, publications], before);
+    assert.deepEqual(connection.setRenderStyle(style), { ok: true, value: false }); assert.equal(draws, firstDraws + 1);
+    assert.equal(connection.setRenderStyle({ color: [2, 0, 0, 1] }).ok, false); assert.equal(draws, firstDraws + 1);
+    fail = true; assert.equal(connection.setRenderStyle({ color: [0, 1, 0, 1] }).ok, false);
+    fail = false; assert.deepEqual(connection.setRenderStyle({ color: [0, 1, 0, 1] }), { ok: true, value: false });
+    assert.equal(context.fillStyle, 'rgba(0, 255, 0, 1)'); assert.deepEqual([queries, measures, publications], before);
+  } finally { connection.disconnect(); }
+  assert.equal(connection.setRenderStyle({}).ok, false);
+  assert.equal(renderer.getDiagnostics().liveResources, 1, 'borrowed renderer remains caller-owned'); renderer.disconnect();
+  assert.deepEqual(connection.getLifecycleDiagnostics(), { listeners: 0, observers: 0, frames: 0, timers: 0, subscriptions: 0, overlayNodes: 0 });
+  value.controller.dispose(); value.window.happyDOM.abort();
+});
+
+test('DOM Chart reports unsupported or throwing borrowed paint updates without drawing or taking ownership', () => {
+  const value = fixture(), connection = createDOMChart({ root: value.root, canvas: value.canvas, controller: value.controller, renderer: value.renderer });
+  try {
+    assert.equal(connection.setRenderStyle({ color: [1, 0, 0, 1] }).ok, false);
+    Object.defineProperty(value.renderer, 'setStyle', { get() { throw Error('external capability getter'); } });
+    assert.equal(connection.setRenderStyle({}).ok, false); assert.equal(value.renders.length, 1);
+  }
+  finally { connection.disconnect(); value.controller.dispose(); value.window.happyDOM.abort(); }
+  assert.equal(value.disconnected(), 0);
+});
+
 test('DOM Chart projection and overlay use the canvas viewport inside a larger root', () => {
   const value = fixture();
-  value.root.getBoundingClientRect = () => ({
+  let rootReads = 0, canvasReads = 0, resize;
+  value.window.ResizeObserver = class {
+    constructor(callback) { resize = callback; }
+    observe() {}
+    disconnect() {}
+  };
+  value.root.getBoundingClientRect = () => (rootReads += 1, {
     x: 10, y: 20, left: 10, top: 20, right: 130, bottom: 200,
     width: 120, height: 180, toJSON() {},
   });
-  value.canvas.getBoundingClientRect = () => ({
+  let canvasRect = {
     x: 18, y: 64, left: 18, top: 64, right: 114, bottom: 176,
     width: 96, height: 112, toJSON() {},
-  });
+  };
+  value.canvas.getBoundingClientRect = () => (canvasReads += 1, canvasRect);
   const connection = createDOMChart({
     root: value.root,
     canvas: value.canvas,
@@ -75,8 +148,35 @@ test('DOM Chart projection and overlay use the canvas viewport inside a larger r
   assert.equal(overlay?.style.top, '44px');
   assert.equal(overlay?.style.width, '96px');
   assert.equal(overlay?.style.height, '112px');
+  assert.equal(overlay?.style.maxInlineSize, 'var(--sectile-internal-chart-overlay-max-inline-size, none)');
   assert.equal(overlay?.getAttribute('viewBox'), '0 0 96 112');
+  const projection = connection.getProjection(), renders = value.renders.length;
+  const children = [...overlay.childNodes];
+  canvasRect = { x: 22, y: 72, left: 22, top: 72, right: 86, bottom: 152,
+    width: 64, height: 80, toJSON() {} };
+  const reads = [rootReads, canvasReads];
+  resize(); resize();
+  assert.deepEqual([rootReads, canvasReads], reads.map(count => count + 2));
+  assert.equal(overlay.style.left, '12px');
+  assert.equal(overlay.style.top, '52px');
+  assert.equal(overlay.style.width, '64px');
+  assert.equal(overlay.style.height, '80px');
+  assert.equal(overlay.getAttribute('preserveAspectRatio'), 'none');
+  assert.equal(overlay.getAttribute('viewBox'), '0 0 96 112');
+  assert.equal(connection.getProjection(), projection, 'resize only synchronizes the physical overlay frame');
+  assert.equal(value.renders.length, renders);
+  assert.deepEqual([...overlay.childNodes], children);
+  assert.equal(connection.getLifecycleDiagnostics().frames, 1);
+  connection.flush();
+  assert.equal(overlay.getAttribute('viewBox'), '0 0 64 80');
+  assert.equal(connection.getLifecycleDiagnostics().frames, 0);
   connection.disconnect();
+  const retiredReads = [rootReads, canvasReads], retiredStyle = overlay.getAttribute('style');
+  resize();
+  assert.deepEqual([rootReads, canvasReads], retiredReads);
+  assert.equal(overlay.getAttribute('style'), retiredStyle);
+  assert.equal(connection.getLifecycleDiagnostics().frames, 0);
+  value.controller.dispose(); value.window.happyDOM.abort();
 });
 
 test('DOM Chart accessibility IDs preserve exact stable identity and linkage', () => {
@@ -722,7 +822,9 @@ test('model generations rebuild accessibility within the declared ceiling', () =
   }] });
   connection.flush();
   assert.equal(value.root.querySelectorAll('[role="option"]').length, 1);
-  assert.equal(value.root.querySelector('[role="listbox"]').getAttribute('aria-setsize'), '3');
+  assert.equal(value.root.querySelector('[role="listbox"]').getAttribute('aria-label'), 'Chart');
+  assert.equal(value.root.querySelector('[role="listbox"]').hasAttribute('aria-setsize'), false);
+  assert.equal(value.root.querySelector('[role="option"]').getAttribute('aria-setsize'), '3');
   connection.disconnect();
 });
 

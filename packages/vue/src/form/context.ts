@@ -1,5 +1,6 @@
 import {
   inject,
+  provide,
   onScopeDispose,
   shallowRef,
   watch,
@@ -19,8 +20,11 @@ import type {
   FormControlRegistration,
   FormLabelMode,
 } from './control.js';
+import { provideFormControlBoundary } from './control.js';
+import { useHostActive } from '../host-provider.js';
 
 export interface FormContext {
+  readonly active: Readonly<ShallowRef<boolean>>;
   readonly summary: ShallowRef<HTMLElement | null>;
   readonly summaryId: string;
   readonly register: (participant: FormParticipant<string>) => () => void;
@@ -39,6 +43,12 @@ export interface FormFieldContext {
 
 export const formContextKey = Symbol('SectileForm');
 export const formFieldContextKey = Symbol('SectileFormField');
+
+/** Independent popup content keeps its Form root and permits new explicit field owners. */
+export function provideFormBoundary(): void {
+  provide(formFieldContextKey, null);
+  provideFormControlBoundary();
+}
 
 const emptyState: FormState = Object.freeze({
   validation: Object.freeze({ generation: 0, status: 'idle', trigger: null, intent: null }),
@@ -68,19 +78,20 @@ export function useFormSelectorFromContext<Selected>(
   selectorSource: () => FormSelectorFunction<Selected>,
   equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
 ): Readonly<ShallowRef<Selected>> {
+  const active = useHostActive();
   const initialSelector = selectorSource();
   const selected = shallowRef(
     initialSelector(context.connection.value?.state ?? emptyState),
   ) as ShallowRef<Selected>;
   let unsubscribe: (() => void) | undefined;
   const stop = watch(
-    [context.connection, selectorSource, equalsSource],
+    [context.connection, selectorSource, equalsSource, active, () => context.active.value],
     ([target, selector, equals]) => {
       unsubscribe?.();
       unsubscribe = undefined;
       const next = selector(target?.state ?? emptyState);
       if (!equals(selected.value, next)) selected.value = next;
-      if (target !== null) {
+      if (target !== null && active.value && context.active.value) {
         unsubscribe = target.subscribeForm(selector, (value) => {
           selected.value = value;
         }, { equals });
@@ -101,19 +112,20 @@ export function useFormFieldSelectorFromContext<Selected>(
   selectorSource: () => FormFieldSelectorFunction<Selected>,
   equalsSource: () => NonNullable<FormSubscribeOptions<Selected>['equals']> = () => Object.is,
 ): Readonly<ShallowRef<Selected>> {
+  const active = useHostActive();
   const initialSelector = selectorSource();
   const selected = shallowRef(initialSelector(
     context.connection.value?.getField(idSource()) ?? null,
   )) as ShallowRef<Selected>;
   let unsubscribe: (() => void) | undefined;
   const stop = watch(
-    [context.connection, idSource, selectorSource, equalsSource],
+    [context.connection, idSource, selectorSource, equalsSource, active, () => context.active.value],
     ([target, id, selector, equals]) => {
       unsubscribe?.();
       unsubscribe = undefined;
       const next = selector(target?.getField(id) ?? null);
       if (!equals(selected.value, next)) selected.value = next;
-      if (target !== null) {
+      if (target !== null && active.value && context.active.value) {
         unsubscribe = target.subscribeField(id, selector, (value) => {
           selected.value = value;
         }, { equals });

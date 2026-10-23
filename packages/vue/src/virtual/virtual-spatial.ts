@@ -1,5 +1,6 @@
-import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
+import { defineComponent, h, shallowRef, watch, type AllowedComponentProps, type ComponentCustomProps, type PropType, type ShallowUnwrapRef, type SlotsType, type VNodeChild, type VNodeProps } from 'vue';
 import type { StableID } from '@sectile/core';
+import type { VirtualCollectionPartAttributes } from './virtual-collection.js';
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
@@ -46,7 +47,7 @@ export interface VirtualSpatialComponent {
       empty?: () => VNodeChild;
       footer?: () => VNodeChild;
     };
-  };
+  } & ShallowUnwrapRef<import('./virtual-collection.js').VirtualCollectionExpose<SpatialLayoutState<ID>, ID>>;
 }
 
 
@@ -67,6 +68,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     contentAs: { type: String, default: 'div' },
     itemAs: { type: String, default: 'div' },
     itemAttributes: { type: Function as PropType<VirtualCollectionItemAttributes<unknown>>, default: undefined },
+    partAttributes: { type: Object as PropType<VirtualCollectionPartAttributes>, default: undefined },
   },
   emits: {
     stateChange: (_state: SpatialLayoutState<StableID>): boolean => true,
@@ -209,8 +211,8 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       default: ({ placements }: VirtualizerRootSlotProps) => [
         slots['header'] === undefined
           ? null
-          : h(VirtualizerHeader, {}, { default: () => slots['header']?.() }),
-        h(VirtualizerSurface, { as: props.contentAs }, {
+          : h(VirtualizerHeader, props.partAttributes?.header ?? {}, { default: () => slots['header']?.() }),
+        h(VirtualizerSurface, { ...props.partAttributes?.surface, as: props.contentAs }, {
           default: () => renderHighLevelItems(
             'virtual-spatial',
             placements,
@@ -234,7 +236,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
         }),
         slots['footer'] === undefined
           ? null
-          : h(VirtualizerFooter, {}, { default: () => slots['footer']?.() }),
+          : h(VirtualizerFooter, props.partAttributes?.footer ?? {}, { default: () => slots['footer']?.() }),
       ],
     });
   },

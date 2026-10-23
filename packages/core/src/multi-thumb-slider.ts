@@ -11,6 +11,32 @@ export type MultiThumbSliderEvent<ID extends StableID = StableID> = 'next-thumb'
 export type MultiThumbSliderCommand<ID extends StableID = StableID> = { readonly type: 'focus'; readonly id: ID } | { readonly type: 'announce-tick'; readonly id: ID; readonly tick: number };
 export interface MultiThumbSliderPolicies { readonly minGap?: number; readonly allowCross?: boolean }
 export interface MultiThumbSliderUpdate<ID extends StableID = StableID> { readonly state: MultiThumbSliderState<ID>; readonly commands: readonly MultiThumbSliderCommand<ID>[] }
+export interface MultiThumbSliderThumbBounds { readonly index: number; readonly tick: number; readonly lowerTick: number; readonly upperTick: number }
+
+/** Query-local validation reads at most three adjacent ticks; full state admission is separate. */
+export function getMultiThumbSliderThumbBounds<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange,
+  state: MultiThumbSliderState<NoInfer<ID>>, id: NoInfer<ID>, policies: MultiThumbSliderPolicies = {}): Result<MultiThumbSliderThumbBounds> {
+  if (state.ticks.length !== thumbs.size) return fail('construction', 'thumb-value-count-mismatch', 'Every thumb requires one tick.');
+  const index = thumbs.indexOf(id);
+  if (index === null) return fail('construction', 'multi-thumb-target-unavailable', 'Thumb target must exist.');
+  const gap = policies.minGap ?? 0;
+  if (!Number.isSafeInteger(gap) || gap < 0) return fail('construction', 'invalid-thumb-gap', 'minGap must be a non-negative safe integer.');
+  const tick = state.ticks[index];
+  for (let position = Math.max(0, index - 1); position <= Math.min(state.ticks.length - 1, index + 1); position++) {
+    const candidate = position === index ? tick : state.ticks[position];
+    if (candidate === undefined || !Number.isSafeInteger(candidate) || candidate < 0 || candidate > range.count)
+      return fail('construction', 'thumb-tick-outside-range', 'Relevant thumb ticks must be safe range ticks.');
+  }
+  const { lower, upper } = thumbLimits(state, index, range.count, policies);
+  if (lower > (tick as number) || upper < (tick as number)) return fail('construction', 'thumb-order-violation', 'Thumb ticks must preserve order and minimum gap.');
+  return ok(Object.freeze({ index, tick: tick as number, lowerTick: lower, upperTick: upper }));
+}
+
+function thumbLimits<ID extends StableID>(state: MultiThumbSliderState<ID>, index: number, count: number, policies: MultiThumbSliderPolicies): { readonly lower: number; readonly upper: number } {
+  const gap = policies.minGap ?? 0;
+  return { lower: policies.allowCross || index === 0 ? 0 : (state.ticks[index - 1] as number) + gap,
+    upper: policies.allowCross || index === state.ticks.length - 1 ? count : (state.ticks[index + 1] as number) - gap };
+}
 
 export function createMultiThumbSliderState<ID extends StableID>(thumbs: Sequence<ID>, range: QuantizedRange, ticks: readonly number[], current: ID | null = null, policies: MultiThumbSliderPolicies = {}): MultiThumbSliderState<ID> {
   return unwrap(tryCreateMultiThumbSliderState(thumbs, range, ticks, current, policies));
@@ -50,9 +76,7 @@ export function applyMultiThumbSliderEvent<ID extends StableID>(thumbs: Sequence
   let tick = typeof event === 'object' ? event.tick : event === 'increment' ? current + 1 : event === 'decrement' ? current - 1 : event === 'home' ? 0 : range.count;
   tick = Math.max(0, Math.min(range.count, tick));
   if (!policies.allowCross) {
-    const gap = policies.minGap ?? 0;
-    const lower = index === 0 ? 0 : (state.ticks[index - 1] as number) + gap;
-    const upper = index === state.ticks.length - 1 ? range.count : (state.ticks[index + 1] as number) - gap;
+    const { lower, upper } = thumbLimits(state, index, range.count, policies);
     tick = Math.max(lower, Math.min(upper, tick));
   }
   if (!Number.isSafeInteger(tick)) return fail('transition-rejection', 'thumb-tick-outside-range', 'Thumb tick must be a safe range tick.');

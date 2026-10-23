@@ -6,7 +6,7 @@ import {
   inject,
   mergeProps,
   provide,
-  ref,
+  shallowRef,
   watch,
   type ComputedRef,
   type Component,
@@ -25,6 +25,8 @@ import {
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { providePartContract } from './internal/part-contract.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { reconcileCollectionState } from './internal/collection.js';
+import { provideFormControlReset } from './form/control.js';
 
 export interface RatingRootProps {
   readonly items: readonly string[];
@@ -77,7 +79,13 @@ export const RatingRoot = defineComponent({
     const instance = getCurrentInstance();
     providePartContract('rating');
     const controlled = useControlledStateInvariant('RatingRoot', 'modelValue', () => props.modelValue);
-    const localValue = ref(controlled ? props.modelValue as string : props.defaultValue);
+    const initialValue = controlled ? props.modelValue as string : props.defaultValue;
+    const localValue = shallowRef(initialValue);
+    provideFormControlReset(() => {
+      if (controlled) return;
+      const reconciled = reconcileCollectionState(props.items, initialValue === '' ? [] : [initialValue], initialValue || null, props.disabledItems, 'single');
+      localValue.value = reconciled.selected[0] ?? '';
+    });
     watch(() => props.modelValue, (value) => {
       if (controlled && value !== undefined) localValue.value = value;
     });
@@ -148,7 +156,7 @@ export const RatingItem = defineComponent({
   },
   setup(props, { attrs, slots }) {
     return (): VNodeChild => h(RadioGroupItem as Component, mergeProps(attrs, props, {
-      'aria-label': `${props.value} rating`,
+      'aria-label': attrs['aria-label'] ?? (attrs['aria-labelledby'] === undefined ? `${props.value} rating` : undefined),
       'data-scope': 'rating',
     }), slots);
   },

@@ -7,7 +7,7 @@ type InteractionErrorCode =
   | 'invalid-disabled-state'
   | 'invalid-read-only-state';
 
-export type InteractionIntent = 'navigate' | 'mutate';
+export type InteractionIntent = 'navigate' | 'mutate' | 'configure';
 
 export interface InteractionStateInput {
   readonly disabled?: boolean;
@@ -47,13 +47,14 @@ export function permitsInteraction(
   state: InteractionState,
   intent: InteractionIntent,
 ): boolean {
-  return !state.disabled && (intent === 'navigate' || !state.readOnly);
+  return intent === 'configure' || (!state.disabled && (intent === 'navigate' || !state.readOnly));
 }
 
 export function requireInteraction(
   state: InteractionState,
   intent: InteractionIntent,
 ): Result<true> {
+  if (intent === 'configure') return { ok: true, value: true };
   if (state.disabled) {
     return failure(
       'transition-rejection',

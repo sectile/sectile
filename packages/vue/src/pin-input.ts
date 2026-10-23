@@ -1,6 +1,6 @@
 import {
   computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
-  shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  shallowRef, ssrContextKey, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createPinInput, type PinInputConnection, type PinInputPolicies } from '@sectile/dom/pin-input';
 import { Primitive, type PrimitiveAs } from './primitive.js';
@@ -38,6 +38,7 @@ interface Context {
   readonly mask: ComputedRef<boolean>;
   readonly otp: ComputedRef<boolean>;
   readonly label: ComputedRef<string>;
+  readonly characters: ComputedRef<readonly string[]>;
   register(index: number, element?: HTMLInputElement): void;
   setInputComposing(composing: boolean): void;
 }
@@ -60,6 +61,9 @@ export const PinInputRoot = defineComponent({
     if (!Number.isInteger(props.length) || props.length < 1) throw new TypeError('PinInput length must be a positive integer.');
     const root = shallowRef<HTMLElement | null>(null);
     const hiddenInput = shallowRef<HTMLInputElement | null>(null);
+    const initialValue = props.modelValue ?? props.defaultValue;
+    let mounted = false;
+    let connectScheduled = false;
     const participation = useCompositeFormControl({
       root,
       focusTarget: () => inputs.value.find((candidate) => candidate !== undefined) ?? null,
@@ -67,6 +71,16 @@ export const PinInputRoot = defineComponent({
         element: hiddenInput,
         capabilities: hiddenValueSubmissionCapabilities,
       }],
+      reset: () => {
+        queueMicrotask(() => {
+          if (!mounted) return;
+          if (reconnectTimer !== null) clearTimeout(reconnectTimer);
+          reconnectTimer = null; reconnectPending = false; inputComposing = false; proposedValue = null;
+          connectScheduled = false;
+          value.value = controlled ? props.modelValue as string : initialValue;
+          connect();
+        });
+      },
     });
     provideFormControlOwner();
     const inputs = shallowRef<Array<HTMLInputElement | undefined>>(Array.from({ length: props.length }));
@@ -77,14 +91,16 @@ export const PinInputRoot = defineComponent({
     let inputComposing = false;
     let reconnectPending = false;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    const characters = computed(() => Object.freeze(Array.from(props.modelValue ?? value.value)));
     const state = computed<PinInputRootSlotProps>(() => Object.freeze({
-      value: props.modelValue ?? value.value, complete: (props.modelValue ?? value.value).length === props.length,
+      value: props.modelValue ?? value.value, complete: characters.value.length === props.length,
       disabled: props.disabled, readonly: props.readonly,
     }));
     const connect = (): void => {
       connection.value?.disconnect();
+      connection.value = undefined;
       const nodes = inputs.value.filter((input): input is HTMLInputElement => input !== undefined);
-      if (root.value === null || nodes.length !== props.length) return;
+      if (!mounted || root.value === null || nodes.length !== props.length) return;
       connection.value = createPinInput({
         root: root.value, inputs: nodes, ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(controlled ? { value: proposedValue ?? props.modelValue as string } : { defaultValue: value.value }),
@@ -108,18 +124,26 @@ export const PinInputRoot = defineComponent({
       refresh();
     };
     const requestConnect = (): void => {
-      if (inputComposing) {
+      if (!mounted) return;
+      if (inputComposing || reconnectPending) {
         reconnectPending = true;
         return;
       }
-      connect();
+      if (connectScheduled) return;
+      connectScheduled = true;
+      void nextTick(() => {
+        if (!mounted || !connectScheduled) return;
+        connectScheduled = false;
+        if (inputComposing) { reconnectPending = true; return; }
+        connect();
+      });
     };
     const setInputComposing = (composing: boolean): void => {
       inputComposing = composing;
       if (composing || !reconnectPending || reconnectTimer !== null) return;
       reconnectTimer = setTimeout(() => {
         reconnectTimer = null;
-        if (inputComposing) return;
+        if (!mounted || inputComposing) return;
         reconnectPending = false;
         connect();
       }, 0);
@@ -128,18 +152,23 @@ export const PinInputRoot = defineComponent({
     const register = (index: number, element?: HTMLInputElement): void => {
       if (inputs.value[index] === element) return;
       const next = [...inputs.value]; next[index] = element; inputs.value = next;
+      requestConnect();
     };
     provide<Context>(key, {
       state, length: computed(() => props.length), mask: computed(() => props.mask), otp: computed(() => props.otp),
+      characters,
       label: computed(() => props.label), register, setInputComposing,
     });
-    onMounted(connect);
+    onMounted(() => { mounted = true; connect(); });
     onBeforeUnmount(() => {
+      mounted = false;
+      connectScheduled = false;
       if (reconnectTimer !== null) clearTimeout(reconnectTimer);
       reconnectTimer = null;
       reconnectPending = false;
       proposedValue = null;
       connection.value?.disconnect();
+      connection.value = undefined;
     });
     watch([() => props.length, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], () => {
       inputs.value = Array.from({ length: props.length }, (_, index) => inputs.value[index]);
@@ -152,9 +181,15 @@ export const PinInputRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       value.value = next;
     });
+    const registerRoot = (node: unknown): void => {
+      const next = node instanceof HTMLElement ? node : null;
+      if (root.value === next) return;
+      root.value = next;
+      requestConnect();
+    };
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
+        as: props.as, asChild: props.asChild, elementRef: registerRoot,
         role: 'group', 'aria-label': props.label, 'data-scope': 'pin-input', 'data-part': 'root',
         'data-complete': state.value.complete ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
@@ -180,18 +215,20 @@ export const PinInputInput = defineComponent({
   slots: Object as SlotsType<{ default: (props: PinInputInputSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('PinInputInput');
+    const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
     const slot = computed<PinInputInputSlotProps>(() => ({
-      ...root.state.value, index: props.index, character: Array.from(root.state.value.value)[props.index] ?? '',
+      ...root.state.value, index: props.index, character: root.characters.value[props.index] ?? '',
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => root.register(props.index, node instanceof HTMLInputElement ? node : undefined),
       type: root.mask.value ? 'password' : 'text', inputmode: 'numeric', maxlength: 1,
       autocomplete: root.otp.value && props.index === 0 ? 'one-time-code' : undefined,
+      ...(renderServerValue ? { value: root.characters.value[props.index] ?? '' } : {}),
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
       onCompositionstart: () => root.setInputComposing(true),
       onCompositionend: () => root.setInputComposing(false),
-      'aria-label': `${root.label.value} digit ${props.index + 1} of ${root.length.value}`,
+      'aria-label': typeof attrs['aria-label'] === 'string' ? attrs['aria-label'] : `${root.label.value} digit ${props.index + 1} of ${root.length.value}`,
       'data-scope': 'pin-input', 'data-part': 'input', 'data-index': props.index,
     }), slots['default'] === undefined
       ? undefined

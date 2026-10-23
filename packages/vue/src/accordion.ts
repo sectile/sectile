@@ -4,6 +4,7 @@ import {
   h,
   inject,
   mergeProps,
+  onBeforeUnmount,
   provide,
   shallowRef,
   watch,
@@ -20,10 +21,12 @@ import {
   toAccordionEvent,
   type AccordionController,
 } from '@sectile/dom/accordion';
+import { stableIDToken } from '@sectile/dom/identity';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostId } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 import {
   conditionalPresenceProps,
   useConditionalPresence,
@@ -78,6 +81,7 @@ interface AccordionRootContext {
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   toggle(id: string): void;
+  focus(id: string): void;
   handleKeydown(event: KeyboardEvent): void;
 }
 
@@ -137,6 +141,15 @@ export const AccordionRoot = defineComponent({
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
+    let alive = true;
+    let rootElement: HTMLElement | null = null, pendingFocusRoot: HTMLElement | null = null;
+    const setRootElement = (value: unknown): void => { rootElement = alive ? value as HTMLElement | null : null; };
+    const focusTask = useNextTickTask(() => {
+      const root = pendingFocusRoot;
+      pendingFocusRoot = null;
+      if (alive && !props.disabled && root?.isConnected) focusAccordionTrigger(root, controller.value.getSnapshot().state.cursor.current);
+    });
+    onBeforeUnmount(() => { alive = false; rootElement = null; pendingFocusRoot = null; focusTask.cancel(); });
     const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
     const rebuild = (): void => {
       const requested = controlled
@@ -178,20 +191,25 @@ export const AccordionRoot = defineComponent({
       readonly: readonly.value,
     }));
     const toggle = (id: string): void => {
+      if (!alive) return;
       const result = controller.value.handleEvent({ type: 'toggle', id });
       if (result.ok) snapshot.value = result.snapshot;
     };
+    const focus = (id: string): void => {
+      if (!alive) return;
+      const result = controller.value.handleEvent({ type: 'focus', id });
+      if (result.ok) snapshot.value = result.snapshot;
+    };
     const handleKeydown = (event: KeyboardEvent): void => {
+      if (!alive || event.defaultPrevented) return;
       const semantic = toAccordionEvent<string>(event);
       if (semantic === null || semantic === 'toggle') return;
       event.preventDefault();
       const result = controller.value.handleEvent(semantic);
       if (!result.ok) return;
       snapshot.value = result.snapshot;
-      queueMicrotask(() => focusAccordionTrigger(
-        event.currentTarget as HTMLElement,
-        result.snapshot.state.cursor.current,
-      ));
+      pendingFocusRoot = rootElement;
+      if (pendingFocusRoot) focusTask.schedule();
     };
     provide<AccordionRootContext>(accordionRootContextKey, {
       openIDs,
@@ -199,6 +217,7 @@ export const AccordionRoot = defineComponent({
       readonly,
       disabledItems,
       toggle,
+      focus,
       handleKeydown,
     });
 
@@ -206,17 +225,15 @@ export const AccordionRoot = defineComponent({
       disabled: props.disabled,
       readOnly: props.readonly,
     }));
-    return (): VNodeChild => h(Primitive, mergeProps(
-      attrs,
-      attributes.value as Record<string, unknown>,
-      {
-        as: props.as,
-        asChild: props.asChild,
-        onKeydown: handleKeydown,
-      },
-    ), {
-      default: () => slots['default']?.(slotProps.value),
-    });
+    return (): VNodeChild => {
+      const primitiveProps = mergeProps(attrs, attributes.value as Record<string, unknown>, {
+        as: props.as, asChild: props.asChild, elementRef: setRootElement,
+      });
+      // The application owns group naming, including an adopted host's label.
+      if (attrs['aria-label'] === undefined) delete primitiveProps['aria-label'];
+      else primitiveProps['aria-label'] = attrs['aria-label'];
+      return h(Primitive, primitiveProps, { default: () => slots['default']?.(slotProps.value) });
+    };
   },
 });
 
@@ -305,15 +322,27 @@ export const AccordionTrigger = defineComponent({
     const handleClick = (event: MouseEvent): void => {
       if (!event.defaultPrevented) root.toggle(item.value);
     };
-    return (): VNodeChild => h(Primitive, mergeProps(
-      attrs,
-      attributes.value as Record<string, unknown>,
-      {
-        as: props.as,
-        asChild: props.asChild,
-        onClick: handleClick,
-      },
-    ), { default: () => slots['default']?.(item.slotProps.value) });
+    const handleFocus = (event: FocusEvent): void => {
+      // A preceding application handler may already have redirected focus.
+      if ((event.currentTarget as Element | null)?.matches(':focus')) root.focus(item.value);
+    };
+    return (): VNodeChild => {
+      const primitiveProps = mergeProps(
+        attrs,
+        attributes.value as Record<string, unknown>,
+        {
+          as: props.as,
+          asChild: props.asChild,
+          onClick: handleClick,
+          onFocus: handleFocus,
+          onKeydown: root.handleKeydown,
+        },
+      );
+      // Reuse the owned VNode projection; an absent native prop must not erase
+      // an adopted component's Boolean prop. No second attribute map is needed.
+      if (props.asChild && primitiveProps['disabled'] === undefined) delete primitiveProps['disabled'];
+      return h(Primitive, primitiveProps, { default: () => slots['default']?.(item.slotProps.value) });
+    };
   },
 });
 
@@ -400,7 +429,8 @@ function fromIDs(value: readonly string[], type: AccordionType): AccordionValue 
 
 function focusAccordionTrigger(root: HTMLElement, id: string | null): void {
   if (id === null) return;
+  const token = stableIDToken(id);
   for (const trigger of root.querySelectorAll<HTMLElement>('[data-accordion-id]')) {
-    if (trigger.dataset['accordionId'] === id) trigger.focus();
+    if (trigger.dataset['accordionId'] === token) trigger.focus();
   }
 }

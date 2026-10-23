@@ -156,6 +156,40 @@ test('ISSUE-127: nullable root-focus composites focus the ordinary root without 
   }
 });
 
+test('Toolbar deferred focus follows acknowledged controlled current, refusal and disconnect', async () => {
+  const dom = installDOM();
+  try {
+    const { document } = dom.window;
+    const root = document.createElement('div');
+    const [first, second, outside] = buttons(document, 3);
+    root.append(first, second); document.body.append(root, outside);
+    const proposals = [];
+    let acknowledge = true;
+    const toolbar = createToolbar({ root, items: ['first', 'second'], highlightedValue: 'first',
+      onHighlightedValueChange(value) {
+        proposals.push(value);
+        if (acknowledge) queueMicrotask(() => toolbar.syncControlledValue(value));
+      },
+    });
+    toolbar.setItemAttributes(first, 'first'); toolbar.setItemAttributes(second, 'second');
+    try {
+      first.focus(); toolbar.handleEvent('next');
+      await Promise.resolve();
+      assert.equal(toolbar.getSnapshot().state.cursor.current, 'second');
+      assert.equal(document.activeElement, second);
+      assert.deepEqual([first.tabIndex, second.tabIndex], [-1, 0]);
+      toolbar.syncControlledValue('first'); first.focus(); acknowledge = false;
+      toolbar.handleEvent('next'); await Promise.resolve();
+      assert.equal(toolbar.getSnapshot().state.cursor.current, 'first');
+      assert.equal(document.activeElement, first);
+      assert.deepEqual(proposals, ['second', 'second']);
+      toolbar.handleEvent('next'); toolbar.disconnect(); outside.focus();
+      await Promise.resolve();
+      assert.equal(document.activeElement, outside);
+    } finally { toolbar.disconnect(); root.remove(); outside.remove(); }
+  } finally { dom.restore(); }
+});
+
 test('ISSUE-127: controlled null and unavailable fallback keep host entry separate from semantic current', () => {
   const dom = installDOM();
   try {

@@ -25,3 +25,7 @@ const navigation: DOMChartNavigation<1 | '1'> = {
 normalizeDOMChartNavigation(navigation);
 tryNormalizeDOMChartNavigation(navigation);
 connection.setNavigation(navigation);
+const changed = connection.setRenderStyle({ color: [0.1, 0.2, 0.3, 1], pointRadius: 3, lineWidth: 2 });
+if (changed.ok) changed.value satisfies boolean;
+// @ts-expect-error RGBA paint requires four channels.
+connection.setRenderStyle({ color: [0, 0, 0] });

@@ -4,6 +4,7 @@ import { createCalculatorExpression } from '../../.verification-dist/number-fiel
 import {
   applyQuantityFieldEvent,
   createQuantityFieldState,
+  getQuantityFieldDisplayUnits,
   parseQuantityInput,
 } from '../../.verification-dist/quantity-field.js';
 import { unwrap } from '../../.verification-dist/result.js';
@@ -19,6 +20,16 @@ const registry = createUnitRegistry([
   { id: 'inch', symbol: 'in', dimension: { length: 1 }, scale: '0.0254' },
   { id: 'second', symbol: 's', dimension: { time: 1 }, scale: '1' },
 ]);
+
+test('quantity display units preserve preference order, deduplicate and include the active unit', () => {
+  const policies = { registry, canonicalUnit: 'meter' };
+  assert.deepEqual(getQuantityFieldDisplayUnits(policies, 'centimeter'), ['meter', 'centimeter', 'inch']);
+  const preferred = ['inch', 'inch'];
+  const units = getQuantityFieldDisplayUnits({ ...policies, unitSystem: { getUnits: () => preferred } }, 'centimeter');
+  assert.deepEqual(units, ['inch', 'centimeter']);
+  assert.deepEqual(preferred, ['inch', 'inch']);
+  assert.equal(Object.isFrozen(units), true);
+});
 
 test('quantity field normalizes storage and changes display units without changing quantity', () => {
   const policies = { registry, canonicalUnit: 'meter' };

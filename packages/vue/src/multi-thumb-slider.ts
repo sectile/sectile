@@ -1,10 +1,13 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
-  createMultiThumbSlider, type MultiThumbSliderConnection, type MultiThumbSliderPolicies,
+  createMultiThumbSlider, getMultiThumbSliderThumbAttributes, type MultiThumbSliderConnection, type MultiThumbSliderPolicies,
 } from '@sectile/dom/multi-thumb-slider';
+import { tryCreateMultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
+import { tryCreateSequence } from '@sectile/core/sequence';
+import { unwrap } from '@sectile/core/result';
 import { createSliderControllerFromRange } from '@sectile/dom/slider';
 import type { FormSubmissionRegistration } from './form/control.js';
 import {
@@ -48,12 +51,15 @@ interface Context {
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
   readonly connection: ComputedRef<MultiThumbSliderConnection<string> | undefined>;
   registerTrack(element?: HTMLElement): void;
-  registerThumb(id: string, element: HTMLElement): void;
+  registerThumb(id: string, element?: HTMLElement): void;
+  requestConnect(): void;
+  thumbIndex(id: string): number | null;
+  attributesFor(id: string): Readonly<Record<string, string | number | undefined>>;
 }
 const key = Symbol('SectileMultiThumbSliderRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } };
 
-export const MultiThumbSliderRoot = defineComponent({
+export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
   name: 'SectileMultiThumbSliderRoot', inheritAttrs: false,
   props: {
     thumbs: { type: Array as PropType<readonly string[]>, required: true },
@@ -75,7 +81,9 @@ export const MultiThumbSliderRoot = defineComponent({
     const root = shallowRef<HTMLElement>(); const track = shallowRef<HTMLElement>();
     const submissions = new Map<number, HTMLInputElement>();
     const connection = shallowRef<MultiThumbSliderConnection<string>>();
-    const local = shallowRef<readonly string[]>(normalizeValues(props.modelValue ?? props.defaultValue ?? props.thumbs.map(() => props.min)));
+    const initialValues = normalizeValues(props.modelValue ?? props.defaultValue ?? props.thumbs.map(() => props.min));
+    const local = shallowRef<readonly string[]>(initialValues);
+    let mounted = false, resetScheduled = false, connectScheduled = false;
     const controlled = useControlledStateInvariant('MultiThumbSliderRoot', 'modelValue', () => props.modelValue);
     const rangeController = computed(() => {
       const result = createSliderControllerFromRange({ min: String(props.min), max: String(props.max), step: String(props.step) });
@@ -100,6 +108,16 @@ export const MultiThumbSliderRoot = defineComponent({
           capabilities: hiddenValueSubmissionCapabilities,
         }];
       }),
+      reset: () => {
+        if (controlled || resetScheduled) return;
+        resetScheduled = true;
+        queueMicrotask(() => {
+          resetScheduled = false;
+          if (!mounted) return;
+          local.value = initialValues;
+          connect();
+        });
+      },
     });
     const state = computed<MultiThumbSliderRootSlotProps>(() => Object.freeze({
       values: current.value, percentages: percentages.value, activeThumb: active.value,
@@ -110,13 +128,20 @@ export const MultiThumbSliderRoot = defineComponent({
       if (tick === null) throw new TypeError(`Multi-thumb slider value ${value} is outside its exact range.`);
       return tick;
     });
+    const domain = computed(() => connection.value?.domain ?? unwrap(tryCreateSequence(props.thumbs)));
+    const projection = computed(() => {
+      const values = current.value;
+      return connection.value?.getSnapshot().state
+        ?? unwrap(tryCreateMultiThumbSliderState(domain.value, rangeController.value.range, ticks(values), null, props.policies));
+    });
     const refresh = (): void => {
       if (connection.value === undefined) return;
       local.value = connection.value.getValues(); active.value = connection.value.getSnapshot().state.cursor.current;
     };
     const connect = (): void => {
-      connection.value?.disconnect();
-      if (root.value === undefined) return;
+      connectScheduled = false;
+      connection.value?.disconnect(); connection.value = undefined;
+      if (!mounted || root.value === undefined) return;
       connection.value = createMultiThumbSlider({
         root: root.value, ...(track.value === undefined ? {} : { track: track.value }), thumbs: props.thumbs,
         min: String(props.min), max: String(props.max), step: String(props.step),
@@ -139,6 +164,14 @@ export const MultiThumbSliderRoot = defineComponent({
       });
       refreshThumbs(); refresh();
     };
+    const requestConnect = (): void => {
+      if (!mounted || connectScheduled) return;
+      connectScheduled = true;
+      void nextTick(() => {
+        if (!mounted || !connectScheduled) return;
+        connect();
+      });
+    };
     const refreshThumbs = (): void => {
       if (root.value === undefined || connection.value === undefined) return;
       root.value.querySelectorAll<HTMLElement>('[data-sectile-multi-thumb]').forEach((element) => {
@@ -147,16 +180,37 @@ export const MultiThumbSliderRoot = defineComponent({
     };
     provide<Context>(key, {
       state, thumbs: computed(() => props.thumbs), orientation: computed(() => props.orientation), connection: computed(() => connection.value),
-      registerTrack: (element) => { track.value = element; }, registerThumb: (id, element) => connection.value?.setThumbAttributes(element, id),
+      registerTrack: (element) => { track.value = element; },
+      registerThumb: (id, element) => {
+        if (element === undefined) requestConnect(); else connection.value?.setThumbAttributes(element, id);
+      },
+      requestConnect,
+      thumbIndex: id => domain.value.indexOf(id),
+      attributesFor: id => getMultiThumbSliderThumbAttributes({ domain: domain.value, range: connection.value?.range ?? rangeController.value.range, state: projection.value, id,
+        orientation: props.orientation, disabled: props.disabled, readOnly: props.readonly,
+        ...(props.policies === undefined ? {} : { policies: props.policies }),
+        ...(props.getThumbLabel === undefined ? {} : { label: props.getThumbLabel(id) }),
+        ...(props.formatValue === undefined ? {} : { formatValue: props.formatValue }),
+      }),
     });
-    onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
+    onMounted(() => { mounted = true; requestConnect(); });
+    onBeforeUnmount(() => {
+      mounted = false; resetScheduled = false; connectScheduled = false;
+      connection.value?.disconnect(); connection.value = undefined;
+      root.value = undefined; track.value = undefined; submissions.clear();
+    });
     watch([() => props.thumbs, () => props.min, () => props.max, () => props.step, () => props.orientation,
-      () => props.disabled, () => props.readonly, () => props.policies], connect);
-    watch(() => props.modelValue, (values) => {
-      if (!controlled || values === undefined || connection.value === undefined) return;
-      const result = connection.value.syncControlledValues({ values: ticks(normalizeValues(values)), highlightedValue: active.value });
+      () => props.disabled, () => props.readonly, () => props.policies, () => props.label,
+      () => props.getThumbLabel, () => props.formatValue, () => props.modelValue], (next, previous) => {
+      if (!mounted) return;
+      for (let index = 0; index < next.length - 1; index++) {
+        if (next[index] !== previous[index]) { connect(); return; }
+      }
+      if (connectScheduled || !controlled || props.modelValue === undefined || connection.value === undefined) return;
+      const result = connection.value.syncControlledValues({ values: ticks(normalizeValues(props.modelValue)), highlightedValue: active.value });
       if (!result.ok) throw new TypeError(result.error.message); refresh();
     });
+    watch([root, track], requestConnect, { flush: 'post' });
     return (): VNodeChild => {
       const style = Object.fromEntries(percentages.value.map((value, index) => [`--sectile-thumb-${index}-percentage`, `${value}%`]));
       const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
@@ -183,7 +237,7 @@ export const MultiThumbSliderRoot = defineComponent({
 
 export type MultiThumbSliderValueChangeHandler = (values: readonly string[]) => void;
 
-export const MultiThumbSliderTrack = defineComponent({
+export const MultiThumbSliderTrack = /* @__PURE__ */ defineComponent({
   name: 'SectileMultiThumbSliderTrack', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) { const root = useRoot('MultiThumbSliderTrack'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -192,33 +246,40 @@ export const MultiThumbSliderTrack = defineComponent({
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 
-export const MultiThumbSliderRange = defineComponent({
+export const MultiThumbSliderRange = /* @__PURE__ */ defineComponent({
   name: 'SectileMultiThumbSliderRange', inheritAttrs: false, props: partProps,
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('MultiThumbSliderRange'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) {
+    const root = useRoot('MultiThumbSliderRange');
+    const style = computed(() => {
+      const percentages = root.state.value.percentages;
+      let start = percentages[0] ?? 0, end = start;
+      for (const percentage of percentages) { start = Math.min(start, percentage); end = Math.max(end, percentage); }
+      return { '--sectile-range-start': `${start}%`, '--sectile-range-end': `${end}%` };
+    });
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, 'aria-hidden': 'true', 'data-scope': 'multi-thumb-slider', 'data-part': 'range',
-    style: {
-      '--sectile-range-start': `${Math.min(...root.state.value.percentages)}%`,
-      '--sectile-range-end': `${Math.max(...root.state.value.percentages)}%`,
-    },
+    style: style.value,
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
 
-export const MultiThumbSliderThumb = defineComponent({
+export const MultiThumbSliderThumb = /* @__PURE__ */ defineComponent({
   name: 'SectileMultiThumbSliderThumb', inheritAttrs: false,
   props: { value: { type: String, required: true }, ...partProps },
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderThumbSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('MultiThumbSliderThumb');
+    onBeforeUnmount(root.requestConnect);
+    watch(() => props.value, root.requestConnect, { flush: 'post' });
     const slot = computed<MultiThumbSliderThumbSlotProps>(() => {
-      const index = root.thumbs.value.indexOf(props.value);
+      const index = root.thumbIndex(props.value) ?? -1;
       return { ...root.state.value, value: props.value, index, percentage: root.state.value.percentages[index] ?? 0 };
     });
     return (): VNodeChild => {
-      const index = root.thumbs.value.indexOf(props.value);
-      return h(Primitive, mergeProps(attrs, {
+      const index = root.thumbIndex(props.value) ?? -1;
+      return h(Primitive, mergeProps(attrs, root.attributesFor(props.value), {
         as: props.as, asChild: props.asChild,
-        elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerThumb(props.value, node); },
+        elementRef: (node: unknown) => root.registerThumb(props.value, node instanceof HTMLElement ? node : undefined),
         'data-sectile-multi-thumb': props.value, 'data-scope': 'multi-thumb-slider', 'data-part': 'thumb',
         'data-index': index, style: { '--sectile-thumb-percentage': `${root.state.value.percentages[index] ?? 0}%` },
       }), { default: () => slots['default']?.({ ...slot.value, index, percentage: root.state.value.percentages[index] ?? 0 }) });

@@ -1,10 +1,14 @@
-import { type PropType } from 'vue';
+import { computed, type PropType } from 'vue';
+import { unwrap } from '@sectile/core/result';
+import { createDateFieldState, formatDateFieldValue, reformatDateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
 import {
   createDateField,
   formatDateValue,
+  getDateFieldPlaceholder,
   type DateFieldOptions,
 } from '@sectile/dom/temporal/date-field';
-import { createNativeFieldComponent } from '../input/native-field.js';
+import { createNativeFieldComponent, type NativeFieldPresentation } from '../input/native-field.js';
+import { useTemporalFormatter } from './temporal-provider.js';
 
 export type DateValue = NonNullable<DateFieldOptions['value']>;
 export interface DateFieldProps {
@@ -20,7 +24,11 @@ export interface DateFieldProps {
 
 type DateFieldPolicies = NonNullable<DateFieldOptions['policies']>;
 
-export const DateField = createNativeFieldComponent<DateValue, DateFieldPolicies>({
+function rebase(value: DateValue | null, inputState: Parameters<typeof createDateFieldState>[1], previousFormat: DateFieldFormat | undefined, format?: DateFieldFormat) {
+  return unwrap(reformatDateFieldState(createDateFieldState(value, inputState, previousFormat), format)).inputState;
+}
+
+export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, DateFieldPolicies, DateFieldFormat>({
   name: 'SectileDateField',
   scope: 'date-field',
   inputMode: 'numeric',
@@ -29,5 +37,16 @@ export const DateField = createNativeFieldComponent<DateValue, DateFieldPolicies
   formatValue: formatDateValue,
   valueType: Object as PropType<DateValue | null>,
   create: createDateField,
+  rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
+  usePresentation(props) {
+    const formatter = useTemporalFormatter();
+    return computed<NativeFieldPresentation<DateValue, DateFieldPolicies, DateFieldFormat> | undefined>(() => {
+      if (props.native === true || formatter.value === undefined) return undefined;
+      const format = unwrap(formatter.value.dateFieldFormat());
+      return { format, placeholder: getDateFieldPlaceholder(format), formatValue: (value: DateValue) => formatDateFieldValue(value, format),
+        create: options => createDateField({ ...options, format }),
+        rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat, format) };
+    });
+  },
 });
 export type DateFieldValueChangeHandler = (value: DateValue | null) => void;

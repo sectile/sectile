@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { applyToastEvent, createToastState, tryCreateToastState } from '../../.verification-dist/toast.js';
+import { applyToastEvent, areToastInputsEqual, createToastState, getToastInputs, reconcileToastProposal, reconcileToastState, tryCreateToastState } from '../../.verification-dist/toast.js';
 
 test('toast queue announces, pauses, and dismisses after elapsed time', () => {
   let state = createToastState([], false, { defaultDurationMs: 1_000 });
@@ -16,12 +16,38 @@ test('toast queue announces, pauses, and dismisses after elapsed time', () => {
   assert.deepEqual(elapsed.commands, [{ type: 'toast-dismissed', id: 'saved', reason: 'timeout' }]);
 });
 
+test('Toast input projection lends immutable external values without internal countdown fields', () => {
+  const state = applyToastEvent(createToastState([{ id: 'a', title: 'A', durationMs: 1000 }]), { type: 'tick', elapsedMs: 100 }).value.state;
+  const inputs = getToastInputs(state.items);
+  assert.deepEqual(inputs, [{ id: 'a', title: 'A', kind: 'info', durationMs: 1000 }]);
+  assert.ok(Object.isFrozen(inputs) && Object.isFrozen(inputs[0]));
+  assert.equal(reconcileToastState(state, inputs).value.items[0].remainingMs, 900);
+  for (const size of [1_000, 4_000, 16_000]) {
+    let reads = 0;
+    const items = Array.from({ length: size }, (_, id) => ({ get id() { reads++; return id; }, title: 'A', description: null, kind: 'info', durationMs: null, remainingMs: null }));
+    assert.equal(getToastInputs(items).length, size); assert.equal(reads, size);
+  }
+});
+
 test('toast queue applies a visible limit and rejects duplicate identifiers', () => {
   const state = createToastState([{ id: 'one', title: 'One' }], false, { maxVisible: 1 });
   const pushed = applyToastEvent(state, { type: 'push', toast: { id: 'two', title: 'Two' } }, { maxVisible: 1 }).value;
   assert.deepEqual(pushed.state.items.map((item) => item.id), ['two']);
   assert.equal(pushed.commands[0].reason, 'overflow');
   assert.equal(applyToastEvent(pushed.state, { type: 'push', toast: { id: 'two', title: 'Again' } }, { maxVisible: 1 }).ok, false);
+});
+
+test('toast persistent default applies to initial and pushed items while explicit durations and manual dismissal remain available', () => {
+  const policies = { defaultDurationMs: null };
+  let state = createToastState([{ id: 'initial', title: 'Initial' }], false, policies);
+  assert.equal(state.items[0].durationMs, null);
+  state = applyToastEvent(state, { type: 'push', toast: { id: 'pushed', title: 'Pushed' } }, policies).value.state;
+  assert.equal(state.items[1].remainingMs, null);
+  state = applyToastEvent(state, { type: 'push', toast: { id: 'timed', title: 'Timed', durationMs: 1000 } }, policies).value.state;
+  const elapsed = applyToastEvent(state, { type: 'tick', elapsedMs: 6000 }, policies).value;
+  assert.deepEqual(elapsed.state.items.map(item => item.id), ['initial', 'pushed']);
+  assert.deepEqual(elapsed.commands, [{ type: 'toast-dismissed', id: 'timed', reason: 'timeout' }]);
+  assert.deepEqual(applyToastEvent(elapsed.state, { type: 'dismiss', id: 'initial' }, policies).value.state.items.map(item => item.id), ['pushed']);
 });
 
 test('toast queue preserves user-defined kinds and defaults blank kinds to info', () => {
@@ -141,6 +167,61 @@ test('toast provenance preserves per-call limits, duplicate errors and overflow 
   const duplicate = tryCreateToastState([{ id: 0, title: 'A' }, { id: -0, title: 'B' }], false, { maxVisible: 1 });
   assert.equal(duplicate.error.class, 'construction');
   assert.equal(duplicate.error.code, 'toast-id-duplicate', 'validation includes items preceding the visible slice');
+});
+
+test('controlled reconciliation retains membership, countdowns and canonical constant-size follow-up work', () => {
+  for (const size of [1_000, 4_000, 16_000]) {
+    const initial = createToastState(Array.from({ length: size }, (_, id) => ({ id, title: 'x', durationMs: 1000 })));
+    const proposal = applyToastEvent(initial, { type: 'tick', elapsedMs: 100 }).value.state;
+    const elapsed = reconcileToastProposal(initial, proposal, 'clock').value;
+    assert.equal(elapsed.items.length, size); assert.equal(elapsed.items[0].remainingMs, 900);
+    assert.equal(areToastInputsEqual(initial.items, elapsed.items), true);
+    const external = reconcileToastState(elapsed, [{ id: 0, title: 'Changed', durationMs: 1000 }]).value;
+    assert.equal(external.items[0].title, 'Changed'); assert.equal(external.items[0].remainingMs, 900);
+    assert.equal(areToastInputsEqual(elapsed.items, external.items), false);
+    for (const state of [elapsed, external]) {
+      const observed = toastWork(() => {
+        const paused = applyToastEvent(state, 'pause').value.state;
+        return reconcileToastProposal(state, paused, 'input');
+      });
+      assert.equal(observed.value.ok, true); assert.equal(observed.trims, 0); assert.equal(observed.mappedItems, 0);
+      assert.equal(observed.value.value.items, state.items); assert.equal(observed.value.value.paused, true);
+    }
+    const expiredProposal = applyToastEvent(external, { type: 'tick', elapsedMs: 900 }).value.state;
+    const expired = reconcileToastProposal(external, expiredProposal, 'clock').value;
+    assert.equal(expired.items[0].remainingMs, 0); assert.equal(expiredProposal.items.length, 0);
+    assert.equal(areToastInputsEqual(external.items, expiredProposal.items), false);
+    const rejected = reconcileToastProposal(external, expiredProposal, 'input').value;
+    assert.equal(rejected.items, external.items);
+    const reset = reconcileToastState(expired, [{ id: 0, title: 'Changed', durationMs: 2000 }]).value;
+    assert.equal(reset.items[0].remainingMs, 2000);
+  }
+});
+
+test('reconciliation never grants trust to foreign aliases and still checks changed policies and external inputs', () => {
+  const initial = createToastState([{ id: 'a', title: 'A', durationMs: 1000 }]);
+  const elapsed = applyToastEvent(initial, { type: 'tick', elapsedMs: 100 }).value.state;
+  const unrelated = createToastState([{ id: 'a', title: 'Not accepted', durationMs: 2000 }]);
+  const retained = reconcileToastProposal(elapsed, unrelated, 'clock').value;
+  assert.equal(retained.items[0], elapsed.items[0]);
+  const resetProposal = createToastState([{ id: 'a', title: 'Not accepted', durationMs: 1000 }]);
+  assert.equal(reconcileToastProposal(elapsed, resetProposal, 'clock').value.items[0].remainingMs, 900);
+  const persistent = createToastState([{ id: 'persistent', title: 'Persistent', durationMs: null }]);
+  assert.equal(reconcileToastProposal(persistent, createToastState([]), 'clock').value.items[0].remainingMs, null);
+  const foreignItem = { ...initial.items[0] }, foreign = { items: [foreignItem], paused: false };
+  const proposal = applyToastEvent(foreign, 'pause').value.state;
+  const reconciled = reconcileToastProposal(foreign, proposal, 'input').value;
+  const observed = toastWork(() => applyToastEvent(reconciled, 'resume'));
+  assert.ok(observed.trims > 0 && observed.mappedItems > 0);
+  foreignItem.title = ' ';
+  assert.equal(applyToastEvent(reconciled, 'resume').error.code, 'toast-title-empty');
+  assert.equal(reconcileToastProposal(initial, proposal, 'input').error.code, 'toast-title-empty');
+  assert.equal(reconcileToastProposal(initial, initial, 'input', { maxVisible: 0 }).error.code, 'toast-max-visible-invalid');
+  assert.equal(reconcileToastState(initial, [{ id: 'a', title: 'A' }, { id: 'a', title: 'Duplicate' }]).error.code, 'toast-id-duplicate');
+  assert.equal(reconcileToastState(initial, [{ id: 'a', title: ' ' }]).error.code, 'toast-title-empty');
+  const paused = applyToastEvent(initial, 'pause').value.state;
+  const inert = toastWork(() => reconcileToastProposal(paused, applyToastEvent(paused, { type: 'tick', elapsedMs: 100 }).value.state, 'clock'));
+  assert.equal(inert.trims, 0); assert.equal(inert.mappedItems, 0); assert.equal(inert.value.value.items, initial.items);
 });
 
 function toastWork(run) {

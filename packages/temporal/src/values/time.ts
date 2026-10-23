@@ -60,7 +60,8 @@ export function addTimeMilliseconds(value: TimeValue, amount: number): TemporalR
   return tryCreateTimeValue(hour, minute, second, next % 1_000);
 }
 
-function timeToMilliseconds(value: TimeValue): number { return ((value.hour * 60 + value.minute) * 60 + value.second) * 1_000 + value.millisecond; }
+/** Owner-local conversion shared by time arithmetic and precision-aligned picker bounds. */
+export function timeToMilliseconds(value: TimeValue): number { return ((value.hour * 60 + value.minute) * 60 + value.second) * 1_000 + value.millisecond; }
 
 function pad(value: number, length: number): string { return String(value).padStart(length, '0'); }
 

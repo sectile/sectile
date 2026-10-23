@@ -1,4 +1,4 @@
-import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type Component, type ComponentCustomProps, type PropType, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, shallowRef, watch, type AllowedComponentProps, type Component, type ComponentCustomProps, type PropType, type ShallowUnwrapRef, type SlotsType, type VNodeArrayChildren, type VNodeChild, type VNodeProps } from 'vue';
 import type { StableID } from '@sectile/core';
 import { createSequence } from '@sectile/core/sequence';
 import {
@@ -21,6 +21,7 @@ import {
   updatePreparedVirtualCollection,
   virtualCollectionRootStyle,
   type PreparedVirtualCollection,
+  type VirtualCollectionPartAttributes,
   type VirtualCollectionBaseProps,
   type VirtualCollectionExpose,
   type VirtualCollectionIDResolver,
@@ -66,7 +67,7 @@ export interface VirtualListComponent {
       empty?: () => VNodeChild;
       footer?: () => VNodeChild;
     };
-  };
+  } & ShallowUnwrapRef<VirtualListExpose<ID>>;
 }
 
 
@@ -112,6 +113,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       type: Function as PropType<VirtualListItemAttributes<unknown>>,
       default: undefined,
     },
+    partAttributes: { type: Object as PropType<VirtualCollectionPartAttributes>, default: undefined },
   },
   emits: {
     stateChange: (_state: LinearLayoutState<StableID>): boolean => true,
@@ -167,8 +169,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       : isBootstrapping()
         ? 'bootstrap' as const
         : 'ready' as const;
-    const currentState = (): LinearLayoutState<StableID> =>
-      (root.value?.state as LinearLayoutState<StableID> | undefined) ?? activeState.value;
+    // The child receives this snapshot on its next render, after ready consumers
+    // may already have published another source update.
+    const currentState = (): LinearLayoutState<StableID> => activeState.value;
 
     const bootstrapItemRef = (index: number): ((value: unknown) => void) => {
       const existing = bootstrapRefs.get(index);
@@ -264,7 +267,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
           return;
         }
         let nextState = currentState();
-        const exposed = root.value;
+        const exposed = root.value?.state === nextState ? root.value : undefined;
         const patch = reconcileVirtualCollectionExtents(
           nextState,
           next,
@@ -396,8 +399,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       default: ({ placements }: VirtualizerRootSlotProps) => [
         slots['header'] === undefined
           ? null
-          : h(VirtualizerHeader, {}, { default: () => slots['header']?.() }),
+          : h(VirtualizerHeader, props.partAttributes?.header ?? {}, { default: () => slots['header']?.() }),
         h(VirtualizerSurface, {
+          ...props.partAttributes?.surface,
           as: props.contentAs,
           ...(isBootstrapping() && axis === 'horizontal'
             ? { style: { display: 'flex' } }
@@ -437,7 +441,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         }),
         slots['footer'] === undefined
           ? null
-          : h(VirtualizerFooter, {}, { default: () => slots['footer']?.() }),
+          : h(VirtualizerFooter, props.partAttributes?.footer ?? {}, { default: () => slots['footer']?.() }),
       ],
     });
   },

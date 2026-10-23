@@ -87,7 +87,7 @@ export const ToolbarItem = defineComponent({
 
 export const ToolbarSeparator = defineComponent({
   name: 'SectileToolbarSeparator', inheritAttrs: false, props: partProps,
-  setup(props, { attrs }) { const root = useRoot(); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: 'separator', 'aria-orientation': root.state.value.orientation, 'data-scope': 'toolbar', 'data-part': 'separator' })); },
+  setup(props, { attrs }) { const root = useRoot(); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: 'separator', 'aria-orientation': root.state.value.orientation === 'horizontal' ? 'vertical' : 'horizontal', 'data-scope': 'toolbar', 'data-part': 'separator' })); },
 });
 
 function useRoot(): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError('Toolbar parts must be used inside ToolbarRoot.'); return root; }

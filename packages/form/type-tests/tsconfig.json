@@ -1,0 +1,5 @@
+{
+  "extends": "@sectile/tooling/tsconfig.base.json",
+  "compilerOptions": { "lib": ["ES2022"], "isolatedDeclarations": false, "noEmit": true },
+  "include": ["**/*.ts"]
+}

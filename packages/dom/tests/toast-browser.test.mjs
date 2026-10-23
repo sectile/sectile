@@ -177,31 +177,116 @@ test('toast dismisses with a directional swipe and exposes motion data', () => {
   const window = new Window();
   const viewport = window.document.createElement('ol');
   const item = window.document.createElement('li');
+  const captured = capture(item);
+  item.setAttribute('data-swipe', 'original');
+  item.style.setProperty('--sectile-toast-swipe-move-x', '2px', 'important');
   viewport.append(item); window.document.body.append(viewport);
   const toast = createToast({ root: viewport, autoDismiss: false, swipeDirection: 'right', swipeThreshold: 40 });
   toast.push({ id: 'saved', title: 'Saved' }); toast.setToastAttributes(item, 'saved');
   assert.equal(item.style.touchAction, 'pan-y');
-  item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 1, clientX: 10, clientY: 0, bubbles: true }));
+  item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 1, isPrimary: true, clientX: 10, clientY: 0, bubbles: true }));
   item.dispatchEvent(new window.PointerEvent('pointermove', { pointerId: 1, clientX: 70, clientY: 0, bubbles: true }));
   item.dispatchEvent(new window.PointerEvent('pointerup', { pointerId: 1, clientX: 70, clientY: 0, bubbles: true }));
   assert.equal(item.dataset.swipe, 'end');
   assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-end-x'), '60px');
   assert.equal(toast.getSnapshot().state.items.length, 0);
+  assert.equal(captured.size, 0);
+  item.style.setProperty('--sectile-toast-swipe-end-y', '99px', 'important');
   toast.disconnect();
   assert.equal(item.style.touchAction, '');
+  assert.equal(item.getAttribute('data-swipe'), 'original');
+  assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-move-x'), '2px');
+  assert.equal(item.style.getPropertyPriority('--sectile-toast-swipe-move-x'), 'important');
+  assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-end-x'), '');
+  assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-end-y'), '99px');
 });
 
 test('toast cancels a cancelled swipe without dismissing the item', () => {
   const window = new Window();
   const viewport = window.document.createElement('ol');
   const item = window.document.createElement('li');
+  const captured = capture(item);
   viewport.append(item); window.document.body.append(viewport);
   const toast = createToast({ root: viewport, autoDismiss: false, swipeDirection: 'right', swipeThreshold: 40 });
   toast.push({ id: 'saved', title: 'Saved' }); toast.setToastAttributes(item, 'saved');
-  item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 1, clientX: 10, clientY: 0, bubbles: true }));
+  item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 1, isPrimary: true, clientX: 10, clientY: 0, bubbles: true }));
   item.dispatchEvent(new window.PointerEvent('pointermove', { pointerId: 1, clientX: 70, clientY: 0, bubbles: true }));
   item.dispatchEvent(new window.PointerEvent('pointercancel', { pointerId: 1, clientX: 70, clientY: 0, bubbles: true }));
   assert.equal(item.dataset.swipe, 'cancel');
   assert.equal(toast.getSnapshot().state.items.length, 1);
+  assert.equal(captured.size, 0); assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-move-x'), '');
   toast.disconnect();
 });
+
+test('Toast retires lost capture, item unregister and disconnected gesture paint without reviving saved input', () => {
+  const window = new Window(), root = window.document.createElement('ol'), item = window.document.createElement('li');
+  root.append(item); window.document.body.append(root); const captured = capture(item);
+  const toast = createToast({ root, autoDismiss: false, initialToasts: [{ id: 'a', title: 'A' }] });
+  toast.setToastAttributes(item, 'a');
+  const down = () => item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 1, isPrimary: true, clientX: 0, clientY: 0, bubbles: true }));
+  const move = () => item.dispatchEvent(new window.PointerEvent('pointermove', { pointerId: 1, clientX: 20, clientY: 0, bubbles: true }));
+  down(); move(); captured.clear();
+  item.dispatchEvent(new window.PointerEvent('lostpointercapture', { pointerId: 1, bubbles: true }));
+  assert.equal(item.dataset.swipe, 'cancel'); assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-move-x'), '');
+  down(); move(); toast.setToastAttributes(undefined, 'a');
+  assert.equal(captured.size, 0); assert.equal(item.getAttribute('data-swipe'), null); assert.equal(item.style.getPropertyValue('--sectile-toast-swipe-move-x'), '');
+  toast.setToastAttributes(item, 'a'); down(); move(); toast.disconnect();
+  assert.equal(captured.size, 0); assert.equal(item.getAttribute('data-swipe'), null); assert.equal(item.style.touchAction, '');
+  down(); move(); assert.equal(captured.size, 0); assert.equal(item.getAttribute('data-swipe'), null);
+});
+
+test('Toast preserves independent controls and cancelled or auxiliary pointer input', () => {
+  const window = new Window(), document = window.document;
+  const root = document.createElement('ol'), item = document.createElement('li');
+  root.append(item); document.body.append(root); const captured = capture(item);
+  const toast = createToast({ root, autoDismiss: false, initialToasts: [{ id: 'a', title: 'A' }] });
+  toast.setToastAttributes(item, 'a');
+  const pointer = (type, init = {}) => new window.PointerEvent(type, { pointerId: 1, isPrimary: true, button: 0, bubbles: true, composed: true, cancelable: true, ...init });
+  const rejected = (target, init = {}, prevent = false) => {
+    const down = pointer('pointerdown', init); if (prevent) down.preventDefault();
+    target.dispatchEvent(down);
+    assert.equal(captured.size, 0); assert.equal(item.hasAttribute('data-swipe'), false);
+    assert.equal(down.defaultPrevented, prevent);
+    target.dispatchEvent(pointer('pointermove', { clientX: 80 })); target.dispatchEvent(pointer('pointerup', { clientX: 80 }));
+    assert.equal(toast.getSnapshot().state.items.length, 1);
+  };
+  try {
+    rejected(item, {}, true); rejected(item, { button: 2 }); rejected(item, { button: 1 }); rejected(item, { isPrimary: false });
+    for (const tag of ['button', 'input', 'select', 'textarea', 'a', 'summary']) {
+      const control = document.createElement(tag); if (tag === 'a') control.href = '#action';
+      item.append(control); rejected(control);
+      if (tag === 'button' || tag === 'a') {
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); control.append(icon); rejected(icon);
+      }
+    }
+    const editable = document.createElement('div'); editable.setAttribute('contenteditable', 'true');
+    const text = document.createElement('span'); editable.append(text); item.append(editable); rejected(text);
+    const control = document.createElement('div'); control.setAttribute('role', 'slider'); item.append(control); rejected(control);
+    const host = document.createElement('div'); item.append(host);
+    const shadow = host.attachShadow({ mode: 'open' }), button = document.createElement('button'); shadow.append(button); rejected(button);
+    const close = document.createElement('button'); item.append(close); toast.setCloseButtonAttributes(close, 'a');
+    rejected(close); close.click(); assert.equal(toast.getSnapshot().state.items.length, 0);
+  } finally { toast.destroy(); }
+});
+
+test('Toast accepts primary mouse, touch and pen swipe on ordinary content', () => {
+  const window = new Window(), document = window.document;
+  const root = document.createElement('ol'), item = document.createElement('li'), text = document.createElement('span');
+  item.append(text); root.append(item); document.body.append(root); const captured = capture(item);
+  const toast = createToast({ root, autoDismiss: false });
+  try {
+    for (const pointerType of ['mouse', 'touch', 'pen']) {
+      toast.push({ id: pointerType, title: pointerType }); toast.setToastAttributes(item, pointerType);
+      const pointer = (type, x) => new window.PointerEvent(type, { pointerId: 1, pointerType, isPrimary: true, button: 0, clientX: x, bubbles: true, composed: true });
+      text.dispatchEvent(pointer('pointerdown', 0)); assert.equal(captured.size, 1);
+      text.dispatchEvent(pointer('pointermove', 80)); text.dispatchEvent(pointer('pointerup', 80));
+      assert.equal(toast.getSnapshot().state.items.length, 0); assert.equal(captured.size, 0);
+    }
+  } finally { toast.destroy(); }
+});
+
+function capture(item) {
+  const captured = new Set(); item.setPointerCapture = id => captured.add(id);
+  item.hasPointerCapture = id => captured.has(id); item.releasePointerCapture = id => captured.delete(id);
+  return captured;
+}

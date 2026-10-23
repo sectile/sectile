@@ -39,12 +39,24 @@
       "types": "dist/checkbox-group.d.ts"
     },
     {
+      "subpath": "./checkbox-tree",
+      "types": "dist/checkbox-tree.d.ts"
+    },
+    {
       "subpath": "./color-picker",
       "types": "dist/color-picker.d.ts"
     },
     {
       "subpath": "./combobox",
       "types": "dist/combobox.d.ts"
+    },
+    {
+      "subpath": "./component-handle",
+      "types": "dist/component-handle.d.ts"
+    },
+    {
+      "subpath": "./context-menu",
+      "types": "dist/context-menu.d.ts"
     },
     {
       "subpath": "./data-grid",
@@ -67,6 +79,10 @@
       "types": "dist/disclosure.d.ts"
     },
     {
+      "subpath": "./drag-drop",
+      "types": "dist/drag-drop.d.ts"
+    },
+    {
       "subpath": "./drawer",
       "types": "dist/overlay/drawer.d.ts"
     },
@@ -83,6 +99,22 @@
       "types": "dist/form.d.ts"
     },
     {
+      "subpath": "./form-boundary",
+      "types": "dist/form-boundary.d.ts"
+    },
+    {
+      "subpath": "./form/file-input",
+      "types": "dist/form/file-input.d.ts"
+    },
+    {
+      "subpath": "./form/file-upload",
+      "types": "dist/form/file-upload.d.ts"
+    },
+    {
+      "subpath": "./fullscreen",
+      "types": "dist/fullscreen.d.ts"
+    },
+    {
       "subpath": "./grid",
       "types": "dist/grid.d.ts"
     },
@@ -91,8 +123,16 @@
       "types": "dist/host-provider.d.ts"
     },
     {
+      "subpath": "./image",
+      "types": "dist/image.d.ts"
+    },
+    {
       "subpath": "./listbox",
       "types": "dist/listbox.d.ts"
+    },
+    {
+      "subpath": "./media-gesture",
+      "types": "dist/media-gesture.d.ts"
     },
     {
       "subpath": "./menu",
@@ -219,6 +259,10 @@
       "types": "dist/temporal/date-time-picker.d.ts"
     },
     {
+      "subpath": "./temporal/date-time-range-field",
+      "types": "dist/temporal/date-time-range-field.d.ts"
+    },
+    {
       "subpath": "./temporal/date-time-range-picker",
       "types": "dist/temporal/date-time-range-picker.d.ts"
     },
@@ -241,6 +285,10 @@
     {
       "subpath": "./temporal/time-field",
       "types": "dist/temporal/time-field.d.ts"
+    },
+    {
+      "subpath": "./temporal/time-picker",
+      "types": "dist/temporal/time-picker.d.ts"
     },
     {
       "subpath": "./temporal/time-range-field",
@@ -283,8 +331,16 @@
       "types": "dist/overlay/tooltip.d.ts"
     },
     {
+      "subpath": "./transfer",
+      "types": "dist/transfer.d.ts"
+    },
+    {
       "subpath": "./tree-grid",
       "types": "dist/tree-grid.d.ts"
+    },
+    {
+      "subpath": "./tree-select",
+      "types": "dist/tree-select.d.ts"
     },
     {
       "subpath": "./tree-view",
@@ -315,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "0cd9a65260f4bd18082e080ad7e3f300adf50c0fd254d0ef4baff697c0a893ac",
+  "fingerprint": "9f5af7ce509529f7af00d83d79717f48dd8c44a841ee85412bb5ed8d38fd9e35",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -323,7 +379,7 @@
     },
     {
       "path": "dist/carousel.d.ts",
-      "sha256": "64ff1a4f9f2f9d2f040800f7125fcfd9b2f1fed6bdd22cb760eb69199e7838a0"
+      "sha256": "1e563cebd8c11dc127d924782df1b55247be5d6183e94eedf0968c44a30a7638"
     },
     {
       "path": "dist/cascade-list.d.ts",
@@ -342,28 +398,48 @@
       "sha256": "cfbac273dc6c07303e193f554411c7ded75848286d6df5ebf38b4dad5dd1fb59"
     },
     {
+      "path": "dist/checkbox-tree.d.ts",
+      "sha256": "bf48a64b2b2e5f08118250b1bec53fa4d08ad8774d4df84fbf6fbfb1efb990ce"
+    },
+    {
       "path": "dist/checkbox.d.ts",
       "sha256": "731a042072793bbc1840fc2c9ac1c8d0fca8df88779f75f9c79232b26b673503"
     },
     {
       "path": "dist/color-picker.d.ts",
-      "sha256": "a04d77aa665ce335af1db1169c2d170ae9dc7771ff16b46b659b3a82981516ea"
+      "sha256": "455ff8d5715dd3fecb5e774a755eb2758405ec0f6f368c79656558cd842f2f83"
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "74208d83b9b0163fe8d018bb586028683270bc64a2575a7c0ec70c320ef1f148"
+      "sha256": "2de58a5e99fa9a0519831d1de6e612d1cdb7b8c8a30dfb0dc57124e8986e7c67"
+    },
+    {
+      "path": "dist/component-handle.d.ts",
+      "sha256": "11f80da1d3e6f06969c0f71f8fc09329ba93d7f339d406eb942f44033e030691"
+    },
+    {
+      "path": "dist/context-menu.d.ts",
+      "sha256": "a84cf8e01d9f711ce8c190b81935f09ef66b93dcdd10381850267dd7239ee848"
     },
     {
       "path": "dist/disclosure.d.ts",
       "sha256": "845eb20257bc4565de7c9cd223a161a571121c4f09efe2880421c2802874291a"
     },
     {
+      "path": "dist/drag-drop.d.ts",
+      "sha256": "919c8c557cdc019056fd26ff09d1c828710791154d52748bb808467df8daf6b6"
+    },
+    {
       "path": "dist/editable.d.ts",
-      "sha256": "8a6997c13b7bff5f02fae51f8bcea4a2fb0d22bc541652ed607fd4e2d1f4f838"
+      "sha256": "ae3ca3e35413c45a06814c5429423249c389107997c1bfea5aed08e4f545a506"
     },
     {
       "path": "dist/feed.d.ts",
       "sha256": "a758c0cb211cf1d14e975ca0e4606fa7e8ca00360525a2668d382370447fe4b8"
+    },
+    {
+      "path": "dist/form-boundary.d.ts",
+      "sha256": "0de571f0918055c5d3b43f39062485faf47eaec2735cd23a09e3f6acb10d405a"
     },
     {
       "path": "dist/form.d.ts",
@@ -375,11 +451,23 @@
     },
     {
       "path": "dist/form/control.d.ts",
-      "sha256": "d32781c2df833310dce1485481680bccc7e25255f5288fea1e3d8498b53d692c"
+      "sha256": "5ae349d423ad0d41b0f9a8d8dcdcd5b95d141bcab7c6b656c105137cd41e714b"
     },
     {
       "path": "dist/form/field.d.ts",
       "sha256": "7d8884af76403f62f4ace77602c329d4b9b3b07017ef9b87193f33d8516fb79e"
+    },
+    {
+      "path": "dist/form/file-input.d.ts",
+      "sha256": "d3d6d77dae7c10e84f268ef6e399a36d4a9d44ef876b5ccab58f7cd409cd129b"
+    },
+    {
+      "path": "dist/form/file-upload.d.ts",
+      "sha256": "5311e1b593021905afee4c1c221ffa583b90c567f489869501fc281b662194c8"
+    },
+    {
+      "path": "dist/form/file-upload/group.d.ts",
+      "sha256": "ec803b0b58834002dddd0b132d92fd4857af8b1d9ab2a56c371967415a2282ef"
     },
     {
       "path": "dist/form/parts.d.ts",
@@ -398,20 +486,28 @@
       "sha256": "a9fb9882796ae53c97a5b5f787fd12e983783f9f7556b1c66c0e7a988620d8e2"
     },
     {
+      "path": "dist/fullscreen.d.ts",
+      "sha256": "e0c94997327aa90642b963f54f8f16fa6cd25b68df5586891612e28c653b8ec3"
+    },
+    {
       "path": "dist/grid.d.ts",
       "sha256": "5ca9ef731b1743a16ea2c9d431421a7318b9ffc371c87069f4427392899a75de"
     },
     {
       "path": "dist/host-provider.d.ts",
-      "sha256": "f17614a5b58f79d989e0ea03133218d3359071a6c6a2fefe17d8f3629a578b4b"
+      "sha256": "0cfb557bbb4ddbe89a36ad8b414699bdc633fafabeb1485a78ffbdfd7c9da2e9"
+    },
+    {
+      "path": "dist/image.d.ts",
+      "sha256": "20bc5f5fef874b846e5b68cb4b1cc515907ae3a58cced5a0bfb2d6bcec8c9404"
     },
     {
       "path": "dist/index.d.ts",
-      "sha256": "ed49e924e1c33eb5e914d1ac62ed64af593453289ef4025a1976270d9f4dfceb"
+      "sha256": "7901a97065f79bf5656afbf3d12e094894f4bfbd5f95ad00bfa1a757f944ce7b"
     },
     {
       "path": "dist/input/native-field.d.ts",
-      "sha256": "41155d817552cc7de7a3063a91df5c10bb25f4dffe4c1d40678ee0e639a81d73"
+      "sha256": "5710951d5d015e49142b133046039f04b4e388bbadd565f8093a29e491d2e419"
     },
     {
       "path": "dist/internal/cascade-choice.d.ts",
@@ -419,7 +515,11 @@
     },
     {
       "path": "dist/listbox.d.ts",
-      "sha256": "846e5770d2b9b4315c7d10e633ed58460209d22d81f7f9e6d136ba341fbf4827"
+      "sha256": "380b4f09545c19c6c3213d0e112570cfb055b6843a104ff72105005a0063bd5a"
+    },
+    {
+      "path": "dist/media-gesture.d.ts",
+      "sha256": "a0cd77927178138dc7c7f3781160c24726a3b20a8c45ea298f687d37dc2352da"
     },
     {
       "path": "dist/menu-button.d.ts",
@@ -427,7 +527,7 @@
     },
     {
       "path": "dist/menu.d.ts",
-      "sha256": "4c18534cc813a72049cb4f54b3a930608c8ab3f6612c707f3055d8427f804784"
+      "sha256": "ce57abe4be83fb9a8ba6ec7f7faa20ae3691d43b10abd79a8bad0fee826eb5c3"
     },
     {
       "path": "dist/menubar.d.ts",
@@ -459,23 +559,23 @@
     },
     {
       "path": "dist/overlay/dialog.d.ts",
-      "sha256": "f7e9451c6bad3a5393cde0d25a7e4dd04cf3bb67e902bc2c40bcd5bc354cd5fe"
+      "sha256": "309182beda2152028ac1d9b9404d2f525441f86d99ba30088ce64aa510a92c23"
     },
     {
       "path": "dist/overlay/drawer.d.ts",
-      "sha256": "4d97a2a2b45ed9ac26d6e89aa98ae337a5378d47f4b45876e29e9875e12aed92"
+      "sha256": "151d9c97d3c77cd545c0a822ddefe2f77d3b43d249df1df733dcc09bd1044950"
     },
     {
       "path": "dist/overlay/popover.d.ts",
-      "sha256": "32b6b9ed2b240fe6efa1fb5b73cf52179d2284d52e051eb6baeca106a931081f"
+      "sha256": "a37ccf1270a370dba2621f8b98b478f4632adcbd6e471a5caa383366fe3c5e5b"
     },
     {
       "path": "dist/overlay/popup.d.ts",
-      "sha256": "6db183a718b72f0a2c06c7b7b571f628cd53eefc41dfc759d9942c13746176b8"
+      "sha256": "667c6405074727224ebd53f71f5ec5f4c9a4c52f9fdb28d5d8af785836362b7c"
     },
     {
       "path": "dist/overlay/tooltip.d.ts",
-      "sha256": "64f7ec0be9c6876293d00814ecca9552ce35de3bdef2eba9417e23fcc3a2e132"
+      "sha256": "02520853b8ea3b446c704e86fc9eed7e13094be6270b815d476a6de5df5f756e"
     },
     {
       "path": "dist/pagination.d.ts",
@@ -491,7 +591,7 @@
     },
     {
       "path": "dist/primitive.d.ts",
-      "sha256": "5f800bd4e4a8d742e9643ca3ea4c2edb216164733d41a259fa1f6e3c94df7932"
+      "sha256": "92576c1dad944c03c6ae4a3f709dfcc498a6f5113c8a041d193b6bc337cbb700"
     },
     {
       "path": "dist/progress.d.ts",
@@ -511,11 +611,11 @@
     },
     {
       "path": "dist/reorder.d.ts",
-      "sha256": "61b7c00c1fa1c8739204b35689c6b44a60b3d5241d674a0dd737d23e509f42ec"
+      "sha256": "e45a10f208f98bcc274d8d561f4f27df7218bdeb432eda4a3a62815026a49817"
     },
     {
       "path": "dist/select.d.ts",
-      "sha256": "ff5d81c9b022a7fc7836e12d3562dc71950c61e5d335ac53046d79026b329d79"
+      "sha256": "b6cfd0fd9d05a3dfb30ec50f5b4aa39a962011cb0c56f6dae7db34a73485a64b"
     },
     {
       "path": "dist/slider.d.ts",
@@ -523,7 +623,7 @@
     },
     {
       "path": "dist/spin-button.d.ts",
-      "sha256": "922697c2d86a627ea2f7213348f81e62c2b3fe6d2a89cf5bc34ac13f74e43ac7"
+      "sha256": "dc5757f96e52f6d36cb5dc7a01cd2f504f1f214bdbf57772c98a455fa3513804"
     },
     {
       "path": "dist/stepper.d.ts",
@@ -535,11 +635,11 @@
     },
     {
       "path": "dist/tabs.d.ts",
-      "sha256": "d91302d4fcf1557e20507d48bb9806afa7d42cd1ccc433835734866ff0911a5d"
+      "sha256": "961bbd9eb74c9cf86033851834a93b6a74d379cd9d5f188621c69542abbd3665"
     },
     {
       "path": "dist/tabular/components.d.ts",
-      "sha256": "d3ff8433550b7ca2a8f69151dd25f4f67793ddeeed75b00ecdb100ecf8519b94"
+      "sha256": "30c73ddb315f97c5a165330874f13864af4c0aca88c3eca576fc8cd99fc00a18"
     },
     {
       "path": "dist/tabular/context.d.ts",
@@ -547,23 +647,23 @@
     },
     {
       "path": "dist/tabular/controller.d.ts",
-      "sha256": "35d3675ade9eab542a6c13838fc6a989a165f9fadd6df8c20e2125f09abe2633"
+      "sha256": "2fc3c0e941de0ec0eeedad4820366aa27f4480354ac6a8661a825d4e1d791979"
     },
     {
       "path": "dist/tabular/data-grid.d.ts",
-      "sha256": "6a769d1d4e66dab5b0c9a95dd33c228bb34be44d53d4933578a1868e9bb34ebf"
+      "sha256": "afac69bf683a7fdc02aad0e56b41ac79ef94f20c9a1b89d3e6f75b6e4ee1803f"
     },
     {
       "path": "dist/tabular/data-table.d.ts",
-      "sha256": "0132af783814a217bb8b759815213c5f91f5b98c70e444554e70964f5fb3fc26"
+      "sha256": "1e0303f1456b9e9c9c2a51d5f5b059b9b71cb9c51c9997b4f65727ab095c2d4f"
     },
     {
       "path": "dist/tabular/data-tree-grid.d.ts",
-      "sha256": "2af577dc701396d62ca4f6fd88eb2c4aee79e2bf73fe549778892f64e5715ecf"
+      "sha256": "883c7a299bb41d2d904270dae6141568a08071d6abdc5e9d0c4349f92f211dec"
     },
     {
       "path": "dist/tabular/parts.d.ts",
-      "sha256": "a9d1aa0f95f4fb4f3875eb3df91a1f3ffc3d64ebb293fce8346e5db1e3a2c4f3"
+      "sha256": "3430c4b7d7268ec6ca0ce7f979a95c57bef5b0899794b3b8eeb7916b7d4914bb"
     },
     {
       "path": "dist/tabular/schema.d.ts",
@@ -575,87 +675,95 @@
     },
     {
       "path": "dist/tags-input.d.ts",
-      "sha256": "cc7053632cb40649b490ddbb9ea25ea3d61537047d7ad474ae169b5dde476e11"
+      "sha256": "b240ac9961b7eaebdb4b6cc66dcc7e8e221bef6453a43647f01da888c8047c1c"
     },
     {
       "path": "dist/temporal/calendar.d.ts",
-      "sha256": "790351aa84bfac20b18d00e65ec316506f170bba29ba557d5e1db608b910ed3e"
+      "sha256": "53cdc8f62a0762c039758acfc036d253027c7167e491def575c10e3a9650a390"
     },
     {
       "path": "dist/temporal/capability.d.ts",
-      "sha256": "9c61927b0a7f3569395e0eb3c2e6cdab5847f659af4fe8b53b2bfe0dc82ab950"
+      "sha256": "2f9e7b79a54828d83b59adb78bd80c1b4ffcf74fb7fe6b74d59b3957a2574f19"
     },
     {
       "path": "dist/temporal/date-field.d.ts",
-      "sha256": "df6dc1d6cfe7b27397859b6ddae55ba3b65eafc65e1a058f42c15ea7a8c56a29"
+      "sha256": "bb9a50a6c6356791ba6452613fd984f78c79abd0d49036f6c6e1f9279652fb6e"
     },
     {
       "path": "dist/temporal/date-picker.d.ts",
-      "sha256": "bb2bab62c33fd671ef1c44e83805669e3b8b163d3594ef2e1cb1a82d9bbe19e2"
+      "sha256": "c29478705f7a94a108829a863a23322d469ee2bdcabe1475f9b2e74052ac8df2"
     },
     {
       "path": "dist/temporal/date-range-field.d.ts",
-      "sha256": "3bd39a107447d4272447c228903bc8782fce84add849ac851625eb78518e9039"
+      "sha256": "bc56ce124152fe0cd8e2f92629f434d4a68bad090af515a8fb93a77b15a2b108"
     },
     {
       "path": "dist/temporal/date-range-picker.d.ts",
-      "sha256": "9333754709d84d596b0442224a4fbb57d662b3db46a0dbe0ec79a9f4a34925cb"
+      "sha256": "382b82033fa582d213e0f3246e5407c9d6c7e5e4f927c7d5794d061078c05dc5"
     },
     {
       "path": "dist/temporal/date-time-field.d.ts",
-      "sha256": "2d8318298d0bb83f50d6c48e65c2d3b4a650839c66c5e48edf66a83427a843e7"
+      "sha256": "6fca1109024c395277f788626497a2c4704ba726aa5a7c28d8e7a4bb95057460"
     },
     {
       "path": "dist/temporal/date-time-picker.d.ts",
-      "sha256": "09b4dd78e8993280c20d8284bbc987864c57f809b6ef898bff96cae0f020a5ea"
+      "sha256": "de26827da21322eacf9a410de90e5885489d246e28a2de943c96b8afb5e9365d"
+    },
+    {
+      "path": "dist/temporal/date-time-range-field.d.ts",
+      "sha256": "ff5d8440245ae4def5640a476a4ad0aa78d40cf9a2bbc4c73197794094206209"
     },
     {
       "path": "dist/temporal/date-time-range-picker.d.ts",
-      "sha256": "8a64948ab6fa83e48ee4c58d18a6b18c080378fc8f12cc1b60ae8dbb91a6cedb"
+      "sha256": "fe347b8f562b79c1fbc95c2dcc8fa1c608f7747d2b5917df0721a432d60cec8b"
     },
     {
       "path": "dist/temporal/month-picker.d.ts",
-      "sha256": "314648762b095cd90369fd3c8b3739bef237fc166f93da5bcf7bda5d6d04c003"
+      "sha256": "1ab3dac4302adaf5ff31e781580d28743cf4c15babaa1037aaaf1577151ea1d1"
     },
     {
       "path": "dist/temporal/month-range-picker.d.ts",
-      "sha256": "315d0146d8361c6f45cacd669482ea12fb6a5c4251f7851fcb59fd7cdc32a922"
+      "sha256": "8d2621837274f990f1350e10639a9ead127690f664a506f622ca35606831d391"
     },
     {
       "path": "dist/temporal/picker.d.ts",
-      "sha256": "343ce12b27e80e1be3fe18f77e172c4ff61e7a1ed7421994de9452f7013ab531"
+      "sha256": "39f85ae511c0c7876203e6e8457d0c0d5bd97f0a0e23f1d23e5ea73cdc73d4c6"
     },
     {
       "path": "dist/temporal/range-calendar.d.ts",
-      "sha256": "f77379701a3e7cd4ffa6643d7cbd13a315e53e369ac53b7571cf9928564871bf"
+      "sha256": "feb41cd366643bd9a809d985a2cde0f3c8c10da545c00d0ed9ab87753199ecc4"
     },
     {
       "path": "dist/temporal/temporal-provider.d.ts",
-      "sha256": "b52b6f798ad615569894a9e40a1c7bca26a834157cfb1ea708dfb645fce012e7"
+      "sha256": "12171c2ed0391202e1dadd2f232526e9437a2754495277c49873a61608c2e1ef"
     },
     {
       "path": "dist/temporal/time-field.d.ts",
-      "sha256": "7972e39462d753ce43761a7f3165afd9b473cab9575e5ba470fe065f040af671"
+      "sha256": "ab592daf3e30dc21ebd36111cc76ef21f1886f8a970f17b051373b833b6c4471"
+    },
+    {
+      "path": "dist/temporal/time-picker.d.ts",
+      "sha256": "701e69d200ad937c47471c43ed81572c4b3f20d45e128d205ac3258f49ca55a2"
     },
     {
       "path": "dist/temporal/time-range-field.d.ts",
-      "sha256": "b0dab1ebd0f14af213d684efeae61ba5ebcb021e4bb99bb6c293da27440545c4"
+      "sha256": "64dcf9ab5e467a72254f746d4aa888a71ce384038b5bf9dffcfa687ae0c59403"
     },
     {
       "path": "dist/temporal/year-picker.d.ts",
-      "sha256": "e3d65472ab0af9cd5da133a8dc874df5aeda4e915a311d6b91029e08d61e41c2"
+      "sha256": "b1fb7080d8f2476bc271c4262edc5a66792305cfb51bf0bdb3ed3e3b2d2a13ec"
     },
     {
       "path": "dist/temporal/year-range-picker.d.ts",
-      "sha256": "b8f30369ba0631f7576f4aa5860e47862912684981f16b2b91ec6374034a5ece"
+      "sha256": "567610d1c785eff8bf7f24c2a0b0fd1ad034de6da880033e4873642be3beddbb"
     },
     {
       "path": "dist/text.d.ts",
-      "sha256": "fd275e5fd0fc8434e5e81e5621e9c0ba71b9bd817314e75b87df5210530ad1e3"
+      "sha256": "7b02e573a257364bda4cf9f214c8e82874c44315f4f9bb15dc6748de38ae08e0"
     },
     {
       "path": "dist/timer.d.ts",
-      "sha256": "70a8842b3d04630db2aebfd40ceb66a3599aef37fa1e05aae372394770a8ca1c"
+      "sha256": "5e8f3b572756e33ff49144822f0f56d5ee91a56d576f9b0edaac5265e4d3872f"
     },
     {
       "path": "dist/toast.d.ts",
@@ -674,8 +782,16 @@
       "sha256": "17dc8c3dc0a1c49d1ea4356d439205f81f8336f57d1eff3f4c86d81af1716d3d"
     },
     {
+      "path": "dist/transfer.d.ts",
+      "sha256": "27573dac4800e9efb5fe14f062e74a09fc3eb91f0f0d925c95e19045a34728bd"
+    },
+    {
       "path": "dist/tree-grid.d.ts",
-      "sha256": "0708980d50c300a5e21d45b1535987763418319df4d4653e76622ba25e036ccc"
+      "sha256": "df802094b9eed10a58fe4bc354c34e6edf69c254dc51650ac43f615b75e70b9f"
+    },
+    {
+      "path": "dist/tree-select.d.ts",
+      "sha256": "7ec5888858e97d1e94a5795db7a38f27255248bc58bc80890ae001db5e0d19e5"
     },
     {
       "path": "dist/tree-view.d.ts",
@@ -691,7 +807,7 @@
     },
     {
       "path": "dist/virtual/virtual-collection.d.ts",
-      "sha256": "e2cbcf56c5618a80a4846ac62d46efd81622adc3abb8f1dddafede3870f4a5a2"
+      "sha256": "de954456be2b1b2e6a704293ed973802315d57b18199f9546df8ab33fa17be7a"
     },
     {
       "path": "dist/virtual/virtual-core.d.ts",
@@ -699,19 +815,19 @@
     },
     {
       "path": "dist/virtual/virtual-grid.d.ts",
-      "sha256": "5f65b205a111ec6bc6a408ba05647ef2830f8c8b04972ac11ba3e512e1d358d8"
+      "sha256": "d994b48eac73a77276761eba7439fe224f82fd426bc18b02a9460dd4a8bf372f"
     },
     {
       "path": "dist/virtual/virtual-list.d.ts",
-      "sha256": "f65fd349507baa394c983af12563bb1d362cad3b0c5083eced75276a1b2379a2"
+      "sha256": "fc8a61fded03054cc62297726e078619afae8229eb99a62b841147033a69374d"
     },
     {
       "path": "dist/virtual/virtual-masonry.d.ts",
-      "sha256": "1d566b2ae3962cf37246998beee2b3afec250d57ecbfe84dcbbda476b0a822e5"
+      "sha256": "3d916a6b115e4dbd078e35af0ddb282b4bc859ed35cdf4135e3db50e29d1019d"
     },
     {
       "path": "dist/virtual/virtual-spatial.d.ts",
-      "sha256": "d930cd99b203e9e5a7a22df301febb0851da0a10069220db470872e83aa39008"
+      "sha256": "c33b4381e1a06f3ad71b6a6b98858f364f690e86d09ffad6181694739e5756a3"
     },
     {
       "path": "dist/window-splitter.d.ts",

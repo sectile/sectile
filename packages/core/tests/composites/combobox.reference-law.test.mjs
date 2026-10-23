@@ -18,6 +18,53 @@ import {
 import { createSequence } from '../../.verification-dist/structures/sequence.js';
 import { unwrap } from '../support.mjs';
 
+test('selection-only text events preserve popup/cursor authority without filtering candidates', () => {
+  const domain = createSequence(Array.from({ length: 4096 }, (_, index) => 'candidate-' + index));
+  const labels = new Map(domain.ids.map(id => [id, id]));
+  let callbacks = 0;
+  const policies = { matches() { callbacks++; return true; }, eligible() { callbacks++; return true; } };
+  const text = createTextEditingState('a😀b', endSelection('a😀b'));
+  const event = { type: 'text', event: { type: 'select', selection: { anchorCodeUnitOffset: 3, focusCodeUnitOffset: 1 } } };
+  for (const popupOpen of [false, true]) {
+    const input = { popupOpen, current: domain.ids.at(-1), selected: [domain.ids[0]] };
+    const state = createComboboxState(domain, text, input);
+    const actual = applyComboboxEvent(domain, labels, state, event, policies);
+    const reference = referenceApplyComboboxEvent(domain, labels, createReferenceComboboxState(domain, text, input), event, policies);
+    assert.deepEqual(resultObservation(actual), referenceResultObservation(reference));
+    assert.equal(actual.ok, true); assert.equal(callbacks, 0);
+    assert.equal(actual.value.state.cursor, state.cursor); assert.equal(actual.value.state.selection, state.selection);
+    assert.deepEqual(actual.value.commands, []);
+    assert.equal(unwrap(applyComboboxEvent(domain, labels, actual.value.state, event, policies)).state, actual.value.state);
+  }
+});
+
+test('combobox candidate eligibility is independent of matching and rejects stale acceptance', () => {
+  const domain = createSequence(['a', 'b', 'c']), labels = new Map([['a', 'Alpha'], ['b', 'Beta'], ['c', 'Charlie']]);
+  let allowed = new Set(['b', 'c']); const policies = { matches: () => true, eligible: id => allowed.has(id), boundary: 'wrap' };
+  let state = createComboboxState(domain, createTextEditingState(), { popupOpen: true });
+  state = unwrap(applyComboboxEvent(domain, labels, state, 'next', policies)).state; assert.equal(state.cursor.current, 'b');
+  state = unwrap(applyComboboxEvent(domain, labels, state, 'previous', policies)).state; assert.equal(state.cursor.current, 'c');
+  assert.equal(applyComboboxEvent(domain, labels, state, { type: 'accept', id: 'a' }, policies).ok, false);
+  const direct = unwrap(applyComboboxEvent(domain, labels, state, { type: 'accept', id: 'b' }, policies)); assert.deepEqual(direct.state.selection.selected, ['b']);
+  allowed = new Set(['b']); const stale = applyComboboxEvent(domain, labels, state, 'accept', policies); assert.equal(stale.ok, false); assert.equal(stale.error.code, 'combobox-candidate-unavailable');
+  state = unwrap(applyComboboxEvent(domain, labels, state, 'next', policies)).state; assert.equal(state.cursor.current, 'b');
+  allowed.clear(); state = unwrap(applyComboboxEvent(domain, labels, state, 'next', policies)).state; assert.equal(state.cursor.current, null);
+  assert.equal(applyComboboxEvent(domain, labels, state, { type: 'accept', id: 'b' }, policies).ok, false);
+  assert.equal(applyComboboxEvent(domain, labels, state, 'accept', { eligible: true }).error.code, 'invalid-combobox-policies');
+});
+test('combobox eligibility scans once per candidate resolution and once for current acceptance', () => {
+  for (const size of [0, 1, 128, 4096]) {
+    const ids = Array.from({ length: size }, (_, i) => `i${i}`), domain = createSequence(ids), labels = new Map(ids.map(id => [id, id]));
+    let calls = 0; const policies = { eligible: id => { calls++; return id === ids.at(-1); } };
+    const state = createComboboxState(domain, createTextEditingState());
+    const moved = unwrap(applyComboboxEvent(domain, labels, state, 'next', policies)); assert.equal(calls, size); assert.equal(moved.state.cursor.current, ids.at(-1) ?? null);
+    calls = 0; const result = applyComboboxEvent(domain, labels, moved.state, 'accept', policies); assert.equal(calls, size ? 1 : 0); assert.equal(result.ok, size > 0);
+    calls = 0;
+    const edited = unwrap(applyComboboxEvent(domain, labels, state, { type: 'text', event: { type: 'replace', startCodeUnitOffset: 0, endCodeUnitOffset: 0, text: 'query', selection: endSelection('query') } }, policies));
+    assert.equal(calls, size); assert.equal(edited.state.cursor.current, ids.at(-1) ?? null);
+  }
+});
+
 test('combobox direct acceptance targets an eligible candidate', () => {
   const domain = createSequence(['a', 'b']);
   const labels = new Map([['a', 'Alpha'], ['b', 'Beta']]);

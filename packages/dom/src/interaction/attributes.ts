@@ -5,6 +5,53 @@ interface ValidationResult {
   readonly error?: { readonly message: string };
 }
 
+export interface DOMAttributeBinding {
+  apply(values: Readonly<Record<string, string | number | undefined>>): void;
+  disconnect(): void;
+}
+/** Internal bounded part projection; restore only values still owned by this binding. */
+export function createDOMAttributeBinding(input: HTMLElement): DOMAttributeBinding {
+  let element: HTMLElement | undefined = input;
+  const entries = new Map<string, { original: string | null; accepted: string | null }>();
+  return {
+    apply: values => {
+      const target = element; if (!target) return;
+      for (const [name, value] of Object.entries(values)) {
+        if (element !== target) return;
+        const accepted = value === undefined ? null : String(value), actual = target.getAttribute(name);
+        if (element !== target) return;
+        let entry = entries.get(name);
+        if (!entry) { entry = { original: actual, accepted }; entries.set(name, entry); }
+        else entry.accepted = accepted;
+        if (actual === accepted) continue;
+        if (accepted === null) target.removeAttribute(name); else target.setAttribute(name, accepted);
+      }
+    },
+    disconnect: () => {
+      const target = element; if (!target) return;
+      element = undefined;
+      let failed = false, first: unknown;
+      try {
+        for (const [name, entry] of entries) {
+          try {
+            if (target.getAttribute(name) !== entry.accepted) continue;
+            if (entry.original === null) target.removeAttribute(name); else target.setAttribute(name, entry.original);
+          } catch (error) { if (!failed) { failed = true; first = error; } }
+        }
+      } finally { entries.clear(); }
+      if (failed) throw first;
+    },
+  };
+}
+
+/** Decorative markers stay silent; native disclosure buttons expose the owner's state. */
+export function setDisclosureAccessibility(element: HTMLElement, expanded: boolean, disabled: boolean): void {
+  if (element.tagName !== 'BUTTON') { element.setAttribute('aria-hidden', 'true'); return; }
+  element.removeAttribute('aria-hidden');
+  element.setAttribute('aria-expanded', String(expanded));
+  setInteractionAttributes(element, { disabled }, true);
+}
+
 export function setInteractionAttributes(
   element: HTMLElement,
   interaction: InteractionStateInput,

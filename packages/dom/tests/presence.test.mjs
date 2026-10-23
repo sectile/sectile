@@ -14,6 +14,43 @@ test('presence is SSR-safe and an initially closed surface does not start an exi
   presence.disconnect();
 });
 
+test('suspended presence cancels work without closure and resumes current state without stale motion', () => {
+  const first = new FakeElement(style({ transitionDuration: '100ms' }));
+  const second = new FakeElement(style({ transitionDuration: '100ms' }));
+  const changes = [], timers = new Map(); let nextTimer = 0;
+  const originalSetTimeout = globalThis.setTimeout, originalClearTimeout = globalThis.clearTimeout;
+  globalThis.setTimeout = callback => { const id = ++nextTimer; timers.set(id, callback); return id; };
+  globalThis.clearTimeout = id => { timers.delete(id); };
+  const presence = createPresence({ open: true, element: first, onPresentChange: value => changes.push(value) });
+  try {
+    for (let turn = 0; turn < 3; turn++) {
+      presence.update(false, first);
+      const stale = [...timers.values(), ...(first.listeners.get('transitionend') ?? [])];
+      assert.equal(timers.size, 1); assert.equal(first.listenerCount(), 4);
+      presence.suspend(); presence.suspend();
+      assert.equal(timers.size, 0); assert.equal(first.listenerCount(), 0);
+      assert.equal(presence.getPresent(), true); assert.deepEqual(changes, []);
+      presence.update(false, second); presence.update(true, second);
+      assert.equal(second.listenerCount(), 0); assert.equal(timers.size, 0);
+      assert.equal(presence.resume(true, second), true);
+      for (const finish of stale) finish({ target: first });
+      presence.resume(true, first);
+      assert.equal(presence.getPresent(), true); assert.deepEqual(changes, []);
+    }
+    presence.update(false, first); presence.suspend();
+    assert.equal(presence.resume(false, second), false, 'a discarded exit is not replayed');
+    assert.deepEqual(changes, [false]); assert.equal(timers.size, 0); assert.equal(second.listenerCount(), 0);
+    presence.update(true, second); presence.update(false, second);
+    assert.equal(timers.size, 1); assert.equal(second.listenerCount(), 4, 'future normal exits still own motion');
+    presence.suspend(); presence.disconnect();
+    presence.update(true, first); presence.resume(true, first); presence.suspend();
+    assert.equal(timers.size, 0); assert.equal(first.listenerCount() + second.listenerCount(), 0);
+    assert.deepEqual(changes, [false, true], 'terminal disposal cannot resume or publish');
+  } finally {
+    presence.disconnect(); globalThis.setTimeout = originalSetTimeout; globalThis.clearTimeout = originalClearTimeout;
+  }
+});
+
 test('presence waits for the longest transition on the owner element', () => {
   const view = new FakeView(style({
     transitionProperty: 'opacity, transform',
@@ -25,7 +62,7 @@ test('presence waits for the longest transition on the owner element', () => {
   const presence = createPresence({ open: true, element, onPresentChange: (present) => changes.push(present) });
 
   assert.equal(presence.update(false, element), true);
-  assert.equal(element.listenerCount(), 2);
+  assert.equal(element.listenerCount(), 4);
   view.now = 5;
   element.emit('transitionend');
   assert.equal(presence.getPresent(), true);
@@ -66,7 +103,7 @@ test('reopen and element replacement cancel stale exit generations', () => {
   const presence = createPresence({ open: true, element: first, onPresentChange: (present) => changes.push(present) });
 
   presence.update(false, first);
-  assert.equal(first.listenerCount(), 2);
+  assert.equal(first.listenerCount(), 4);
   presence.update(true, first);
   assert.equal(first.listenerCount(), 0);
   firstView.now = 100;
@@ -74,7 +111,7 @@ test('reopen and element replacement cancel stale exit generations', () => {
   assert.equal(presence.getPresent(), true);
 
   presence.update(false, first);
-  assert.equal(first.listenerCount(), 2);
+  assert.equal(first.listenerCount(), 4);
   assert.equal(presence.update(false, second), false);
   assert.equal(first.listenerCount(), 0);
   assert.equal(second.listenerCount(), 0);
@@ -115,7 +152,7 @@ test('fallback completion and disconnect both leave zero owned resources', async
   const presence = createPresence({ open: true, element, onPresentChange: (present) => changes.push(present) });
 
   presence.update(false, element);
-  assert.equal(element.listenerCount(), 2);
+  assert.equal(element.listenerCount(), 4);
   await new Promise((resolve) => setTimeout(resolve, 70));
   assert.equal(presence.getPresent(), false);
   assert.equal(element.listenerCount(), 0);
@@ -130,6 +167,32 @@ test('fallback completion and disconnect both leave zero owned resources', async
   second.view.now = 100;
   second.emit('transitionend');
   assert.deepEqual(disconnectedChanges, []);
+});
+
+test('live zero-motion cancellation releases the retained owner exactly once without extending finite tracks', () => {
+  for (const event of ['transitioncancel', 'animationcancel']) {
+    const view = new FakeView(style({ transitionDuration: '100ms' }));
+    const element = new FakeElement(view), changes = [];
+    const presence = createPresence({ open: true, element, onPresentChange: value => changes.push(value) });
+    presence.update(false, element);
+    view.computedStyle = style();
+    for (const listener of element.listeners.get(event) ?? []) listener({ target: {} });
+    assert.equal(presence.getPresent(), true, 'descendant cancellation is not the owner');
+    element.emit(event);
+    assert.equal(presence.getPresent(), false);
+    assert.equal(element.listenerCount(), 0);
+    element.emit(event); element.emit('transitionend');
+    assert.deepEqual(changes, [false]);
+    presence.update(true, element);
+    view.computedStyle = style({ transitionDuration: '100ms' });
+    presence.update(false, element);
+    view.now = 60; element.emit(event);
+    assert.equal(presence.getPresent(), true, 'another finite track can still own presentation');
+    view.now = 100; element.emit('transitionend');
+    assert.equal(presence.getPresent(), false, 'cancellation keeps the original completion deadline');
+    assert.equal(element.listenerCount(), 0);
+    presence.disconnect();
+  }
 });
 
 test('presence caps consumer-controlled fallback waits at sixty seconds', () => {

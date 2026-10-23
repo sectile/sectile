@@ -12,7 +12,27 @@ import {
   ref,
 } from 'vue';
 import { Primitive, renderPrimitive } from '../.verification-dist/primitive.js';
+import { createComponentHandle } from '../.verification-dist/component-handle.js';
 import { createHostNode, createTestRenderer } from './renderer.mjs';
+
+test('component handle keeps saved methods live across replacement and inert after release', () => {
+  const handle = createComponentHandle(current => ({ read: () => current()?.value ?? null }));
+  const view = handle.view;
+  const read = view.read;
+  assert.equal(read(), null);
+  handle.set({ value: 'first' });
+  assert.equal(read(), 'first');
+  handle.set({ value: 'replacement' });
+  assert.equal(read(), 'replacement');
+  handle.release();
+  handle.release();
+  assert.equal(read(), null);
+  handle.set({ value: 'remounted' });
+  assert.equal(handle.view, view);
+  assert.equal(read(), 'remounted');
+  handle.set(null);
+  assert.equal(read(), null);
+});
 
 test('Primitive adopts an element forwarded through a named slot', async () => {
   const NamedSlotForwarder = defineComponent({

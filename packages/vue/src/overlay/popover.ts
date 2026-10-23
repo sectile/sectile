@@ -6,6 +6,7 @@ import {
   type PopupPortalProps,
   type PopupRootProps,
   type PopupRootSlotProps,
+  type PopupRootExpose,
 } from './popup.js';
 
 const parts = createPopupComponents({
@@ -26,5 +27,6 @@ export const PopoverClose = parts.Close;
 export const PopoverArrow = parts.Arrow;
 export type PopoverRootProps = PopupRootProps;
 export type PopoverRootSlotProps = PopupRootSlotProps;
+export type PopoverRootExpose = PopupRootExpose;
 export type PopoverPartProps = PopupPartProps;
 export type PopoverPortalProps = PopupPortalProps;

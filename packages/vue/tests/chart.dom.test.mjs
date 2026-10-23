@@ -30,6 +30,7 @@ const { createChartController } = await import('@sectile/chart/controller');
 const {
   ChartAxisView,
   ChartCartesian,
+  ChartExternalViewControls,
   ChartLine,
   ChartNavigation,
   ChartPanControl,
@@ -133,6 +134,34 @@ test('declarative ChartRoot batches layer replacement and inherits axis scope fo
   await nextTick();
   assert.equal(host.querySelector('[data-part="root"]').getAttribute('aria-label'), 'Quarterly revenue chart');
   app.unmount(); host.remove();
+});
+
+test('ChartRoot publishes shallow render styles without rebuilding data or projections', async () => {
+  const prior = Object.getOwnPropertyDescriptor(HTMLCanvasElement.prototype, 'getContext');
+  let draws = 0, exposed, queries = 0; const errors = [], style = shallowRef({ color: [1, 0, 0, 1], lineWidth: 3 });
+  const context = { setTransform() { draws++; }, clearRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {} };
+  Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', { configurable: true, value: kind => kind === '2d' ? context : null });
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(ChartRoot, { ref: value => { exposed = value; }, onError: error => errors.push(String(error)),
+    dom: { renderer: 'canvas2d', renderStyle: style.value } }, { default: () => [controlledChartDeclarations(), h(ChartPlot, null, () => h(ChartRenderer))] }) });
+  try {
+    app.mount(host); await nextTick(); await nextTick(); assert.deepEqual(errors, []);
+    assert.equal(draws, 1); assert.equal(context.lineWidth, 3); const datumPaint = context.strokeStyle;
+    const owner = exposed.controller, diagnostics = exposed.getDeclarationDiagnostics(), project = owner.project.bind(owner);
+    owner.project = input => { queries++; return project(input); };
+    style.value.lineWidth = 9; await nextTick(); assert.equal(draws, 1, 'deep edits do not publish'); assert.equal(context.lineWidth, 3);
+    style.value = { color: [0, 1, 0, 1], lineWidth: 6 }; await nextTick(); assert.equal(context.lineWidth, 6);
+    assert.equal(context.strokeStyle, datumPaint, 'canonical datum colors remain authoritative over fallback paint');
+    assert.equal(draws, 2); assert.equal(queries, 0); assert.ok(exposed.controller === owner);
+    assert.deepEqual(exposed.getDeclarationDiagnostics(), diagnostics);
+    style.value = { lineWidth: 0 }; await nextTick(); assert.equal(errors.length, 1); assert.equal(draws, 2);
+    style.value = undefined; await nextTick(); assert.equal(draws, 3); assert.equal(queries, 0);
+    assert.notEqual(context.lineWidth, 6); assert.equal(context.strokeStyle, datumPaint);
+    const retained = exposed; app.unmount(); assert.equal(retained.controller, null); assert.equal(host.querySelector('[data-chart-overlay]'), null);
+  } finally {
+    if (host.firstChild) app.unmount(); host.remove();
+    if (prior) Object.defineProperty(HTMLCanvasElement.prototype, 'getContext', prior); else delete HTMLCanvasElement.prototype.getContext;
+  }
 });
 
 test('ChartRoot warns when controlled ownership shape changes without a remount', async () => {
@@ -278,6 +307,40 @@ test('direct gestures require a declared visible or external control alternative
   assert.equal(errors.length, 1);
   assert.match(String(errors[0]), /ChartViewControls|ChartExternalViewControls/);
   app.unmount(); host.remove();
+});
+
+test('external Chart controls admit gestures and release their declaration without owning application controls', async (t) => {
+  const enabled = shallowRef(true), errors = [], projections = [];
+  let exposed, controller, mounted = false;
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h('div', [
+    h('button', { onClick: () => controller.dispatch({ type: 'zoom-axis-view', axisID: 'x', factor: 2, phase: 'settled' }) }, 'External zoom'),
+    h(ChartRoot, { ref: value => { if (value) exposed = value; },
+      dom: { renderer: mockRenderer(projections) }, onError: error => errors.push(error) }, {
+      default: state => {
+        controller = state.controller;
+        return [controlledChartDeclarations(), h(ChartNavigation, { axes: ['x'], drag: enabled.value ? 'pan' : 'none' }),
+          enabled.value ? h(ChartExternalViewControls) : null, h(ChartPlot, null, () => h(ChartRenderer))];
+      },
+    }),
+  ]) });
+  t.after(() => { if (mounted) app.unmount(); host.remove(); });
+  app.mount(host); mounted = true; await nextTick(); await nextTick();
+  assert.deepEqual(errors, []); assert.ok(controller);
+  const owner = controller, diagnostics = exposed.getDeclarationDiagnostics();
+  const before = owner.getSnapshot().state.view;
+  host.querySelector('button').click(); await nextTick(); await nextTick();
+  assert.notDeepEqual(owner.getSnapshot().state.view, before, 'the application-owned control changes the real chart view');
+  assert.equal(host.querySelectorAll('button').length, 1, 'the external declaration creates no competing controls');
+  enabled.value = false; await nextTick(); await nextTick();
+  assert.deepEqual(errors, []); assert.equal(controller, owner);
+  assert.equal(exposed.getDeclarationDiagnostics().registeredRecords, diagnostics.registeredRecords - 1);
+  enabled.value = true; await nextTick(); await nextTick();
+  assert.deepEqual(errors, []); assert.equal(controller, owner);
+  assert.equal(exposed.getDeclarationDiagnostics().registeredRecords, diagnostics.registeredRecords);
+  app.unmount(); mounted = false;
+  assert.equal(exposed.getDeclarationDiagnostics().registeredRecords, 0);
+  assert.ok(host.querySelector('button') === null, 'the application unmount owns the external button lifetime');
 });
 
 test('ChartRoot surfaces later DOM projection failures through its existing onError contract', async () => {

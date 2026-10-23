@@ -1,6 +1,5 @@
 import { computed, defineComponent, h, mergeProps, type Component, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { applyStepperEvent, tryCreateStepperState } from '@sectile/core/stepper';
-import { createSequence } from '@sectile/core/sequence';
 import {
   TabsContent,
   TabsIndicator,
@@ -50,6 +49,7 @@ export const StepperRoot = defineComponent({
     providePartContract('stepper', { trigger: 'step' });
     return (): VNodeChild => h(TabsRoot as Component, mergeProps(attrs, props, {
       activationMode: 'manual',
+      role: 'group',
       'aria-roledescription': 'stepper',
       'onUpdate:modelValue': (value: string) => emit('update:modelValue', value),
       onHighlight: (value: string | null) => emit('highlight', value),
@@ -84,7 +84,7 @@ function createAction(name: 'Previous' | 'Next', direction: -1 | 1) {
       if (root.partContract.scope !== 'stepper') {
         throw new TypeError(`Stepper${name} must be used inside StepperRoot.`);
       }
-      const domain = computed(() => createSequence(root.items.value));
+      const domain = root.domain;
       const targetValue = computed(() => {
         if (props.disabled || root.disabled.value || root.readonly.value) return null;
         const selected = root.value.value || null;
