@@ -73,3 +73,61 @@ The diagnostic bundle audit and its output are local-only at
 `/tmp/sectile-headless-bundle-audit-20261023.log`. The accepted measurements and
 module/dependency inventories are preserved in the committed baseline. This is
 an implementation decision, not independent reviewer approval.
+
+## Verification — v1
+
+- Record ID: existing-package-integration-20261023-verification-1
+- Work ID / Run ID: existing-package-integration-20261023 / extraction-close-1
+- Verifier / role: Codex / implementation self-check, not independent approval
+- Verified at: 2026-10-23T14:40:00+09:00
+- Phase: Implementation close
+- Source full SHA: `98628b58bf9e3ae7f20d61268ba67864a4c1cb15`
+- Policy/template: sectile-records/v1 / `8a96dc7c50c73214f9af87554d2fbbf511a85175`
+- Environment: WSL Linux, Node 24.22.0, pnpm 11.24.0, TypeScript 7.0.2.
+- Source state: clean committed extraction; later changes to this record are prose only.
+- Package/registry artifact: N/A; local tarballs and isolated installations only.
+- Accepted criteria: existing packages independently usable without new styled
+  packages; existing public extensions, behavior, types, and tree-shaking retained.
+
+| Criterion | Procedure | Outcome |
+| --- | --- | --- |
+| Production packages | Sequential builds of the existing nine packages | Passed |
+| Existing package behavior | Package tests, then Vue rerun after two assertion repairs | 2721 passed, 38 explicitly skipped GC-dependent cases, zero remaining failures |
+| Public types | Existing package public type projects, including Vue SFC projects | Passed |
+| Package boundaries | Source and freshly rebuilt production structure graph | Passed: 642 source modules, 617 runtime modules, no recorded debt |
+| Portable/host parity | Cross-host suite with exposed GC | 75 passed, zero skipped |
+| Changed verification tools | Existing completeness, bundle, install, packed-content and source-map tests | 30 passed, zero skipped |
+| Bundles | 484 fixtures, esbuild and Vite; root/direct, unused import and dependency checks | 968 results qualified; eight reviewed byte rows revalidated from the exact captured measurements |
+| Isolated installation | Existing consumer runner, npm and pnpm | Passed: nine tarballs, two isolated installs; installed payloads 22311755 and 22319624 bytes |
+| Source maps | Existing map validation | Passed: 617 JavaScript files and external maps; no declaration maps |
+| Registered contracts | Public signatures, breaking mappings, semantic authority, DAG, algorithm reuse, complexity, Form scenarios, Tabular laws/implementation, crossover provenance and public-change registration | Passed |
+| Git hygiene | Working and staged diff checks | Passed |
+
+The package runtime and type inputs did not change after their qualifying checks.
+The final two cross-host fixtures were then checked against the same production
+artifacts. Their facade now models native containment, activeElement and
+parentNode, and starts the virtual reveal scenario from a focused cell. Existing
+trace, focus completion and reveal-order assertions remain intact.
+
+Earlier failed checks remain explicit: stale Vue assertions; missing structure,
+signature, DAG and optional-direction migration registrations; stale named bundle
+representatives; four historical bundle budgets; outdated Tabular footprint;
+and three cross-host failures caused by incomplete DOM facades or an unfocused
+scenario. These were corrected at their owners and the affected checks rerun.
+No timeout, global relative allowance, or zero-byte requirement was relaxed.
+
+Local-only full logs use `/tmp/sectile-headless-*-20261023.log`; these are
+disposable, not a remotely archived evidence store. Key SHA-256 receipts:
+
+- Bundle audit: `b1008d7c75e473c3401f69199a2290c7d913a332295647f245e88a6aba6a632b`.
+- Isolated install report: `bf9db54df7fd4e12c1d22ab36216e52dd645a05457d47a30f026f847032ea415`.
+- Final cross-host/tooling log: `2995c59d6c4e739ed68aa3cff5aace27e7a8dd6669600c14f842a432bf149b6a`.
+
+Heavy checks ran sequentially under a shared lock with MemoryHigh=3GiB,
+MemoryMax=4GiB, MemorySwapMax=512MiB, CPUQuota=200%, and a 2GiB Node heap.
+The 38 GC-only package cases, a fresh statistical performance certification,
+browser certification, the documentation-site build, remote CI, publication and
+independent review are not claimed by this integration receipt. Wider UI
+verification and completion remain separate.
+
+Conclusion: qualifying local source integration, not a published release.
