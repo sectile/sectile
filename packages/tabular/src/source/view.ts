@@ -86,6 +86,22 @@ export function sliceVisibleRows(
   return Object.freeze([...context, ...rows.slice(start, end)]);
 }
 
+/** A projection owns one immutable access window, including context ancestors. */
+export function createVisibleRowReader(
+  projection: Parameters<typeof sliceVisibleRows>[0],
+): (start: number, end: number) => readonly TabularResolvedRow[] {
+  let previousStart = -1;
+  let previousEnd = -1;
+  let previousRows: readonly TabularResolvedRow[] | null = null;
+  return (start, end) => {
+    if (previousRows !== null && start === previousStart && end === previousEnd) return previousRows;
+    previousRows = sliceVisibleRows(projection, start, end);
+    previousStart = start;
+    previousEnd = end;
+    return previousRows;
+  };
+}
+
 export function createPreparedViewResponse(
   request: TabularRequest,
   currentView: TabularView | null,

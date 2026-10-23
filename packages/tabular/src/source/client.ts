@@ -1,7 +1,7 @@
 import { unwrap } from '@sectile/core/result';
 import { deriveSafeTabularPageStart } from '../model/access.js';
 import { fail, ok, validateID } from '../foundation.js';
-import { createContextParentIndexes, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs, sliceVisibleRows } from './view.js';
+import { createContextParentIndexes, createVisibleRowReader, nextClientViewRevision, preparedViewOf, retainRemovedRowIDs } from './view.js';
 import { tryCreateTabularModel } from '../model/state.js';
 import { tryCreateTabularQuery } from './query.js';
 import type {
@@ -27,6 +27,8 @@ import type {
   TabularWireValue,
 } from '../contracts.js';
 
+const EMPTY_ROW_IDS: readonly string[] = Object.freeze([]);
+
 interface ClientSource<RecordValue> extends TabularSource {
   readonly options: TabularClientSourceOptions<RecordValue>;
   readonly limits: TabularLimits;
@@ -51,6 +53,9 @@ interface ClientProjectionStage<RecordValue> {
   readonly query: ClientQueryStage<RecordValue>;
   readonly expansionRevision: number;
   readonly projection: ClientProjection;
+  readonly matchingLeafCount: TabularCount;
+  readonly visibleRowCount: TabularCount;
+  readonly readRows: (start: number, end: number) => readonly TabularResolvedRow[];
 }
 
 class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
@@ -136,6 +141,9 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
       query,
       expansionRevision: request.expansionRevision,
       projection: projection.value,
+      matchingLeafCount: Object.freeze({ kind: 'known' as const, value: query.filtered.length }),
+      visibleRowCount: Object.freeze({ kind: 'known' as const, value: projection.value.rows.length }),
+      readRows: createVisibleRowReader(projection.value),
     });
     this.#p = stage;
     return ok(stage);
@@ -354,11 +362,11 @@ function resolveClient<RecordValue>(
     expansionRevision: request.expansionRevision,
     viewRevision,
     access: request.access,
-    matchingLeafCount: Object.freeze({ kind: 'known', value: projected.value.query.filtered.length }),
-    visibleRowCount: Object.freeze({ kind: 'known', value: total }),
-    rows: sliceVisibleRows(projection, start, Math.min(total, start + count)),
+    matchingLeafCount: projected.value.matchingLeafCount,
+    visibleRowCount: projected.value.visibleRowCount,
+    rows: projected.value.readRows(start, Math.min(total, start + count)),
     columnSchema: projection.schema,
-    removedRowIDs: Object.freeze([]),
+    removedRowIDs: EMPTY_ROW_IDS,
   }));
 }
 
@@ -1051,6 +1059,7 @@ function normalizeIDs(
   if (ceiling !== undefined && length > ceiling) {
     return fail('resource-rejection', 'scan-record-ceiling-exceeded', `${label} list exceeds the configured source cardinality ceiling.`, { actual: length, ceiling });
   }
+  if (length === 0) return ok(EMPTY_ROW_IDS);
   const ids = new Set<string>();
   const output: string[] = [];
   for (let index = 0; index < length; index += 1) {

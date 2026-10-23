@@ -64,6 +64,25 @@ function source(sourceRecords = records) {
   });
 }
 
+test('one immutable row window is retained per current projection while responses advance', () => {
+  const client = source();
+  const initial = request({ access: { kind: 'window', start: 0, count: 2 } });
+  const first = resolveClientTabularRequest(client, initial).value;
+  const repeated = resolveClientTabularRequest(client, initial).value;
+  assert.equal(repeated.rows, first.rows);
+  assert.equal(Object.isFrozen(repeated.rows), true);
+  assert.ok(repeated.viewRevision > first.viewRevision);
+  const nextWindow = resolveClientTabularRequest(client, { ...initial, access: { kind: 'window', start: 2, count: 2 } }).value;
+  assert.deepEqual(nextWindow.rows.map(row => row.id), ['r3', 'r4']);
+  assert.deepEqual(first.rows.map(row => row.id), ['r1', 'r2']);
+  const nextQuery = resolveClientTabularRequest(client, { ...initial, queryRevision: 1,
+    query: { ...initial.query, sort: [{ id: 'names', columnID: 'name', comparator: 'value', direction: 'ascending' }] },
+  }).value;
+  assert.deepEqual(nextQuery.rows.map(row => row.id), ['r2', 'r1']);
+  assert.notEqual(nextQuery.rows, first.rows);
+  assert.deepEqual(first.rows.map(row => row.id), ['r1', 'r2']);
+});
+
 test('ISSUE-121: request getter failures stay typed and accepted fields are read once', () => {
   const stable = request();
   const accepted = resolveClientTabularRequest(source(), stable).value;

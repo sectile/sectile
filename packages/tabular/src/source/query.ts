@@ -149,10 +149,10 @@ function normalizeSort(input: readonly TabularSort[], limits: QueryLimits): Tabu
   const array = requireArray(input, 'sort');
   if (!array.ok) return array;
   if (input.length > limits.maxSortRules) return ceiling('sort-rule-ceiling-exceeded', input.length, limits.maxSortRules);
-  const ids = new Set<string>();
+  let ids: Set<string> | undefined;
   const result: TabularSort[] = [];
   for (const descriptor of input) {
-    const base = validateDescriptorBase(descriptor, ids, limits);
+    const base = validateDescriptorBase(descriptor, ids ??= new Set<string>(), limits);
     if (!base.ok) return base;
     try {
       const columnID = descriptor.columnID;
@@ -175,10 +175,10 @@ function normalizeFilters(input: readonly TabularFilter[], limits: QueryLimits):
   const array = requireArray(input, 'filters');
   if (!array.ok) return array;
   if (input.length > limits.maxFilterRules) return ceiling('filter-rule-ceiling-exceeded', input.length, limits.maxFilterRules);
-  const ids = new Set<string>();
+  let ids: Set<string> | undefined;
   const result: TabularFilter[] = [];
   for (const descriptor of input) {
-    const base = validateDescriptorBase(descriptor, ids, limits);
+    const base = validateDescriptorBase(descriptor, ids ??= new Set<string>(), limits);
     if (!base.ok) return base;
     try {
       const scope = descriptor.scope;
@@ -219,10 +219,10 @@ function normalizeGroups(input: readonly TabularGroup[], limits: QueryLimits): T
   const array = requireArray(input, 'groups');
   if (!array.ok) return array;
   if (input.length > limits.maxGroupDescriptors) return ceiling('group-descriptor-ceiling-exceeded', input.length, limits.maxGroupDescriptors);
-  const ids = new Set<string>();
+  let ids: Set<string> | undefined;
   const result: TabularGroup[] = [];
   for (const descriptor of input) {
-    const base = validateDescriptorBase(descriptor, ids, limits);
+    const base = validateDescriptorBase(descriptor, ids ??= new Set<string>(), limits);
     if (!base.ok) return base;
     try {
       const columnID = descriptor.columnID;
@@ -241,10 +241,10 @@ function normalizeAggregates(input: readonly TabularAggregate[], limits: QueryLi
   const array = requireArray(input, 'aggregates');
   if (!array.ok) return array;
   if (input.length > limits.maxAggregateDescriptors) return ceiling('aggregate-descriptor-ceiling-exceeded', input.length, limits.maxAggregateDescriptors);
-  const ids = new Set<string>();
+  let ids: Set<string> | undefined;
   const result: TabularAggregate[] = [];
   for (const descriptor of input) {
-    const base = validateDescriptorBase(descriptor, ids, limits);
+    const base = validateDescriptorBase(descriptor, ids ??= new Set<string>(), limits);
     if (!base.ok) return base;
     try {
       const columnID = descriptor.columnID;
@@ -267,12 +267,13 @@ function normalizePivots(
   const array = requireArray(input, 'pivots');
   if (!array.ok) return array;
   if (input.length > limits.maxPivotDescriptors) return ceiling('pivot-descriptor-ceiling-exceeded', input.length, limits.maxPivotDescriptors);
-  const ids = new Set<string>();
-  const aggregateDomain = new Set(aggregates.map((aggregate) => aggregate.id));
+  let ids: Set<string> | undefined;
+  let aggregateDomain: Set<string> | undefined;
   const result: TabularPivot[] = [];
   for (const descriptor of input) {
-    const base = validateDescriptorBase(descriptor, ids, limits);
+    const base = validateDescriptorBase(descriptor, ids ??= new Set<string>(), limits);
     if (!base.ok) return base;
+    aggregateDomain ??= new Set(aggregates.map((aggregate) => aggregate.id));
     try {
       const columnID = descriptor.columnID;
       const valuePolicy = descriptor.valuePolicy;
