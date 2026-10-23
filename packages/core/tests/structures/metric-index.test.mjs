@@ -48,6 +48,33 @@ test('lookup, distance, nearest, radius, and forward half-space are deterministi
   assert.deepEqual(index.forwardNearest([0, 0], [-1, 0]), { id: 'west', squaredDistance: 1 });
 });
 
+test('indexed queries preserve outer input snapshots through reentrant getters and later queries', () => {
+  const points = Array.from({ length: 256 }, (_, id) => ({ id, coordinates: [id, id % 7] }));
+  const index = createMetricIndex(points, { expectedQueries: 256 });
+  const packed = createMetricIndex(points, { expectedQueries: 0 });
+  for (const target of [[80, 3], [4, 4], [250, 5]]) {
+    const captured = [...target];
+    let reads = 0;
+    Object.defineProperty(captured, 0, { get() {
+      reads++;
+      assert.deepEqual(index.nearest([200, 4]), packed.nearest([200, 4]));
+      return target[0];
+    } });
+    assert.deepEqual(index.nearest(captured), packed.nearest(target));
+    assert.equal(reads, 1);
+    const direction = [1, 0];
+    Object.defineProperty(direction, 0, { get() {
+      assert.deepEqual(index.forwardNearest([200, 4], [-1, 1]), packed.forwardNearest([200, 4], [-1, 1]));
+      return 1;
+    } });
+    assert.deepEqual(index.forwardNearest(target, direction), packed.forwardNearest(target, [1, 0]));
+  }
+  const unreadable = [0, 0];
+  Object.defineProperty(unreadable, 1, { get() { throw new Error('unreadable target'); } });
+  assert.throws(() => index.nearest(unreadable), /unreadable target/);
+  assert.deepEqual(index.nearest([12, 3]), packed.nearest([12, 3]));
+});
+
 test('packed and construction-selected indexed paths agree with brute force across dimensions and distributions', () => {
   for (const dimensions of [1, 2, 3, 4, 8, 32]) {
     for (const distribution of ['uniform', 'clustered', 'collinear', 'duplicate']) {
