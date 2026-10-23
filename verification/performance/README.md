@@ -73,6 +73,14 @@ do not extend each other's retained lifetime. Certification is for release,
 nightly or dedicated benchmark runs, or an explicit selected/full
 investigation. It is not part of ordinary `pnpm verify` or `pnpm verify:full`.
 
+Measurement protocol 11 warms each fresh allocation workload with the same two
+calibrated batches used for timing, then collects garbage and samples the fixed
+allocation loop. A local consumed-result sink keeps global numeric-boxing costs
+outside the sample. Each process records its allocation warmup count. The result
+is transient heap growth after warmup, not total allocated bytes or cold-start
+cost. Retention still measures newly retained owner state without this warmup;
+warming retention first would hide the state that lane is intended to observe.
+
 Every command that actually measures performance creates a retained session
 under `.tasks/performance/runs/<run-id>/`. The progress manifest is written
 before the first worker starts, each isolated worker report is immutable once
@@ -109,6 +117,13 @@ the isolated-process median plus batch-sample p95 corroboration with a minimum
 20% band; it does not treat the p95 of only three process medians as stable tail
 evidence.
 
+Full certification reports historical complete-dist byte ratios but uses the
+existing consumer-install payload allowance for package admission. Comparison
+records the policy path, SHA-256, byte ceilings and owner. Category, absolute-size
+and installed-payload checks remain separate required gates. See the
+[package-budget decision](../../docs/engineering/package-boundary.md) for the
+prior and replacement ceilings; this does not change runtime or heap bands.
+
 Performance timing is conditional evidence. The default performance contract is
 structural: complexity, deterministic work, and resource bounds. Timing evidence
 is required when an operation has an explicit latency or throughput target, a
@@ -140,9 +155,35 @@ calibration, and retained run artifacts with one isolated process, without
 selecting or comparing an authoritative baseline. It cannot produce work-item
 evidence or replace a baseline.
 
-## Node 24.21 tagged-source certification reference
+## Node 24.21 allocation-protocol-11 reference
 
-The full-catalog reference for Node v24.21.0 and the current workload-file
+The full-catalog protocol-11 reference is environment partition
+`57c2416a5746aba9b80e57ef95210b88639edad093b759b31bb02a5459c6b95c`.
+It measures the nine prepared release artifacts from pre-optimization source
+`9357a4e74ec077fc408bd4360d6e9b2a8221cf80`. These were local tarballs, not
+published registry artifacts. The optimized candidate did not supply this
+baseline. Their extracted complete-dist totals match the preserved failed
+protocol-10 release run `2026-10-23T09-49-05-386Z-110-2ba00f17`.
+
+The isolated source snapshot uses its own extracted package dependencies.
+Only `scripts/performance/{config,measurement,worker,check,run}.mjs` and
+`scripts/consumer-install/check.mjs` are overlaid from
+`1870761a6c09a85771d9ca461e81e66856437aad`, identically to the candidate.
+Workloads, statistics and GC are unchanged. With Node 24.21.0, recording ran
+`node scripts/performance/run.mjs record --all --certify --profile certification --prepared`,
+then the retained report was promoted through `performance:promote`.
+
+Run `2026-10-23T11-07-21-133Z-62-9eb020a2` completed ten isolated processes and
+all 234 metrics. Its build fingerprint is
+`8c3d1370252abea28617ef351a22ad86c90d13d8c9b1f1d8d3ddf787d11ddfbf`.
+Historical protocol-10 partitions remain unchanged and cannot be selected for
+protocol-11 comparisons. Timing, allocation and retention tolerance formulas
+remain unchanged; replacing the measurement procedure requires a new compatible
+reference, rather than rewriting old measurements.
+
+## Historical Node 24.21 tagged-source certification reference
+
+The protocol-10 full-catalog reference for Node v24.21.0 and its workload-file
 fingerprint is environment partition
 `b750109d2af09bf9d48a818e9fc7e6534a834b39ecf72af72ed6175a2dcbd323`.
 It measures production builds of `release-2026-09-21.1`, source commit
