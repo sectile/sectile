@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import { execFile as execFileCallback } from 'node:child_process';
 import {
   DEFAULT_BASELINE_DIRECTORY,
@@ -30,6 +32,7 @@ import {
 } from './session-log.mjs';
 import { summarize } from './statistics.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
+import { packedPayloadCeiling } from '../consumer-install/check.mjs';
 import {
   PERFORMANCE_TIMING_PACKAGES,
   WORKLOAD_SCHEMA,
@@ -78,6 +81,7 @@ async function main() {
   }
 
   if (!options.prepared) await prepareBuild(options);
+  const footprintPolicy = options.mode === 'record' || executionMode === 'smoke' ? null : await readFootprintPolicy();
   const session = await createPerformanceSession({
     runsRoot: options.runsRoot,
     mode: executionMode,
@@ -187,7 +191,7 @@ async function main() {
     });
     const baselinePath = selectedBaseline.path;
     const baseline = selectedBaseline.report;
-    const comparison = compareReports(baseline, report);
+    const comparison = compareReports(baseline, report, { packageFootprintCeilings: footprintPolicy?.ceilings });
     const comparisonPath = resolve(session.directory, 'comparison.json');
     const output = Object.freeze({
       mode: options.mode,
@@ -202,6 +206,7 @@ async function main() {
       baseline: baselinePath,
       baselineBuildFingerprint: baseline.provenance.buildFingerprint,
       currentBuildFingerprint: report.provenance.buildFingerprint,
+      packageFootprintPolicy: footprintPolicy,
       ...comparison,
     });
     await writePerformanceComparison(session, output);
@@ -268,6 +273,15 @@ function aggregateMetrics(processReports) {
 
 function optionalSummary(values) {
   return values.length === 0 ? null : summarize(values);
+}
+
+async function readFootprintPolicy() {
+  const source = 'verification/consumer-install/baseline.json';
+  const bytes = await readFile(resolve(repoRoot, source));
+  const recorded = JSON.parse(bytes.toString());
+  assert.equal(recorded.schemaVersion, 2, 'unsupported consumer footprint policy');
+  const ceilings = Object.fromEntries(Object.entries(recorded.packages).map(([name, report]) => [name, packedPayloadCeiling(report)]));
+  return Object.freeze({ source, sha256: createHash('sha256').update(bytes).digest('hex'), ceilings: Object.freeze(ceilings) });
 }
 
 function parseArguments(arguments_) {

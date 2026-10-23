@@ -25,6 +25,7 @@ import {
   MIN_TIMING_CALIBRATION_NANOSECONDS,
   TIMING_WARMUP_BATCH_COUNT,
   timingCalibrationComplete,
+  measureTransientAllocation,
 } from './performance/measurement.mjs';
 import {
   PERFORMANCE_GC_PROTOCOL_VERSION,
@@ -373,6 +374,26 @@ test('comparison reports an intentional timing regression', () => {
   assert.deepEqual(comparison.regressions.map(({ id }) => id), ['core:case']);
 });
 
+test('transient allocation warms the operation before collection and samples only the measurement loop', () => {
+  const events = [];
+  let usedBytes = 100;
+  const measured = measureTransientAllocation({
+    operation: iteration => { events.push(`work:${iteration}`); usedBytes += 8; return iteration; },
+    iterations: 2, warmupIterations: 3, warmupBatches: 2, sink: 10,
+    collect: () => { events.push('collect'); usedBytes = 100; },
+    readHeapBytes: () => { events.push('heap'); return usedBytes; },
+    consume: (sink, value) => sink + value,
+  });
+  assert.deepEqual(events, ['work:0', 'work:1', 'work:2', 'work:3', 'work:4', 'work:5', 'collect', 'heap', 'work:0', 'work:1', 'heap']);
+  assert.deepEqual(measured, { sink: 26, before: 100, afterMeasurement: 116 });
+  let reads = 0;
+  assert.throws(() => measureTransientAllocation({
+    operation: () => { throw new Error('warmup failed'); }, iterations: 1, warmupIterations: 1, warmupBatches: 1,
+    collect: () => {}, readHeapBytes: () => { reads++; return 0; }, consume: () => 0, sink: 0,
+  }), /warmup failed/);
+  assert.equal(reads, 0);
+});
+
 test('comparison reports intentional allocation and retained-heap regressions', () => {
   const baseline = fixture();
   const current = fixture();
@@ -391,6 +412,26 @@ test('comparison reports an intentional package-footprint regression only for ce
   const targeted = structuredClone(current);
   targeted.runner = { processCount: 3, certification: false, targetPackages: ['core'] };
   assert.deepEqual(compareReports(baseline, targeted).regressions, []);
+});
+
+test('certification uses recorded consumer payload ceilings and preserves historical size deltas', () => {
+  const baseline = fixture();
+  const current = fixture();
+  current.provenance.packageFootprint.core = 121;
+  const options = { packageFootprintCeilings: { core: 125 } };
+  const comparison = compareReports(baseline, current, options);
+  assert.deepEqual(comparison.regressions, []);
+  assert.equal(comparison.footprintComparisons[0].footprintRatio, 1.21);
+  assert.equal(comparison.footprintComparisons[0].ceilingOwner, 'consumer-install');
+  current.provenance.packageFootprint.core = 126;
+  assert.deepEqual(compareReports(baseline, current, options).regressions.map(({ id }) => id), ['package-footprint:core']);
+  assert.throws(() => compareReports(baseline, current, { packageFootprintCeilings: {} }), /missing footprint ceiling/u);
+  current.provenance.packageFootprint.core = 121;
+  current.metrics['core:case'].timing.median = 180;
+  current.metrics['core:case'].timing.p95 = 180;
+  current.metrics['core:case'].timing.minimum = 180;
+  current.metrics['core:case'].timing.maximum = 180;
+  assert.ok(compareReports(baseline, current, options).regressions.some(({ id }) => id === 'core:case'));
 });
 
 test('comparison does not call a bimodal median shift a regression without tail corroboration', () => {

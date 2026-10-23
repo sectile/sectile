@@ -2,6 +2,21 @@ export const MAX_TIMING_ITERATIONS = 1_000_000;
 export const MIN_TIMING_CALIBRATION_NANOSECONDS = 1_000_000;
 export const TIMING_WARMUP_BATCH_COUNT = 2;
 
+/** Steady-state allocation excludes VM warmup and keeps the live sink local. */
+export function measureTransientAllocation({ operation, iterations, warmupIterations, warmupBatches, collect, readHeapBytes, consume, sink }) {
+  let measuredSink = sink;
+  for (let batch = 0; batch < warmupBatches; batch += 1) {
+    for (let iteration = 0; iteration < warmupIterations; iteration += 1) {
+      measuredSink = consume(measuredSink, operation(iteration + batch * warmupIterations));
+    }
+  }
+  collect();
+  const before = readHeapBytes();
+  for (let iteration = 0; iteration < iterations; iteration += 1) measuredSink = consume(measuredSink, operation(iteration));
+  const afterMeasurement = readHeapBytes();
+  return { sink: measuredSink, before, afterMeasurement };
+}
+
 export function timingCalibrationComplete(elapsedNanoseconds, iterations, maximumIterations) {
   if (!Number.isFinite(elapsedNanoseconds) || elapsedNanoseconds < 0) {
     throw new TypeError('calibration duration must be a finite non-negative number');

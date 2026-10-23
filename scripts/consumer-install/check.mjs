@@ -21,6 +21,11 @@ function payloadBytes(report) {
   }, 0);
 }
 
+/** One owner for the recorded delivered-payload allowance. */
+export function packedPayloadCeiling(report) {
+  return Math.ceil(payloadBytes(report) * 1.05) + 32;
+}
+
 export function validateInstallBaseline(baseline, current) {
   assert.equal(baseline.schemaVersion, 2, 'unsupported install baseline schema');
   assert.equal(current.schemaVersion, 2, 'unsupported current install schema');
@@ -30,7 +35,7 @@ export function validateInstallBaseline(baseline, current) {
     const before = baseline.packages[packageName];
     // Packed metadata is reported separately; the same allowance now protects
     // only the delivered payload, in addition to the individual category gates.
-    assert.ok(payloadBytes(report) <= Math.ceil(payloadBytes(before) * 1.05) + 32, `${packageName}: payload budget exceeded`);
+    assert.ok(payloadBytes(report) <= packedPayloadCeiling(before), `${packageName}: payload budget exceeded`);
     if (packageName === 'core') assert.ok(payloadBytes(report) < 1_140_000, 'core: absolute payload ceiling exceeded');
     for (const category of payloadCategories) {
       const actualBytes = report.categories[category].bytes;

@@ -46,7 +46,7 @@ export function assertComparable(baseline, current) {
   );
 }
 
-export function compareReports(baseline, current) {
+export function compareReports(baseline, current, { packageFootprintCeilings } = {}) {
   validateRunnerReport(baseline);
   validateRunnerReport(current);
   assertComparable(baseline, current);
@@ -134,9 +134,9 @@ export function compareReports(baseline, current) {
       && (!certification || heapFloorRatio > 1 + heapBand);
     if (timingRegression || allocationRegression || heapRegression) regressions.push(comparison);
   }
-  const footprintComparisons = comparePackageFootprints(baseline, current, runnerBand);
+  const footprintComparisons = comparePackageFootprints(baseline, current, runnerBand, packageFootprintCeilings);
   if (certification) {
-    regressions.push(...footprintComparisons.filter(({ footprintRatio, band }) => footprintRatio > 1 + band));
+    regressions.push(...footprintComparisons.filter(({ exceedsCeiling }) => exceedsCeiling));
   }
   return Object.freeze({
     runnerBand,
@@ -146,7 +146,7 @@ export function compareReports(baseline, current) {
   });
 }
 
-function comparePackageFootprints(baseline, current, runnerBand) {
+function comparePackageFootprints(baseline, current, runnerBand, approvedCeilings) {
   const before = baseline.provenance.packageFootprint;
   const after = current.provenance.packageFootprint;
   assert.ok(before !== null && typeof before === 'object', 'baseline package footprint is missing');
@@ -159,6 +159,10 @@ function comparePackageFootprints(baseline, current, runnerBand) {
   return Object.freeze(Object.keys(after).sort().map((packageName) => {
     assert.ok(Number.isSafeInteger(before[packageName]) && before[packageName] >= 0, `invalid baseline footprint for ${packageName}`);
     assert.ok(Number.isSafeInteger(after[packageName]) && after[packageName] >= 0, `invalid current footprint for ${packageName}`);
+    const ceilingBytes = approvedCeilings === undefined
+      ? Math.floor(before[packageName] * (1 + runnerBand))
+      : approvedCeilings[packageName];
+    assert.ok(Number.isSafeInteger(ceilingBytes) && ceilingBytes >= 0, `invalid or missing footprint ceiling for ${packageName}`);
     return Object.freeze({
       id: `package-footprint:${packageName}`,
       kind: 'footprint',
@@ -167,6 +171,9 @@ function comparePackageFootprints(baseline, current, runnerBand) {
       currentBytes: after[packageName],
       footprintRatio: ratio(after[packageName], before[packageName]),
       band: runnerBand,
+      ceilingBytes,
+      ceilingOwner: approvedCeilings === undefined ? 'performance-baseline' : 'consumer-install',
+      exceedsCeiling: after[packageName] > ceilingBytes,
     });
   }));
 }

@@ -11,6 +11,7 @@ import {
   calibratedTimingIterations,
   TIMING_WARMUP_BATCH_COUNT,
   timingCalibrationComplete,
+  measureTransientAllocation,
 } from './measurement.mjs';
 import {
   normalizePerformanceSelection,
@@ -73,7 +74,7 @@ async function measureWorkloadGroup(createGroup, lane, laneSelection) {
   }
 }
 
-function measureTiming(workload, metric) {
+function calibrateWorkload(workload) {
   const warmupStartedAt = performance.now();
   let calibrationIterations = 0;
   let warmupNanoseconds = 0;
@@ -88,11 +89,15 @@ function measureTiming(workload, metric) {
   ));
   const warmupNanosecondsPerOperation = Math.max(1, warmupNanoseconds / calibrationIterations);
   const targetBatchNanoseconds = quick ? 2_000_000 : screening ? 10_000_000 : 20_000_000;
-  const measuredIterations = calibratedTimingIterations(
+  return calibratedTimingIterations(
     targetBatchNanoseconds,
     warmupNanosecondsPerOperation,
     workload.metadata.owner === 'runner' ? workload.iterations : 1,
   );
+}
+
+function measureTiming(workload, metric) {
+  const measuredIterations = calibrateWorkload(workload);
   for (let warmupBatch = 0; warmupBatch < TIMING_WARMUP_BATCH_COUNT; warmupBatch += 1) {
     for (let iteration = 0; iteration < measuredIterations; iteration += 1) {
       sink = consume(sink, workload.operation(iteration + warmupBatch * measuredIterations));
@@ -113,16 +118,24 @@ function measureTiming(workload, metric) {
 }
 
 function measureAllocation(workload, metric) {
-  collectTransientGarbage();
-  const before = getHeapStatistics().used_heap_size;
-  for (let iteration = 0; iteration < workload.iterations; iteration += 1) {
-    sink = consume(sink, workload.operation(iteration));
-  }
-  const afterMeasurement = getHeapStatistics().used_heap_size;
+  const warmupIterations = metric.iterationsPerBatch || calibrateWorkload(workload);
+  const { sink: measuredSink, before, afterMeasurement } = measureTransientAllocation({
+    operation: workload.operation,
+    iterations: workload.iterations,
+    warmupIterations,
+    warmupBatches: TIMING_WARMUP_BATCH_COUNT,
+    collect: collectTransientGarbage,
+    readHeapBytes: usedHeapBytes,
+    consume,
+    sink,
+  });
+  sink = measuredSink;
   const heap = heapResult(metric);
-  heap.allocation = Object.freeze({ before, afterMeasurement });
+  heap.allocation = Object.freeze({ before, afterMeasurement, warmupIterations, warmupBatches: TIMING_WARMUP_BATCH_COUNT });
   heap.peakDelta = Math.max(0, afterMeasurement - before);
 }
+
+function usedHeapBytes() { return getHeapStatistics().used_heap_size; }
 
 function measureRetention(workload, metric) {
   collectTransientGarbage();
