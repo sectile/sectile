@@ -181,6 +181,27 @@ protocol-11 comparisons. Timing, allocation and retention tolerance formulas
 remain unchanged; replacing the measurement procedure requires a new compatible
 reference, rather than rewriting old measurements.
 
+The [October 23 comparison](release-2026-10-23-comparison.json) records candidate
+`d6c2e0f596548cdf2e31e87f61b685a0006e5078`: ten processes, all 234 metrics,
+a 5% timing band, and zero detected regressions. Median observations on this
+Node/host/workload set are:
+
+| Registered operation | Before | Candidate | Timing change |
+| --- | ---: | ---: | ---: |
+| Tabular warm resolution, 1,000 rows | 3.740 us | 1.284 us | -65.7% |
+| Core indexed forward nearest, 2D, 1,000 points | 1.867 us | 1.563 us | -16.3% |
+| Core packed nearest, 2D, 1,000 points | 2.896 us | 2.884 us | -0.4%, within noise |
+
+Chart cached projection's fixed allocation loops show transient heap growth
+falling from about 20.0 MB to 24.7–34.7 KB. These are heap deltas, not total
+allocated bytes. Chart timing was more variable (up to 17.3% relative MAD), so
+the allocation result is the stronger evidence for that correction. The earlier
+candidate passed the global gate but slowed the small packed Core query;
+alternating before/after probes reproduced that cost. Restoring its incumbent
+public-result conversion boundary removed it before final certification.
+The five historical footprint failures are resolved by the shared existing
+package-admission policy described above, not by claiming those packages shrank.
+
 ## Historical Node 24.21 tagged-source certification reference
 
 The protocol-10 full-catalog reference for Node v24.21.0 and its workload-file
