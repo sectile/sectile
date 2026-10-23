@@ -41,10 +41,24 @@ jobs:
         with:
           node-version: 24.x
           cache: pnpm
-      - id: metadata
-        run: node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts
       - run: pnpm install --frozen-lockfile
-      - run: pnpm release:check "$RELEASE_TAG"
+      - name: Preview release notes with Releaseway's changelog template
+        id: notes
+        uses: releaseway/actions@b6f17f2ffe2c8fd92bdf6be4729e1e56d151bef3 # v0.8.0
+        with:
+          tag: ${{ inputs.tag }}
+          commit: ${{ github.sha }}
+          notes: changelog
+          notes-config: .github/release-notes.yml
+          notes-preview: "true"
+      - name: Freeze package versions and generated release notes
+        id: metadata
+        env:
+          GENERATED_NOTES: ${{ steps.notes.outputs.notes-path }}
+          NOTES_REPORT: ${{ steps.notes.outputs.notes-report }}
+        run: |
+          node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts "$GENERATED_NOTES"
+          cp -- "$NOTES_REPORT" release-artifacts/release-notes-report.json
       - name: Validate and seal release npm artifacts
         run: pnpm publish:packages -- --pack-only --pack-destination=release-artifacts --releaseway-manifest
       - id: bundle
@@ -129,6 +143,7 @@ jobs:
           assets: |
             release-artifacts/*.tgz
             release-artifacts/artifacts.json
+            release-artifacts/release-notes-report.json
             release-evidence/*.json
       - name: Preserve GitHub publication diagnostics
         if: always()

@@ -48,12 +48,6 @@ export function parseReleaseConfirmation(input) {
   throw new Error('answer y or n');
 }
 
-export function selectReleaseTrack(dryRun, independentBaseline) {
-  assert.equal(typeof dryRun, 'boolean', 'release dry-run marker must be boolean');
-  assert.equal(typeof independentBaseline, 'boolean', 'independent release baseline marker must be boolean');
-  return dryRun || independentBaseline ? 'independent' : 'synchronized';
-}
-
 export function parseStableVersion(version) {
   const match = stableVersionPattern.exec(version);
   assert.notEqual(match, null, `invalid stable version: ${version}`);
@@ -113,43 +107,6 @@ export function parseGitLog(output) {
 
 export function formatCommitList(commits) {
   return commits.map(({ shortHash, subject }) => `- ${subject} (${shortHash})`).join('\n');
-}
-
-export function formatReleaseNotes(baseTag, commits) {
-  return `## Changes since ${baseTag}\n\n${formatCommitList(commits)}\n`;
-}
-
-export function formatIndependentReleaseNotes(releaseTag, entries) {
-  assert.ok(entries.length > 0, 'independent release notes require at least one package');
-  const commits = [];
-  const seen = new Set();
-  for (const entry of entries) {
-    for (const commit of entry.commits ?? []) {
-      if (seen.has(commit.hash)) continue;
-      seen.add(commit.hash);
-      commits.push(commit);
-    }
-  }
-  const packages = entries
-    .map(({ name, previousVersion, version }) => `- ${name}: ${previousVersion} -> ${version}`)
-    .join('\n');
-  const changes = commits.length === 0 ? '- No direct package commits.' : formatCommitList(commits);
-  return `Sectile ${releaseTag}\n\n## Packages\n\n${packages}\n\n## Changes\n\n${changes}\n`;
-}
-
-export function filterPackageCommits(commits, directory, changedPathsByHash) {
-  const packagePrefix = `packages/${directory}/`;
-  const changelogPath = `${packagePrefix}CHANGELOG.md`;
-  return commits.filter(({ hash }) => {
-    const changedPaths = changedPathsByHash.get(hash);
-    assert.notEqual(changedPaths, undefined, `missing changed paths for commit ${hash}`);
-    return changedPaths.some((path) => path.startsWith(packagePrefix) && path !== changelogPath);
-  });
-}
-
-export function prependChangelog(document, packageName, version, commits) {
-  return prependChangelogChanges(document, packageName, version,
-    commits.length === 0 ? ['No package-specific changes.'] : commits.map(({ shortHash, subject }) => `${subject} (${shortHash})`));
 }
 
 export function prependChangelogChanges(document, packageName, version, changes) {

@@ -76,13 +76,6 @@ function run(command, args, options = {}) {
   })?.trim();
 }
 
-function assertSupportedNpm() {
-  const version = run('npm', ['--version'], { capture: true });
-  const [major, minor, patch] = version.split('.').map(Number);
-  assert.equal([major, minor, patch].every(Number.isInteger), true, `invalid npm version: ${version}`);
-  assert.equal(major > 11 || (major === 11 && (minor > 5 || (minor === 5 && patch >= 1))), true, `npm 11.5.1 or newer is required for trusted publishing; found ${version}`);
-}
-
 async function registryMetadata(specifier, environment) {
   try {
     const result = await execFilePortable('npm', [
@@ -95,8 +88,6 @@ async function registryMetadata(specifier, environment) {
     throw new Error(`failed to query ${specifier}:\n${output.trim() || error.message}`, { cause: error });
   }
 }
-
-if (bootstrapOnly) assertSupportedNpm();
 
 const graph = await loadPublishedPackageGraph();
 const allPackages = graph.order.map(({ directory, manifest, name }) => ({
@@ -207,7 +198,7 @@ function dependencyClosure(packageGraph, targets) {
 
 async function publishTarball(tarball, environment) {
   const arguments_ = ['publish', tarball, '--access', 'public', '--registry', registry];
-  if (process.env.CI !== undefined || (process.stdin.isTTY && process.stdout.isTTY)) {
+  if (process.stdin.isTTY && process.stdout.isTTY) {
     run('npm', arguments_, { env: environment });
     return;
   }

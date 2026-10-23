@@ -1,0 +1,17 @@
+# Releaseway owns change evidence and the Added / Changed / Fixed template.
+version: 1
+notes:
+  source: commits
+  range:
+    strategy: previous-release
+    tag-pattern: release-*
+    ancestry: first-parent
+    first-release: error
+  filter:
+    exclude:
+      types: [build, ci, style, test]
+      scopes: [release, verification, performance]
+  render:
+    layout: changelog
+    authors: false
+    comparison: true

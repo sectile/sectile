@@ -1,38 +1,30 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { fileURLToPath } from 'node:url';
 import {
-  bumpVersion,
   classifyReleaseBranch,
-  filterPackageCommits,
   formatCommitList,
-  formatIndependentReleaseNotes,
-  formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
   parseReleaseConfirmation,
-  parseStableVersion,
   shouldPromptForRelease,
-  prependChangelog,
   prependChangelogChanges,
   recommendBump,
-  selectReleaseTrack,
 } from './lib/release.mjs';
 import {
   assertIndependentDependencyProtocols,
-  assertSynchronizedReleaseBase,
   createPackageTag,
   createReleaseManifest,
   createReleaseSetTag,
+  formatReleaseTitle,
   independentReleaseBaselineTag,
   planIndependentVersions,
   releaseManifestFile,
   releaseSetSequence,
 } from './lib/release-set.mjs';
-import { publishedPackageDirectories } from './lib/published-packages.mjs';
 import { execFileSyncPortable } from '../tools/tooling/portable-process.mjs';
 import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 import {
@@ -48,20 +40,11 @@ import {
 const workspaceRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 const isolatedResultEnvironment = 'SECTILE_RELEASE_PREPARE_RESULT';
 
-function releasePackages(root) {
-  return publishedPackageDirectories.map((directory) => ({
-    directory,
-    manifestPath: join(root, 'packages', directory, 'package.json'),
-    changelogPath: join(root, 'packages', directory, 'CHANGELOG.md'),
-  }));
-}
-
 function run(root, command, args, options = {}) {
   return execFileSyncPortable(command, args, {
     cwd: root,
     encoding: 'utf8',
-    input: options.input,
-    stdio: options.capture || options.input !== undefined ? ['pipe', 'pipe', 'pipe'] : 'inherit',
+    stdio: options.capture ? ['pipe', 'pipe', 'pipe'] : 'inherit',
   })?.replaceAll('\r\n', '\n').trim();
 }
 
@@ -77,61 +60,10 @@ function isAncestor(root, ancestor, descendant) {
   return result.status === 0;
 }
 
-function synchronizedVersion(packages) {
-  const versions = packages.map(({ manifestPath }) => JSON.parse(readFileSync(manifestPath, 'utf8')).version);
-  assert.equal(new Set(versions).size, 1, `package versions differ: ${versions.join(', ')}`);
-  parseStableVersion(versions[0]);
-  return versions[0];
-}
-
 function githubRepository(remote) {
   const match = remote.match(/github\.com[/:]([^/]+)\/([^/#]+?)(?:\.git)?$/i);
   assert.notEqual(match, null, `origin must be a GitHub repository: ${remote}`);
   return `${match[1]}/${match[2]}`;
-}
-
-function latestPublishedTag(root, repository, packages) {
-  const result = spawnSync('gh', ['release', 'view', '--repo', repository, '--json', 'tagName', '--jq', '.tagName'], {
-    cwd: root,
-    encoding: 'utf8',
-  });
-  assert.equal(
-    result.status,
-    0,
-    `no published GitHub release found; publish and tag v${synchronizedVersion(packages)} manually before using pnpm release`,
-  );
-  const tag = result.stdout.trim();
-  return tag;
-}
-
-function updatePackages(root, packages, version, commits) {
-  const changedPathsByHash = new Map(commits.map(({ hash }) => [
-    hash,
-    run(root, 'git', ['diff-tree', '--root', '--no-commit-id', '--name-only', '-r', '-M', hash], { capture: true })
-      .split('\n')
-      .filter(Boolean),
-  ]));
-  const updates = packages.map(({ manifestPath, changelogPath }) => {
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    manifest.version = version;
-    const changelog = readFileSync(changelogPath, 'utf8');
-    const directory = basename(dirname(manifestPath));
-    return {
-      changelog: prependChangelog(
-        changelog,
-        manifest.name,
-        version,
-        filterPackageCommits(commits, directory, changedPathsByHash),
-      ),
-      changelogPath,
-      manifest: `${JSON.stringify(manifest, null, 2)}\n`,
-      manifestPath,
-    };
-  });
-  for (const update of updates) {
-    writeFileSync(update.manifestPath, update.manifest);
-    writeFileSync(update.changelogPath, update.changelog);
-  }
 }
 
 async function independentReleaseEntries(root) {
@@ -150,11 +82,6 @@ async function independentReleaseEntries(root) {
 function assertIndependentBaseline(root) {
   run(root, 'git', ['rev-parse', '--verify', `refs/tags/${independentReleaseBaselineTag}^{commit}`], { capture: true });
   run(root, 'git', ['merge-base', '--is-ancestor', independentReleaseBaselineTag, 'HEAD'], { capture: true });
-}
-
-function independentReleaseActive(root) {
-  const tag = run(root, 'git', ['tag', '--list', independentReleaseBaselineTag], { capture: true });
-  return tag === independentReleaseBaselineTag && isAncestor(root, independentReleaseBaselineTag, 'HEAD');
 }
 
 function packageBaseTag(root, entry) {
@@ -236,7 +163,7 @@ function createIndependentPlan(context) {
 function renderIndependentRecommendations(context) {
   return context.directChanges.map(({ baseTag, commits, name, recommendation }) => [
     `${name} (${baseTag})`,
-    `commits:\n${commits.length === 0 ? '- version-only repair' : formatCommitList(commits)}`,
+    `commits:\n${formatCommitList(commits)}`,
     `recommended bump: ${recommendation.bump} (${recommendation.reason})`,
   ].join('\n')).join('\n\n');
 }
@@ -320,74 +247,18 @@ async function prepareIndependentRelease(root, installDependencies, yes) {
   ]);
   run(root, 'git', ['commit', '-m', `chore(release): ${plan.releaseTag}`]);
   const releaseCommit = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
-  const notes = formatIndependentReleaseNotes(plan.releaseTag, plan.entries);
   return Object.freeze({
     repository,
     remoteHead,
     releaseCommit,
-    sourceHead,
     tag: plan.releaseTag,
     packageTags: plan.manifest.packages.map(({ tag }) => tag),
-    notes,
+    title: formatReleaseTitle(plan.manifest),
   });
 }
 
-async function prepareRelease(root, installDependencies, yes) {
-  const packages = releasePackages(root);
-  const repository = githubRepository(run(root, 'git', ['remote', 'get-url', 'origin'], { capture: true }));
-  for (const { manifestPath } of packages) {
-    const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-    assert.equal(githubRepository(manifest.repository?.url).toLowerCase(), repository.toLowerCase(), `${manifest.name} repository must match origin`);
-  }
-
-  run(root, 'git', ['fetch', 'origin', 'main', '--tags']);
-  const sourceHead = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
-  const remoteHead = run(root, 'git', ['rev-parse', 'origin/main'], { capture: true });
-  const branchState = classifyReleaseBranch(sourceHead, remoteHead, isAncestor(root, 'origin/main', 'HEAD'));
-  assert.notEqual(branchState, 'blocked', 'local main must contain origin/main; fetch and reconcile remote changes before release');
-
-  const baseTag = latestPublishedTag(root, repository, packages);
-  assertSynchronizedReleaseBase(baseTag);
-  const previousVersion = baseTag.slice(1);
-  assert.equal(synchronizedVersion(packages), previousVersion, `package version must match the last published release ${baseTag}`);
-  run(root, 'git', ['rev-parse', '--verify', `refs/tags/${baseTag}^{commit}`], { capture: true });
-  run(root, 'git', ['merge-base', '--is-ancestor', baseTag, 'HEAD'], { capture: true });
-
-  const log = run(root, 'git', ['log', '--format=%H%x1f%h%x1f%s%x1f%b%x1e', `${baseTag}..HEAD`], { capture: true });
-  const commits = parseGitLog(log);
-  if (commits.length === 0) {
-    console.log(`no commits since ${baseTag}; nothing to release`);
-    return undefined;
-  }
-
-  const recommendation = recommendBump(commits, previousVersion);
-  const version = bumpVersion(previousVersion, recommendation.bump);
-  const tag = `v${version}`;
-  console.log(`release base: ${baseTag}`);
-  console.log(`release branch: ${branchState}`);
-  console.log(`commits:\n${formatCommitList(commits)}`);
-  console.log(`recommended bump: ${recommendation.bump} (${recommendation.reason})`);
-  console.log(`\nrecommended release plan:\nrelease tag: ${tag}`);
-  if (!await confirmReleasePlan(yes)) {
-    console.log('\nrelease cancelled');
-    return undefined;
-  }
-
-  assert.equal(run(root, 'git', ['tag', '--list', tag], { capture: true }), '', `${tag} already exists locally`);
-  assert.equal(run(root, 'git', ['ls-remote', '--tags', 'origin', `refs/tags/${tag}`], { capture: true }), '', `${tag} already exists on origin`);
-  updatePackages(root, packages, version, commits);
-  run(root, 'pnpm', ['install', '--lockfile-only']);
-  if (installDependencies) run(root, 'pnpm', ['install', '--frozen-lockfile']);
-  run(root, 'pnpm', ['release:check', tag]);
-  run(root, 'git', ['add', '--', 'packages', 'pnpm-lock.yaml']);
-  run(root, 'git', ['commit', '-m', `chore(release): ${tag}`]);
-  const releaseCommit = run(root, 'git', ['rev-parse', 'HEAD'], { capture: true });
-  const notes = `Sectile ${tag}\n\n${formatReleaseNotes(baseTag, commits)}`;
-  return Object.freeze({ repository, remoteHead, releaseCommit, sourceHead, tag, notes });
-}
-
 function publishRelease(root, release) {
-  run(root, 'git', ['tag', '-a', release.tag, release.releaseCommit, '-F', '-'], { input: release.notes });
+  run(root, 'git', ['tag', '-a', release.tag, release.releaseCommit, '-m', release.title]);
   for (const packageTag of release.packageTags ?? []) {
     run(root, 'git', ['tag', '-a', packageTag, release.releaseCommit, '-m', packageTag]);
   }
@@ -492,16 +363,12 @@ async function main() {
   if (isolatedResultPath !== undefined) {
     delete process.env[isolatedResultEnvironment];
     assert.equal(releaseWorktreeStatus(workspaceRoot), '', 'isolated release worktree must start clean');
-    const track = selectReleaseTrack(dryRun, independentReleaseActive(workspaceRoot));
-    const release = track === 'independent'
-      ? await prepareIndependentRelease(workspaceRoot, true, yes)
-      : await prepareRelease(workspaceRoot, true, yes);
+    const release = await prepareIndependentRelease(workspaceRoot, true, yes);
     writeFileSync(isolatedResultPath, `${JSON.stringify(release ?? null)}\n`);
     return;
   }
 
   assert.equal(run(workspaceRoot, 'git', ['branch', '--show-current'], { capture: true }), 'main', 'release must run from main');
-  const track = selectReleaseTrack(dryRun, independentReleaseActive(workspaceRoot));
   if (dryRun) {
     const context = await inspectIndependentRelease(workspaceRoot);
     console.log(renderIndependentRecommendations(context));
@@ -519,9 +386,7 @@ async function main() {
     return;
   }
 
-  const release = track === 'independent'
-    ? await prepareIndependentRelease(workspaceRoot, false, yes)
-    : await prepareRelease(workspaceRoot, false, yes);
+  const release = await prepareIndependentRelease(workspaceRoot, false, yes);
   if (release !== undefined) publishRelease(workspaceRoot, release);
 }
 

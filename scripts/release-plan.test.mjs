@@ -82,25 +82,38 @@ test('automatic release plans reject an empty package change set', (context) => 
   assert.match(result.stderr, /no changed packages since their latest release tags/u);
 });
 
-test('release metadata preserves annotated notes and rejects a different workflow source before output', (context) => {
+test('release metadata seals the template preview and independent versions against the workflow source', (context) => {
   const root = releaseFixture(context);
   const script = join(root, 'scripts', 'release-metadata.mjs');
   cpSync(join(repositoryRoot, 'scripts', 'release-metadata.mjs'), script);
-  const notes = 'Release notes\n\nPackage transitions and evidence.\n';
-  git(root, ['tag', '-a', 'v0.14.2', '-m', notes]);
+  const tag = 'release-2026-09-04.1';
+  writeFileSync(join(root, 'release-manifest.json'), JSON.stringify({ releaseTag: tag, packages: [
+    { name: '@sectile/form', directory: 'form', previousVersion: '0.14.1', version: '0.14.2' },
+  ] }));
+  git(root, ['add', 'release-manifest.json']);
+  git(root, ['commit', '-m', 'chore(release): prepare fixture']);
+  const notes = '## Fixed\n\n- Preserve field validity. ([abcdef1](https://github.com/sectile/sectile/commit/abcdef1))\n';
+  const preview = join(root, 'preview.md');
+  writeFileSync(preview, notes);
   const commit = git(root, ['rev-parse', 'HEAD']);
   const output = join(root, 'github-output');
   const directory = join(root, 'release-artifacts');
-  const invoke = (sha) => spawnSync(process.execPath, [script, 'prepare', 'v0.14.2', directory], {
-    cwd: root, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha, GITHUB_OUTPUT: output },
+  const invoke = (sha) => spawnSync(process.execPath, [script, 'prepare', tag, directory, preview], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha, GITHUB_OUTPUT: output, GITHUB_REPOSITORY: 'sectile/sectile' },
   });
   const rejected = invoke('b'.repeat(40));
   assert.notEqual(rejected.status, 0);
   assert.match(rejected.stderr, /dispatch the workflow on the release tag ref/u);
+  writeFileSync(preview, '');
+  assert.match(invoke(commit).stderr, /preview notes cannot be empty/u);
+  writeFileSync(preview, notes);
   const result = invoke(commit);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(readFileSync(join(directory, 'notes.md'), 'utf8'), notes);
-  assert.equal(readFileSync(output, 'utf8'), `commit=${commit}\ntitle=v0.14.2\n`);
+  const sealed = readFileSync(join(directory, 'notes.md'), 'utf8');
+  assert.ok(sealed.startsWith('## Packages\n\n| Package | Version | Details |'));
+  assert.ok(sealed.includes('0.14.1 → **0.14.2**'));
+  assert.ok(sealed.endsWith(notes), 'the Releaseway template body must retain its exact bytes');
+  assert.equal(readFileSync(output, 'utf8'), `commit=${commit}\ntitle=form v0.14.2\n`);
   assert.notEqual(invoke(commit).status, 0, 'existing sealed release notes must not be overwritten');
 });
 

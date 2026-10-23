@@ -23,12 +23,6 @@ export function isReleaseSetTag(tag) {
   return releaseSetTagPattern.test(tag) || legacyReleaseSetTagPattern.test(tag);
 }
 
-export function assertSynchronizedReleaseBase(tag) {
-  assert.equal(isLegacyReleaseTag(tag), true, `latest GitHub release is not a legacy stable tag: ${tag}`);
-  assert.notEqual(tag, independentReleaseBaselineTag,
-    `synchronized releases ended at ${independentReleaseBaselineTag}; use independent release tracking`);
-}
-
 export function createReleaseSetTag(date = new Date(), sequence = 1) {
   assert.equal(Number.isNaN(date.getTime()), false, 'release date is invalid');
   assert.equal(Number.isSafeInteger(sequence) && sequence > 0, true, 'release sequence must be a positive integer');
@@ -65,6 +59,26 @@ export function createPackageTag(packageName, version) {
   assert.match(packageName, /^@sectile\/[a-z0-9-]+$/u, `invalid package name: ${packageName}`);
   parseStableVersion(version);
   return `${packageName}@${version}`;
+}
+
+// Releaseway owns change collection/classification/rendering. Sectile adds only
+// the independent package identities that its single-version presets do not know.
+export function formatReleasePackageSummary(manifest, repository, commit) {
+  formatReleaseTitle(manifest);
+  assert.match(repository, /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u, 'release repository is required');
+  assert.match(commit, /^[0-9a-f]{40}$/u, 'release source must be a full commit SHA');
+  const rows = manifest.packages.map(({ name, previousVersion, version, directory }) => {
+    parseStableVersion(previousVersion);
+    assert.equal(name, `@sectile/${directory}`, 'release package directory must match its name');
+    return `| [${name}](https://www.npmjs.com/package/${name}/v/${version}) | ${previousVersion} → **${version}** | [Changelog](https://github.com/${repository}/blob/${commit}/packages/${directory}/CHANGELOG.md) |`;
+  });
+  return [
+    ...(manifest.reason ? [manifest.reason, ''] : []),
+    '## Packages', '',
+    '| Package | Version | Details |',
+    '| --- | --- | --- |',
+    ...rows, '',
+  ].join('\n');
 }
 
 export function parsePackageTag(tag) {

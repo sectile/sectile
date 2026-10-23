@@ -6,26 +6,22 @@ import { fileURLToPath } from 'node:url';
 import {
   bumpVersion,
   classifyReleaseBranch,
-  filterPackageCommits,
-  formatIndependentReleaseNotes,
-  formatReleaseNotes,
   parseGitLog,
   parseReleaseArguments,
   parseReleaseConfirmation,
-  prependChangelog,
+  prependChangelogChanges,
   recommendBump,
   resolveExpectedReleaseTag,
-  selectReleaseTrack,
   shouldPromptForRelease,
 } from './lib/release.mjs';
 import {
   assertIndependentDependencyProtocols,
-  assertSynchronizedReleaseBase,
   caretAccepts,
   createPackageTag,
   createReleaseManifest,
   createReleaseSetTag,
   formatReleaseTitle,
+  formatReleasePackageSummary,
   isReleaseSetTag,
   planIndependentVersions,
   releaseSetDate,
@@ -65,7 +61,7 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
   assert.match(publication, /npm_config_otp/u);
   assert.match(workflow, /--pack-destination=release-artifacts/u);
   assert.match(workflow, /--releaseway-manifest/u);
-  assert.ok(workflow.includes('node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts'));
+  assert.ok(workflow.includes('node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts "$GENERATED_NOTES"'));
   assert.match(workflow, /jobs:\n  prepare:/u);
   const preparation = workflow.slice(workflow.indexOf('  prepare:'), workflow.indexOf('\n  publish:'));
   assert.ok(preparation.includes('test "$GITHUB_REF_NAME" = "$RELEASE_TAG"'));
@@ -78,6 +74,10 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
   assert.match(publicationJob, /artifact-report-path/u);
   assert.match(publicationJob, /if: always\(\)/u);
   assert.match(workflow, /group: release-main/u);
+  assert.match(preparation, /notes: changelog/u);
+  assert.match(preparation, /notes-config: \.github\/release-notes\.yml/u);
+  assert.match(preparation, /notes-preview: "true"/u);
+  assert.ok(preparation.indexOf('notes-preview: "true"') < preparation.indexOf('--releaseway-manifest'));
   const githubJob = workflow.slice(workflow.indexOf('\n  github-release:'));
   assert.match(githubJob, /needs: \[prepare, publish\]/u);
   assert.match(githubJob, /contents: write/u);
@@ -89,7 +89,6 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
     assert.match(workflow, new RegExp(`uses: ${action}@[0-9a-f]{40} # v0\\.8\\.0`, 'u'));
   }
   assert.match(readText(join(root, '.github/npm/packages.yml')), /publish:\n  mode: direct/u);
-  assert.match(workflow, /run: pnpm release:check/u);
   assert.equal(workflow.includes('@sectile/docs'), false, 'docs remain local-only');
   assert.equal(workflow.includes('docs/dist'), false);
   assert.equal(workflow.includes('pages: write'), false);
@@ -103,7 +102,6 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
   assert.equal(workflow.includes('verify:release'), false);
   assert.equal(workflow.includes('verify:compat'), false);
   assert.equal(localRelease.includes("['verify:release']"), false);
-  assert.match(localRelease, /\['add', '--', 'packages', 'pnpm-lock\.yaml'\]/u);
   assert.match(manifest.scripts['publish:packages'], /--verbose package-publication/u);
 });
 
@@ -158,7 +156,7 @@ test('recommends minor for a feature and patch otherwise', () => {
   assert.equal(recommendBump([commit('fix: restore focus'), commit('docs: clarify release')], '0.14.2').bump, 'patch');
 });
 
-test('bumps stable synchronized versions', () => {
+test('bumps stable package versions', () => {
   assert.equal(bumpVersion('1.2.3', 'patch'), '1.2.4');
   assert.equal(bumpVersion('1.2.3', 'minor'), '1.3.0');
   assert.equal(bumpVersion('1.2.3', 'major'), '2.0.0');
@@ -202,78 +200,45 @@ test('release --yes bypasses only the interactive confirmation requirement', () 
   );
 });
 
-test('switches the default release command to independent tracking after the bridge', () => {
-  assert.equal(selectReleaseTrack(false, false), 'synchronized');
-  assert.equal(selectReleaseTrack(false, true), 'independent');
-  assert.equal(selectReleaseTrack(true, false), 'independent');
-});
-
-test('parses git records and renders commit-based notes', () => {
+test('parses git records for independent version recommendations', () => {
   const commits = parseGitLog('abcdef123456\x1fabcdef1\x1ffeat: add field\x1fbody\x1e');
   assert.deepEqual(commits, [commit('feat: add field', 'body')]);
-  assert.equal(formatReleaseNotes('v1.2.3', commits), '## Changes since v1.2.3\n\n- feat: add field (abcdef1)\n');
 });
 
-test('independent release notes retain package transitions and unique commit subjects', () => {
-  const shared = commit('feat(dom): add presence');
-  const vue = { ...commit('fix(vue): retain exit node'), hash: 'bbbbbb123456', shortHash: 'bbbbbb1' };
-  assert.equal(formatIndependentReleaseNotes('release-2026-09-04.1', [
-    {
-      name: '@sectile/dom', previousVersion: '0.14.1', version: '0.14.2', commits: [shared],
-    },
-    {
-      name: '@sectile/vue', previousVersion: '0.14.1', version: '0.14.2', commits: [shared, vue],
-    },
-  ]), [
-    'Sectile release-2026-09-04.1',
-    '',
-    '## Packages',
-    '',
-    '- @sectile/dom: 0.14.1 -> 0.14.2',
-    '- @sectile/vue: 0.14.1 -> 0.14.2',
-    '',
-    '## Changes',
-    '',
-    '- feat(dom): add presence (abcdef1)',
-    '- fix(vue): retain exit node (bbbbbb1)',
-    '',
-  ].join('\n'));
+test('package summary preserves independent transitions and links to source-bound changelogs', () => {
+  const manifest = {
+    releaseTag: 'release-2026-09-04.1',
+    packages: [
+      { name: '@sectile/dom', directory: 'dom', previousVersion: '0.14.1', version: '0.14.2' },
+      { name: '@sectile/vue', directory: 'vue', previousVersion: '0.14.1', version: '0.15.0' },
+    ],
+  };
+  const summary = formatReleasePackageSummary(manifest, 'sectile/sectile', 'a'.repeat(40));
+  assert.ok(summary.includes('| [@sectile/dom](https://www.npmjs.com/package/@sectile/dom/v/0.14.2) | 0.14.1 → **0.14.2** |'));
+  assert.ok(summary.includes('| [@sectile/vue](https://www.npmjs.com/package/@sectile/vue/v/0.15.0) | 0.14.1 → **0.15.0** |'));
+  assert.ok(summary.includes(`/blob/${'a'.repeat(40)}/packages/vue/CHANGELOG.md`));
+  assert.ok(formatReleasePackageSummary({ ...manifest, reason: 'Maintenance publication.' }, 'sectile/sectile', 'a'.repeat(40)).startsWith('Maintenance publication.\n\n'));
+  assert.throws(() => formatReleasePackageSummary(manifest, 'sectile/sectile', 'main'), /full commit SHA/u);
 });
 
 test('prepends the same commit list to a package changelog', () => {
   const changelog = '# @sectile/core\n\n## 0.1.0\n\n- Initial release.\n';
   assert.equal(
-    prependChangelog(changelog, '@sectile/core', '0.2.0', [commit('feat: add field')]),
-    '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- feat: add field (abcdef1)\n\n## 0.1.0\n\n- Initial release.\n',
+    prependChangelogChanges(changelog, '@sectile/core', '0.2.0', ['Add field.']),
+    '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- Add field.\n\n## 0.1.0\n\n- Initial release.\n',
   );
 });
 
 test('creates the first release entry from a seeded package changelog', () => {
   assert.equal(
-    prependChangelog('# @sectile/chart\n', '@sectile/chart', '0.12.0', [commit('feat(chart): add plots')]),
-    '# @sectile/chart\n\n## 0.12.0\n\n### Changes\n\n- feat(chart): add plots (abcdef1)\n',
+    prependChangelogChanges('# @sectile/chart\n', '@sectile/chart', '0.12.0', ['Add plots.']),
+    '# @sectile/chart\n\n## 0.12.0\n\n### Changes\n\n- Add plots.\n',
   );
 });
 
-test('filters package changelogs by changed package paths', () => {
-  const coreCommit = commit('feat(core): add field');
-  const vueCommit = { ...commit('fix(vue): project field'), hash: 'bbbbbb123456', shortHash: 'bbbbbb1' };
-  const metadataCommit = { ...commit('docs: repair changelog'), hash: 'cccccc123456', shortHash: 'cccccc1' };
-  const paths = new Map([
-    [coreCommit.hash, ['packages/core/src/field.ts', 'packages/core/CHANGELOG.md']],
-    [vueCommit.hash, ['packages/vue/src/field.ts']],
-    [metadataCommit.hash, ['packages/core/CHANGELOG.md']],
-  ]);
-  assert.deepEqual(filterPackageCommits([coreCommit, vueCommit, metadataCommit], 'core', paths), [coreCommit]);
-  assert.deepEqual(filterPackageCommits([coreCommit, vueCommit, metadataCommit], 'vue', paths), [vueCommit]);
-});
-
-test('writes an explicit empty package release entry', () => {
+test('rejects an empty package release entry', () => {
   const changelog = '# @sectile/core\n\n## 0.1.0\n\n- Initial release.\n';
-  assert.equal(
-    prependChangelog(changelog, '@sectile/core', '0.2.0', []),
-    '# @sectile/core\n\n## 0.2.0\n\n### Changes\n\n- No package-specific changes.\n\n## 0.1.0\n\n- Initial release.\n',
-  );
+  assert.throws(() => prependChangelogChanges(changelog, '@sectile/core', '0.2.0', []), /at least one change/u);
 });
 
 test('creates readable release-set tags while accepting legacy release-set tags', () => {
@@ -289,9 +254,6 @@ test('creates readable release-set tags while accepting legacy release-set tags'
   assert.throws(() => createReleaseSetTag(date, 0), /positive integer/u);
   assert.equal(createPackageTag('@sectile/form', '0.14.2'), '@sectile/form@0.14.2');
   assert.throws(() => createPackageTag('@other/form', '0.14.2'), /invalid package name/u);
-  assert.doesNotThrow(() => assertSynchronizedReleaseBase('v0.14.0'));
-  assert.throws(() => assertSynchronizedReleaseBase('v0.14.1'), /synchronized releases ended/u);
-  assert.throws(() => assertSynchronizedReleaseBase('release-20260901010203'), /not a legacy stable tag/u);
 });
 
 test('formats compact GitHub release titles by package count', () => {
