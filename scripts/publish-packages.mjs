@@ -8,7 +8,7 @@ import {
   inspectPackedPackage,
 } from './lib/packed-package-contract.mjs';
 import { completeNpmWebAuth, parseNpmWebAuthChallenge } from './lib/npm-publish-auth.mjs';
-import { assertRegistryArtifact, publishRegistryArtifacts } from './lib/npm-registry-artifact.mjs';
+import { sealReleaseArtifacts } from './lib/release-artifacts.mjs';
 import { execFilePortable, execFileSyncPortable, spawnSyncPortable } from '../tools/tooling/portable-process.mjs';
 import { resolveExpectedReleaseTag } from './lib/release.mjs';
 import {
@@ -25,6 +25,7 @@ const packOnly = process.argv.includes('--pack-only');
 const prepared = process.argv.includes('--prepared');
 const bootstrapOnly = process.argv.includes('--bootstrap-only');
 const validateOnly = process.argv.includes('--validate-only');
+const releasewayManifest = process.argv.includes('--releaseway-manifest');
 const packDestinationArgument = process.argv.find((argument) => argument.startsWith('--pack-destination='));
 const tarballDirectoryArgument = process.argv.find((argument) => argument.startsWith('--tarball-directory='));
 const packageArguments = process.argv.filter((argument) => argument.startsWith('--package='));
@@ -35,6 +36,7 @@ const unexpectedArguments = process.argv.slice(2).filter((argument) => (
   && argument !== '--prepared'
   && argument !== '--bootstrap-only'
   && argument !== '--validate-only'
+  && argument !== '--releaseway-manifest'
   && argument !== '--'
   && argument !== packDestinationArgument
   && argument !== tarballDirectoryArgument
@@ -50,6 +52,12 @@ assert.equal(packDestination !== undefined && !packOnly, false, '--pack-destinat
 assert.equal(tarballDirectory !== undefined && (packOnly || bootstrapOnly), false,
   '--tarball-directory cannot be combined with --pack-only or --bootstrap-only');
 assert.equal(validateOnly && tarballDirectory === undefined, false, '--validate-only requires --tarball-directory');
+assert.ok(packOnly || validateOnly || bootstrapOnly,
+  'regular publication is owned by Releaseway; use pnpm release, --pack-only, --validate-only or --bootstrap-only');
+assert.equal(releasewayManifest && (!packOnly || packDestination === undefined || expectedTag === undefined), false,
+  '--releaseway-manifest requires --pack-only, --pack-destination and a release tag');
+assert.equal(releasewayManifest && packageArguments.length > 0, false,
+  '--releaseway-manifest must cover the complete release set');
 assert.equal(packDestination === '', false, '--pack-destination requires a directory');
 assert.equal(tarballDirectory === '', false, '--tarball-directory requires a directory');
 if (bootstrapOnly) assert.notEqual(process.env.CI, 'true', 'first package publication requires local npm authentication');
@@ -88,7 +96,7 @@ async function registryMetadata(specifier, environment) {
   }
 }
 
-assertSupportedNpm();
+if (bootstrapOnly) assertSupportedNpm();
 
 const graph = await loadPublishedPackageGraph();
 const allPackages = graph.order.map(({ directory, manifest, name }) => ({
@@ -155,13 +163,18 @@ try {
     npm_config_cache: join(packRoot, 'npm-cache'),
   };
   const unregistered = [];
-  if (!packOnly && !validateOnly) {
+  if (bootstrapOnly) {
     for (const artifact of packed) {
       if (await registryMetadata(artifact.manifest.name, npmEnvironment) === undefined) unregistered.push(artifact);
     }
   }
 
   if (packOnly) {
+    if (releasewayManifest) {
+      const commit = run('git', ['rev-parse', 'HEAD'], { capture: true });
+      assert.equal(process.env.GITHUB_SHA, commit, 'release artifact source must match the workflow SHA');
+      await sealReleaseArtifacts(packRoot, packed, { repository: process.env.GITHUB_REPOSITORY, commit });
+    }
     console.log(`validated ${packed.length} package tarballs`);
   } else if (validateOnly) {
     console.log(`validated ${packed.length} downloaded package tarballs`);
@@ -171,23 +184,6 @@ try {
       console.log(`bootstrapped ${manifest.name}@${manifest.version}`);
     }
     if (unregistered.length === 0) console.log('all public package names are already registered');
-  } else {
-    assert.deepEqual(
-      unregistered.map(({ manifest }) => manifest.name),
-      [],
-      'unregistered packages require local `pnpm publish:packages -- --bootstrap-only` before release publication',
-    );
-    await publishRegistryArtifacts(packed, {
-      read: ({ manifest }) => registryMetadata(`${manifest.name}@${manifest.version}`, npmEnvironment),
-      publish: async ({ manifest, tarball }) => {
-        await publishTarball(tarball, npmEnvironment);
-        console.log(`submitted ${manifest.name}@${manifest.version}; registry verification queued`);
-      },
-      verify: ({ manifest, tarball }, metadata) => assertPublishedArtifact(metadata, manifest, tarball),
-      onVerified: ({ manifest }, existing) => console.log(existing
-        ? `skipped ${manifest.name}@${manifest.version}; already published and verified`
-        : `verified ${manifest.name}@${manifest.version}; registry artifact matches`),
-    });
   }
 } finally {
   if (temporaryPackRoot !== undefined) {
@@ -207,10 +203,6 @@ function dependencyClosure(packageGraph, targets) {
   };
   for (const target of targets) visit(target);
   return closure;
-}
-
-async function assertPublishedArtifact(published, manifest, tarball) {
-  assertRegistryArtifact(published, manifest, await readFile(tarball));
 }
 
 async function publishTarball(tarball, environment) {
