@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { execFilePortable } from '../../tools/tooling/portable-process.mjs';
@@ -32,10 +32,11 @@ try {
     const destination = packDirectory;
     await mkdir(destination, { recursive: true });
     if (tarballDirectory === null) await run('pnpm', ['--filter', `@sectile/${name}`, 'pack', '--pack-destination', destination], root);
-    const prefix = `sectile-${name}-`;
+    const manifest = JSON.parse(await readFile(join(root, 'packages', name, 'package.json'), 'utf8'));
+    const expectedTarball = `sectile-${name}-${manifest.version}.tgz`;
     const file = (await readdir(destination))
-      .find((entry) => entry.startsWith(prefix) && entry.endsWith('.tgz'));
-    assert.notEqual(file, undefined, `packed tarball missing for @sectile/${name}`);
+      .find((entry) => entry === expectedTarball);
+    assert.notEqual(file, undefined, `packed tarball missing: ${expectedTarball}`);
     tarballs[name] = join(destination, file);
   }
   vueDependency = await packInstalledDependencyClosure(

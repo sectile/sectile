@@ -981,7 +981,7 @@ test('every shipped route renders and all internal page links resolve', async ()
           'vue-temporal-date-time-selection': [/Selected: 2026-10-03T09:00/u, /without a time zone/u],
           'vue-temporal-date-time-range-selection': [/Selected: 2026-10-03T09:00.*2026-10-08T17:00/u, /Range end/u],
           'vue-components-meter-group-storage-budget': [/60 \/ 100/u, /40 units remaining/u, /Documents/u, /Media/u],
-          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /Display unit/u, /data-example-field-group/u],
+          'vue-components-quantity-field-unit-conversion': [/Canonical value: 1\.5 metre/u, /aria-label="Parcel length unit"/u, /data-example-field-group/u],
           'vue-components-window-splitter-bounded-panes': [/First pane: 50%/u, /Resize delivery panels/u],
           'vue-virtual-measured-list': [/Delivery 1/u, /Mounted content establishes/u],
           'vue-virtual-responsive-grid': [/Parcel 1/u, /64px tall/u],

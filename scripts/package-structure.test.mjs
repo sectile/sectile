@@ -839,12 +839,12 @@ test('DOM overlay infrastructure keeps lower resource owners below public profil
   for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
 
   const owners = [
-    ['overlay/layer/manager', ['overlay-layer-manager']],
-    ['overlay/layer/binding', ['overlay-layer-manager', 'overlay-layer-binding']],
+    ['overlay/layer/manager', ['overlay-layer-manager', 'overlay-interact']],
+    ['overlay/layer/binding', ['overlay-layer-manager', 'overlay-layer-binding', 'overlay-interact']],
     ['overlay/modal/effects', ['overlay-modal']],
-    ['overlay/position/engine', ['overlay-position-engine']],
-    ['overlay/position/connection', ['positioning', 'overlay-position-engine', 'overlay-position-connection']],
-    ['overlay/position/picker', ['positioning', 'overlay-position-engine', 'overlay-position-connection', 'overlay-position-picker']],
+    ['overlay/position/engine', ['overlay-position-engine', 'viewport']],
+    ['overlay/position/connection', ['positioning', 'overlay-position-engine', 'overlay-position-connection', 'viewport']],
+    ['overlay/position/picker', ['positioning', 'overlay-position-engine', 'overlay-position-connection', 'overlay-position-picker', 'viewport']],
     ['overlay/presence/motion', ['overlay-presence-motion']],
     ['interact-outside', ['overlay-interact']],
   ];

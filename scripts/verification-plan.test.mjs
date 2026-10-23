@@ -146,16 +146,18 @@ test('verification CLI separates affected, full deterministic, and release certi
   assert.equal(full.commands.includes('consumer bundles'), true);
   assert.equal(full.commands.includes('consumer install'), true);
   assert.ok(full.units.some(({ id }) => id === 'package:vue'));
-  assert.ok(full.units.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
-  assert.ok(full.units.some(({ id }) => id === 'consumer-bundles:vue:4-of-4'));
+  const firstVueBundle = full.units.find(({ id }) => /^consumer-bundles:vue:1-of-\d+$/u.test(id));
+  assert.ok(firstVueBundle);
+  const shardCount = Number(firstVueBundle.id.split('-of-')[1]);
+  assert.ok(full.units.some(({ id }) => id === `consumer-bundles:vue:${shardCount}-of-${shardCount}`));
   assert.ok(full.units.some(({ id }) => id === 'public-signatures'));
   assert.equal(full.certificationPerformance, false);
   assert.equal(full.documentationSiteBuild, false);
 
-  const bundleUnit = explain(['--full', '--unit', 'consumer-bundles:vue:1-of-4']);
-  assert.equal(bundleUnit.selectedUnit, 'consumer-bundles:vue:1-of-4');
-  assert.deepEqual(bundleUnit.stages, ['consumer bundles @sectile/vue shard 1/4']);
-  assert.deepEqual(bundleUnit.commands, ['consumer bundles @sectile/vue shard 1/4']);
+  const bundleUnit = explain(['--full', '--unit', firstVueBundle.id]);
+  assert.equal(bundleUnit.selectedUnit, firstVueBundle.id);
+  assert.deepEqual(bundleUnit.stages, [`consumer bundles @sectile/vue shard 1/${shardCount}`]);
+  assert.deepEqual(bundleUnit.commands, [`consumer bundles @sectile/vue shard 1/${shardCount}`]);
 
   const installUnit = explain(['--full', '--unit', 'consumer-install']);
   assert.equal(installUnit.selectedUnit, 'consumer-install');
@@ -181,7 +183,7 @@ test('verification unit CLI lists stable units and rejects unknown IDs', () => {
   assert.equal(listed.status, 0, listed.stderr);
   const units = JSON.parse(listed.stdout).units;
   assert.ok(units.some(({ id }) => id === 'package:virtual'));
-  assert.ok(units.some(({ id }) => id === 'consumer-bundles:vue:1-of-4'));
+  assert.ok(units.some(({ id }) => /^consumer-bundles:vue:1-of-\d+$/u.test(id)));
   assert.ok(units.some(({ id }) => id === 'consumer-bundles:virtual'));
   assert.equal(new Set(units.map(({ id }) => id)).size, units.length);
 
