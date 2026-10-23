@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -106,14 +106,32 @@ test('release metadata seals the template preview and independent versions again
   assert.match(rejected.stderr, /dispatch the workflow on the release tag ref/u);
   writeFileSync(preview, '');
   assert.match(invoke(commit).stderr, /preview notes cannot be empty/u);
+  for (const [contamination, diagnostic] of [
+    ['-----BEGIN PGP SIGNATURE-----\npublic signature\n-----END PGP SIGNATURE-----', /must not contain PGP armor/u],
+    ['\\-\\-\\-\\-\\-BEGIN PGP SIGNATURE\\-\\-\\-\\-\\-', /must not contain PGP armor/u],
+    ['## Pre-publication qualification\n\n58 checks passed.', /must not contain qualification logs/u],
+  ]) {
+    writeFileSync(preview, `${notes}\n${contamination}\n`);
+    const rejectedBody = invoke(commit);
+    assert.notEqual(rejectedBody.status, 0);
+    assert.match(rejectedBody.stderr, diagnostic);
+    assert.equal(existsSync(directory), false, 'rejected notes must not produce a publishable artifact');
+    assert.equal(existsSync(output), false, 'rejected notes must not emit publication metadata');
+  }
   writeFileSync(preview, notes);
+  const manifestPath = join(root, 'release-manifest.json');
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
+  writeFileSync(manifestPath, JSON.stringify({ ...manifest, reason: '-----BEGIN PGP SIGNATURE-----' }));
+  assert.match(invoke(commit).stderr, /must not contain PGP armor/u);
+  assert.equal(existsSync(directory), false);
+  writeFileSync(manifestPath, JSON.stringify(manifest));
   const result = invoke(commit);
   assert.equal(result.status, 0, result.stderr);
   const sealed = readFileSync(join(directory, 'notes.md'), 'utf8');
   assert.ok(sealed.startsWith('## Packages\n\n| Package | Version | Details |'));
   assert.ok(sealed.includes('0.14.1 → **0.14.2**'));
   assert.ok(sealed.endsWith(notes), 'the Releaseway template body must retain its exact bytes');
-  assert.equal(readFileSync(output, 'utf8'), `commit=${commit}\ntitle=form v0.14.2\n`);
+  assert.equal(readFileSync(output, 'utf8'), `commit=${commit}\ntitle=1 packages · 2026-09-04\n`);
   assert.notEqual(invoke(commit).status, 0, 'existing sealed release notes must not be overwritten');
 });
 

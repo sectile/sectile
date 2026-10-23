@@ -46,13 +46,11 @@ export function formatReleaseTitle(manifest) {
   assert.equal(isReleaseSetTag(manifest?.releaseTag), true, `invalid release-set tag: ${manifest?.releaseTag}`);
   assert.ok(Array.isArray(manifest.packages) && manifest.packages.length > 0,
     'release manifest requires at least one package');
-  const titles = manifest.packages.map(({ name, version }) => {
+  for (const { name, version } of manifest.packages) {
     assert.match(name, /^@sectile\/[a-z0-9-]+$/u, `invalid package name: ${name}`);
     parseStableVersion(version);
-    return `${name.slice('@sectile/'.length)} v${version}`;
-  });
-  if (titles.length <= 2) return titles.join(' + ');
-  return `${titles.length} packages · ${releaseSetDate(manifest.releaseTag)}`;
+  }
+  return `${manifest.packages.length} packages · ${releaseSetDate(manifest.releaseTag)}`;
 }
 
 export function createPackageTag(packageName, version) {

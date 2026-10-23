@@ -28,6 +28,12 @@ assert.equal(process.env.GITHUB_SHA, commit, 'dispatch the workflow on the relea
 const changes = readFileSync(generatedNotes, 'utf8');
 assert.notEqual(changes.trim(), '', 'Releaseway preview notes cannot be empty');
 const summary = formatReleasePackageSummary(manifest, process.env.GITHUB_REPOSITORY, commit);
+const body = `${summary}\n${changes}`;
+// Check the complete body, including a maintenance reason and Markdown-escaped
+// commit text, before any artifact is sealed or npm publication can begin.
+const plainBody = body.replaceAll('\\', '');
+assert.doesNotMatch(plainBody, /-----BEGIN PGP /iu, 'release notes must not contain PGP armor');
+assert.doesNotMatch(plainBody, /Pre-publication qualification/iu, 'release notes must not contain qualification logs');
 mkdirSync(directory, { recursive: true });
-writeFileSync(join(directory, 'notes.md'), `${summary}\n${changes}`, { flag: 'wx' });
+writeFileSync(join(directory, 'notes.md'), body, { flag: 'wx' });
 appendFileSync(process.env.GITHUB_OUTPUT, `commit=${commit}\ntitle=${title}\n`);

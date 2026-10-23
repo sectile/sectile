@@ -256,18 +256,18 @@ test('creates readable release-set tags while accepting legacy release-set tags'
   assert.throws(() => createPackageTag('@other/form', '0.14.2'), /invalid package name/u);
 });
 
-test('formats compact GitHub release titles by package count', () => {
+test('formats GitHub release titles with package count and release date', () => {
   assert.equal(formatReleaseTitle({
     releaseTag: 'release-2026-09-04.1',
     packages: [{ name: '@sectile/dom', version: '0.14.2' }],
-  }), 'dom v0.14.2');
+  }), '1 packages · 2026-09-04');
   assert.equal(formatReleaseTitle({
     releaseTag: 'release-2026-09-04.2',
     packages: [
       { name: '@sectile/dom', version: '0.14.2' },
       { name: '@sectile/vue', version: '0.15.0' },
     ],
-  }), 'dom v0.14.2 + vue v0.15.0');
+  }), '2 packages · 2026-09-04');
   assert.equal(formatReleaseTitle({
     releaseTag: 'release-2026-09-04.3',
     packages: [
