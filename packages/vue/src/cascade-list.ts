@@ -27,6 +27,8 @@ import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenSelectSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { useConditionalPresenceRegistry } from './presence/conditional-presence.js';
@@ -80,6 +82,7 @@ const itemKey: InjectionKey<CascadeChoiceItemContext> = Symbol('SectileCascadeLi
 const partProps = cascadeChoicePartProps;
 
 export const CascadeListRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileCascadeListRoot',
   inheritAttrs: false,
   props: {
@@ -104,12 +107,14 @@ export const CascadeListRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: CascadeListRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null);
     const submission = shallowRef<HTMLSelectElement | null>(null);
     const connection = shallowRef<CascadeListConnection<string>>();
     const initialValue = props.modelValue !== undefined ? props.modelValue : props.defaultValue;
     let mounted = false;
+    const submissionProps = useFormSubmissionProps({ element: submission, capabilities: hiddenSelectSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root,
       focusTarget: root,
@@ -142,8 +147,8 @@ export const CascadeListRoot = defineComponent({
       highlightedValue: highlighted.value,
       path: path.value,
       columns: columns.value,
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     const selectedIDSet = computed<ReadonlySet<string>>(() => {
       const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
@@ -191,8 +196,8 @@ export const CascadeListRoot = defineComponent({
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value } : { defaultValue: value }),
         defaultHighlightedValue,
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => {
           localValue.value = next;
@@ -226,8 +231,8 @@ export const CascadeListRoot = defineComponent({
     watch([
       () => props.nodes,
       () => props.disabledItems,
-      () => props.disabled,
-      () => props.readonly,
+      () => flags.value.disabled,
+      () => flags.value.readonly,
       () => props.label,
       () => props.policies,
       direction,
@@ -246,21 +251,18 @@ export const CascadeListRoot = defineComponent({
         role: 'group',
         tabindex: -1,
         'aria-label': props.label,
-        'aria-disabled': props.disabled ? 'true' : undefined,
-        'aria-readonly': props.readonly ? 'true' : undefined,
+        'aria-disabled': flags.value.disabled ? 'true' : undefined,
+        'aria-readonly': flags.value.readonly ? 'true' : undefined,
         'data-scope': 'cascade-list',
         'data-part': 'root',
         dir: direction.value,
-        'data-disabled': props.disabled ? '' : undefined,
-        'data-readonly': props.readonly ? '' : undefined,
+        'data-disabled': flags.value.disabled ? '' : undefined,
+        'data-readonly': flags.value.readonly ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
       return [visual, h('select', {
         ref: (element: unknown) => { submission.value = element instanceof HTMLSelectElement ? element : null; },
-        name: props.name,
-        form: props.form,
-        required: props.required,
-        disabled: props.disabled,
+        ...submissionProps.value,
         value: state.value.value ?? '',
         tabindex: -1,
         'aria-hidden': 'true',

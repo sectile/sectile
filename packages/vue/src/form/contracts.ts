@@ -219,6 +219,7 @@ export interface FormRootComponent {
 }
 
 export interface FormFieldProps {
+  readonly labelMode?: import('./control.js').FormLabelMode;
   readonly id?: string;
   readonly name?: FormFieldPath;
   readonly form?: string;

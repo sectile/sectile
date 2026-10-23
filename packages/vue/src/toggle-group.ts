@@ -10,6 +10,8 @@ import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState, sameIDs } from './internal/collection.js';
@@ -48,6 +50,7 @@ interface RootContext {
 const rootKey = Symbol('SectileToggleGroupRoot');
 
 export const ToggleGroupRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileToggleGroupRoot', inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true },
@@ -66,9 +69,11 @@ export const ToggleGroupRoot = defineComponent({
   emits: { 'update:modelValue': (_value: readonly string[]): boolean => true, highlight: (_value: string | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: ToggleGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
+    const submissionProps = useFormSubmissionProps({ element: () => null, capabilities: hiddenValueSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: () => value.value.map((_, index) => ({
@@ -90,7 +95,7 @@ export const ToggleGroupRoot = defineComponent({
       const result = createListboxControllerFromItems({
         items: props.items,
         selectionMode: props.multiple ? 'multiple' : 'single',
-        disabledItems: props.disabledItems, disabled: props.disabled, readOnly: props.readonly,
+        disabledItems: props.disabledItems, disabled: flags.value.disabled, readOnly: flags.value.readonly,
         orientation: props.orientation, direction: direction.value, activationMode: 'toggle', clearOnEscape: false,
         policies: { deselectable: props.deselectable, boundary: 'wrap' },
         ...(controlled ? { value } : { defaultValue: value }),
@@ -122,11 +127,11 @@ export const ToggleGroupRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, () => props.multiple, () => props.deselectable, direction], rebuild);
+    watch([() => props.items, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.orientation, () => props.multiple, () => props.deselectable, direction], rebuild);
     const value = computed(() => snapshot.value.state.selection.selected);
     const highlighted = computed(() => snapshot.value.state.cursor.current);
-    const disabled = computed(() => props.disabled);
-    const readonly = computed(() => props.readonly);
+    const disabled = computed(() => flags.value.disabled);
+    const readonly = computed(() => flags.value.readonly);
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const apply = (result: ReturnType<ListboxController<string>['handleEvent']>, root?: HTMLElement): boolean => {
       if (!result.ok) return false;
@@ -139,9 +144,9 @@ export const ToggleGroupRoot = defineComponent({
       focus: (id) => { if (snapshot.value.state.cursor.current !== id) apply(controller.value.handleEvent({ type: 'focus', id })); },
       press: (id, target) => apply(controller.value.handleEvent({ type: 'toggle', id }), target.closest('[data-scope="toggle-group"][data-part="root"]') as HTMLElement | undefined),
     });
-    const slotProps = computed<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
+    const slotProps = computed<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     return (): VNodeChild => {
-      const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }), disabled: props.disabled, readOnly: props.readonly }) as Record<string, unknown>, {
+      const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }), disabled: flags.value.disabled, readOnly: flags.value.readonly }) as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
       onKeydown: (event: KeyboardEvent) => { if (apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) event.preventDefault(); },
@@ -151,8 +156,8 @@ export const ToggleGroupRoot = defineComponent({
         ref: (element: unknown) => {
           submissionElements[index] = element instanceof HTMLInputElement ? element : null;
         },
-        type: 'hidden', name: props.name, form: props.form, value: selected,
-        disabled: props.disabled, style: visuallyHiddenInputStyle,
+        type: 'hidden', ...submissionProps.value, value: selected,
+        style: visuallyHiddenInputStyle,
       }))];
     };
   },

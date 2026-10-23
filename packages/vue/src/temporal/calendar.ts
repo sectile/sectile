@@ -4,14 +4,7 @@ import type {
   CalendarViewMode,
 } from '@sectile/dom/temporal/calendar';
 import type { DateValue } from '@sectile/dom/temporal/calendar';
-import {
-  defineComponent,
-  h,
-  mergeProps,
-  type PropType,
-  type SlotsType,
-  type VNodeChild,
-} from 'vue';
+import type { DefineSetupFnComponent, SlotsType, VNodeChild } from 'vue';
 import {
   PickerCell,
   PickerContent,
@@ -54,41 +47,15 @@ export interface CalendarMonthCellProps extends PickerPartProps {
   readonly value: CalendarMonthValue;
 }
 
-const CalendarProviderRoot = /* @__PURE__ */ createPickerRoot(calendarCapability, 'SectileCalendarProviderRoot', {
+export const CalendarRoot = /* @__PURE__ */ createPickerRoot(calendarCapability, 'SectileCalendarRoot', {
   scope: 'calendar',
   defaultOpen: true,
   defaultView: 'month',
   inline: true,
-});
-
-export const CalendarRoot = /* @__PURE__ */ defineComponent({
-  name: 'SectileCalendarRoot',
-  inheritAttrs: false,
-  props: {
-    modelValue: { type: Object as PropType<DateValue | null>, default: undefined },
-    defaultValue: { type: Object as PropType<DateValue | null>, default: null },
-    highlightedValue: { type: Object as PropType<DateValue>, default: undefined },
-    defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
-    referenceDate: { type: Object as PropType<DateValue>, default: undefined },
-    defaultView: { type: String as PropType<CalendarViewMode>, default: 'month' },
-    disabled: { type: Boolean, default: false },
-    readonly: { type: Boolean, default: false },
-    required: { type: Boolean, default: false },
-    label: { type: String, default: undefined },
-    policies: { type: Object as PropType<CalendarPolicies>, default: undefined },
-  },
-  emits: {
-    'update:modelValue': (_value: DateValue | null): boolean => true,
-    'update:highlightedValue': (_value: DateValue): boolean => true,
-  },
-  slots: Object as SlotsType<{ default: (props: CalendarRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, emit, slots }) {
-    return (): VNodeChild => h(CalendarProviderRoot, mergeProps(attrs, props, {
-      'onUpdate:modelValue': (value: PickerRootSlotProps<DateValue | null>['value']) => emit('update:modelValue', value),
-      'onUpdate:highlightedValue': (value: DateValue) => emit('update:highlightedValue', value),
-    }), slots);
-  },
-});
+}) as unknown as DefineSetupFnComponent<CalendarRootProps, {
+  'update:modelValue': (value: DateValue | null) => boolean;
+  'update:highlightedValue': (value: DateValue) => boolean;
+}, SlotsType<{ default: (props: CalendarRootSlotProps) => VNodeChild }>>;
 export type CalendarValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:modelValue']>;
 export type CalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof CalendarRoot>['$props']['onUpdate:highlightedValue']>;
 export const CalendarContent = PickerContent as unknown as PickerRootPartComponent<'calendar'>;

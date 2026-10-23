@@ -421,6 +421,230 @@ for (const controlled of [0, 2, 5, 7]) test(`Combobox registered reset retains m
   } finally { if (!unmounted) app.unmount(); host.remove(); }
 });
 
+test('[HYD-08] Select FormField hydration preserves labels, explicit submission metadata, editing and reset', async () => {
+  const { renderToString } = await import('vue/server-renderer');
+  const warnings = [];
+  const originalWarn = console.warn;
+  const host = document.createElement('div'); document.body.append(host);
+  const triggerKey = ref(0);
+  const fields = new Map();
+  const view = () => h(FormRoot, {}, {
+    default: () => ['choice', 'other'].map((name, index) => h(FormField, { name, required: true }, {
+      default: field => { fields.set(name, field); return [h(FormLabel, {}, () => name),
+        h(SelectRoot, { items: ['a', 'b'], defaultValue: 'a', position: false,
+          ...(index === 1 ? { name: 'explicit', required: false } : {}) }, {
+          default: () => [h(SelectTrigger, { key: triggerKey.value }, () => h(SelectValue)),
+            h(SelectContent, {}, () => ['a', 'b'].map(value => h(SelectItem, { value }, () => value)))],
+        })]; },
+    })),
+  });
+  const app = createSSRApp({ render: view });
+  try {
+    host.innerHTML = await renderToString(createSSRApp({ render: view }));
+    const ids = [...host.querySelectorAll('[id]')].map(element => element.id);
+    assert.deepEqual([...new FormData(host.querySelector('form'))], [['choice', 'a'], ['explicit', 'a']]);
+    console.warn = (...args) => { warnings.push(args.join(' ')); };
+    app.mount(host);
+    for (let turn = 0; turn < 5; turn++) await nextTick();
+    assert.deepEqual([...host.querySelectorAll('[id]')].map(element => element.id), ids);
+    const labels = [...host.querySelectorAll('label')];
+    const triggers = [...host.querySelectorAll('[data-part="trigger"]')];
+    assert.equal(labels[0].control, triggers[0]); assert.equal(labels[1].control, triggers[1]);
+    assert.equal(host.querySelectorAll('select')[1].required, false);
+    triggers[0].focus();
+    triggers[0].dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    await nextTick();
+    host.querySelectorAll('[data-scope="select"][data-part="item"]')[1].click();
+    for (let turn = 0; turn < 5; turn++) await nextTick();
+    assert.deepEqual(new FormData(host.querySelector('form')).getAll('choice'), ['b']);
+    assert.equal(fields.get('choice').dirty, true);
+    host.querySelector('form').reset();
+    for (let turn = 0; turn < 5; turn++) await nextTick();
+    assert.deepEqual(new FormData(host.querySelector('form')).getAll('choice'), ['a']);
+    assert.equal(fields.get('choice').dirty, false);
+    triggerKey.value++;
+    for (let turn = 0; turn < 5; turn++) await nextTick();
+    assert.equal(host.querySelector('label').control, host.querySelector('[data-part="trigger"]'));
+    assert.deepEqual(new FormData(host.querySelector('form')).getAll('choice'), ['a']);
+    assert.equal(warnings.some(message => /hydration|mismatch|multiple active/i.test(message)), false, warnings.join('\n'));
+  } finally { console.warn = originalWarn; app.unmount(); host.remove(); }
+});
+
+test('[HYD-09] composite labels and native metadata remain stable through hydration and field updates', async () => {
+  const { renderToString } = await import('vue/server-renderer');
+  const flags = ref(false), override = ref(false), label = ref('Choice'), warnings = [];
+  const fields = new Map();
+  const originalWarn = console.warn;
+  let resets = 0, reentrantReset = false;
+  const controls = [
+    [CheckboxRoot, { defaultValue: true }],
+    [RadioGroupRoot, { items: ['a', 'b'], defaultValue: 'a' }],
+    [ListboxRoot, { items: ['a', 'b'], defaultValue: 'a' }],
+    [CheckboxGroupRoot, { items: ['a', 'b'], defaultValue: ['a'] }],
+  ];
+  const view = () => h(FormRoot, {
+    onReset: () => {
+      resets++;
+      if (reentrantReset && resets === 1) {
+        reentrantReset = false;
+        queueMicrotask(() => host.querySelector('form').reset());
+      }
+    },
+  }, () => controls.map(([Control, props], index) => h(FormField, {
+    name: `choice${index}`, required: flags.value, disabled: flags.value,
+  }, { default: field => { fields.set(index, field); return [h(FormLabel, {}, () => label.value), h(Control, { ...props, ...(override.value ? { name: undefined, required: false, disabled: false } : {}) })]; } })));
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createSSRApp({ render: view });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  try {
+    host.innerHTML = await renderToString(createSSRApp({ render: view }));
+    const before = host.innerHTML;
+    console.warn = (...args) => warnings.push(args.join(' '));
+    app.mount(host); await drain();
+    assert.equal(host.querySelectorAll('[data-part="label"]').length, 4);
+    assert.equal(host.querySelectorAll('[data-part="label"][for]').length, 0);
+    const names = [...host.querySelectorAll('input,select')].map(element => element.name);
+    assert.deepEqual(names, ['choice0', 'choice1', 'choice1', 'choice2', 'choice3']);
+    assert.ok(before.includes('aria-labelledby='));
+    flags.value = true; label.value = 'Updated'; await drain();
+    assert.ok([...host.querySelectorAll('input,select')].every(element => element.disabled));
+    override.value = true; await drain();
+    assert.ok([...host.querySelectorAll('input,select')].every(element => !element.disabled && !element.required && !element.hasAttribute('name')));
+    override.value = false; flags.value = false; await drain();
+    assert.deepEqual([...host.querySelectorAll('input,select')].map(element => element.name), names);
+    const checkbox = host.querySelector('[data-scope="checkbox"][data-part="root"]');
+    const listbox = host.querySelector('[role="listbox"]');
+    const edit = () => {
+      checkbox.click();
+      for (const key of ['End', ' ']) listbox.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+    };
+    edit(); await drain();
+    assert.equal(fields.get(0).dirty, true); assert.equal(fields.get(2).dirty, true);
+    reentrantReset = true; host.querySelector('form').reset(); await drain();
+    assert.equal(resets, 2);
+    assert.equal(fields.get(0).dirty, false); assert.equal(fields.get(2).dirty, false);
+    edit(); await drain();
+    assert.equal(fields.get(0).dirty, true); assert.equal(fields.get(2).dirty, true);
+    assert.equal(warnings.some(message => /hydration|mismatch|multiple active/i.test(message)), false, warnings.join('\n'));
+  } finally { console.warn = originalWarn; app.unmount(); host.remove(); }
+});
+
+test('range fields inherit reactive constraints without replacing accepted endpoint values', async () => {
+  const enabled = ref(false), host = document.createElement('div'); document.body.append(host);
+  const initial = { start: { year: 2026, month: 10, day: 1 }, end: { year: 2026, month: 10, day: 2 } };
+  const app = createApp({ render: () => h(FormRoot, {}, () => h(FormField, {
+    name: 'dates', disabled: enabled.value, readonly: enabled.value, required: enabled.value,
+  }, () => [h(FormLabel, {}, () => 'Dates'), h(DateRangeFieldRoot, { defaultValue: initial }, () => [h(DateRangeFieldStartInput), h(DateRangeFieldEndInput)])])) });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain();
+    const inputs = [...host.querySelectorAll('input')];
+    inputs[0].value = '2026-09-30'; inputs[0].dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' })); await drain();
+    const accepted = inputs.map(element => element.value);
+    enabled.value = true; await drain();
+    assert.ok(inputs.every(element => element.disabled && element.readOnly && element.required));
+    assert.deepEqual(inputs.map(element => element.value), accepted);
+    enabled.value = false; await drain();
+    assert.ok(inputs.every(element => !element.disabled && !element.readOnly && !element.required));
+    assert.deepEqual(inputs.map(element => element.value), accepted);
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('inherited interaction flags govern controllers and release cleanly with field updates', async () => {
+  const { DateField } = await import('../.verification-dist/temporal/date-field.js');
+  const readonly = ref(true), disabled = ref(false), overrides = ref(false), states = new Map(), proposals = [];
+  const host = document.createElement('div'); document.body.append(host);
+  const controls = [
+    ['check', CheckboxRoot, { defaultValue: false }, () => 'Check'],
+    ['list', ListboxRoot, { items: ['a', 'b'], defaultValue: 'a' }, () => ['a', 'b'].map(value => h(ListboxItem, { value }, () => value))],
+    ['select', SelectRoot, { items: ['a', 'b'], defaultValue: 'a', position: false }, () => [h(SelectTrigger, {}, () => 'Pick'), h(SelectContent, {}, () => ['a', 'b'].map(value => h(SelectItem, { value }, () => value)))]],
+  ];
+  const app = createApp({ render: () => h(FormRoot, {}, () => [
+    ...controls.map(([name, Control, props, children]) => h(FormField, { id: name, name, disabled: disabled.value, readonly: readonly.value }, () =>
+      h(Control, { ...props, ...(overrides.value ? { disabled: false, readonly: false } : {}), 'onUpdate:modelValue': value => proposals.push([name, value]) }, {
+        default: current => { states.set(name, current); return children(); },
+      }))),
+    h(FormField, { id: 'date', name: 'date', readonly: readonly.value, disabled: disabled.value }, () =>
+      h(DateField, { defaultValue: { year: 2026, month: 10, day: 1 } })),
+  ]) });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain();
+    const checkbox = host.querySelector('#check-control'), listItem = host.querySelectorAll('#list-control [role="option"]')[1];
+    checkbox.click(); listItem.click();
+    const date = host.querySelector('#date-control'); date.setSelectionRange(0, 0);
+    date.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })); await drain();
+    assert.equal(states.get('check').checked, false);
+    assert.deepEqual(proposals, []);
+    assert.equal(date.value, '2026-10-01');
+    disabled.value = true; await drain();
+    assert.equal(checkbox.disabled, true);
+    assert.equal(host.querySelector('#select-control').disabled, true);
+    assert.ok([...states.values()].every(state => state.disabled && state.readonly));
+    overrides.value = true; await drain();
+    assert.ok([...states.values()].every(state => !state.disabled && !state.readonly));
+    checkbox.click(); listItem.click(); await drain();
+    assert.equal(states.get('check').checked, true);
+    assert.deepEqual(proposals, [['check', true], ['list', 'b']]);
+    readonly.value = false; disabled.value = false; await drain();
+    date.dispatchEvent(new browserWindow.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true })); await drain();
+    assert.equal(date.value, '2027-10-01');
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('picker native parts preserve authored empty metadata through hydration, field updates and replacement', async () => {
+  const { renderToString } = await import('vue/server-renderer');
+  const { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerGrid } = await import('../.verification-dist/temporal/date-picker.js');
+  const metadata = ref({ name: undefined, form: undefined }), fieldName = ref('when'), inputKey = ref(0);
+  const date = { year: 2026, month: 10, day: 1 }, warnings = [], originalWarn = console.warn;
+  const view = () => h(FormRoot, { id: 'picker-form' }, () => h(FormField, { name: fieldName.value, form: 'picker-form', required: true }, () => [
+    h(FormLabel, {}, () => 'When'), h(DatePickerRoot, { defaultValue: date, defaultHighlightedValue: date, position: false }, () => [
+      h(DatePickerInput, { key: inputKey.value, ...metadata.value }), h(DatePickerTrigger, {}, () => 'Pick'), h(DatePickerContent, {}, () => h(DatePickerGrid)),
+    ]),
+  ]));
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createSSRApp({ render: view });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  try {
+    host.innerHTML = await renderToString(createSSRApp({ render: view }));
+    let input = host.querySelector('input');
+    assert.equal(input.hasAttribute('name'), false); assert.equal(input.hasAttribute('form'), false);
+    console.warn = (...args) => warnings.push(args.join(' '));
+    app.mount(host); await drain(); input = host.querySelector('input');
+    assert.equal(input.hasAttribute('name'), false); assert.equal(input.hasAttribute('form'), false);
+    const value = input.value;
+    metadata.value = {}; await drain();
+    assert.equal(input.name, 'when'); assert.equal(input.getAttribute('form'), 'picker-form');
+    metadata.value = { name: 'override', form: undefined }; await drain();
+    fieldName.value = 'later'; await drain();
+    assert.equal(input.name, 'override'); assert.equal(input.hasAttribute('form'), false);
+    metadata.value = { name: undefined, form: undefined }; await drain();
+    fieldName.value = 'latest'; await drain();
+    assert.equal(input.hasAttribute('name'), false); assert.equal(input.hasAttribute('form'), false);
+    assert.equal(host.querySelector('input'), input); assert.equal(input.value, value);
+    inputKey.value++; await drain();
+    assert.notEqual(host.querySelector('input'), input);
+    assert.equal(host.querySelector('input').hasAttribute('name'), false);
+    assert.equal(host.querySelector('input').hasAttribute('form'), false);
+    assert.equal(warnings.some(message => /hydration|mismatch|multiple active/i.test(message)), false, warnings.join('\n'));
+  } finally { console.warn = originalWarn; app.unmount(); host.remove(); }
+});
+
+test('native part registrations follow added and removed owner overrides', async () => {
+  const overrides = ref({ disabled: false, readonly: false }), host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => h(FormRoot, {}, () => h(FormField, { name: 'amount', disabled: true, readonly: true }, () =>
+    h(SpinButtonRoot, { min: 0, max: 10, defaultValue: 5, ...overrides.value }, () => h(SpinButtonInput)))) });
+  const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
+  try {
+    app.mount(host); await drain(); const input = host.querySelector('input');
+    for (const [props, expected] of [[{}, true], [{ disabled: false, readonly: false }, false], [{}, true]]) {
+      overrides.value = props; await drain();
+      assert.equal(input.disabled, expected); assert.equal(input.readOnly, expected);
+      assert.equal(input.value, '5'); assert.equal(host.querySelector('input'), input);
+    }
+  } finally { app.unmount(); host.remove(); }
+});
+
 for (const [initial, expected] of [[{ defaultValue: 'b' }, 'b'], [{ modelValue: 'b', defaultValue: 'a' }, 'b'], [{ modelValue: null, defaultValue: 'a' }, '']]) {
   test(`Select SSR encodes initial native selection for ${JSON.stringify(initial)}`, async () => {
     const { renderToString } = await import('vue/server-renderer');
@@ -682,6 +906,7 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
     'SelectRoot',
     'ComboboxRoot',
     'TreeSelectRoot',
+    'TransferRoot',
     'CascadeListRoot',
     'CascadeSelectRoot',
     'RatingRoot',
@@ -695,8 +920,10 @@ test('Vue Form value-control inventory is an explicit integration ratchet', () =
     'DateField',
     'DateTimeField',
     'TimeField',
+    'TimePickerRoot',
     'DateRangeFieldRoot',
     'TimeRangeFieldRoot',
+    'DateTimeRangeFieldRoot',
     'SliderRoot',
     'MultiThumbSliderRoot',
     'ColorPickerRoot',

@@ -26,7 +26,7 @@ import {
 import { stableIDElementToken } from '@sectile/dom/identity';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
-import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
+import { hiddenSelectSubmissionCapabilities, useCompositeFormControl, useFormSubmissionProps, useFormControlFlags } from './form/control.js';
 import { useHostDirection, useHostId, type HostDirection } from './host-provider.js';
 import {
   invalidateItemProjection,
@@ -136,6 +136,7 @@ const listboxPartProps = {
 };
 
 export const ListboxRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileListboxRoot',
   inheritAttrs: false,
   props: {
@@ -162,6 +163,7 @@ export const ListboxRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: ListboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const instanceID = useHostId();
     const itemID = (id: string): string => `sectile-listbox-${instanceID}-option-${stableIDElementToken(id)}`;
@@ -169,6 +171,7 @@ export const ListboxRoot = defineComponent({
     const submissionElement = shallowRef<HTMLSelectElement | null>(null);
     let controllerProps = snapshotListboxControllerProps({
       ...props,
+      ...flags.value,
       direction: direction.value,
     });
     const controlled = useControlledStateInvariant('ListboxRoot', 'modelValue', () => props.modelValue);
@@ -273,6 +276,7 @@ export const ListboxRoot = defineComponent({
       disabledItemSet = nextDisabledItems;
       itemIndex = new Map(nextControllerProps.items.map((id, index) => [id, index] as const));
     };
+    const submissionProps = useFormSubmissionProps({ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
@@ -298,6 +302,7 @@ export const ListboxRoot = defineComponent({
     const rebuild = (): void => {
       const nextControllerProps = snapshotListboxControllerProps({
         ...props,
+        ...flags.value,
         direction: direction.value,
       });
       if (sameListboxControllerProps(controllerProps, nextControllerProps)) return;
@@ -335,7 +340,7 @@ export const ListboxRoot = defineComponent({
     });
     watch(
       [() => props.items, () => props.selectionMode, () => props.disabledItems,
-        () => props.disabled, () => props.readonly, () => props.orientation, () => props.textValue, direction],
+        () => flags.value.disabled, () => flags.value.readonly, () => props.orientation, () => props.textValue, direction],
       rebuild,
     );
     watch(() => props.renderedItems, syncActiveDescendant, { flush: 'post' });
@@ -385,8 +390,8 @@ export const ListboxRoot = defineComponent({
         selectionMode: props.selectionMode,
         orientation: props.orientation,
         direction: direction.value,
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         ...(activeID === undefined ? {} : { activeDescendantID: activeID }),
       });
       const root = h(Primitive, mergeProps(
@@ -403,11 +408,8 @@ export const ListboxRoot = defineComponent({
       for (const id of props.items) options.push(h('option', { value: id, selected: currentSelectedSet.has(id) }, id));
       return [root, h('select', {
         ref: submissionElement,
-        name: props.name,
-        form: props.form,
-        required: props.required,
+        ...submissionProps.value,
         multiple: props.selectionMode === 'multiple',
-        disabled: props.disabled,
         tabindex: -1,
         'aria-hidden': 'true',
         style: visuallyHiddenInputStyle,

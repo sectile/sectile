@@ -12,7 +12,7 @@ import {useHostActive,useHostDirection} from './host-provider.js';
 import {useControlledStateInvariant} from './internal/controlled-state.js';
 import {useNextTickTask} from './internal/scheduled-task.js';
 import {sameIDs} from './internal/collection.js';
-import {hiddenSelectSubmissionCapabilities,provideFormControlOwner,useCompositeFormControl,useFormFieldDefaults} from './form/control.js';
+import {hiddenSelectSubmissionCapabilities,provideFormControlOwner,useCompositeFormControl,useFormControlFlags,useFormSubmissionProps} from './form/control.js';
 import {visuallyHiddenInputStyle} from './input/native-input.js';
 
 export type {TransferSide,TransferMoveProposal,TransferControllerPolicies,TransferTypeaheadOptions} from '@sectile/dom/transfer';
@@ -64,6 +64,7 @@ function createExposure(target:TransferExpose){
 }
 
 const RootImplementation=/* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode:'labelledby',
   name:'SectileTransferRoot',inheritAttrs:false,
   props:{nodes:{type:Array as PropType<readonly TreeNodeInput<string>[]>,required:true},sourceId:{type:String,required:true},targetId:{type:String,required:true},controlled:{type:Boolean,default:false},
     sourceValue:{type:Array as PropType<readonly string[]>,default:undefined},defaultSourceValue:{type:Array as PropType<readonly string[]>,default:()=>empty},
@@ -81,8 +82,8 @@ const RootImplementation=/* @__PURE__ */ defineComponent({
   setup(props,{attrs,emit,slots,expose}){
     const element=shallowRef<HTMLElement>(),sourceRoot=shallowRef<HTMLElement>(),targetRoot=shallowRef<HTMLElement>(),submission=shallowRef<HTMLSelectElement>();
     const controller=shallowRef<TransferController<string>>(),accepted=shallowRef<ReturnType<TransferController<string>['getSnapshot']>>();
-    const active=useHostActive(),direction=useHostDirection(),defaults=useFormFieldDefaults();
-    const disabled=computed(()=>props.disabled??defaults?.value.disabled??false),readonly=computed(()=>props.readonly??defaults?.value.readonly??false),required=computed(()=>props.required??defaults?.value.required??false);
+    const active=useHostActive(),direction=useHostDirection(),flags=useFormControlFlags(props);
+    const disabled=computed(()=>flags.value.disabled),readonly=computed(()=>flags.value.readonly),required=computed(()=>flags.value.required);
     const snapshot=computed(()=>accepted.value!.state),sourceItems=computed(()=>getTransferItems(snapshot.value,'source')),targetItems=computed(()=>getTransferItems(snapshot.value,'target'));
     const prefix=`sectile-transfer-${useId()}`,elementID=(side:TransferSide,id:string):string=>`${prefix}-${side}-${stableIDElementToken(id)}`;
     const rows=new Map<HTMLElement,{side:TransferSide;id:string}>();
@@ -136,6 +137,7 @@ const RootImplementation=/* @__PURE__ */ defineComponent({
       sourceValue:snapshot.value.source.selection.selected,targetValue:snapshot.value.target.selection.selected,
       sourceHighlightedValue:snapshot.value.source.cursor.current,targetHighlightedValue:snapshot.value.target.cursor.current,disabled:disabled.value||!active.value,readonly:readonly.value}));
     const resetTask=useNextTickTask(()=>build(true));
+    const submissionProps=useFormSubmissionProps({element:submission,capabilities:hiddenSelectSubmissionCapabilities},props);
     const participation=useCompositeFormControl({root:targetRoot,validationTarget:submission,submissions:[{element:submission,capabilities:hiddenSelectSubmissionCapabilities}],
       getValue:()=>targetItems.value.ids,isValueEqual:(left,right)=>Array.isArray(left)&&Array.isArray(right)&&sameIDs(left,right),reset:resetTask.schedule});
     provideFormControlOwner();
@@ -169,7 +171,7 @@ const RootImplementation=/* @__PURE__ */ defineComponent({
     return():VNodeChild=>[h(Primitive,mergeProps(attrs,{as:props.as,asChild:props.asChild,elementRef:(node:unknown)=>{element.value=typeof HTMLElement!=='undefined'&&node instanceof HTMLElement?node:undefined;},'data-scope':'transfer','data-part':'root'}),{default:()=>slots.default?.(state.value)}),
       ...(participation.participating||props.name!==undefined||props.form!==undefined||required.value?[h('select',{
         ref:(node:unknown)=>{submission.value=typeof HTMLSelectElement!=='undefined'&&node instanceof HTMLSelectElement?node:undefined;},
-        name:props.name,form:props.form,required:required.value,disabled:disabled.value,multiple:true,tabindex:-1,'aria-hidden':'true',style:visuallyHiddenInputStyle,
+        ...submissionProps.value,required:required.value,disabled:disabled.value,multiple:true,tabindex:-1,'aria-hidden':'true',style:visuallyHiddenInputStyle,
       },submissionOptions.value)]:[])];
   },
 });

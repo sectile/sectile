@@ -20,7 +20,7 @@ import {
   type TextController,
   type TextState,
 } from '@sectile/dom/text';
-import { useNativeInputFormControl } from './form/control.js';
+import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { captureNativeTextState } from './input/native-text-state.js';
 import { cancelTextComposition, findTextQuery, type TextSnapshot, type TextQuery, type TextQueryOptions } from '@sectile/core/text';
@@ -119,6 +119,7 @@ const TextFieldImplementation = defineComponent({
     snapshotChange: (): boolean => true,
   },
   setup(props, { attrs, emit }) {
+    const flags = useFormControlFlags(props);
     const instance = getCurrentInstance()!;
     const element = shallowRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
@@ -157,8 +158,8 @@ const TextFieldImplementation = defineComponent({
         ...(controlled && !props.modelModifiers.lazy
           ? { value: state }
           : { defaultValue: state }),
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         onValueChange: (change) => {
           frame = null;
           if (clearing !== null && clearing.proposal === null) clearing.proposal = change.value;
@@ -196,8 +197,8 @@ const TextFieldImplementation = defineComponent({
       connection = connectText({
         controller,
         element: element.value,
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         onTransition: ({ input }) => {
           if (!controlled || props.modelModifiers.lazy || input.type !== 'composition-commit') return;
           const proposal = proposedState;
@@ -317,7 +318,7 @@ const TextFieldImplementation = defineComponent({
       proposedState = null;
       synchronizeControlledState(state, proposal);
     });
-    watch([() => props.disabled, () => props.readonly], requestReconnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly], requestReconnect);
 
     const commitLazyValue = (): void => {
       if (!props.modelModifiers.lazy || controller === null) return;
@@ -327,7 +328,7 @@ const TextFieldImplementation = defineComponent({
     clearPort.request = (): boolean => {
       let target = connection;
       const input = element.value;
-      if (!mounted || !target || !input || clearing || props.disabled || props.readonly || inputComposing) return false;
+      if (!mounted || !target || !input || clearing || flags.value.disabled || flags.value.readonly || inputComposing) return false;
       const state = proposedState ?? target.getSnapshot().state;
       if (state.composition !== null || state.snapshot.text.length === 0) return false;
       if (connectedElement !== input) {
@@ -383,8 +384,8 @@ const TextFieldImplementation = defineComponent({
       if (typeof text !== 'string' || typeof startCodeUnitOffset !== 'number' || typeof endCodeUnitOffset !== 'number') return rejectedTextEdit('invalid');
       const target = connection, input = element.value;
       if (!mounted || !target || !input || connectedElement !== input) return rejectedTextEdit('unavailable');
-      if (props.disabled) return rejectedTextEdit('disabled');
-      if (props.readonly) return rejectedTextEdit('readonly');
+      if (flags.value.disabled) return rejectedTextEdit('disabled');
+      if (flags.value.readonly) return rejectedTextEdit('readonly');
       if (inputComposing || target.getSnapshot().state.composition !== null) return rejectedTextEdit('composing');
       if (clearing !== null) return rejectedTextEdit('busy');
       const issued = clearPort.read?.();
@@ -410,7 +411,7 @@ const TextFieldImplementation = defineComponent({
         if (!mounted || connection === null) return rejectedTextEdit('unavailable');
         const settled = operation.settlement;
         if (settled === null || settled.connection !== connection || settled.revision !== connection.getSnapshot().revision
-          || connectedElement !== input || props.disabled || props.readonly) return rejectedTextEdit('stale');
+          || connectedElement !== input || flags.value.disabled || flags.value.readonly) return rejectedTextEdit('stale');
         if (!settled.accepted) return rejectedTextEdit('refused');
         const committed = clearPort.read?.();
         return committed ? Object.freeze({ status: 'accepted', snapshot: committed }) : rejectedTextEdit('stale');
@@ -423,9 +424,9 @@ const TextFieldImplementation = defineComponent({
         ref: element,
         ...(!props.multiline ? { type: props.type } : {}),
         ...(renderServerValue ? { value: initialValue } : { defaultValue: controlled ? String(props.modelValue) : initialValue }),
-        disabled: props.disabled,
-        readonly: props.readonly,
-        required: props.required,
+        disabled: flags.value.disabled,
+        readonly: flags.value.readonly,
+        required: flags.value.required,
         name: props.name,
         form: props.form,
         placeholder: props.placeholder,
@@ -435,8 +436,8 @@ const TextFieldImplementation = defineComponent({
         onChange: commitLazyValue,
         'data-scope': 'text',
         'data-part': 'input',
-        'data-disabled': props.disabled ? '' : undefined,
-        'data-readonly': props.readonly ? '' : undefined,
+        'data-disabled': flags.value.disabled ? '' : undefined,
+        'data-readonly': flags.value.readonly ? '' : undefined,
       },
       participation.controlProps.value,
     ));

@@ -35,6 +35,16 @@
       "id": "HYD-07",
       "contract": "Form hydration registers participants once and preserves controlled value ownership",
       "evidence": "tests/hydration.dom.test.mjs"
+    },
+    {
+      "id": "HYD-09",
+      "contract": "Composite fields preserve declarative group labels and native submission metadata through SSR hydration and field-default overrides",
+      "evidence": "tests/form.dom.test.mjs"
+    },
+    {
+      "id": "HYD-08",
+      "contract": "Select fields preserve native label targets, inherited submission metadata and stable identities from SSR through hydration and trigger replacement",
+      "evidence": "tests/form.dom.test.mjs"
     }
   ],
   "unverified": [

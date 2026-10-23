@@ -15,7 +15,7 @@ import { reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { createTreeGroup, createTreeItem, createTreeDisclosure, provideTreeParts } from './internal/tree-parts.js';
 import { usePresence } from './presence/presence.js';
 import { provideHostLayerParent } from './host-provider.js';
-import { hiddenSelectSubmissionCapabilities, provideFormControlOwner, useCompositeFormControl, useFormFieldDefaults } from './form/control.js';
+import { hiddenSelectSubmissionCapabilities, provideFormControlOwner, useCompositeFormControl, useFormControlFlags, useFormSubmissionProps } from './form/control.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import type { TreeViewGroupProps, TreeViewItemSlotProps, TreeViewPartProps } from './tree-view.js';
 
@@ -93,9 +93,9 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     const input = shallowRef<HTMLInputElement>(), popup = shallowRef<HTMLElement>(), submission = shallowRef<HTMLSelectElement>();
     const controller = shallowRef<TreeSelectController<string>>(), accepted = shallowRef<RevisionSnapshot<TreeSelectState<string>>>();
     const connection = shallowRef<TreeSelectConnection<string>>();
-    const defaults = useFormFieldDefaults();
-    const disabled = computed(() => props.disabled ?? defaults?.value.disabled ?? false), readonly = computed(() => props.readonly ?? defaults?.value.readonly ?? false);
-    const required = computed(() => props.required ?? defaults?.value.required ?? false);
+    const flags = useFormControlFlags(props);
+    const disabled = computed(() => flags.value.disabled), readonly = computed(() => flags.value.readonly);
+    const required = computed(() => flags.value.required);
     const inputID = `sectile-tree-select-${useId()}`, popupID = `${inputID}-popup`;
     const elementID = (id: string): string => `${popupID}-${stableIDElementToken(id)}`;
     const items = new Map<HTMLElement, string>(), disclosures = new Map<HTMLElement, string>();
@@ -175,6 +175,7 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
       highlightedValue: snapshot.value.view.cursor.current, query: snapshot.value.request.query, open: snapshot.value.open, pending: snapshot.value.pending,
       request: snapshot.value.request, disabled: disabled.value || !lifecycle.active.value, readonly: readonly.value, getChildren, isBranch }));
     const resetTask = useNextTickTask(() => { if (alive) build(true); });
+    const submissionProps = useFormSubmissionProps({ element: submission, capabilities: hiddenSelectSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({ root: input, focusTarget: input, validationTarget: submission, labelMode: 'for',
       submissions: [{ element: submission, capabilities: hiddenSelectSubmissionCapabilities }],
       getValue: () => snapshot.value.selection.selected, isValueEqual: (left, right) => Array.isArray(left) && Array.isArray(right) && sameIDs(left, right),
@@ -216,7 +217,7 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     watch(() => props.position, scheduleAttach);
     const selected = computed(() => snapshot.value.selection), sourceIDs = computed(() => controller.value!.tree.preorder().ids);
     const encoding = computed(() => h('select', { ref: (node: unknown) => { submission.value = typeof HTMLSelectElement !== 'undefined' && node instanceof HTMLSelectElement ? node : undefined; },
-      name: props.name, form: props.form, required: required.value, disabled: disabled.value, multiple: props.selectionMode === 'multiple',
+      ...submissionProps.value, required: required.value, disabled: disabled.value, multiple: props.selectionMode === 'multiple',
       tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
     }, [ ...(props.selectionMode === 'single' ? [h('option', { value: '', selected: selected.value.size === 0 })] : []),
       ...sourceIDs.value.map(id => h('option', { key: id, value: id, selected: selected.value.has(id) }, id)) ]));

@@ -52,6 +52,7 @@ const config: NativeRangeFieldConfig<DateRange, DateRangeFieldPolicies, DateRang
 };
 
 export const DateRangeFieldRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileDateRangeFieldRoot',
   inheritAttrs: false,
   props: {

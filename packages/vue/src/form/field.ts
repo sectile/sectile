@@ -41,6 +41,10 @@ import {
   type FormMetadataAttribute,
   type FormFieldDefaults,
   provideFormControlFieldContext,
+  formLabelModeKey,
+  formSubmissionMetadata,
+  visitFormComponents,
+  formControlMetadata,
 } from './control.js';
 import type { FormIssueSource } from '@sectile/form/state';
 import type { FormParticipant, FormSubmissionElement } from '@sectile/dom/form';
@@ -57,6 +61,7 @@ export const FormField = defineComponent({
     required: { type: Boolean, default: undefined },
     disabled: { type: Boolean, default: undefined },
     readonly: { type: Boolean, default: undefined },
+    labelMode: { type: String as PropType<FormLabelMode>, default: undefined },
     ...partProps,
   },
   slots: Object as SlotsType<{ default: (props: FormFieldSlotProps) => VNodeChild }>,
@@ -77,6 +82,7 @@ export const FormField = defineComponent({
       disabled: props.disabled === true, readonly: props.readonly === true, required: props.required === true,
     }));
     const controls = shallowRef<readonly FormControlRegistration[]>([]);
+    const declaredLabelMode = shallowRef<FormLabelMode>();
     const fallback = shallowRef<FormControlRegistration | null>(null);
     const nativeFallbackProblem = shallowRef<string | null>(null);
     const appliedAttributes = new Map<HTMLElement, Map<string, string | null>>();
@@ -98,7 +104,7 @@ export const FormField = defineComponent({
         ? activeRegistrations.value[0]
         : controls.value.length === 0 ? fallback.value : null
     ));
-    const labelMode = computed<FormLabelMode>(() => activeControl.value?.labelMode ?? 'for');
+    const labelMode = computed<FormLabelMode>(() => props.labelMode ?? activeControl.value?.labelMode ?? declaredLabelMode.value ?? 'for');
     const semanticControl = (): HTMLElement | null => {
       const registration = activeControl.value;
       if (registration === undefined || registration === null) return null;
@@ -159,11 +165,17 @@ export const FormField = defineComponent({
     ): Readonly<Record<string, unknown>> => {
       const explicit = new Set(registration.explicit ?? []);
       const capabilities = registration.capabilities ?? {};
+      const authored = formControlMetadata(registration);
+      const required = explicit.has('required') ? authored?.['required'] === true : props.required === true;
+      const disabled = explicit.has('disabled') ? authored?.['disabled'] === true : props.disabled === true;
+      const readonly = explicit.has('readonly') ? authored?.['readonly'] === true : props.readonly === true;
       const attributes: Record<string, unknown> = {};
       const assign = (attribute: FormMetadataAttribute, value: unknown): void => {
         if (!explicit.has(attribute) && value !== undefined) attributes[attribute] = value;
       };
       if (capabilities.id === true) assign('id', slotProps.value.controlId);
+      if (capabilities.name === true) assign('name', nameKey.value);
+      if (capabilities.form === true) assign('form', props.form);
       if (capabilities.describedBy === true) {
         assign('aria-describedby', slotProps.value.describedBy);
         assign(
@@ -179,12 +191,12 @@ export const FormField = defineComponent({
       if (capabilities.labelledBy === true && labelMode.value === 'labelledby') {
         assign('aria-labelledby', slotProps.value.labelId);
       }
-      if (capabilities.required === true && props.required === true) assign('required', true);
-      else if (labelMode.value !== 'for' && props.required === true) assign('aria-required', 'true');
-      if (capabilities.disabled === true && props.disabled === true) assign('disabled', true);
-      else if (labelMode.value !== 'for' && props.disabled === true) assign('aria-disabled', 'true');
-      if (capabilities.readonly === true && props.readonly === true) assign('readonly', true);
-      else if (labelMode.value !== 'for' && props.readonly === true) assign('aria-readonly', 'true');
+      if (capabilities.required === true && required) assign('required', true);
+      else if (labelMode.value !== 'for' && required) assign('aria-required', 'true');
+      if (capabilities.disabled === true && disabled) assign('disabled', true);
+      else if (labelMode.value !== 'for' && disabled) assign('aria-disabled', 'true');
+      if (capabilities.readonly === true && readonly) assign('readonly', true);
+      else if (labelMode.value !== 'for' && readonly) assign('aria-readonly', 'true');
       if (labelMode.value !== 'for') {
         const refreshValue = (): void => {
           const generation = activityGeneration;
@@ -231,7 +243,7 @@ export const FormField = defineComponent({
       for (const submission of resolveSubmissionRegistrations(registration)) {
         const element = resolveElement(submission.element);
         if (element === null) continue;
-        const explicit = submission.explicit ?? registration.explicit;
+        const explicit = formSubmissionMetadata(element) ?? submission.explicit ?? registration.explicit;
         applyMetadata(element, submissionAttributesFor(submission, element), explicit, appliedAttributes);
       }
     };
@@ -498,6 +510,25 @@ export const FormField = defineComponent({
       'data-invalid': slotProps.value.valid ? undefined : '',
       'data-touched': slotProps.value.touched ? '' : undefined,
       'data-dirty': slotProps.value.dirty ? '' : undefined,
-    }), { default: () => slots['default']?.(slotProps.value) });
+    }), { default: () => {
+      const children = slots['default']?.(slotProps.value);
+      declaredLabelMode.value = findDeclaredLabelMode(children);
+      return children;
+    } });
   },
 });
+
+// Read only already-created VNodes. Component slots belong to their owners and
+// must not be executed here; wrappers can declare the field's labelMode instead.
+function findDeclaredLabelMode(children: VNodeChild): FormLabelMode | undefined {
+  let result: FormLabelMode | undefined;
+  visitFormComponents(children, type => {
+    const mode = type[formLabelModeKey];
+    if (mode === 'for' || mode === 'labelledby' || mode === 'legend') {
+      if (result !== undefined) { result = undefined; return false; }
+      result = mode;
+    }
+    return true;
+  });
+  return result;
+}

@@ -25,6 +25,8 @@ import { usePartContract, type PartContract } from './internal/part-contract.js'
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
@@ -74,6 +76,7 @@ interface CheckboxEmit {
 const checkboxContextKey = Symbol('SectileCheckbox');
 
 export const CheckboxRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileCheckboxRoot',
   inheritAttrs: false,
   props: {
@@ -95,6 +98,7 @@ export const CheckboxRoot = defineComponent({
     default: (props: CheckboxSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const rootElement = shallowRef<HTMLElement | null>(null);
     const inputElement = shallowRef<HTMLInputElement | null>(null);
     const controlled = useControlledStateInvariant('CheckboxRoot', 'modelValue', () => props.modelValue);
@@ -102,7 +106,7 @@ export const CheckboxRoot = defineComponent({
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as CheckboxValue : props.defaultValue,
-      props,
+      { ...props, ...flags.value },
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
@@ -114,9 +118,10 @@ export const CheckboxRoot = defineComponent({
       const value = controlled
         ? props.modelValue as CheckboxValue
         : fromDOMValue(snapshot.value.state.checked);
-      controller.value = createController(controlled, value, props, emit);
+      controller.value = createController(controlled, value, { ...props, ...flags.value }, emit);
       refresh();
     };
+    const submissionProps = useFormSubmissionProps({ element: inputElement, capabilities: hiddenInputSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       focusTarget: rootElement,
@@ -129,7 +134,7 @@ export const CheckboxRoot = defineComponent({
           controller.value = createController(
             controlled,
             controlled ? props.modelValue as CheckboxValue : initialValue,
-            props,
+            { ...props, ...flags.value },
             emit,
           );
           refresh();
@@ -144,7 +149,7 @@ export const CheckboxRoot = defineComponent({
       snapshot.value = result.value;
     });
     watch(
-      [() => props.disabled, () => props.readonly],
+      [() => flags.value.disabled, () => flags.value.readonly],
       rebuild,
     );
 
@@ -152,13 +157,13 @@ export const CheckboxRoot = defineComponent({
       checked: fromDOMValue(snapshot.value.state.checked),
       isChecked: snapshot.value.state.checked === true,
       isIndeterminate: snapshot.value.state.checked === 'mixed',
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     const attributes = computed(() => getCheckboxAttributes(snapshot.value.state, {
-      disabled: props.disabled,
-      readOnly: props.readonly,
-      required: props.required,
+      disabled: flags.value.disabled,
+      readOnly: flags.value.readonly,
+      required: flags.value.required,
       native: true,
     }));
     const inputAttributes = computed(() => getCheckboxInputAttributes(snapshot.value.state, {
@@ -202,6 +207,7 @@ export const CheckboxRoot = defineComponent({
         && !props.required) return root;
       return [root, h('input', mergeProps(
         inputAttributes.value as unknown as Record<string, unknown>,
+        submissionProps.value,
         {
           ref: inputElement,
           style: visuallyHiddenInputStyle,

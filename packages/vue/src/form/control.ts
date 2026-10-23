@@ -7,8 +7,11 @@ import {
   onMounted,
   provide,
   shallowRef,
+  Fragment,
+  isVNode,
   type ComputedRef,
   type ShallowRef,
+  type VNodeChild,
 } from 'vue';
 
 export type FormControlPathSegment = string | number;
@@ -19,6 +22,23 @@ export type FormControlSubmissionElement =
   | HTMLSelectElement
   | HTMLTextAreaElement;
 export type FormLabelMode = 'for' | 'labelledby' | 'legend';
+/** Components use this literal option key so unused initializers remain tree-shakable. */
+export const formLabelModeKey = '__sectileFormLabelMode';
+
+/** Inspect materialized native/Fragment children without evaluating component slots. */
+export function visitFormComponents(children: VNodeChild, visit: (component: Readonly<Record<string, unknown>>) => boolean | void): void {
+  const pending = [children];
+  while (pending.length > 0) {
+    const child = pending.pop();
+    if (Array.isArray(child)) {
+      for (let index = child.length - 1; index >= 0; index--) pending.push(child[index]);
+    } else if (isVNode(child)) {
+      const type = child.type;
+      if (typeof type === 'string' || type === Fragment) pending.push(child.children as VNodeChild);
+      else if ((typeof type === 'object' || typeof type === 'function') && visit(type as unknown as Record<string, unknown>) === false) return;
+    }
+  }
+}
 export type FormMetadataAttribute =
   | 'id'
   | 'name'
@@ -36,6 +56,8 @@ export type FormMetadataAttribute =
 
 export interface FormControlCapabilities {
   readonly id?: boolean;
+  readonly name?: boolean;
+  readonly form?: boolean;
   readonly describedBy?: boolean;
   readonly invalid?: boolean;
   readonly labelledBy?: boolean;
@@ -117,7 +139,45 @@ const inactiveRefresh = (): void => {};
 const formControlFieldContextKey = Symbol('SectileFormControlField');
 const formControlOwnerKey = Symbol('SectileFormControlOwner');
 const formControlResetKey = Symbol('SectileFormControlReset');
+const formControlFlagsKey = Symbol('SectileFormControlFlags');
+const controlMetadataKey = /* @__PURE__ */ Symbol('SectileControlMetadata');
+type MetadataControlRegistration = FormControlRegistration & { [controlMetadataKey]?: Readonly<Record<string, unknown>> | undefined };
+export function formControlMetadata(registration: FormControlRegistration): Readonly<Record<string, unknown>> | undefined {
+  return (registration as MetadataControlRegistration)[controlMetadataKey];
+}
+interface FormControlFlagsContext {
+  readonly defaults: ComputedRef<FormFieldDefaults>;
+  readonly explicit: ComputedRef<readonly FormMetadataAttribute[]>;
+}
+type NativeControlRegistration = FormControlRegistration & { [formControlFlagsKey]?: ComputedRef<readonly FormMetadataAttribute[]> | undefined };
+const formFlagKeys = ['disabled', 'readonly', 'required'] as const;
+const submissionMetadataKey = /* @__PURE__ */ Symbol('SectileSubmissionMetadata');
+type SubmissionMetadataElement = HTMLElement & { [submissionMetadataKey]?: Readonly<ShallowRef<readonly FormMetadataAttribute[]>> };
+
+/** A native part owns metadata that cannot be inferred from absent DOM attributes. */
+export function useFormSubmissionMetadata(owned: readonly FormMetadataAttribute[] = []): (element: FormControlSubmissionElement | null) => void {
+  const explicit = useFormMetadataPresence(owned);
+  let current: SubmissionMetadataElement | null = null;
+  const release = (): void => {
+    if (current?.[submissionMetadataKey] === explicit) delete current[submissionMetadataKey];
+    current = null;
+  };
+  onBeforeUnmount(release);
+  return element => {
+    if (element === current) return;
+    release(); current = element;
+    if (current !== null) current[submissionMetadataKey] = explicit;
+  };
+}
+
+export function formSubmissionMetadata(element: HTMLElement): readonly FormMetadataAttribute[] | undefined {
+  return (element as SubmissionMetadataElement)[submissionMetadataKey]?.value;
+}
 interface FormControlResetContext { readonly field: FormControlFieldContext; readonly reset: () => void }
+
+function useParticipatingField(): FormControlFieldContext | null {
+  return inject(formControlOwnerKey, false) ? null : inject<FormControlFieldContext | null>(formControlFieldContextKey, null);
+}
 
 // Isolate the reader from the provider's props, participants and Form controller.
 function fieldDefaultsView(source: Readonly<ShallowRef<FormFieldDefaults>>): ComputedRef<FormFieldDefaults> {
@@ -126,8 +186,24 @@ function fieldDefaultsView(source: Readonly<ShallowRef<FormFieldDefaults>>): Com
 
 /** Read inherited control defaults without registering another semantic control. */
 export function useFormFieldDefaults(): ComputedRef<FormFieldDefaults> | undefined {
-  const source = inject<FormControlFieldContext | null>(formControlFieldContextKey, null)?.defaults;
-  return source === undefined || inject(formControlOwnerKey, false) ? undefined : fieldDefaultsView(source);
+  const source = useParticipatingField()?.defaults;
+  return source === undefined ? undefined : fieldDefaultsView(source);
+}
+
+/** Match inherited native metadata with the controller's interaction policies. */
+export function useFormControlFlags(props: Readonly<{ [Key in keyof FormFieldDefaults]?: boolean | undefined }>): ComputedRef<FormFieldDefaults> {
+  const defaults = useParticipatingField()?.defaults;
+  const explicit = useFormMetadataPresence();
+  const flags = computed<FormFieldDefaults>(previous => {
+    const next = {} as { -readonly [Key in keyof FormFieldDefaults]: boolean };
+    for (const key of formFlagKeys) next[key] = explicit.value.includes(key) ? props[key] === true : defaults?.value[key] ?? props[key] === true;
+    return previous !== undefined && formFlagKeys.every(key => previous[key] === next[key]) ? previous : Object.freeze(next);
+  });
+  provide<FormControlFlagsContext>(formControlFlagsKey, {
+    defaults: flags,
+    explicit: computed(() => formFlagKeys.filter(key => explicit.value.includes(key))),
+  });
+  return flags;
 }
 
 /** A derived control decorates its inner owner's registration, not a second control. */
@@ -138,12 +214,50 @@ export function provideFormControlReset(reset: () => void): void {
 
 export function provideFormControlFieldContext(context: FormControlFieldContext): void {
   provide(formControlFieldContextKey, context);
+  provide(formControlOwnerKey, false);
+  provide(formControlFlagsKey, null);
 }
 
 /** Project an existing composite owner's native submission; never register another control. */
-export function useFormSubmissionProps(submission: FormSubmissionRegistration): ComputedRef<Readonly<Record<string, unknown>>> {
-  const field = inject<FormControlFieldContext | null>(formControlFieldContextKey, null);
+export function useFormSubmissionProps(
+  submission: FormSubmissionRegistration,
+  props?: Readonly<Partial<Record<'name' | 'form' | 'required' | 'disabled' | 'readonly', unknown>>>,
+): ComputedRef<Readonly<Record<string, unknown>>> {
+  const project = useFormSubmissionProjection(props);
+  return computed(() => project(submission));
+}
+
+/** Project indexed submissions at render time without adding a Form dependency to controls. */
+export function useFormSubmissionProjection(
+  props?: Readonly<Partial<Record<'name' | 'form' | 'required' | 'disabled' | 'readonly', unknown>>>,
+): (submission: FormSubmissionRegistration) => Readonly<Record<string, unknown>> {
+  const project = useSubmissionDefaultsProjection();
+  const explicit = props === undefined ? undefined : useFormMetadataPresence();
+  return submission => {
+    const attributes = project(submission);
+    if (props !== undefined) for (const key of ['name', 'form', 'required', 'disabled', 'readonly'] as const) {
+      if (submission.capabilities?.[key] === true && (explicit!.value.includes(key) || attributes[key] === undefined)) attributes[key] = props[key];
+    }
+    return attributes;
+  };
+}
+
+/** Field-only projection for composite parts that own their interaction policies. */
+export function useFormSubmissionDefaults(submission: FormSubmissionRegistration): ComputedRef<Readonly<Record<string, unknown>>> {
+  const field = useParticipatingField();
   return computed(() => field?.submissionAttributesFor(submission) ?? {});
+}
+
+function useSubmissionDefaultsProjection(): (submission: FormSubmissionRegistration) => Record<string, unknown> {
+  const field = useParticipatingField();
+  const scoped = inject<FormControlFlagsContext | null>(formControlFlagsKey, null);
+  return submission => {
+    const inherited = { ...field?.submissionAttributesFor(submission) };
+    if (field !== null && scoped !== null) for (const key of formFlagKeys) {
+      if (submission.capabilities?.[key] === true && scoped.explicit.value.includes(key)) inherited[key] = scoped.defaults.value[key];
+    }
+    return inherited;
+  };
 }
 
 /** Preserve authored undefined separately from an absent native metadata attribute. */
@@ -170,14 +284,15 @@ export function useFormMetadataPresence(fixedExplicit: readonly FormMetadataAttr
 }
 
 export function useFormControl(registration: FormControlRegistration): FormControlParticipation {
-  const field = inject<FormControlFieldContext | null>(formControlFieldContextKey, null);
-  const owned = inject(formControlOwnerKey, false);
+  const field = useParticipatingField();
   const resetOwner = inject<FormControlResetContext | null>(formControlResetKey, null);
-  if (field === null || owned) return Object.freeze({
+  if (field === null) return Object.freeze({
     participating: false, controlProps: computed<Readonly<Record<string, unknown>>>(() => Object.freeze({})),
   });
   const explicit = useFormMetadataPresence(registration.explicit);
-  const normalized = { ...registration, get explicit() { return explicit.value; } };
+  const scoped = (registration as NativeControlRegistration)[formControlFlagsKey];
+  const combinedExplicit = scoped === undefined ? explicit : computed(() => [...new Set([...scoped.value, ...explicit.value])]);
+  const normalized = { ...registration, [controlMetadataKey]: getCurrentInstance()?.props, get explicit() { return combinedExplicit.value; } };
   if (resetOwner?.field === field) {
     const reset = normalized.reset;
     normalized.reset = () => { resetOwner.reset(); reset?.(); };
@@ -197,6 +312,8 @@ export function useFormControl(registration: FormControlRegistration): FormContr
 
 export const nativeInputControlCapabilities = Object.freeze({
   id: true,
+  name: true,
+  form: true,
   describedBy: true,
   invalid: true,
   required: true,
@@ -235,14 +352,16 @@ export function useNativeInputFormControl(
     readonly isValueEqual?: (current: unknown, baseline: unknown) => boolean;
   } = {},
 ): FormControlParticipation {
-  return useFormControl(withFormCallbacks({
+  const registration: NativeControlRegistration = {
+    [formControlFlagsKey]: inject<FormControlFlagsContext | null>(formControlFlagsKey, null)?.explicit,
     element: element as FormElementSource<HTMLInputElement>,
     semanticControl: element as FormElementSource<HTMLInputElement>,
     focusTarget: element as FormElementSource<HTMLInputElement>,
     validationTarget: element as FormElementSource<HTMLInputElement>,
     labelMode: 'for',
     capabilities: nativeInputControlCapabilities,
-  }, options));
+  };
+  return useFormControl(withFormCallbacks(registration, options));
 }
 
 export function useCompositeFormControl(options: {
@@ -289,6 +408,7 @@ export function provideFormControlOwner(): void {
 export function provideFormControlBoundary(): void {
   provide(formControlFieldContextKey, null);
   provide(formControlOwnerKey, false);
+  provide(formControlFlagsKey, null);
 }
 
 const metadataAliases: Readonly<Record<FormMetadataAttribute, string>> = {

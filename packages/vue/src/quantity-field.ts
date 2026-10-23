@@ -7,7 +7,7 @@ import {
 } from '@sectile/dom/quantity-field';
 import { createQuantityFieldState, getQuantityFieldDisplayUnits } from '@sectile/core/quantity-field';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './form/control.js';
+import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 import { captureNativeTextState } from './input/native-text-state.js';
 
 export {
@@ -61,6 +61,7 @@ export const QuantityFieldRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: QuantityFieldRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const input = shallowRef<HTMLInputElement>(); const select = shallowRef<HTMLSelectElement>();
     const connection = shallowRef<QuantityFieldConnection>();
     const initial = createQuantityFieldState(props.policies, props.modelValue !== undefined ? props.modelValue : props.defaultValue,
@@ -78,10 +79,10 @@ export const QuantityFieldRoot = defineComponent({
     const state = computed<QuantityFieldRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : value.value,
       text: text.value, displayUnit: props.displayUnit ?? unit.value, invalid: invalid.value,
-      disabled: props.disabled, readonly: props.readonly,
+      disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const unitState = computed(() => Object.freeze({ displayUnit: props.displayUnit ?? unit.value,
-      disabled: props.disabled, readonly: props.readonly }));
+      disabled: flags.value.disabled, readonly: flags.value.readonly }));
     const refresh = (): void => {
       if (connection.value === undefined) return;
       value.value = connection.value.getQuantity(); unit.value = connection.value.getDisplayUnit();
@@ -100,7 +101,7 @@ export const QuantityFieldRoot = defineComponent({
         ...(valueControlled ? { quantity: props.modelValue as QuantityValue | null } : { defaultQuantity: value.value }),
         ...(unitControlled ? { displayUnit: props.displayUnit as string } : { defaultDisplayUnit: unit.value }),
         ...(inputState === undefined ? {} : { defaultInputState: inputState }),
-        disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onQuantityChange: (details) => { value.value = details.value; emit('update:modelValue', details.value); emit('commit', details); },
         onDisplayUnitChange: (next) => { unit.value = next; emit('update:displayUnit', next); }, onUpdate: refresh,
       });
@@ -161,7 +162,7 @@ export const QuantityFieldRoot = defineComponent({
       connection.value?.disconnect();
       connection.value = undefined;
     });
-    watch([() => props.policies, () => props.disabled, () => props.readonly, () => props.label], requestConnect);
+    watch([() => props.policies, () => flags.value.disabled, () => flags.value.readonly, () => props.label], requestConnect);
     watch([() => props.modelValue, () => props.displayUnit], () => {
       if (connection.value === undefined) return;
       const result = connection.value.syncControlledValues({
@@ -172,8 +173,8 @@ export const QuantityFieldRoot = defineComponent({
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, 'data-scope': 'quantity-field', 'data-part': 'root',
-      'data-invalid': invalid.value ? '' : undefined, 'data-disabled': props.disabled ? '' : undefined,
-      'data-readonly': props.readonly ? '' : undefined,
+      'data-invalid': invalid.value ? '' : undefined, 'data-disabled': flags.value.disabled ? '' : undefined,
+      'data-readonly': flags.value.readonly ? '' : undefined,
     }), { default: () => slots['default']?.(state.value) });
   },
 });

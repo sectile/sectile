@@ -10,6 +10,27 @@ Import focused entries such as `@sectile/vue/checkbox`. Components expose
 `data-scope`, `data-part` and state attributes for application-owned styling.
 Install the corresponding optional domain package for domain integrations.
 
+Within a `FormField`, compose `SelectRoot` with `SelectTrigger`. `FormLabel`
+targets the trigger button, and the hidden native select inherits the field's
+submission name and constraints in the initial server HTML. Put `FormLabel`
+before the trigger as usual; hydration preserves their generated IDs.
+An explicit name, form association, or constraint on `SelectRoot` overrides
+the field default. For an explicit trigger ID, supply the matching `for` on
+`FormLabel`. A trigger rendered through `as` or `asChild` must resolve to a
+native button, matching the Select connection's trigger contract.
+
+Sectile composite controls declare their label semantics so `FormField` can
+render group labels and inherited native submission metadata during SSR.
+Labels can precede controls, including controls inside native wrappers and
+fragments. `FormField` does not execute child component slots to inspect them.
+For an opaque wrapper around a Sectile group control, use
+`labelMode="labelledby"` on `FormField`; a native field can use `"for"`, and a
+fieldset can use `"legend"`. External controls must also register their semantic
+and submission targets through the Form hooks or supply their own native IDs,
+names and labelling. Explicit label targets and control metadata retain their
+precedence. Native event connections, validation, focus recovery, and
+reset coordination start after mounting.
+
 `Anchor` from `@sectile/vue/primitive` renders a native link or adopts one native
 `<a>` with `asChild`. An enabled link requires a nonempty `href`. Disabled links
 remove their destination and tab stop; activation guards run before adopted

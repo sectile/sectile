@@ -23,6 +23,8 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
@@ -67,6 +69,7 @@ interface SwitchEmit {
 const switchContextKey = Symbol('SectileSwitch');
 
 export const SwitchRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileSwitchRoot',
   inheritAttrs: false,
   props: {
@@ -88,8 +91,10 @@ export const SwitchRoot = defineComponent({
     default: (props: SwitchSlotProps) => VNodeChild;
   }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const rootElement = shallowRef<HTMLElement | null>(null);
     const inputElement = shallowRef<HTMLInputElement | null>(null);
+    const submissionProps = useFormSubmissionProps({ element: inputElement, capabilities: hiddenInputSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       focusTarget: rootElement,
@@ -99,7 +104,7 @@ export const SwitchRoot = defineComponent({
       }],
       reset: () => {
         if (controlled) return;
-        controller.value = createController(false, initialValue, props, emit);
+        controller.value = createController(false, initialValue, { ...props, ...flags.value }, emit);
         refresh();
       },
     });
@@ -108,14 +113,14 @@ export const SwitchRoot = defineComponent({
     const controller = shallowRef(createController(
       controlled,
       controlled ? props.modelValue as boolean : props.defaultValue,
-      props,
+      { ...props, ...flags.value },
       emit,
     ));
     const snapshot = shallowRef(controller.value.getSnapshot());
     const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
     const rebuild = (): void => {
       const checked = controlled ? props.modelValue as boolean : snapshot.value.state.checked;
-      controller.value = createController(controlled, checked, props, emit);
+      controller.value = createController(controlled, checked, { ...props, ...flags.value }, emit);
       refresh();
     };
 
@@ -125,17 +130,17 @@ export const SwitchRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
-    watch([() => props.disabled, () => props.readonly], rebuild);
+    watch([() => flags.value.disabled, () => flags.value.readonly], rebuild);
 
     const slotProps = computed<SwitchSlotProps>(() => Object.freeze({
       checked: snapshot.value.state.checked,
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     const attributes = computed(() => getSwitchAttributes(snapshot.value.state, {
-      disabled: props.disabled,
-      readOnly: props.readonly,
-      required: props.required,
+      disabled: flags.value.disabled,
+      readOnly: flags.value.readonly,
+      required: flags.value.required,
       native: true,
     }));
     const inputAttributes = computed(() => getSwitchInputAttributes(snapshot.value.state, {
@@ -176,6 +181,7 @@ export const SwitchRoot = defineComponent({
         && !props.required) return root;
       return [root, h('input', mergeProps(
         inputAttributes.value as unknown as Record<string, unknown>,
+        submissionProps.value,
         {
           ref: inputElement,
           style: visuallyHiddenInputStyle,

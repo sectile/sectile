@@ -18,6 +18,10 @@ import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
   useFormSubmissionProps,
+  useFormControlFlags,
+  useFormSubmissionDefaults,
+  useFormSubmissionMetadata,
+  visitFormComponents,
 } from '../form/control.js';
 import { visuallyHiddenInputStyle } from '../input/native-input.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
@@ -76,6 +80,7 @@ export interface PickerRootConfig {
   readonly defaultOpen?: boolean;
   readonly yearPageSize?: number;
   readonly inline?: boolean;
+  readonly formLayout?: { inspect(children: VNodeChild): number; includes(layout: number, part: PickerInputPart): boolean };
 }
 
 export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue, Policies = Readonly<Record<string, unknown>>> extends PickerPositionProps {
@@ -178,6 +183,7 @@ interface Context {
   readonly active: Readonly<ShallowRef<boolean>>;
   readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   registerPresence(present: ShallowRef<boolean>): () => void;
+  isSubmission(part: PickerInputPart): boolean;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   setInputFocused(part: PickerInputPart, focused: boolean): void;
   setInputComposing(part: PickerInputPart, composing: boolean): void;
@@ -207,6 +213,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
   const compositeConstraint = granularity !== 'day' || kind === 'calendar' || kind === 'date-range' || kind === 'date-time-range';
   const selectionEventType = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
   const component = defineComponent({
+    __sectileFormLabelMode: 'labelledby',
     name, inheritAttrs: false,
     props: {
       modelValue: { type: Object as PropType<PickerValueFor<Kind>>, default: undefined }, defaultValue: { type: Object as PropType<PickerValueFor<Kind>>, default: null },
@@ -231,9 +238,11 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
     slots: Object as SlotsType<{ default: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
+      const flags = useFormControlFlags(runtimeProps);
       const elements = new Map<string, HTMLElement>(); const connection = shallowRef<PickerConnection>();
+      const submissionLayout = config.formLayout === undefined ? undefined : shallowRef(0);
       const constraint = shallowRef<HTMLSelectElement | null>(null);
-      const constraintAttributes = useFormSubmissionProps({ element: constraint, capabilities: { form: true, required: true, disabled: true } });
+      const constraintAttributes = useFormSubmissionDefaults({ element: constraint, capabilities: { form: true } });
       const hostReferenceDate = useTemporalReferenceDate();
       const formatter = useTemporalFormatter();
       const layerHost = useHostLayer();
@@ -273,7 +282,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         return Object.freeze({
           value,
           highlightedValue: highlighted, open: runtimeProps.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
-          view: localView.value, viewMode: localViewMode.value, disabled: runtimeProps.disabled, readonly: runtimeProps.readonly,
+          view: localView.value, viewMode: localViewMode.value, disabled: flags.value.disabled, readonly: flags.value.readonly,
         });
       });
       const lifecycle = usePopupPresentation({ connection, open: computed(() => inline || state.value.open), connect: () => connect(), refresh: () => refresh() });
@@ -378,7 +387,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         const base: Record<string, unknown> = {
           ...(retainedState === undefined ? {} : { defaultState: retainedState }),
           ...(retainedFieldStates === undefined ? {} : { defaultFieldStates: retainedFieldStates }),
-          root: content, grid, disabled: runtimeProps.disabled, readOnly: runtimeProps.readonly, required: runtimeProps.required,
+          root: content, grid, disabled: flags.value.disabled, readOnly: flags.value.readonly, required: flags.value.required,
           referenceDate: referenceDate.value,
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           ...(controlled.value ? { value: runtimeProps.modelValue } : { defaultValue: localValue.value }),
@@ -504,6 +513,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
             : inputPresentation.value?.formatInput(part, value) ?? capability.formatInput(granularity, part, value);
         },
         inputAttributes: part => inputPresentation.value?.attributes[part],
+        isSubmission: part => config.formLayout?.includes(submissionLayout!.value, part) ?? true,
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
@@ -599,7 +609,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         focusedInputs.clear(); composingInputs.clear();
       }, { flush: 'sync' });
       watch([
-        () => runtimeProps.disabled, () => runtimeProps.readonly, () => runtimeProps.required, () => runtimeProps.label, () => runtimeProps.policies,
+        () => flags.value.disabled, () => flags.value.readonly, () => flags.value.required, () => runtimeProps.label, () => runtimeProps.policies,
         () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
         () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
         () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking,
@@ -626,11 +636,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       });
       return (): VNodeChild => {
         const children: VNodeChild[] = [slots['default']?.(state.value as PickerRootSlotProps<PickerValueFor<Kind>>)];
+        if (config.formLayout !== undefined) submissionLayout!.value = config.formLayout.inspect(children);
         const constraintValue = controlled.value && kind !== 'calendar' ? runtimeProps.modelValue ?? null : state.value.value;
         if (compositeConstraint) children.push(h('select', {
           ...constraintAttributes.value, ref: constraint,
-          required: runtimeProps.required || constraintAttributes.value['required'] === true,
-          disabled: !lifecycle.active.value || runtimeProps.disabled || runtimeProps.readonly || constraintAttributes.value['disabled'] === true,
+          required: flags.value.required,
+          disabled: !lifecycle.active.value || flags.value.disabled || flags.value.readonly,
           value: constraintValue === null ? '' : 'selected', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
           onInvalid: (event: Event) => { event.preventDefault(); focusTarget()?.focus(); },
         }, [h('option', { value: '', selected: constraintValue === null }), h('option', { value: 'selected', selected: constraintValue !== null })]));
@@ -788,26 +799,45 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
 export const PickerMonthCell = /* @__PURE__ */ createPickerMonthCell();
 export const PickerYearCell = /* @__PURE__ */ createPickerYearCell();
 
+export const dateTimeSubmissionLayout = {
+  inspect(children: VNodeChild): number {
+    let layout = 0;
+    visitFormComponents(children, component => { layout |= Number(component['__sectileSubmissionPart']) || 0; });
+    return layout;
+  },
+  includes(layout: number, part: PickerInputPart): boolean {
+    const bit = part === 'date-input' || part === 'time-input' ? 1
+      : part === 'start-date-input' || part === 'start-time-input' ? 2
+        : part === 'end-date-input' || part === 'end-time-input' ? 4 : 0;
+    return (layout & bit) === 0;
+  },
+};
+
 export function createPickerInput(part: PickerInputPart, name: string, type: 'text' | 'hidden' = 'text') {
   return defineComponent({
     name, inheritAttrs: false,
+    __sectileSubmissionPart: part === 'date-time-input' ? 1 : part === 'start-date-time-input' ? 2 : part === 'end-date-time-input' ? 4 : 0,
     props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
     setup(props, { attrs }) {
       const root = useRoot(name);
       const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
-      const submissionAttributes = useFormSubmissionProps(pickerSubmission(part, () => null));
+      const submissionAttributes = useFormSubmissionProps(pickerSubmission(part, () => null), props);
+      const bindMetadata = useFormSubmissionMetadata(['disabled', 'readonly', 'required']);
       const browserOwned = type === 'text'
         && root.granularity === 'day'
         && !isPickerDisplayInput(part);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
         ...(renderServerValue ? root.inputAttributes(part) : {}),
-        elementRef: (node: unknown) => root.register(part, node instanceof HTMLInputElement ? node : undefined),
-        ...(renderServerValue ? submissionAttributes.value : {}),
-        type, name: props.name ?? (renderServerValue ? submissionAttributes.value['name'] : undefined),
-        form: props.form ?? (renderServerValue ? submissionAttributes.value['form'] : undefined), disabled: root.state.value.disabled,
+        elementRef: (node: unknown) => {
+          const element = node instanceof HTMLInputElement ? node : null;
+          bindMetadata(element); root.register(part, element ?? undefined);
+        },
+        ...submissionAttributes.value,
+        ...(!root.isSubmission(part) && props.name === undefined ? { name: undefined } : {}),
+        type, disabled: root.state.value.disabled,
         readOnly: root.granularity !== 'day' || root.state.value.readonly || isPickerDisplayInput(part),
-        required: renderServerValue && submissionAttributes.value['required'] === true,
+        required: submissionAttributes.value['required'] === true,
         ...(renderServerValue || !browserOwned
           ? { value: root.formatInput(root.granularity, part, root.state.value.value) }
           : {}),

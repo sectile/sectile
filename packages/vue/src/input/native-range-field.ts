@@ -4,7 +4,7 @@ import {
   type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
 import type { TextEditingState } from '@sectile/core/text';
-import { hiddenInputSubmissionCapabilities, useCompositeFormControl, useFormMetadataPresence, useFormSubmissionProps } from '../form/control.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl, useFormControlFlags, useFormMetadataPresence, useFormSubmissionProps } from '../form/control.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
@@ -118,6 +118,7 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     { element: endInput, relativeName: 'end', capabilities: hiddenInputSubmissionCapabilities },
   ] as const;
   const explicit = useFormMetadataPresence();
+  const flags = useFormControlFlags(props);
   const endpointSubmissionProps = (endpoint: 'start' | 'end', index: 0 | 1) => {
     const inherited = useFormSubmissionProps(submissions[index]);
     return computed<Readonly<Record<string, unknown>>>(() => {
@@ -128,6 +129,7 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
         attributes['name'] = name === undefined || name === '' ? name : `${name}.${endpoint}`;
       }
       if (explicit.value.includes('form')) attributes['form'] = props.form;
+      Object.assign(attributes, flags.value);
       return attributes;
     });
   };
@@ -170,9 +172,9 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     } = {
       startInput: startInput.value,
       endInput: endInput.value,
-      disabled: props.disabled,
-      readOnly: props.readonly,
-      required: props.required,
+      disabled: flags.value.disabled,
+      readOnly: flags.value.readonly,
+      required: flags.value.required,
       onValueChange: (value) => emit('update:modelValue', value),
       onUpdate: refresh,
     };
@@ -238,20 +240,20 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     snapshot.value = result.value.state;
     if ((requested?.value ?? config) !== presentation.value) presentationTask?.schedule();
   });
-  watch([() => props.policies, () => props.disabled, () => props.readonly,
-    () => props.required, () => props.startLabel, () => props.endLabel], requestMount);
+  watch([() => props.policies, () => flags.value.disabled, () => flags.value.readonly,
+    () => flags.value.required, () => props.startLabel, () => props.endLabel], requestMount);
   if (requested !== undefined) watch(requested, settlePresentation);
   const slotProps = computed<RangeFieldSlotProps<Value>>(() => Object.freeze({
     value: snapshot.value.value,
     startText: snapshot.value.start.inputState.snapshot.text,
     endText: snapshot.value.end.inputState.snapshot.text,
     active: snapshot.value.active,
-    disabled: props.disabled,
-    readonly: props.readonly,
+    disabled: flags.value.disabled,
+    readonly: flags.value.readonly,
   }));
   provide<RangeFieldContext<Value>>(config.contextKey, {
     slotProps, startInput, endInput, setInputComposing,
-    get required() { return props.required; },
+    get required() { return flags.value.required; },
     isInputComposing: (endpoint) => (composingInputs & (endpoint === 'start' ? 1 : 2)) !== 0,
     placeholder: computed(() => presentation.value.placeholder),
     inputMode: computed(() => presentation.value.inputMode ?? 'numeric'),
@@ -261,8 +263,8 @@ export function setupNativeRangeField<Value, Policies, State extends RangeFieldS
     as: props.as, asChild: props.asChild,
     elementRef: (element: unknown) => { root.value = element as HTMLElement | null; },
     role: 'group', 'data-scope': config.scope, 'data-part': 'root',
-    'data-disabled': props.disabled ? '' : undefined,
-    'data-readonly': props.readonly ? '' : undefined,
+    'data-disabled': flags.value.disabled ? '' : undefined,
+    'data-readonly': flags.value.readonly ? '' : undefined,
   }), { default: () => slots['default']?.(slotProps.value) });
 }
 
@@ -280,7 +282,6 @@ export function createNativeRangeFieldInput(
         value: context.isInputComposing(endpoint)
           ? context[endpoint === 'start' ? 'startInput' : 'endInput'].value?.value
           : endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText,
-        disabled: context.slotProps.value.disabled, readonly: context.slotProps.value.readonly, required: context.required,
         onCompositionstart: () => context.setInputComposing(endpoint, true),
         onCompositionend: () => context.setInputComposing(endpoint, false),
         'aria-disabled': String(context.slotProps.value.disabled),

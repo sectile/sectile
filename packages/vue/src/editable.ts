@@ -23,7 +23,7 @@ import {
   type EditableState,
 } from '@sectile/dom/editable';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './form/control.js';
+import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { useNextTickTask } from './internal/scheduled-task.js';
 
@@ -94,6 +94,7 @@ export const EditableRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: EditableRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const controlled = useControlledStateInvariant('EditableRoot', 'modelValue', () => props.modelValue);
     const initial = controlled ? props.modelValue as string : props.defaultValue;
     const snapshot = shallowRef<EditableState>({ value: initial, draft: initial, editing: false });
@@ -120,8 +121,8 @@ export const EditableRoot = defineComponent({
         ...(editTrigger.value === null ? {} : { editTrigger: editTrigger.value }),
         ...(submitTrigger.value === null ? {} : { submitTrigger: submitTrigger.value }),
         ...(cancelTrigger.value === null ? {} : { cancelTrigger: cancelTrigger.value }),
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         submitOnBlur: props.submitOnBlur,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(props.name === undefined ? {} : { name: props.name }),
@@ -203,7 +204,7 @@ export const EditableRoot = defineComponent({
       snapshot.value = result.value.state;
     });
     watch(
-      [() => props.disabled, () => props.readonly, () => props.submitOnBlur, () => props.policies, () => props.label, () => props.name],
+      [() => flags.value.disabled, () => flags.value.readonly, () => props.submitOnBlur, () => props.policies, () => props.label, () => props.name],
       requestMount,
     );
     watch(input, (_next, previous) => {
@@ -213,8 +214,8 @@ export const EditableRoot = defineComponent({
 
     const slotProps = computed<EditableRootSlotProps>(() => Object.freeze({
       ...snapshot.value,
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     provide<EditableContext>(editableContextKey, {
       slotProps, root, preview, input, editTrigger, submitTrigger, cancelTrigger, multiline,
@@ -229,8 +230,8 @@ export const EditableRoot = defineComponent({
       'data-scope': 'editable',
       'data-part': 'root',
       'data-state': slotProps.value.editing ? 'editing' : 'idle',
-      'data-disabled': props.disabled ? '' : undefined,
-      'data-readonly': props.readonly ? '' : undefined,
+      'data-disabled': flags.value.disabled ? '' : undefined,
+      'data-readonly': flags.value.readonly ? '' : undefined,
     }), { default: () => slots['default']?.(slotProps.value) });
   },
 });

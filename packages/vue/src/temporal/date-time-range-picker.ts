@@ -3,7 +3,7 @@ import type { DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange } from '@sectile/dom/temporal/date-time-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, type PickerRootPartComponent,
-  createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
+  createPickerRoot, dateTimeSubmissionLayout, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { dateTimeRangePickerCapability } from './capabilities/date-time-range-picker.js';
 import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
@@ -15,7 +15,7 @@ export interface DateTimeRangePickerRootProps extends PickerPartProps, PickerPos
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateTimeRangePickerOptions['policies'];
 }
-export const DateTimeRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimeRangePickerCapability, 'SectileDateTimeRangePickerRoot');
+export const DateTimeRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimeRangePickerCapability, 'SectileDateTimeRangePickerRoot', { formLayout: dateTimeSubmissionLayout });
 export type DateTimeRangePickerRootSlotProps = PickerRootSlotProps<DateTimeRange | null>;
 export type DateTimeRangePickerContentSlotProps = PickerContentSlotProps<DateTimeRange | null>;
 export type DateTimeRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:modelValue']>;

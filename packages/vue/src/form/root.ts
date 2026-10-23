@@ -80,6 +80,19 @@ const FormRootImpl = defineComponent({
     const summaryId = `${useHostId()}-summary`;
     const connection = shallowRef<FormConnection<string> | null>(null);
     const participants = new Map<string, RegisteredParticipant>();
+    let resetGeneration = 0;
+    let resetConnection: FormConnection<string> | null = null;
+    const resetValuesTask = useNextTickTask(() => {
+      const target = resetConnection;
+      const generation = resetGeneration;
+      resetConnection = null;
+      if (target === null || connection.value !== target || !active.value) return;
+      for (const [id, registered] of [...participants]) {
+        if (connection.value !== target || !active.value || generation !== resetGeneration) break;
+        if (participants.get(id) === registered && registered.participant.active !== false)
+          target.refreshParticipant(id, 'baseline');
+      }
+    });
     const fieldDiagnostics = new Map<string, FormIssue>();
     let syncConfiguredIssues = (): void => {};
     let syncFieldDiagnostics = (): void => {};
@@ -158,7 +171,15 @@ const FormRootImpl = defineComponent({
       revalidateOn: props.revalidateOn,
       ...(props.onSubmit === undefined ? {} : { onSubmit: submit }),
       onReset: () => {
+        const target = connection.value, generation = ++resetGeneration;
         emit('reset');
+        // Control resets can queue a microtask before their Vue render. Join
+        // that render's nextTick rather than capturing the native reset value.
+        queueMicrotask(() => {
+          if (target === null || connection.value !== target || !active.value || generation !== resetGeneration) return;
+          resetConnection = target;
+          resetValuesTask.schedule();
+        });
         void nextTick(syncFieldDiagnostics);
       },
       onStateChange: (next: FormState) => {
@@ -192,12 +213,16 @@ const FormRootImpl = defineComponent({
 
     onMounted(mountTask.schedule);
     onBeforeUnmount(() => {
+      resetGeneration++; resetConnection = null; resetValuesTask.cancel();
       mountTask.cancel();
       connection.value?.destroy();
       connection.value = null;
     });
     watch(availability, next => {
-      if (!next) { active.value = false; mountTask.cancel(); connection.value?.suspend(); }
+      if (!next) {
+        resetGeneration++; resetConnection = null; resetValuesTask.cancel();
+        active.value = false; mountTask.cancel(); connection.value?.suspend();
+      }
     }, { flush: 'sync' });
     watch(availability, next => {
       if (!next) return;

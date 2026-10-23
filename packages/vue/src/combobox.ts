@@ -15,7 +15,7 @@ import type {
 } from '@sectile/dom/position';
 import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './form/control.js';
+import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePopupPresentation } from './internal/popup-presentation.js';
@@ -107,6 +107,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: ComboboxRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const input = shallowRef<HTMLInputElement | HTMLTextAreaElement>(); const popup = shallowRef<HTMLElement>();
     let manageText = true;
     const connection = shallowRef<ComboboxConnection<string>>();
@@ -131,7 +132,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     const state = computed<ComboboxRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       inputValue: props.inputValue ?? localInput.value, highlightedValue: highlighted.value,
-      open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly,
+      open: props.open ?? localOpen.value, disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
     const itemLabels = computed(() => new Map(props.items.map((item) => [item.id, item.label] as const)));
@@ -231,7 +232,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
         defaultHighlightedValue: reconciled.current,
         ...(controlled.input ? { inputState } : { defaultInputState: inputState }),
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
-        disabled: props.disabled, readOnly: props.readonly,
+        disabled: flags.value.disabled, readOnly: flags.value.readonly,
         presentation: props.presentation, position: props.position, anchor: props.anchor, side: props.side, align: props.align, sideOffset: props.sideOffset,
         ...(props.itemId === undefined ? {} : { getItemElementID: props.itemId }),
         isItemRendered: id => renderedItems.value?.has(id) ?? true,
@@ -335,7 +336,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) requestConnect();
     });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.presentation, () => props.anchor, () => props.itemId, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.position, () => props.presentation, () => props.anchor, () => props.itemId, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
     watch(renderedItems, () => {
       if (connection.value?.getActive()) connection.value.setInputAttributes(props.label);
     }, { flush: 'post' });
@@ -363,8 +364,8 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, 'data-scope': 'combobox', 'data-part': 'root',
-      'data-state': state.value.open ? 'open' : 'closed', 'data-disabled': props.disabled ? '' : undefined,
-      'data-readonly': props.readonly ? '' : undefined,
+      'data-state': state.value.open ? 'open' : 'closed', 'data-disabled': flags.value.disabled ? '' : undefined,
+      'data-readonly': flags.value.readonly ? '' : undefined,
     }), { default: () => slots['default']?.(state.value) });
   },
 });

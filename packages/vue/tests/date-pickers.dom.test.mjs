@@ -245,12 +245,13 @@ for (const range of [false, true]) test(`date-time ${range ? 'range' : 'scalar'}
   const initial = range ? { start: value, end: endValue } : value, proposals = [];
   const formatting = shallowRef({ locale: 'en-GB', timeZone: 'UTC' }); let form;
   const inputs = range ? ['StartDateTimeInput', 'EndDateTimeInput', 'StartDateInput', 'EndDateInput', 'StartTimeInput', 'EndTimeInput'] : ['DateTimeInput', 'DateInput', 'TimeInput'];
+  let inputParts = inputs;
   const Wrapper = { render: () => h(TemporalProvider, { formatting: formatting.value, referenceDate: date }, {
     default: () => h(FormRoot, { ref: value => { if (value) form = value; } }, {
       default: () => h(FormField, { name: 'delivery' }, { default: () => h(parts[prefix + 'Root'], {
         defaultValue: initial, defaultOpen: true, position: false, 'onUpdate:modelValue': value => proposals.push(value),
       }, { default: () => [
-        ...inputs.map(part => h(parts[prefix + part])), h(parts[prefix + 'Trigger']),
+        ...inputParts.map(part => h(parts[prefix + part])), h(parts[prefix + 'Trigger']),
         h(parts[prefix + 'Content'], {}, { default: () => h(parts[prefix + 'Grid']) }),
       ] }) }),
     }),
@@ -258,6 +259,19 @@ for (const range of [false, true]) test(`date-time ${range ? 'range' : 'scalar'}
   const expected = range ? ['2026-10-14T15:24:38.125', '2026-10-16T15:24:38.125', '14/10/2026', '16/10/2026', '15:24:38.125', '15:24:38.125']
     : ['14/10/2026, 15:24:38.125', '14/10/2026', '15:24:38.125'];
   const html = await renderToString(createSSRApp(Wrapper));
+  const initialNames = range ? ['delivery.end', 'delivery.start'] : ['delivery'];
+  const parseNames = markup => {
+    const element = document.createElement('div'); element.innerHTML = markup;
+    return [...new FormData(element.querySelector('form')).keys()].sort();
+  };
+  assert.deepEqual(parseNames(html), initialNames);
+  inputParts = [...inputs].reverse();
+  assert.deepEqual(parseNames(await renderToString(createSSRApp(Wrapper))), initialNames);
+  inputParts = inputs.filter(part => !part.includes('DateTimeInput'));
+  assert.deepEqual(parseNames(await renderToString(createSSRApp(Wrapper))), range
+    ? ['delivery.end.date', 'delivery.end.time', 'delivery.start.date', 'delivery.start.time']
+    : ['delivery.date', 'delivery.time']);
+  inputParts = inputs;
   assert.deepEqual([...html.matchAll(/<input[^>]*value="([^"]*)"/g)].map(match => match[1]), expected);
   const host = document.createElement('div'); document.body.append(host); const app = createApp(Wrapper);
   try {

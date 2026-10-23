@@ -831,6 +831,49 @@ test('native date-time field mounts and commits without text selection APIs', as
   host.remove();
 });
 
+for (const [name, Field, initial, changedText, partialText, stepped] of [
+  ['DateField', DateField, { year: 2026, month: 9, day: 13 }, '2026-10-14', '2026-11-', { year: 2027, month: 10, day: 14 }],
+  ['TimeField', TimeField, { hour: 9, minute: 30, second: 0, millisecond: 0 }, '10:45', '10:', { hour: 11, minute: 45, second: 0, millisecond: 0 }],
+  ['DateTimeField', DateTimeField, { date: { year: 2026, month: 9, day: 13 }, time: { hour: 9, minute: 30, second: 0, millisecond: 0 } },
+    '2026-10-14T10:45', '2026-11-14T10:', { date: { year: 2027, month: 10, day: 14 }, time: { hour: 10, minute: 45, second: 0, millisecond: 0 } }],
+]) test(`ISSUE-178: uncontrolled ${name} keeps accepted value, draft and selection across metadata/default changes`, async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const options = shallowRef({}); const defaultValue = shallowRef(initial); const proposals = [];
+  const app = createApp({ render: () => h(Field, { defaultValue: defaultValue.value, ...options.value,
+    'onUpdate:modelValue': value => proposals.push(value) }) });
+  const settle = async () => { for (let turn = 0; turn < 3; turn++) await nextTick(); };
+  try {
+    app.mount(host); await settle(); const input = host.querySelector('input');
+    const edit = async text => {
+      input.value = text; input.setSelectionRange(text.length, text.length);
+      input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' }));
+      await settle();
+    };
+    await edit(changedText); input.dispatchEvent(new Event('blur')); await settle();
+    const acceptedText = input.value;
+    for (const metadata of [{ label: 'Updated' }, { disabled: true }, { readonly: true }, { required: true }]) {
+      input.setSelectionRange(1, 3, 'backward');
+      options.value = metadata; await settle();
+      assert.equal(input.value, acceptedText, `${name}: ${JSON.stringify(metadata)}`);
+      assert.deepEqual([input.selectionStart, input.selectionEnd, input.selectionDirection], [1, 3, 'backward']);
+      options.value = {}; await settle();
+    }
+    defaultValue.value = initial === null ? null : structuredClone(initial); await settle();
+    assert.equal(input.value, acceptedText, 'a later default does not reset the accepted value');
+    input.setSelectionRange(0, 0);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true, cancelable: true }));
+    await settle(); assert.deepEqual(proposals.at(-1), stepped, 'stepping uses the displayed accepted value');
+    await edit(partialText);
+    for (const metadata of [{ label: 'Draft' }, { disabled: true }, { readonly: true }, { required: true }]) {
+      input.setSelectionRange(1, 3, 'backward'); options.value = metadata; await settle();
+      assert.equal(input.value, partialText);
+      assert.deepEqual([input.selectionStart, input.selectionEnd, input.selectionDirection], [1, 3, 'backward']);
+      options.value = {}; await settle();
+    }
+    defaultValue.value = structuredClone(initial); await settle(); assert.equal(input.value, partialText);
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('uncontrolled date field preserves accepted values and partial drafts across reconfiguration', async () => {
   const host = document.createElement('div');
   document.body.append(host);

@@ -5,6 +5,8 @@ import { unwrap } from '@sectile/core/result';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 
@@ -57,6 +59,7 @@ const areaKey = Symbol('SectileColorPickerArea');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
 export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileColorPickerRoot', inheritAttrs: false,
   props: {
     modelValue: { type: String, default: undefined }, defaultValue: { type: String, default: '#5b6df6' }, draft: { type: String as PropType<string | null>, default: undefined }, defaultDraft: { type: String as PropType<string | null>, default: null },
@@ -67,8 +70,10 @@ export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true, 'update:draft': (_value: string | null): boolean => true, 'update:format': (_value: ColorFormat): boolean => true },
   slots: Object as SlotsType<{ default: (props: ColorPickerRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const root = shallowRef<HTMLElement>(); const connection = shallowRef<ColorPickerConnection>(); const native = shallowRef<HTMLInputElement>(); const text = shallowRef<HTMLInputElement>(); const swatch = shallowRef<HTMLElement>(); const areaElement = shallowRef<HTMLElement>(); const areaSurface = shallowRef<HTMLElement>(); const areaThumb = shallowRef<HTMLElement>(); const hue = shallowRef<HTMLInputElement>(); const alpha = shallowRef<HTMLInputElement>(); const channels = new Map<ColorChannel, HTMLInputElement>(); const coordinates = new Map<HTMLInputElement, readonly [ColorModel, ColorCoordinate, 'number' | 'range']>();
     const submission = shallowRef<HTMLInputElement>();
+    const submissionProps = useFormSubmissionProps({ element: submission, capabilities: hiddenInputSubmissionCapabilities }, props);
     let areaAxes: ColorPickerAreaAxes | undefined;
     let mounted = false, resetScheduled = false, connectScheduled = false;
     const participation = useCompositeFormControl({
@@ -119,7 +124,7 @@ export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
       return result;
     };
     const coordinateValues = shallowRef<readonly ColorCoordinateValue[]>(coordinatesFor(initialState.format)); const revision = shallowRef(0);
-    const state = computed<ColorPickerRootSlotProps>(() => ({ value: value.value, text: textValue.value, cssColor: cssColor.value, draft: draft.value, format: format.value, channel: channel.value, area: area.value, coordinates: coordinateValues.value, disabled: props.disabled, readonly: props.readonly }));
+    const state = computed<ColorPickerRootSlotProps>(() => ({ value: value.value, text: textValue.value, cssColor: cssColor.value, draft: draft.value, format: format.value, channel: channel.value, area: area.value, coordinates: coordinateValues.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     const refresh = (): void => { const target = connection.value; if (target === undefined) return; const snapshot = target.getSnapshot(); revision.value = snapshot.revision; value.value = snapshot.state.value; draft.value = snapshot.state.draft; format.value = snapshot.state.format; channel.value = snapshot.state.channel; textValue.value = target.getText(); cssColor.value = target.getCSSColor(); area.value = target.getAreaValue(); coordinateValues.value = coordinatesFor(snapshot.state.format); };
     const syncControlledValues = (): void => {
       const target = connection.value;
@@ -140,7 +145,7 @@ export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
       connection.value?.disconnect(); connection.value = undefined; if (!mounted || root.value === undefined) return;
       const resumed = unwrap(reconcileColorPickerState({ value: value.value, area: area.value, draft: draft.value, format: format.value, channel: channel.value },
         { value: props.modelValue ?? value.value }, { allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep }));
-      connection.value = createColorPicker({ root: root.value, ...(resumed.area === undefined ? {} : { area: resumed.area }), ...(valueControlled ? { value: props.modelValue as string } : { defaultValue: value.value }), ...(draftControlled ? { draft: proposedDraft === noDraftProposal ? props.draft as string | null : proposedDraft } : { defaultDraft: draft.value }), ...(formatControlled ? { format: props.format as ColorFormat } : { defaultFormat: format.value }), allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => emit('update:modelValue', toHex(next)), onDraftChange: (next) => { emit('update:draft', next); if (!draftControlled) return; proposedDraft = next; const proposal = next; void nextTick(() => { if (connection.value === undefined || proposedDraft !== proposal) return; proposedDraft = noDraftProposal; syncControlledValues(); }); }, onFormatChange: (next) => emit('update:format', next), onUpdate: refresh });
+      connection.value = createColorPicker({ root: root.value, ...(resumed.area === undefined ? {} : { area: resumed.area }), ...(valueControlled ? { value: props.modelValue as string } : { defaultValue: value.value }), ...(draftControlled ? { draft: proposedDraft === noDraftProposal ? props.draft as string | null : proposedDraft } : { defaultDraft: draft.value }), ...(formatControlled ? { format: props.format as ColorFormat } : { defaultFormat: format.value }), allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: flags.value.disabled, readOnly: flags.value.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => emit('update:modelValue', toHex(next)), onDraftChange: (next) => { emit('update:draft', next); if (!draftControlled) return; proposedDraft = next; const proposal = next; void nextTick(() => { if (connection.value === undefined || proposedDraft !== proposal) return; proposedDraft = noDraftProposal; syncControlledValues(); }); }, onFormatChange: (next) => emit('update:format', next), onUpdate: refresh });
       connectParts(); refresh();
     };
     const requestConnect = (): void => {
@@ -172,7 +177,7 @@ export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
     };
     provide<RootContext>(rootKey, {
       state, coordinatesFor, allowAlpha: computed(() => props.allowAlpha),
-      inputAttributesFor: part => getColorPickerInputAttributes(state.value, { part, allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: props.disabled, readOnly: props.readonly }),
+      inputAttributesFor: part => getColorPickerInputAttributes(state.value, { part, allowAlpha: props.allowAlpha, channelStep: props.channelStep, alphaStep: props.alphaStep, disabled: flags.value.disabled, readOnly: flags.value.readonly }),
       registerNative: element => registerPart(native, element),
       registerText: element => {
         if (text.value === element) return;
@@ -219,12 +224,27 @@ export const ColorPickerRoot = /* @__PURE__ */ defineComponent({
       root.value = undefined; native.value = undefined; text.value = undefined; swatch.value = undefined;
       areaElement.value = undefined; areaSurface.value = undefined; areaThumb.value = undefined; areaAxes = undefined; hue.value = undefined; alpha.value = undefined; submission.value = undefined;
     });
-    watch([() => props.allowAlpha, () => props.channelStep, () => props.alphaStep, () => props.disabled, () => props.readonly, () => props.label], requestConnect);
+    watch([() => props.allowAlpha, () => props.channelStep, () => props.alphaStep, () => flags.value.disabled, () => flags.value.readonly, () => props.label], requestConnect);
     watch([() => props.modelValue, () => props.draft, () => props.format], () => {
       proposedDraft = noDraftProposal;
       syncControlledValues();
     });
-    return (): VNodeChild => { const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, { as: props.as, asChild: props.asChild, elementRef: (element: unknown) => { registerPart(root, element instanceof HTMLElement ? element : undefined); }, role: 'group', 'aria-label': props.label ?? attrs['aria-label'], 'aria-disabled': String(props.disabled), 'aria-readonly': undefined, 'data-readonly': props.readonly ? '' : undefined, 'data-scope': 'color-picker', 'data-part': 'root', 'data-format': state.value.format, 'data-channel': state.value.channel, 'data-revision': String(revision.value) }), { default: () => slots['default']?.(state.value) }); if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual; return [visual, h('input', { ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; }, type: 'hidden', name: props.name, form: props.form, required: props.required, disabled: props.disabled, value: state.value.text })]; };
+    return (): VNodeChild => {
+      const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
+        as: props.as, asChild: props.asChild,
+        elementRef: (element: unknown) => { registerPart(root, element instanceof HTMLElement ? element : undefined); },
+        role: 'group', 'aria-label': props.label ?? attrs['aria-label'],
+        'aria-disabled': String(flags.value.disabled), 'aria-readonly': flags.value.readonly ? 'true' : undefined,
+        'data-readonly': flags.value.readonly ? '' : undefined,
+        'data-scope': 'color-picker', 'data-part': 'root', 'data-format': state.value.format,
+        'data-channel': state.value.channel, 'data-revision': String(revision.value),
+      }), { default: () => slots['default']?.(state.value) });
+      if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual;
+      return [visual, h('input', {
+        ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; },
+        type: 'hidden', ...submissionProps.value, value: state.value.text,
+      })];
+    };
   },
 });
 

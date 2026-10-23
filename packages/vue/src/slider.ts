@@ -14,6 +14,8 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import {
   hiddenInputSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
@@ -64,6 +66,7 @@ const partProps = {
 };
 
 export const SliderRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileSliderRoot',
   inheritAttrs: false,
   props: {
@@ -88,6 +91,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: SliderSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const controlled = useControlledStateInvariant('SliderRoot', 'modelValue', () => props.modelValue);
     const createController = (value: string): SliderController => {
       const result = createSliderControllerFromRange({
@@ -96,8 +100,8 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
         step: String(props.step),
         page: props.pageStep,
         ...(controlled ? { value } : { defaultValue: value }),
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         onValueChange: ({ value: next }) => emit('update:modelValue', String(next)),
       });
       if (!result.ok) throw new TypeError(result.error.message);
@@ -113,7 +117,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
     const connection = shallowRef<SliderConnection>();
     const refresh = (): void => { snapshot.value = controller.value.getSnapshot(); };
     watch([() => props.min, () => props.max, () => props.step, () => props.pageStep,
-      () => props.disabled, () => props.readonly, () => props.modelValue], (next, previous) => {
+      () => flags.value.disabled, () => flags.value.readonly, () => props.modelValue], (next, previous) => {
       if (next[0] !== previous[0] || next[1] !== previous[1] || next[2] !== previous[2] || next[3] !== previous[3]
         || next[4] !== previous[4] || next[5] !== previous[5]) {
         const current = controlled ? String(props.modelValue) : controller.value.range.valueAt(snapshot.value.state.tick) as string;
@@ -133,8 +137,8 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
     const state = computed<SliderSlotProps>(() => ({
       value: value.value,
       percentage: controller.value.range.count === 0 ? 0 : snapshot.value.state.tick / controller.value.range.count * 100,
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     const orientation = computed(() => props.orientation);
     const role = computed(() => props.role);
@@ -148,6 +152,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
       connection.value?.disconnect(); connection.value = undefined;
       rootElement.value = undefined; track.value = undefined; thumb.value = undefined; submission.value = undefined;
     });
+    const submissionProps = useFormSubmissionProps({ element: submission, capabilities: hiddenInputSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: () => rootElement.value ?? null,
       focusTarget: () => thumb.value ?? null,
@@ -173,8 +178,8 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
         elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : undefined; },
         'data-scope': part.scope, 'data-part': part.part,
         'data-orientation': props.orientation,
-        'data-disabled': props.disabled ? '' : undefined,
-        'data-readonly': props.readonly ? '' : undefined,
+        'data-disabled': flags.value.disabled ? '' : undefined,
+        'data-readonly': flags.value.readonly ? '' : undefined,
         style: { '--sectile-slider-percentage': `${state.value.percentage}%` },
       }), { default: () => slots['default']?.(state.value) });
       if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return root;
@@ -184,7 +189,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
         disabled: props.disabled,
       }) as Record<string, unknown>, {
         ref: (element: unknown) => { submission.value = element instanceof HTMLInputElement ? element : undefined; },
-        required: props.required,
+        ...submissionProps.value,
         style: visuallyHiddenInputStyle,
       }))];
     };

@@ -1,4 +1,9 @@
 import { h, useTemplateRef } from 'vue';
+import { FormField, type FormFieldProps } from '@sectile/vue/form';
+const groupedField: FormFieldProps = { name: 'choice', labelMode: 'labelledby' };
+h(FormField, groupedField);
+// @ts-expect-error Field label semantics use the supported native/group/legend modes.
+h(FormField, { labelMode: 'custom' });
 import { ContextMenuRoot, ContextMenuTrigger, ContextMenuContent, ContextMenuItem, ContextMenuSubContent, ContextMenuSeparator,
   type ContextMenuRootProps, type ContextMenuRootSlotProps, type ContextMenuOpenChangeHandler, type ContextMenuInvokeHandler } from '@sectile/vue/context-menu';
 const contextProps: ContextMenuRootProps = { items: [{ id: 'copy', parentID: null }], open: false, strategy: 'fixed', sideOffset: 0 };

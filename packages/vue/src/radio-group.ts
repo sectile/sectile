@@ -12,7 +12,7 @@ import { Primitive, type PrimitiveAs } from './primitive.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { usePartContract, type PartContract } from './internal/part-contract.js';
 import { provideFormControlOwner } from './form/control.js';
-import { hiddenInputSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
+import { hiddenInputSubmissionCapabilities, useCompositeFormControl, useFormSubmissionProps, useFormControlFlags } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
@@ -55,6 +55,7 @@ const rootKey = Symbol('SectileRadioGroupRoot');
 const itemKey = Symbol('SectileRadioGroupItem');
 
 export const RadioGroupRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileRadioGroupRoot',
   inheritAttrs: false,
   props: {
@@ -77,9 +78,11 @@ export const RadioGroupRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: RadioGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const rootElement = shallowRef<HTMLElement | null>(null);
     const inputElements: Array<HTMLInputElement | null> = [];
+    const submissionProps = useFormSubmissionProps({ element: () => null, capabilities: hiddenInputSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: () => props.items.map((_, index) => ({
@@ -103,8 +106,8 @@ export const RadioGroupRoot = defineComponent({
         items: props.items,
         selectionMode: 'single',
         disabledItems: props.disabledItems,
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         orientation: props.orientation,
         direction: direction.value,
         policies: { selectionFollowsFocus: true },
@@ -151,10 +154,10 @@ export const RadioGroupRoot = defineComponent({
       if (!result.ok) throw new TypeError(result.error.message);
       snapshot.value = result.value;
     });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.orientation, direction], rebuild);
+    watch([() => props.items, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.orientation, direction], rebuild);
     const value = computed(() => snapshot.value.state.selection.selected[0] ?? '');
     const highlighted = computed(() => snapshot.value.state.cursor.current);
-    const disabled = computed(() => props.disabled);
+    const disabled = computed(() => flags.value.disabled);
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const apply = (result: ReturnType<ListboxController<string>['handleEvent']>, root?: HTMLElement): boolean => {
       if (!result.ok) return false;
@@ -168,8 +171,8 @@ export const RadioGroupRoot = defineComponent({
       focus: syncHighlight,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="radiogroup"]') as HTMLElement | undefined),
     });
-    const rootAttributes = computed(() => getRadioGroupRootAttributes({ orientation: props.orientation, direction: direction.value, disabled: props.disabled, readOnly: props.readonly }));
-    const slotProps = computed<RadioGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: props.disabled, readonly: props.readonly }));
+    const rootAttributes = computed(() => getRadioGroupRootAttributes({ orientation: props.orientation, direction: direction.value, disabled: flags.value.disabled, readOnly: flags.value.readonly }));
+    const slotProps = computed<RadioGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
         'aria-label': attrs['aria-label'],
@@ -194,8 +197,9 @@ export const RadioGroupRoot = defineComponent({
         value: id,
         checked: value.value === id,
         required: props.required,
-        disabled: props.disabled || props.disabledItems.includes(id),
-      }) as Record<string, unknown>, {
+        disabled: submissionProps.value['disabled'] === true || props.disabledItems.includes(id),
+      }) as Record<string, unknown>, submissionProps.value, {
+        disabled: submissionProps.value['disabled'] === true || props.disabledItems.includes(id),
         ref: (element: unknown) => {
           inputElements[index] = element instanceof HTMLInputElement ? element : null;
         },

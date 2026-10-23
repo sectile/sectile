@@ -37,6 +37,7 @@ const config: NativeRangeFieldConfig<DateTimeRange, DateTimeRangeFieldPolicies, 
   rebase: (state, start, end) => reformatDateTimeRangeFieldState({ ...state, start: { ...state.start, inputState: start }, end: { ...state.end, inputState: end } }),
 };
 export const DateTimeRangeFieldRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileDateTimeRangeFieldRoot', inheritAttrs: false,
   props: {
     name: { type: String as PropType<string | undefined>, default: undefined }, form: { type: String as PropType<string | undefined>, default: undefined },

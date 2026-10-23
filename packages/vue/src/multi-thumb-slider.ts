@@ -13,6 +13,8 @@ import type { FormSubmissionRegistration } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProjection,
+  useFormControlFlags,
 } from './form/control.js';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
@@ -60,6 +62,7 @@ const key = Symbol('SectileMultiThumbSliderRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } };
 
 export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileMultiThumbSliderRoot', inheritAttrs: false,
   props: {
     thumbs: { type: Array as PropType<readonly string[]>, required: true },
@@ -78,6 +81,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
   emits: { 'update:modelValue': (_values: readonly string[]): boolean => true },
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const root = shallowRef<HTMLElement>(); const track = shallowRef<HTMLElement>();
     const submissions = new Map<number, HTMLInputElement>();
     const connection = shallowRef<MultiThumbSliderConnection<string>>();
@@ -97,6 +101,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       return rangeController.value.range.count === 0 ? 0 : tick / rangeController.value.range.count * 100;
     }));
     const active = shallowRef<string | null>(props.thumbs[0] ?? null);
+    const submissionProps = useFormSubmissionProjection(props);
     const participation = useCompositeFormControl({
       root: () => root.value ?? null,
       focusTarget: () => root.value?.querySelector<HTMLElement>('[data-sectile-multi-thumb]') ?? root.value ?? null,
@@ -121,7 +126,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
     });
     const state = computed<MultiThumbSliderRootSlotProps>(() => Object.freeze({
       values: current.value, percentages: percentages.value, activeThumb: active.value,
-      disabled: props.disabled, readonly: props.readonly,
+      disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const ticks = (values: readonly string[]): readonly number[] => values.map((value) => {
       const tick = rangeController.value.range.tickOf(value);
@@ -146,7 +151,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
         root: root.value, ...(track.value === undefined ? {} : { track: track.value }), thumbs: props.thumbs,
         min: String(props.min), max: String(props.max), step: String(props.step),
         ...(controlled ? { values: ticks(current.value) } : { defaultValues: ticks(current.value) }),
-        disabled: props.disabled, readOnly: props.readonly, orientation: props.orientation,
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, orientation: props.orientation,
         ...(props.label === undefined ? {} : { label: props.label }),
         ...(props.getThumbLabel === undefined ? {} : { getThumbLabel: props.getThumbLabel }),
         ...(props.formatValue === undefined ? {} : { formatValue: props.formatValue }),
@@ -187,7 +192,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       requestConnect,
       thumbIndex: id => domain.value.indexOf(id),
       attributesFor: id => getMultiThumbSliderThumbAttributes({ domain: domain.value, range: connection.value?.range ?? rangeController.value.range, state: projection.value, id,
-        orientation: props.orientation, disabled: props.disabled, readOnly: props.readonly,
+        orientation: props.orientation, disabled: flags.value.disabled, readOnly: flags.value.readonly,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(props.getThumbLabel === undefined ? {} : { label: props.getThumbLabel(id) }),
         ...(props.formatValue === undefined ? {} : { formatValue: props.formatValue }),
@@ -200,7 +205,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       root.value = undefined; track.value = undefined; submissions.clear();
     });
     watch([() => props.thumbs, () => props.min, () => props.max, () => props.step, () => props.orientation,
-      () => props.disabled, () => props.readonly, () => props.policies, () => props.label,
+      () => flags.value.disabled, () => flags.value.readonly, () => props.policies, () => props.label,
       () => props.getThumbLabel, () => props.formatValue, () => props.modelValue], (next, previous) => {
       if (!mounted) return;
       for (let index = 0; index < next.length - 1; index++) {
@@ -226,10 +231,8 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
           else submissions.delete(index);
         },
         type: 'hidden',
-        name: props.name,
-        form: props.form,
+        ...submissionProps({ element: () => null, capabilities: hiddenValueSubmissionCapabilities, relativeName: [index] }),
         value,
-        disabled: props.disabled,
       }))];
     };
   },

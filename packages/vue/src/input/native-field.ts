@@ -16,7 +16,7 @@ import {
   type VNodeChild,
 } from 'vue';
 import type { TextEditingState } from '@sectile/core/text';
-import { hiddenInputSubmissionCapabilities, useFormSubmissionProps, useNativeInputFormControl } from '../form/control.js';
+import { hiddenInputSubmissionCapabilities, useFormControlFlags, useFormSubmissionProps, useNativeInputFormControl } from '../form/control.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { captureNativeTextState } from './native-text-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
@@ -109,6 +109,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       'update:modelValue': (_value: Value | null): boolean => true,
     },
     setup(props, { attrs, emit }) {
+      const flags = useFormControlFlags(props);
       const valueBinding = config.commitValue === undefined ? undefined : inject<NativeFieldValueBinding<Value> | undefined>(nativeFieldValueBinding, undefined);
       const composingState = valueBinding === undefined ? undefined : shallowRef(false);
       let detachValueControl: (() => void) | undefined;
@@ -126,8 +127,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           ? ''
           : presentation.value.formatValue(initialProjectedValue as Value),
       );
-      const projectOptions = () => ({ native: props.native, disabled: props.disabled,
-        readonly: props.readonly, required: props.required });
+      const projectOptions = () => ({ native: props.native, ...flags.value });
       const projected = shallowRef(projectOptions());
       let inputComposing = false;
       let reconnectPending = false;
@@ -161,9 +161,9 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           -readonly [Key in keyof NativeFieldFactoryOptions<Value, Policies>]: NativeFieldFactoryOptions<Value, Policies>[Key];
         } & { defaultInputState?: TextEditingState } = {
           input: element,
-          disabled: props.disabled,
-          readOnly: props.readonly,
-          required: props.required,
+          disabled: flags.value.disabled,
+          readOnly: flags.value.readonly,
+          required: flags.value.required,
           native: projected.value.native,
           onValueChange: (value) => {
             emit('update:modelValue', value);
@@ -251,8 +251,8 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         projectedText.value = connection.getText();
       });
       watch(
-        [() => props.policies, () => props.disabled, () => props.readonly,
-          () => props.required, () => props.label, () => props.native],
+        [() => props.policies, () => flags.value.disabled, () => flags.value.readonly,
+          () => flags.value.required, () => props.label, () => props.native],
         requestConnect,
       );
       if (requestedPresentation !== undefined) watch(requestedPresentation, settlePresentation);

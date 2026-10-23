@@ -19,6 +19,7 @@ const config: NativeRangeFieldConfig<TimeRange, TimeRangeFieldPolicies, TimeRang
 };
 
 export const TimeRangeFieldRoot = /* @__PURE__ */ defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileTimeRangeFieldRoot', inheritAttrs: false,
   props: { name: { type: String as PropType<string | undefined>, default: undefined }, form: { type: String as PropType<string | undefined>, default: undefined }, precision: { type: String as PropType<TimeFieldPrecision>, default: undefined }, modelValue: { type: Object as PropType<TimeRange | null>, default: undefined }, defaultValue: { type: Object as PropType<TimeRange | null>, default: null }, policies: { type: Object as PropType<TimeRangeFieldPolicies>, default: undefined }, disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false }, startLabel: { type: String, default: undefined }, endLabel: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   emits: { 'update:modelValue': (_value: TimeRange | null): boolean => true }, slots: Object as SlotsType<{ default: (props: TimeRangeFieldRootSlotProps) => VNodeChild }>,

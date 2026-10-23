@@ -22,7 +22,7 @@ import {
   type SpinButtonOptions,
 } from '@sectile/dom/spin-button';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { useNativeInputFormControl } from './form/control.js';
+import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 
 export interface SpinButtonRootProps {
   readonly min: number | string;
@@ -101,6 +101,7 @@ export const SpinButtonRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: SpinButtonSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const valueControlled = props.modelValue !== undefined;
     const draftControlled = props.draft !== undefined;
     const connection = shallowRef<SpinButtonConnection>();
@@ -119,8 +120,8 @@ export const SpinButtonRoot = defineComponent({
       value: value.value,
       draft: draft.value,
       text: draft.value ?? value.value,
-      disabled: props.disabled,
-      readonly: props.readonly,
+      disabled: flags.value.disabled,
+      readonly: flags.value.readonly,
     }));
     const min = computed(() => String(props.min));
     const max = computed(() => String(props.max));
@@ -157,8 +158,8 @@ export const SpinButtonRoot = defineComponent({
         ...(draftControlled
           ? { draft: pendingDraft === noDraftProposal ? props.draft as string | null : pendingDraft }
           : { defaultDraft: draft.value }),
-        disabled: props.disabled,
-        readOnly: props.readonly,
+        disabled: flags.value.disabled,
+        readOnly: flags.value.readonly,
         ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => emit('update:modelValue', next),
         onDraftChange: (next) => {
@@ -215,7 +216,7 @@ export const SpinButtonRoot = defineComponent({
       proposedDraft = noDraftProposal;
       sync();
     });
-    watch([() => props.disabled, () => props.readonly], requestReconnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly], requestReconnect);
     provide<SpinButtonContext>(spinButtonKey, {
       state, min, max, label, connection, connect, disconnect, reset, setInputComposing,
       step: (event) => {
@@ -227,8 +228,8 @@ export const SpinButtonRoot = defineComponent({
       asChild: props.asChild,
       'data-scope': 'spin-button',
       'data-part': 'root',
-      'data-disabled': props.disabled ? '' : undefined,
-      'data-readonly': props.readonly ? '' : undefined,
+      'data-disabled': flags.value.disabled ? '' : undefined,
+      'data-readonly': flags.value.readonly ? '' : undefined,
       'data-revision': String(revision.value),
     }), { default: () => slots['default']?.(state.value) });
   },

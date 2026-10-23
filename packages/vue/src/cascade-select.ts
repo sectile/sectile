@@ -21,6 +21,8 @@ import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenSelectSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePopupPresentation } from './internal/popup-presentation.js';
@@ -89,6 +91,7 @@ const itemKey: InjectionKey<CascadeChoiceItemContext> = Symbol('SectileCascadeSe
 const partProps = cascadeChoicePartProps;
 
 export const CascadeSelectRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileCascadeSelectRoot', inheritAttrs: false,
   props: {
     nodes: { type: Array as PropType<readonly CascadeSelectItemDefinition<string>[]>, required: true }, modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
@@ -107,6 +110,7 @@ export const CascadeSelectRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string | null): boolean => true, 'update:open': (_value: boolean): boolean => true, highlight: (_value: string | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: CascadeSelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null);
     const trigger = shallowRef<HTMLButtonElement | null>(null);
@@ -119,8 +123,9 @@ export const CascadeSelectRoot = defineComponent({
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue); const initialValuePath = cascadeItemPath(props.nodes, localValue.value); const initialBranchPath = initialValuePath.slice(0, -1); const localOpen = shallowRef(props.open ?? props.defaultOpen); const highlighted = shallowRef<string | null>(localValue.value); const path = shallowRef<readonly string[]>(initialBranchPath); const columns = shallowRef<readonly (readonly string[])[]>(initialCascadeColumns(props.nodes, initialBranchPath)); const valuePath = shallowRef<readonly string[]>(initialValuePath);
     const valueControlled = useControlledStateInvariant('CascadeSelectRoot', 'modelValue', () => props.modelValue);
     const openControlled = useControlledStateInvariant('CascadeSelectRoot', 'open', () => props.open);
-    const state = computed<CascadeSelectRootSlotProps>(() => Object.freeze({ value: props.modelValue !== undefined ? props.modelValue : localValue.value, valuePath: valuePath.value, highlightedValue: highlighted.value, path: path.value, columns: columns.value, open: props.open ?? localOpen.value, disabled: props.disabled, readonly: props.readonly }));
+    const state = computed<CascadeSelectRootSlotProps>(() => Object.freeze({ value: props.modelValue !== undefined ? props.modelValue : localValue.value, valuePath: valuePath.value, highlightedValue: highlighted.value, path: path.value, columns: columns.value, open: props.open ?? localOpen.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
+    const submissionProps = useFormSubmissionProps({ element: submission, capabilities: hiddenSelectSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({ root,
       focusTarget: () => lifecycle.active.value ? trigger.value : null,
       validationTarget: () => lifecycle.active.value ? root.value : null,
@@ -154,10 +159,11 @@ export const CascadeSelectRoot = defineComponent({
       const options: CascadeSelectOptions<string> = { root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, position: props.position, manageVisibility: false, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding, ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached, strategy: props.strategy, tracking: props.tracking, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value } : { defaultValue: value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); }, onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); }, onOpenChange: (next) => { if (!openControlled) localOpen.value = next; emit('update:open', next); }, onUpdate: refresh };
       const host = lifecycle.layerHost.value;
       const layer = host === undefined ? {} : { layerHost: host };
-      const candidate = tryCreateCascadeSelect({ ...options, ...navigation, ...layer, direction: direction.value });
+      const interaction = { disabled: flags.value.disabled, readOnly: flags.value.readonly };
+      const candidate = tryCreateCascadeSelect({ ...options, ...interaction, ...navigation, ...layer, direction: direction.value });
       if (!candidate.ok && (candidate.error.code === 'cascade-select-highlight-outside-tree'
         || candidate.error.code === 'cascade-select-path-outside-tree' || candidate.error.code === 'cascade-select-leaf-in-path'
-        || candidate.error.code === 'invalid-cascade-select-path')) connection.value = createCascadeSelect({ ...options, ...layer, direction: direction.value });
+        || candidate.error.code === 'invalid-cascade-select-path')) connection.value = createCascadeSelect({ ...options, ...interaction, ...layer, direction: direction.value });
       else connection.value = unwrap(candidate);
       refresh();
     };
@@ -178,7 +184,7 @@ export const CascadeSelectRoot = defineComponent({
       });
     };
     provide<RootContext>(rootKey, { state, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence, position: computed(() => props.position), strategy: computed(() => props.strategy), label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, indicatorPresence, registerTrigger: (element) => { const next = element ?? null; const changed = trigger.value !== next; trigger.value = next; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); }, refresh: () => connection.value?.refresh(), registerColumn: (element, depth, label) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null, label), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
-    onMounted(() => { mounted = true; lifecycle.reconnect(); }); onBeforeUnmount(() => { mounted = false; disconnect(); }); watch([() => props.nodes, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies, direction], lifecycle.reconnect);
+    onMounted(() => { mounted = true; lifecycle.reconnect(); }); onBeforeUnmount(() => { mounted = false; disconnect(); }); watch([() => props.nodes, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies, direction], lifecycle.reconnect);
     watch([() => props.modelValue, () => props.open], () => { lifecycle.prepareModelUpdate(); if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(valueControlled ? { value: props.modelValue as string | null } : {}), ...(openControlled ? { open: props.open as boolean } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     const registerRoot = (node: unknown): void => { const next = node instanceof HTMLElement ? node : null; const changed = root.value !== next; root.value = next; if (changed) scheduleConnect(); };
     return (): VNodeChild => {
@@ -194,10 +200,7 @@ export const CascadeSelectRoot = defineComponent({
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
       return [visual, h('select', {
         ref: (element: unknown) => { submission.value = element instanceof HTMLSelectElement ? element : null; },
-        name: props.name,
-        form: props.form,
-        required: props.required,
-        disabled: props.disabled,
+        ...submissionProps.value,
         value: state.value.value ?? '',
         tabindex: -1,
         'aria-hidden': 'true',

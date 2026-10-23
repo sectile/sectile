@@ -10,6 +10,8 @@ import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
 
@@ -52,6 +54,7 @@ const partProps = {
 };
 
 export const TagsInputRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileTagsInputRoot', inheritAttrs: false,
   props: {
     modelValue: { type: Array as PropType<readonly string[]>, default: undefined },
@@ -70,11 +73,13 @@ export const TagsInputRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: TagsInputRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const direction = useHostDirection();
     const root = shallowRef<HTMLElement | null>(null); const input = shallowRef<HTMLInputElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
     const initialTags = Object.freeze([...props.defaultValue]);
     const initialInput = props.defaultInputValue;
+    const submissionProps = useFormSubmissionProps({ element: () => null, capabilities: hiddenValueSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root,
       focusTarget: input,
@@ -102,7 +107,7 @@ export const TagsInputRoot = defineComponent({
     let mounted = false;
     const state = computed<TagsInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? localTags.value, inputValue: props.inputValue ?? localInput.value,
-      disabled: props.disabled, readonly: props.readonly,
+      disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const refresh = (): void => {
       const snapshot = connection.value?.getSnapshot().state;
@@ -140,7 +145,7 @@ export const TagsInputRoot = defineComponent({
         ...(inputControlled
           ? { inputValue: proposedInputValue ?? props.inputValue as string }
           : { defaultInputValue: localInput.value }),
-        disabled: props.disabled, readOnly: props.readonly, label: props.label,
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, label: props.label,
         onValueChange: (next) => { localTags.value = next; emit('update:modelValue', next); },
         onInputValueChange: (next) => {
           localInput.value = next;
@@ -193,7 +198,7 @@ export const TagsInputRoot = defineComponent({
       connection.value?.disconnect();
       connection.value = undefined;
     });
-    watch([() => props.disabled, () => props.readonly, () => props.label, () => props.policies, direction], requestConnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.policies, direction], requestConnect);
     watch(() => props.removeLabel, refreshDeletes, { flush: 'post' });
     watch([() => props.modelValue, () => props.inputValue], () => {
       proposedInputValue = null;
@@ -203,14 +208,14 @@ export const TagsInputRoot = defineComponent({
       const visual = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
         role: 'group', 'aria-label': props.label, dir: direction.value, 'data-scope': 'tags-input', 'data-part': 'root',
-        'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined,
+        'data-disabled': flags.value.disabled ? '' : undefined, 'data-readonly': flags.value.readonly ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return visual;
       return [visual, ...state.value.value.map((tag, index) => h('input', {
         ref: (element: unknown) => {
           submissionElements[index] = element instanceof HTMLInputElement ? element : null;
         },
-        type: 'hidden', name: props.name, form: props.form, value: tag, disabled: props.disabled,
+        type: 'hidden', ...submissionProps.value, value: tag,
         style: visuallyHiddenInputStyle,
       }))];
     };

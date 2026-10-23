@@ -13,8 +13,14 @@ import type {
   PositionTracking,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { useNextTickTask } from './internal/scheduled-task.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
-import { hiddenSelectSubmissionCapabilities, useCompositeFormControl } from './form/control.js';
+import {
+  compositeControlCapabilities, hiddenSelectSubmissionCapabilities,
+  useFormControl, useFormFieldDefaults, useFormMetadataPresence, useFormSubmissionProps,
+  type FormControlRegistration,
+  useFormControlFlags,
+} from './form/control.js';
 import { HostPortal, provideHostLayerParent, useHostId } from './host-provider.js';
 import { usePresence } from './presence/presence.js';
 import {
@@ -61,6 +67,8 @@ export interface SelectItemIndicatorProps extends SelectPartProps, ConditionalPr
 export interface SelectPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
 
 interface RootContext {
+  readonly resetRevision: Readonly<ShallowRef<number>>;
+  readonly formControl: FormControlRegistration;
   readonly active: Readonly<ShallowRef<boolean>>;
   readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   readonly state: ComputedRef<SelectRootSlotProps>;
@@ -86,6 +94,7 @@ const rootKey = Symbol('SectileSelectRoot'); const itemKey = Symbol('SectileSele
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } };
 
 export const SelectRoot = defineComponent({
+  __sectileFormLabelMode: 'for',
   name: 'SectileSelectRoot', inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true }, modelValue: { type: String as PropType<string | null>, default: undefined },
@@ -115,12 +124,22 @@ export const SelectRoot = defineComponent({
   },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     const initialValue = props.defaultValue, initialOpen = props.defaultOpen;
     let resetPending = false;
+    const resetRevision = shallowRef(0);
     const root = shallowRef<HTMLElement>();
     const trigger = shallowRef<HTMLButtonElement>();
     const popup = shallowRef<HTMLElement>();
     const submissionElement = shallowRef<HTMLSelectElement | null>(null);
+    const fieldDefaults = useFormFieldDefaults();
+    const explicitSubmission = useFormMetadataPresence();
+    const submission = {
+      element: submissionElement,
+      capabilities: hiddenSelectSubmissionCapabilities,
+      get explicit() { return explicitSubmission.value; },
+    };
+    const submissionProps = useFormSubmissionProps(submission, props);
     const connection = shallowRef<SelectConnection<string>>();
     const id = useHostId(); const contentID = `sectile-select-${id}-content`; const itemID = (value: string): string => `${contentID}-item-${stableIDElementToken(value)}`;
     const localValue = shallowRef<string | null>(props.modelValue !== undefined ? props.modelValue : props.defaultValue);
@@ -133,7 +152,7 @@ export const SelectRoot = defineComponent({
     const state = computed<SelectRootSlotProps>(() => Object.freeze({
       value: props.modelValue !== undefined ? props.modelValue : localValue.value,
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
-      disabled: props.disabled, readonly: props.readonly,
+      disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const disabledIDs = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const renderedItems = computed<readonly string[] | undefined>(() => {
@@ -150,11 +169,14 @@ export const SelectRoot = defineComponent({
     });
     const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
     const { active, presentation, availability } = lifecycle;
-    const participation = useCompositeFormControl({
-      root: () => root.value ?? null,
+    const formControl: FormControlRegistration = {
+      element: () => root.value ?? null,
+      semanticControl: () => trigger.value ?? null,
+      labelMode: 'for',
+      capabilities: compositeControlCapabilities,
       focusTarget: () => active.value ? trigger.value ?? root.value ?? null : null,
       validationTarget: () => active.value ? root.value ?? null : null,
-      submissions: [{ element: submissionElement, capabilities: hiddenSelectSubmissionCapabilities }],
+      submissions: [submission],
       reset: () => {
         if (resetPending) return;
         resetPending = true;
@@ -168,10 +190,11 @@ export const SelectRoot = defineComponent({
           localValue.value = reconciled.selected[0] ?? null;
           localOpen.value = openControlled ? props.open as boolean : initialOpen;
           highlighted.value = reconciled.current;
+          resetRevision.value++;
           lifecycle.reconnect();
         });
       },
-    });
+    };
     const selectedIDSet = computed<ReadonlySet<string>>(() => {
       const value = props.modelValue !== undefined ? props.modelValue : localValue.value;
       return value === null ? new Set() : new Set([value]);
@@ -223,7 +246,7 @@ export const SelectRoot = defineComponent({
         ...(valueControlled ? { value } : { defaultValue: value }),
         defaultHighlightedValue: reconciled.current,
         ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
-        disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }),
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, ...(props.label === undefined ? {} : { label: props.label }),
         onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); },
         onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); },
         onOpenChange: (next) => { if (!openControlled) localOpen.value = next; emit('update:open', next); }, onUpdate: refresh,
@@ -241,6 +264,8 @@ export const SelectRoot = defineComponent({
       });
     };
     provide<RootContext>(rootKey, {
+      formControl,
+      resetRevision,
       state, active, presentation, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
       disabledItems: disabledIDs,
       isItemRendered: id => renderedItems.value?.includes(id) ?? true,
@@ -264,7 +289,7 @@ export const SelectRoot = defineComponent({
       },
       registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled),
       activateTrigger: (event) => {
-        if (!lifecycle.mayOpen() || event?.defaultPrevented === true || connection.value !== undefined || props.disabled || state.value.open) return;
+        if (!lifecycle.mayOpen() || event?.defaultPrevented === true || connection.value !== undefined || flags.value.disabled || state.value.open) return;
         if (!openControlled) localOpen.value = true;
         emit('update:open', true);
       },
@@ -272,7 +297,7 @@ export const SelectRoot = defineComponent({
     });
     onMounted(() => { mounted = true; lifecycle.reconnect(); });
     onBeforeUnmount(() => { mounted = false; disconnect(); });
-    watch([() => props.items, () => props.disabledItems, () => props.disabled, () => props.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], lifecycle.reconnect);
+    watch([() => props.items, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], lifecycle.reconnect);
     watch([() => props.modelValue, () => props.open], () => {
       lifecycle.prepareModelUpdate();
       if (connection.value === undefined) return;
@@ -293,11 +318,11 @@ export const SelectRoot = defineComponent({
           else scheduleConnect();
         },
         'data-scope': 'select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
-      }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
-      if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return visual;
+      }), { default: () => slots['default']?.(state.value) });
+      if (fieldDefaults === undefined && props.name === undefined && props.form === undefined && !props.required) return visual;
       return [visual, h('select', {
         ref: submissionElement,
-        name: props.name, form: props.form, required: props.required, disabled: props.disabled,
+        ...submissionProps.value,
         value: state.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
       }, [h('option', { value: '', selected: state.value.value === null }), ...(props.formOptions === 'selected' ? selectedFormItems.value : props.items).map((id) => h('option', {
         value: id, selected: state.value.value === id, disabled: disabledIDs.value.has(id),
@@ -314,7 +339,18 @@ export const SelectTrigger = defineComponent({
   name: 'SectileSelectTrigger', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'button' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectTrigger'); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) { const root = useRoot('SelectTrigger');
+    const participation = useFormControl(root.formControl);
+    let baselinePending = false;
+    const valueTask = useNextTickTask(() => {
+      participation.refreshValue?.(baselinePending ? 'baseline' : 'value');
+      baselinePending = false;
+    });
+    watch([() => root.state.value.value, root.resetRevision], (value, previous) => {
+      baselinePending ||= value[1] !== previous[1];
+      valueTask.schedule();
+    }, { flush: 'post' });
+    return (): VNodeChild => h(Primitive, mergeProps(participation.controlProps.value, attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLButtonElement ? node : undefined),
     onClick: root.activateTrigger,
     type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled,

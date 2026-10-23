@@ -57,6 +57,7 @@ interface RatingContext {
 const ratingKey = Symbol('SectileRatingRoot');
 
 export const RatingRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileRatingRoot',
   inheritAttrs: false,
   props: {

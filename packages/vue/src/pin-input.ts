@@ -9,6 +9,8 @@ import { provideFormControlOwner } from './form/control.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
@@ -45,6 +47,7 @@ interface Context {
 const key = Symbol('SectilePinInputRoot');
 
 export const PinInputRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectilePinInputRoot', inheritAttrs: false,
   props: {
     length: { type: Number, default: 6 }, modelValue: { type: String, default: undefined },
@@ -58,12 +61,14 @@ export const PinInputRoot = defineComponent({
   emits: { 'update:modelValue': (_value: string): boolean => true, complete: (_value: string): boolean => true },
   slots: Object as SlotsType<{ default: (props: PinInputRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     if (!Number.isInteger(props.length) || props.length < 1) throw new TypeError('PinInput length must be a positive integer.');
     const root = shallowRef<HTMLElement | null>(null);
     const hiddenInput = shallowRef<HTMLInputElement | null>(null);
     const initialValue = props.modelValue ?? props.defaultValue;
     let mounted = false;
     let connectScheduled = false;
+    const submissionProps = useFormSubmissionProps({ element: hiddenInput, capabilities: hiddenValueSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root,
       focusTarget: () => inputs.value.find((candidate) => candidate !== undefined) ?? null,
@@ -94,7 +99,7 @@ export const PinInputRoot = defineComponent({
     const characters = computed(() => Object.freeze(Array.from(props.modelValue ?? value.value)));
     const state = computed<PinInputRootSlotProps>(() => Object.freeze({
       value: props.modelValue ?? value.value, complete: characters.value.length === props.length,
-      disabled: props.disabled, readonly: props.readonly,
+      disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     const connect = (): void => {
       connection.value?.disconnect();
@@ -104,7 +109,7 @@ export const PinInputRoot = defineComponent({
       connection.value = createPinInput({
         root: root.value, inputs: nodes, ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(controlled ? { value: proposedValue ?? props.modelValue as string } : { defaultValue: value.value }),
-        disabled: props.disabled, readOnly: props.readonly, label: props.label,
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, label: props.label,
         onValueChange: (next) => {
           value.value = next;
           emit('update:modelValue', next);
@@ -170,7 +175,7 @@ export const PinInputRoot = defineComponent({
       connection.value?.disconnect();
       connection.value = undefined;
     });
-    watch([() => props.length, () => props.disabled, () => props.readonly, () => props.label, () => props.policies], () => {
+    watch([() => props.length, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.policies], () => {
       inputs.value = Array.from({ length: props.length }, (_, index) => inputs.value[index]);
       requestConnect();
     });
@@ -196,8 +201,8 @@ export const PinInputRoot = defineComponent({
       if (!participation.participating && props.name === undefined && props.form === undefined) return visual;
       return [visual, h('input', {
         ref: (element: unknown) => { hiddenInput.value = element instanceof HTMLInputElement ? element : null; },
-        type: 'hidden', name: props.name, form: props.form, value: state.value.value,
-        disabled: props.disabled, style: visuallyHiddenInputStyle,
+        type: 'hidden', ...submissionProps.value, value: state.value.value,
+        style: visuallyHiddenInputStyle,
       })];
     };
   },

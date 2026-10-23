@@ -14,6 +14,8 @@ import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   hiddenValueSubmissionCapabilities,
   useCompositeFormControl,
+  useFormSubmissionProps,
+  useFormControlFlags,
 } from './form/control.js';
 
 export interface CheckboxGroupRootProps {
@@ -49,6 +51,7 @@ interface Context {
 const key = Symbol('SectileCheckboxGroupRoot');
 
 export const CheckboxGroupRoot = defineComponent({
+  __sectileFormLabelMode: 'labelledby',
   name: 'SectileCheckboxGroupRoot', inheritAttrs: false,
   props: {
     items: { type: Array as PropType<readonly string[]>, required: true },
@@ -62,6 +65,7 @@ export const CheckboxGroupRoot = defineComponent({
   emits: { 'update:modelValue': (_value: readonly string[]): boolean => true },
   slots: Object as SlotsType<{ default: (props: CheckboxGroupRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
+    const flags = useFormControlFlags(props);
     providePartContract('checkbox-group', { root: 'item' });
     const rootElement = shallowRef<HTMLElement | null>(null);
     const submissionElements: Array<HTMLInputElement | null> = [];
@@ -76,6 +80,7 @@ export const CheckboxGroupRoot = defineComponent({
     if (!initialState.ok) throw new TypeError(initialState.error.message);
     const selectedValue = shallowRef<readonly string[]>(initialState.value.selection.selected);
     const selected = computed<ReadonlySet<string>>(() => new Set(selectedValue.value));
+    const submissionProps = useFormSubmissionProps({ element: () => null, capabilities: hiddenValueSubmissionCapabilities }, props);
     const participation = useCompositeFormControl({
       root: rootElement,
       submissions: () => state.value.value.map((_, index) => ({
@@ -99,7 +104,7 @@ export const CheckboxGroupRoot = defineComponent({
     });
     provideFormControlOwner();
     const state = computed<CheckboxGroupRootSlotProps>(() => Object.freeze({
-      value: selectedValue.value, disabled: props.disabled, readonly: props.readonly,
+      value: selectedValue.value, disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
     watch(() => props.items, () => {
       const nextDomain = createSequence(props.items);
@@ -126,9 +131,9 @@ export const CheckboxGroupRoot = defineComponent({
       selectedValue.value = next.value.selection.selected;
     }, { flush: 'sync' });
     provide<Context>(key, {
-      state, selected, name: computed(() => props.name), form: computed(() => props.form), required: computed(() => props.required),
+      state, selected, name: computed(() => props.name), form: computed(() => props.form), required: computed(() => flags.value.required),
       toggle: (value, checked) => {
-        if (props.disabled || props.readonly) return;
+        if (flags.value.disabled || flags.value.readonly) return;
         const current = tryCreateCheckboxGroupState(domain.value, { selected: selectedValue.value });
         if (!current.ok) throw new TypeError(current.error.message);
         if (current.value.selection.has(value) === (checked === true)) return;
@@ -148,7 +153,7 @@ export const CheckboxGroupRoot = defineComponent({
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
       role: 'group', 'aria-label': props.label,
-      'aria-disabled': props.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
+      'aria-disabled': flags.value.disabled ? 'true' : undefined, 'aria-readonly': flags.value.readonly ? 'true' : undefined,
       'data-scope': 'checkbox-group', 'data-part': 'root',
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return root;
@@ -156,8 +161,8 @@ export const CheckboxGroupRoot = defineComponent({
         ref: (element: unknown) => {
           submissionElements[index] = element instanceof HTMLInputElement ? element : null;
         },
-        type: 'hidden', name: props.name, form: props.form, value,
-        disabled: props.disabled, style: visuallyHiddenInputStyle,
+        type: 'hidden', ...submissionProps.value, value,
+        style: visuallyHiddenInputStyle,
       }))];
     };
   },
