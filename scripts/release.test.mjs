@@ -55,46 +55,40 @@ test('includes release metadata for every public workspace package', () => {
   }
 });
 
-test('release retries prepare tagged artifacts and load the complete current publication tool closure', () => {
+test('release hands verified artifacts to source-bound Releaseway publishers with separate authority', () => {
   const workflow = readText(join(root, '.github/workflows/release.yml'));
   const localRelease = readText(join(root, 'scripts/release.mjs'));
   const publication = readText(join(root, 'scripts/publish-packages.mjs'));
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'));
-  for (const path of [
-    'scripts/publish-packages.mjs',
-    'scripts/release-metadata.mjs',
-    'scripts/lib/npm-registry-artifact.mjs',
-    'scripts/lib/npm-publish-auth.mjs',
-    'scripts/lib/packed-package-contract.mjs',
-    'tools/tooling/portable-process.mjs',
-    'scripts/lib/published-packages.mjs',
-    'scripts/lib/release.mjs',
-    'scripts/lib/release-set.mjs',
-    'scripts/lib/repository.mjs',
-    'scripts/lib/source-map-policy.mjs',
-    'scripts/lib/workspace-graph.mjs',
-  ]) assert.ok(workflow.includes(path), `${path} is absent from publication tooling restore`);
   assert.match(publication, /parseNpmWebAuthChallenge/u);
   assert.match(publication, /completeNpmWebAuth/u);
   assert.match(publication, /npm_config_otp/u);
-  assert.equal(workflow.includes('.release-artifacts'), false);
   assert.match(workflow, /--pack-destination=release-artifacts/u);
-  assert.match(workflow, /path: release-artifacts\/\*\.tgz/u);
-  assert.match(workflow, /--tarball-directory=release-artifacts/u);
-  assert.ok(workflow.includes('node scripts/release-metadata.mjs title "$RELEASE_TAG"'));
-  assert.ok(workflow.includes('--notes-from-tag --title "$RELEASE_TITLE"'));
+  assert.match(workflow, /--releaseway-manifest/u);
+  assert.ok(workflow.includes('node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts'));
   assert.match(workflow, /jobs:\n  prepare:/u);
   const preparation = workflow.slice(workflow.indexOf('  prepare:'), workflow.indexOf('\n  publish:'));
-  const restore = preparation.slice(preparation.indexOf('      - name: Load build entrypoints'), preparation.indexOf('      - run: pnpm install'));
-  assert.ok(restore.includes('git merge-base --is-ancestor "$RELEASE_TOOLING_REF" origin/main'));
-  assert.ok(restore.includes('git restore --source="$RELEASE_TOOLING_REF" --'));
-  assert.deepEqual(restore.match(/tools\/tooling\/[a-z-]+\.mjs/gu), [
-    'tools/tooling/build.mjs', 'tools/tooling/reproducible-build.mjs', 'tools/tooling/public-signatures.mjs',
-  ]);
-  assert.equal(restore.includes('packages/'), false, 'recovery must leave tagged product source intact');
-  assert.ok(workflow.includes('RELEASE_TOOLING_REF: ${{ github.workflow_sha }}'));
-  assert.equal(workflow.match(/git restore --source="\$RELEASE_TOOLING_REF"/gu).length, 2);
-  assert.ok(preparation.includes('ref: ${{ inputs.tag }}'));
+  assert.ok(preparation.includes('test "$GITHUB_REF_NAME" = "$RELEASE_TAG"'));
+  assert.ok(preparation.includes('git merge-base --is-ancestor "$GITHUB_SHA" origin/main'));
+  assert.ok(localRelease.includes("'--ref', release.tag"));
+  const publicationJob = workflow.slice(workflow.indexOf('\n  publish:'), workflow.indexOf('\n  github-release:'));
+  assert.match(publicationJob, /permissions:\n      contents: read\n      id-token: write/u);
+  assert.match(publicationJob, /artifacts-manifest: release-artifacts\/artifacts.json/u);
+  assert.ok(publicationJob.includes('artifact-ids: ${{ needs.prepare.outputs.artifact-id }}'));
+  assert.match(publicationJob, /artifact-report-path/u);
+  assert.match(publicationJob, /if: always\(\)/u);
+  assert.match(workflow, /group: release-main/u);
+  const githubJob = workflow.slice(workflow.indexOf('\n  github-release:'));
+  assert.match(githubJob, /needs: \[prepare, publish\]/u);
+  assert.match(githubJob, /contents: write/u);
+  assert.match(githubJob, /notes: file/u);
+  assert.match(githubJob, /notes-existing: verify/u);
+  assert.match(githubJob, /release-artifacts\/artifacts.json/u);
+  assert.match(githubJob, /release-evidence\/\*\.json/u);
+  for (const action of ['releaseway/npm-actions', 'releaseway/actions']) {
+    assert.match(workflow, new RegExp(`uses: ${action}@[0-9a-f]{40} # v0\\.8\\.0`, 'u'));
+  }
+  assert.match(readText(join(root, '.github/npm/packages.yml')), /publish:\n  mode: direct/u);
   assert.match(workflow, /run: pnpm release:check/u);
   assert.equal(workflow.includes('@sectile/docs'), false, 'docs remain local-only');
   assert.equal(workflow.includes('docs/dist'), false);

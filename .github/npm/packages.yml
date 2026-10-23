@@ -1,0 +1,4 @@
+# Independent versions stay authoritative in each package.json.
+schema: 1
+publish:
+  mode: direct

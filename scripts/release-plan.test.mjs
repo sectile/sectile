@@ -82,6 +82,28 @@ test('automatic release plans reject an empty package change set', (context) => 
   assert.match(result.stderr, /no changed packages since their latest release tags/u);
 });
 
+test('release metadata preserves annotated notes and rejects a different workflow source before output', (context) => {
+  const root = releaseFixture(context);
+  const script = join(root, 'scripts', 'release-metadata.mjs');
+  cpSync(join(repositoryRoot, 'scripts', 'release-metadata.mjs'), script);
+  const notes = 'Release notes\n\nPackage transitions and evidence.\n';
+  git(root, ['tag', '-a', 'v0.14.2', '-m', notes]);
+  const commit = git(root, ['rev-parse', 'HEAD']);
+  const output = join(root, 'github-output');
+  const directory = join(root, 'release-artifacts');
+  const invoke = (sha) => spawnSync(process.execPath, [script, 'prepare', 'v0.14.2', directory], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, GITHUB_SHA: sha, GITHUB_OUTPUT: output },
+  });
+  const rejected = invoke('b'.repeat(40));
+  assert.notEqual(rejected.status, 0);
+  assert.match(rejected.stderr, /dispatch the workflow on the release tag ref/u);
+  const result = invoke(commit);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(directory, 'notes.md'), 'utf8'), notes);
+  assert.equal(readFileSync(output, 'utf8'), `commit=${commit}\ntitle=v0.14.2\n`);
+  assert.notEqual(invoke(commit).status, 0, 'existing sealed release notes must not be overwritten');
+});
+
 function releaseFixture(context) {
   const root = mkdtempSync(join(tmpdir(), 'sectile-release-plan-'));
   context.after(() => rmSync(root, { recursive: true, force: true }));

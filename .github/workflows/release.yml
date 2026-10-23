@@ -5,102 +5,138 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing release tag to retry
+        description: Existing release tag (run this workflow on that same tag ref)
         required: true
         type: string
 
 permissions:
-  contents: write
-  id-token: write
+  contents: read
 
 concurrency:
-  group: release-${{ inputs.tag }}
+  group: release-main
   cancel-in-progress: false
 
 env:
   RELEASE_TAG: ${{ inputs.tag }}
-  RELEASE_TOOLING_REF: ${{ github.workflow_sha }}
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    outputs:
+      artifact-id: ${{ steps.bundle.outputs.artifact-id }}
+      commit: ${{ steps.metadata.outputs.commit }}
+      title: ${{ steps.metadata.outputs.title }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ inputs.tag }}
+          persist-credentials: false
+      - name: Confirm the workflow source is the release tag on main
+        run: |
+          test "$GITHUB_REF_TYPE" = tag
+          test "$GITHUB_REF_NAME" = "$RELEASE_TAG"
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.x
           cache: pnpm
-      - name: Confirm the release tag belongs to main
-        run: |
-          git fetch origin main --tags
-          git rev-parse --verify "refs/tags/${RELEASE_TAG}^{commit}"
-          git merge-base --is-ancestor "refs/tags/${RELEASE_TAG}^{commit}" origin/main
-      - name: Load build entrypoints from workflow revision
-        run: |
-          git merge-base --is-ancestor "$RELEASE_TOOLING_REF" origin/main
-          git restore --source="$RELEASE_TOOLING_REF" -- \
-            tools/tooling/build.mjs \
-            tools/tooling/reproducible-build.mjs \
-            tools/tooling/public-signatures.mjs
+      - id: metadata
+        run: node scripts/release-metadata.mjs prepare "$RELEASE_TAG" release-artifacts
       - run: pnpm install --frozen-lockfile
       - run: pnpm release:check "$RELEASE_TAG"
-      - name: Pack release npm artifacts
-        run: pnpm publish:packages -- --pack-only --pack-destination=release-artifacts
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - name: Validate and seal release npm artifacts
+        run: pnpm publish:packages -- --pack-only --pack-destination=release-artifacts --releaseway-manifest
+      - id: bundle
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: npm-packages-${{ inputs.tag }}
-          path: release-artifacts/*.tgz
+          name: npm-packages-${{ inputs.tag }}-${{ github.run_attempt }}
+          path: release-artifacts/
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 90
 
   publish:
     needs: prepare
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      evidence-id: ${{ steps.evidence.outputs.artifact-id }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-          ref: ${{ inputs.tag }}
-      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: 24.x
-          registry-url: https://registry.npmjs.org
-          package-manager-cache: false
+          persist-credentials: false
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: npm-packages-${{ inputs.tag }}
+          artifact-ids: ${{ needs.prepare.outputs.artifact-id }}
+          merge-multiple: true
           path: release-artifacts
-      - name: Load publication tooling from workflow revision
-        run: |
-          git fetch origin main
-          git merge-base --is-ancestor "$RELEASE_TOOLING_REF" origin/main
-          git restore --source="$RELEASE_TOOLING_REF" -- \
-            scripts/publish-packages.mjs \
-            scripts/release-metadata.mjs \
-            scripts/lib/npm-registry-artifact.mjs \
-            scripts/lib/npm-publish-auth.mjs \
-            scripts/lib/packed-package-contract.mjs \
-            tools/tooling/portable-process.mjs \
-            scripts/lib/published-packages.mjs \
-            scripts/lib/release.mjs \
-            scripts/lib/release-set.mjs \
-            scripts/lib/repository.mjs \
-            scripts/lib/source-map-policy.mjs \
-            scripts/lib/workspace-graph.mjs
-      - name: Publish npm packages with OIDC
-        run: node scripts/publish-packages.mjs --tarball-directory=release-artifacts
-      - name: Ensure GitHub release
-        run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "GitHub release ${RELEASE_TAG} already exists"
-          else
-            RELEASE_TITLE="$(node scripts/release-metadata.mjs title "$RELEASE_TAG")"
-            gh release create "$RELEASE_TAG" --verify-tag --notes-from-tag --title "$RELEASE_TITLE"
-          fi
+      - name: Publish verified npm bytes with OIDC
+        id: npm
+        uses: releaseway/npm-actions@c61fca168e342a622406ef7ee85a27c3a51e8de6 # v0.8.0
+        with:
+          artifacts-manifest: release-artifacts/artifacts.json
+      - name: Collect publication evidence
+        if: always()
         env:
-          GH_TOKEN: ${{ github.token }}
+          REPORT: ${{ steps.npm.outputs.report-path }}
+          DIAGNOSTICS: ${{ steps.npm.outputs.diagnostics-path }}
+          ARTIFACT_REPORT: ${{ steps.npm.outputs.artifact-report-path }}
+        run: |
+          mkdir -p release-evidence
+          if test -n "$REPORT"; then cp -- "$REPORT" release-evidence/npm-report.json; fi
+          if test -n "$DIAGNOSTICS"; then cp -- "$DIAGNOSTICS" release-evidence/npm-diagnostics.json; fi
+          if test -n "$ARTIFACT_REPORT"; then cp -- "$ARTIFACT_REPORT" release-evidence/npm-artifact-report.json; fi
+      - id: evidence
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: npm-evidence-${{ inputs.tag }}-${{ github.run_attempt }}
+          path: release-evidence/
+          if-no-files-found: error
+          retention-days: 90
+
+  github-release:
+    needs: [prepare, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          artifact-ids: ${{ needs.prepare.outputs.artifact-id }}
+          merge-multiple: true
+          path: release-artifacts
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          artifact-ids: ${{ needs.publish.outputs.evidence-id }}
+          merge-multiple: true
+          path: release-evidence
+      - name: Publish immutable GitHub Release with complete publication evidence
+        id: release
+        uses: releaseway/actions@b6f17f2ffe2c8fd92bdf6be4729e1e56d151bef3 # v0.8.0
+        with:
+          tag: ${{ inputs.tag }}
+          commit: ${{ needs.prepare.outputs.commit }}
+          title: ${{ needs.prepare.outputs.title }}
+          notes: file
+          notes-file: release-artifacts/notes.md
+          notes-existing: verify
+          assets: |
+            release-artifacts/*.tgz
+            release-artifacts/artifacts.json
+            release-evidence/*.json
+      - name: Preserve GitHub publication diagnostics
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: github-evidence-${{ inputs.tag }}-${{ github.run_attempt }}
+          path: |
+            ${{ steps.release.outputs.notes-report }}
+            ${{ steps.release.outputs.diagnostics-path }}
+          if-no-files-found: warn
+          retention-days: 90

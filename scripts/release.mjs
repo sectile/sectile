@@ -395,7 +395,7 @@ function publishRelease(root, release) {
     'push', '--atomic', 'origin', 'main', `refs/tags/${release.tag}`,
     ...(release.packageTags ?? []).map((tag) => `refs/tags/${tag}`),
   ]);
-  run(root, 'gh', ['workflow', 'run', 'release.yml', '--repo', release.repository, '--ref', 'main', '--field', `tag=${release.tag}`]);
+  run(root, 'gh', ['workflow', 'run', 'release.yml', '--repo', release.repository, '--ref', release.tag, '--field', `tag=${release.tag}`]);
   console.log(`released ${release.tag} from ${release.repository}; dispatched npm publication through GitHub Actions OIDC`);
 }
 
