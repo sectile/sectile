@@ -17,12 +17,12 @@
     {
       "group": "columns",
       "tests": 5,
-      "sha256": "7cd55477baaf0ddb43a8176e72c5b4cf27a138bd9b9373737881ee10fc16e25e"
+      "sha256": "a3cddd19d51831857c35648e1be95e525b05aa4847db551eb2a21f289abaec94"
     },
     {
       "group": "selection",
-      "tests": 8,
-      "sha256": "457811470b3e2f6170f35ea391fbde66b95ff96fe4fdeeae862b7a5a149089c6"
+      "tests": 10,
+      "sha256": "0bb533ebc91035bb8014079c447fda0c0266fbf014a655895f1eacc821711bc8"
     },
     {
       "group": "advanced",
@@ -32,7 +32,7 @@
     {
       "group": "profiles",
       "tests": 24,
-      "sha256": "1861092623038f703433e84be77f50d4233cfbfc74b0ca7404d7fd6c5a9fb8be"
+      "sha256": "e8e64d85e8072ebf0cdfdceaf3714df91fca780cd0eeb7cfd7c6d186b037d9fa"
     },
     {
       "group": "virtual",
