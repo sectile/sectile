@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.15.1
+
+### Maintenance
+
+- Republish through Releaseway to verify source-bound tarball handoff, npm Trusted Publishing, and immutable GitHub Release delivery. Runtime code, exports, and dependency ranges are unchanged from 0.15.0.
+
 ## 0.15.0
 
 ### Changes
