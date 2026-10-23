@@ -1,5 +1,11 @@
 # @sectile/virtual
 
+## 0.16.0
+
+### Changes
+
+- feat(packages): integrate headless improvements independently of styled UI (240190bf4)
+
 ## 0.15.6
 
 ### Changes

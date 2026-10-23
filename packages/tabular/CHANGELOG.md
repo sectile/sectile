@@ -1,5 +1,14 @@
 # @sectile/tabular
 
+## 0.17.0
+
+### Changes
+
+- test(tabular): finalize release evidence and measured footprint budget (366ca9451)
+- test(tabular): refresh qualified group evidence before release (1660c1224)
+- chore(verification): qualify existing packages without styled UI (83e35073f)
+- feat(packages): integrate headless improvements independently of styled UI (240190bf4)
+
 ## 0.16.3
 
 ### Changes

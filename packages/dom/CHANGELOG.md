@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.19.0
+
+### Changes
+
+- feat(packages): integrate headless improvements independently of styled UI (240190bf4)
+
 ## 0.18.3
 
 ### Changes

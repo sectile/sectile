@@ -1,5 +1,13 @@
 # @sectile/vue
 
+## 0.19.0
+
+### Changes
+
+- fix(vue): keep Form contracts below mounted control integration (3e9249e84)
+- fix(vue): preserve Form contracts across SSR and native controls (9c72f4d6f)
+- feat(packages): integrate headless improvements independently of styled UI (240190bf4)
+
 ## 0.18.3
 
 ### Changes

@@ -1,5 +1,12 @@
 # @sectile/core
 
+## 0.15.0
+
+### Changes
+
+- fix(core): restore layout checks for transfer and tree-select (a7e40363d)
+- feat(packages): integrate headless improvements independently of styled UI (240190bf4)
+
 ## 0.14.8
 
 ### Changes
