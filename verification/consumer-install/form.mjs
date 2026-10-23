@@ -63,6 +63,10 @@ async function verifyDirectFormConsumer() {
     const root = await import('@sectile/form');
     const state = await import('@sectile/form/state');
     const path = await import('@sectile/form/path');
+    const { createFilePolicy } = await import('@sectile/form/files');
+    const file = { name: 'invoice.pdf', size: 4, type: '' };
+    const admitted = createFilePolicy({ accept: '.pdf' }).validate([file]);
+    if (!admitted.ok || admitted.value.files[0] !== file || admitted.value.totalSize !== 4) process.exit(3);
     if (Object.keys(root).length !== 0 || typeof state.tryCreateFormState !== 'function' || typeof path.createFormFieldPath !== 'function') process.exit(2);
   `);
 }
@@ -178,6 +182,9 @@ async function missingSubpath(directory, specifier) {
 async function typeConsumer(directory) {
   await writeFile(join(directory, 'consumer.ts'), `
     import { createFormState, type FormIssue } from '@sectile/form/state';
+    import { createFilePolicy } from '@sectile/form/files';
+    const files = createFilePolicy({ accept: '.pdf' }).validate([{ name: 'invoice.pdf', size: 4, type: '', id: 'invoice' as const }]);
+    if (files.ok) files.value.files[0]!.id satisfies 'invoice';
     import { defineFormSubmission, type FormSummarySlotProps } from '@sectile/vue/form';
     const issue = {
       id: 'lookup-mismatch',

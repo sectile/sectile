@@ -5,6 +5,8 @@ import { tmpdir } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
 import { validateSourceMapFiles } from './source-map-policy.mjs';
 
+export const packageMetadataFiles = Object.freeze(['LICENSE', 'README.md', 'package.json']);
+
 const dependencyFields = Object.freeze([
   'dependencies',
   'devDependencies',
@@ -68,8 +70,15 @@ export function validatePackedPackageContents({ contents, manifest, paths, sourc
     false,
     `${manifest.name}: packed development files detected`,
   );
-
   const sourceMapPolicy = validateSourceMapFiles(contents);
+  for (const path of paths) {
+    assert.ok(
+      packageMetadataFiles.includes(path)
+        || /^dist\/.+\.(?:js|d\.ts|js\.map)$/u.test(path),
+      `${manifest.name}: unexpected packed file ${path}`,
+    );
+  }
+
   assert.ok(sourceMapPolicy.javascriptFiles > 0, `${manifest.name}: packed JavaScript missing`);
   assert.ok(sourceMapPolicy.declarationFiles > 0, `${manifest.name}: packed declarations missing`);
   assert.equal(sourceMapPolicy.sourceMapFiles, sourceMapPolicy.javascriptFiles,

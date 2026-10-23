@@ -119,6 +119,26 @@
       }
     },
     {
+      "id": "checkbox-tree.bridge",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/checkbox-tree.ts",
+      "benchmarkIDs": ["vue:checkbox-tree-bridge"],
+      "specificationCeiling": "O(n * log(n + 1) + m)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "canonical tree nodes bounding selection, expansion and explicit configuration admission", "ceiling": "Tree maxItems" },
+          { "name": "m", "meaning": "mounted item and disclosure ports", "ceiling": "caller-owned rendered part count" }
+        ],
+        "time": { "bound": "O(n * log(n + 1) + m)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n + m)", "output": "O(n)", "retained": "O(n + m)" },
+        "resources": { "allocations": "O(n + m)", "cacheEntries": "O(n + m)", "listeners": "2", "observers": "0", "timers": "0", "subscriptions": "O(1 + m)" },
+        "proof": "Core and the Native controller own all checked aggregation and identity reconciliation. Vue shallow-publishes accepted snapshots, borrows Core selection/expansion membership directly, and projects only its mounted part ports. Tree construction occurs only for explicit configuration generations; Host/KeepAlive and root replacement reuse the accepted controller and O(m) presentation binding work.",
+        "adversarialWitness": "SSR hierarchy, refused controlled proposals, hidden/unmounted descendants, structural focus replacement, retained input getter counters during Host/KeepAlive suspension, root element replacement and zero Native listeners after unmount.",
+        "evidence": ["packages/vue/tests/checkbox-tree.dom.test.mjs", "packages/vue/type-tests/checkbox-tree.ts", "packages/vue/type-tests/fixtures/checkbox-tree.vue"],
+        "fullScan": { "allowed": true, "rationale": "Explicit structural/policy generations admit a new tree through Core. An accepted snapshot updates m mounted ports; suspension never reconstructs the node domain." }
+      }
+    },
+    {
       "id": "collection.external-reconcile",
       "inherits": "linear-v1",
       "source": "packages/vue/src/internal/collection.ts",
@@ -263,6 +283,111 @@
         "adversarialWitness": "Mount 4000 cells, move the cursor by one cell, and count consumer slot executions separately from DOM writes. Exactly the old/new cell slots execute while part discovery remains zero. Then exercise controlled-state combinations, disabled changes, reused IDs, removal/remount, read-only and disabled gates, edit callbacks and unmount cleanup.",
         "evidence": ["packages/vue/tests/dynamic-collections.dom.test.mjs", "packages/vue/tests/structural-controls.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Construction, domain replacement, and genuinely global item-state changes may touch r mounted cells. Ordinary cursor/selection publication does not take that branch and may not execute unrelated GridCell consumer slots." }
+      }
+    },
+    {
+      "id": "text.edit-capability",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/text.ts",
+      "benchmarkIDs": ["VAL-014:vue-text-edit-capability"],
+      "specificationCeiling": "O(n + j)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "native source/output text code units", "ceiling": "owned native text length" }, { "name": "j", "meaning": "replacement text code units", "ceiling": "caller plain-text insertion length" }],
+        "time": { "bound": "O(n + j)", "kind": "worst-case", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(n + j)", "output": "O(n + j)", "retained": "O(n + j)" },
+        "resources": { "allocations": "O(n + j)", "cacheEntries": "one issued frame and one active operation", "listeners": "0 additional", "observers": "0", "timers": "0 additional", "subscriptions": "0 additional" },
+        "proof": "Snapshot admission reads one native value and fixed offsets, reuses the single issued frame for an unchanged connection/revision, and borrows canonical Core text/selection. A replacement dispatches one existing DOM/Core transition; Vue does not calculate replacement output again. Existing controlled watch/nextTick settlement records exact acceptance and final connection/revision. One busy operation cell admits no pending queue; unmount clears the frame and action callbacks.",
+        "deterministicWork": ["one native value read per snapshot call at100000 code units", "unchanged reads reuse one issued object", "a second pending edit is rejected before dispatch"],
+        "resourceRationale": "One frame and one pending operation retain existing immutable text/proposal references; settlement waits only the existing Vue flush, not external work. Held public methods capture a cleared mutable port; returned snapshots do not reference the field/native owner.",
+        "adversarialWitness": "Large unchanged reads, foreign/stale/invalid range rejection, controlled acceptance/refusal/transformation, explicit lazy commit, superseding native input and reconnect, callback-driven unmount, and held methods/results with collected native/caller graphs.",
+        "evidence": ["packages/vue/tests/text.dom.test.mjs", "packages/vue/type-tests/component-contracts.ts", "packages/vue/type-tests/fixtures/text-actions.vue"],
+        "fullScan": { "allowed": true, "rationale": "Native value materialization/equality and the existing Core immutable replacement may process the owned source/output and inserted text; Vue adds no independent text scan or duplicate replacement calculation." }
+      }
+    },
+    {
+      "id": "text.query-capability",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/text.ts",
+      "benchmarkIDs": ["VAL-014:vue-text-query-capability"],
+      "specificationCeiling": "O(n + p*(q + p))",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "native text code units read for snapshot admission", "ceiling": "owned control value length" }, { "name": "p", "meaning": "trigger code units", "ceiling": "caller trigger length" }, { "name": "q", "meaning": "query code-unit ceiling", "ceiling": "explicit maxQueryCodeUnits" }],
+        "time": { "bound": "O(n + p*(q + p))", "kind": "expected", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(p + q)", "output": "O(p + q)", "retained": "O(n + p + q)" },
+        "resources": { "allocations": "O(p + q)", "cacheEntries": "existing one issued snapshot frame", "listeners": "0 additional", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One existing native snapshot admission precedes the Core canonical query projection. Vue adds only a result wrapper pairing bounded query/range with the field-issued snapshot; it neither parses text nor constructs another state. Native materialization/equality may cost O(n). The returned snapshot borrows n source code units explicitly.",
+        "deterministicWork": ["existing snapshot native read and identity witness", "existing Core query source-read counter"],
+        "resourceRationale": "No query cache or provider work is started. Optional snapshotChange observers share one coalesced nextTick callback with mounted retirement checks; fields without a listener schedule none. No callback captures a text/proposal argument. The existing revocable action port is cleared on unmount; returned query data contains no native/instance references. Future provider requests must not retain the full snapshot.",
+        "adversarialWitness": "Real field query-to-replacement acceptance, old range refusal after selection, no query during IME, invalid policy reporting and held query method after unmount/GC.",
+        "evidence": ["packages/vue/tests/text.dom.test.mjs", "packages/core/tests/editing/text.reference-law.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Only the existing native text getter/equality boundary may process n; semantic query inspection is delegated to the bounded Core owner." }
+      }
+    },
+    {
+      "id": "toast.publication",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/toast.ts",
+      "benchmarkIDs": ["vue:toast:publication-work"],
+      "specificationCeiling": "O(1 + n + e)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "active canonical notification items", "ceiling": "current Core queue length and configured visible limit" },
+          { "name": "e", "meaning": "retained rendered exit items", "ceiling": "current registered exit presentations" }
+        ],
+        "time": { "bound": "O(1 + n + e)", "kind": "expected", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(1 + n + e)", "output": "O(1 + n + e)", "retained": "O(1 + n + e)" },
+        "resources": { "allocations": "O(1 + n + e)", "cacheEntries": "O(1 + n + e)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(1)" },
+        "assumptions": ["Core/DOM owns canonical queue/countdown state; Vue owns only shallow publication and exit presentation.", "Map membership is expected constant time; native element lookup borrows the existing DOM registration owner.", "Viewport-less publication retains only active items; no pending function history or unrendered exit rows."],
+        "ceilings": ["One active ID view per changed item generation, replacing the prior active-ID Set; no additional active registry.", "Repeated identical native state publication is O(1); unchanged item arrays share membership and ordered rows.", "Each row reads the current active/exit view with O(1) lookup, not a full-array search."],
+        "deterministicWork": ["Actual mounted 32/128-row tick publication performs zero per-row Array.find predicate visits.", "A reactive label change preserves published item-array and native countdown callback identity.", "Ten viewport-less pushes retain only the configured three active items, including after viewport detach."],
+        "resourceRationale": "One native actor remains across viewport/config changes. A clearable command cell and data-only computed refs do not retain a disposed provider or DOM. Registered presence exits use the existing exit Map; terminal disposal clears it and destroys the facade before late calls can run.",
+        "proof": "Refresh returns on identical native state and reuses membership when items are shared. Changed items build one ID Map, reconcile registered exits and materialize one ordered view. Root computeds query this view directly. The detached actor has no native clock/resources and respects Core queue limits.",
+        "adversarialWitness": "Viewport replacement/absence, reactive labels/policies, concurrent exits/reorder/reactivation, large mounted row views, saved commands after teardown and explicit-GC input/root collection.",
+        "evidence": ["packages/vue/tests/toast.dom.test.mjs", "packages/vue/tests/toast.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Changed active/exit generation requires one shallow ordered publication; per-row and duplicate same-state scans are not needed." }
+      }
+    },
+    {
+      "id": "transfer.bridge",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/transfer.ts",
+      "benchmarkIDs": ["vue:transfer-bridge"],
+      "specificationCeiling": "O(n * log(n + 1) + m + q + c)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "canonical source nodes and explicit admission/submission output", "ceiling": "Core Tree maxItems" },
+          { "name": "m", "meaning": "mounted row ports", "ceiling": "caller-owned rendered parts" },
+          { "name": "q", "meaning": "Native buffered Unicode query code points", "ceiling": "configured maxQueryLength, default256" },
+          { "name": "c", "meaning": "Native normalized text output visited by typeahead", "ceiling": "caller output over maxScan-admitted pane items" }
+        ],
+        "time": { "bound": "O(n * log(n + 1) + m + q + c)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n + m + q + c)", "output": "O(n + m)", "retained": "O(n + m + q)" },
+        "resources": { "allocations": "O(n + m + q + c)", "cacheEntries": "O(m)", "listeners": "6 Native plus existing Form owner", "observers": "0 new observers", "timers": "0", "subscriptions": "O(1 + m)" },
+        "proof": "One Native controller owns both panes and portable atomic membership. Vue shallow-publishes accepted snapshots and borrows Core Sequences/Selection; it adds no topology or selected index. Explicit immutable source/policy replacement re-admits through Core, while Host/KeepAlive and element replacement only reconnect presentation. Cached option output encodes target membership in one render-owned hidden select; one Form participant borrows existing metadata/default/reset owners. Attachment/reset nextTick tasks coalesce and cancel. Unmount retires public method ports before disconnect/dispose and clears registrations; held methods cannot retain component roots/hooks.",
+        "adversarialWitness": "No-DOM SSR, controlled refusal/complete acceptance, source pruning, nested native controls, assigned membership versus temporary pane selection, Form reset/defaults, Host/KeepAlive six-listener churn with no source rereads or accepted ARIA loss, replaced/unmounted target, acquired-listener cleanup after caller eligibility failure and held-method explicit-GC collection.",
+        "evidence": ["packages/vue/tests/transfer.dom.test.mjs", "packages/vue/type-tests/transfer.ts", "packages/vue/type-tests/fixtures/transfer.vue"],
+        "fullScan": { "allowed": true, "rationale": "Explicit source/config admission and complete slot/submission output visit n; attachment visits mounted m. Ordinary controls and Host/KeepAlive do not rebuild the portable owner." }
+      }
+    },
+    {
+      "id": "tree-select.bridge",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/tree-select.ts",
+      "benchmarkIDs": ["vue:tree-select-bridge"],
+      "specificationCeiling": "O(n * log(n + 1) + m + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "source tree nodes bounding explicit selection/topology admission and submission options", "ceiling": "Tree maxItems" },
+          { "name": "m", "meaning": "mounted tree item and disclosure ports", "ceiling": "caller-owned rendered part count" },
+          { "name": "q", "meaning": "query code units", "ceiling": "finite immutable query string" }
+        ],
+        "time": { "bound": "O(n * log(n + 1) + m + q)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n + m)", "output": "O(n + m + q)", "retained": "O(n + m + q)" },
+        "resources": { "allocations": "O(n + m + q)", "cacheEntries": "O(m)", "listeners": "7 Native plus existing layer/position/Form owners", "observers": "existing popup position/presence owners", "timers": "0 new timers", "subscriptions": "O(1 + m)" },
+        "proof": "One SSR-created Native controller owns Core selection/query/expansion. Vue publishes immutable snapshots through shallowRef and borrows Core membership without rebuilding selected Sets. Explicit topology/policy replacement uses existing Tree and collection admission; Host/KeepAlive and element replacement only reattach presentation. One cached native-select vnode depends on selected owner/topology, not every cursor/query revision. Shared cancellable next-tick tasks own attachment/reset; unmount retires them, detaches Native work and disposes the controller. Core alone repairs uncontrolled hidden cursors.",
+        "adversarialWitness": "SSR with initial selected options and no transport; controlled refusal/acceptance, stale responses with later query acceptance, live IME through unrelated render, old requests after source replacement, Host/KeepAlive listener churn and exactly one Form submission owner/reset.",
+        "evidence": ["packages/vue/tests/tree-select.dom.test.mjs", "packages/vue/type-tests/tree-select.ts", "packages/vue/type-tests/fixtures/tree-select.vue"],
+        "fullScan": { "allowed": true, "rationale": "Explicit source generations and native submission option output may visit n. Ordinary Native projection visits m mounted parts. Query results do not rebuild the source controller or selected owner." }
       }
     },
     {

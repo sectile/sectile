@@ -29,6 +29,8 @@
     ]
   },
   "publicSubpaths": {
+    "./transfer": { "source": "src/transfer.ts" },
+    "./tree-select": { "source": "src/tree-select.ts" },
     ".": { "source": "src/index.ts" },
     "./sequence": { "source": "src/structures/sequence.ts" },
     "./range": { "source": "src/structures/range.ts" },
@@ -43,6 +45,7 @@
     "./grid-control": { "source": "src/grid-control.ts" },
     "./tree": { "source": "src/structures/tree.ts" },
     "./identity": { "source": "src/identity.ts" },
+    "./json": { "source": "src/structures/json.ts" },
     "./result": { "source": "src/result.ts" },
     "./selection": { "source": "src/selection.ts" },
     "./interaction": { "source": "src/interaction.ts" },

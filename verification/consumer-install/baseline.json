@@ -2,209 +2,209 @@
   "schemaVersion": 2,
   "packages": {
     "core": {
-      "tarballBytes": 180811,
-      "unpackedBytes": 832868,
-      "unpackedFiles": 291,
+      "tarballBytes": 223995,
+      "unpackedBytes": 1020782,
+      "unpackedFiles": 306,
       "categories": {
         "runtimeJS": {
-          "files": 96,
-          "bytes": 376408
+          "files": 101,
+          "bytes": 466602
         },
         "declarations": {
-          "files": 96,
-          "bytes": 165120
+          "files": 101,
+          "bytes": 193368
         },
         "sourceMaps": {
-          "files": 96,
-          "bytes": 276114
+          "files": 101,
+          "bytes": 346011
         },
         "other": {
           "files": 3,
-          "bytes": 15226
+          "bytes": 14801
         }
       }
     },
     "chart": {
-      "tarballBytes": 98738,
-      "unpackedBytes": 458579,
-      "unpackedFiles": 87,
+      "tarballBytes": 98673,
+      "unpackedBytes": 463812,
+      "unpackedFiles": 90,
       "categories": {
         "runtimeJS": {
-          "files": 28,
-          "bytes": 225047
+          "files": 29,
+          "bytes": 228314
         },
         "declarations": {
-          "files": 28,
-          "bytes": 56944
+          "files": 29,
+          "bytes": 57171
         },
         "sourceMaps": {
-          "files": 28,
-          "bytes": 171298
+          "files": 29,
+          "bytes": 173458
         },
         "other": {
           "files": 3,
-          "bytes": 5290
+          "bytes": 4869
         }
       }
     },
     "form": {
-      "tarballBytes": 36118,
-      "unpackedBytes": 154567,
-      "unpackedFiles": 66,
+      "tarballBytes": 41205,
+      "unpackedBytes": 173515,
+      "unpackedFiles": 72,
       "categories": {
         "runtimeJS": {
-          "files": 21,
-          "bytes": 73138
+          "files": 23,
+          "bytes": 81611
         },
         "declarations": {
-          "files": 21,
-          "bytes": 24352
+          "files": 23,
+          "bytes": 28284
         },
         "sourceMaps": {
-          "files": 21,
-          "bytes": 52996
+          "files": 23,
+          "bytes": 59832
         },
         "other": {
           "files": 3,
-          "bytes": 4081
+          "bytes": 3788
         }
       }
     },
     "tabular": {
-      "tarballBytes": 67615,
-      "unpackedBytes": 315306,
+      "tarballBytes": 70916,
+      "unpackedBytes": 327606,
       "unpackedFiles": 54,
       "categories": {
         "runtimeJS": {
           "files": 17,
-          "bytes": 154869
+          "bytes": 161497
         },
         "declarations": {
           "files": 17,
-          "bytes": 44298
+          "bytes": 45102
         },
         "sourceMaps": {
           "files": 17,
-          "bytes": 111598
+          "bytes": 116165
         },
         "other": {
           "files": 3,
-          "bytes": 4541
+          "bytes": 4842
         }
       }
     },
     "temporal": {
-      "tarballBytes": 36065,
-      "unpackedBytes": 192612,
-      "unpackedFiles": 63,
+      "tarballBytes": 57359,
+      "unpackedBytes": 277162,
+      "unpackedFiles": 93,
       "categories": {
         "runtimeJS": {
-          "files": 20,
-          "bytes": 86329
+          "files": 30,
+          "bytes": 121534
         },
         "declarations": {
-          "files": 20,
-          "bytes": 39072
+          "files": 30,
+          "bytes": 58265
         },
         "sourceMaps": {
-          "files": 20,
-          "bytes": 61702
+          "files": 30,
+          "bytes": 91483
         },
         "other": {
           "files": 3,
-          "bytes": 5509
+          "bytes": 5880
         }
       }
     },
     "virtual": {
-      "tarballBytes": 69178,
-      "unpackedBytes": 331152,
-      "unpackedFiles": 57,
+      "tarballBytes": 69308,
+      "unpackedBytes": 331801,
+      "unpackedFiles": 63,
       "categories": {
         "runtimeJS": {
-          "files": 18,
-          "bytes": 157944
+          "files": 20,
+          "bytes": 157981
         },
         "declarations": {
-          "files": 18,
-          "bytes": 49261
+          "files": 20,
+          "bytes": 49456
         },
         "sourceMaps": {
-          "files": 18,
-          "bytes": 118745
+          "files": 20,
+          "bytes": 119867
         },
         "other": {
           "files": 3,
-          "bytes": 5202
+          "bytes": 4497
         }
       }
     },
     "dom": {
-      "tarballBytes": 304465,
-      "unpackedBytes": 1412849,
-      "unpackedFiles": 321,
+      "tarballBytes": 479367,
+      "unpackedBytes": 2156135,
+      "unpackedFiles": 513,
       "categories": {
         "runtimeJS": {
-          "files": 106,
-          "bytes": 653148
+          "files": 170,
+          "bytes": 996823
         },
         "declarations": {
-          "files": 106,
-          "bytes": 267161
+          "files": 170,
+          "bytes": 384841
         },
         "sourceMaps": {
-          "files": 106,
-          "bytes": 476789
+          "files": 170,
+          "bytes": 753674
         },
         "other": {
           "files": 3,
-          "bytes": 15751
+          "bytes": 20797
         }
       }
     },
     "terminal": {
-      "tarballBytes": 114174,
-      "unpackedBytes": 623920,
+      "tarballBytes": 113119,
+      "unpackedBytes": 627429,
       "unpackedFiles": 246,
       "categories": {
         "runtimeJS": {
           "files": 81,
-          "bytes": 259973
+          "bytes": 261733
         },
         "declarations": {
           "files": 81,
-          "bytes": 168229
+          "bytes": 168717
         },
         "sourceMaps": {
           "files": 81,
-          "bytes": 181262
+          "bytes": 183276
         },
         "other": {
           "files": 3,
-          "bytes": 14456
+          "bytes": 13703
         }
       }
     },
     "vue": {
-      "tarballBytes": 279252,
-      "unpackedBytes": 1742407,
-      "unpackedFiles": 330,
+      "tarballBytes": 430109,
+      "unpackedBytes": 2318137,
+      "unpackedFiles": 432,
       "categories": {
         "runtimeJS": {
-          "files": 109,
-          "bytes": 593497
+          "files": 143,
+          "bytes": 824488
         },
         "declarations": {
-          "files": 109,
-          "bytes": 661649
+          "files": 143,
+          "bytes": 789601
         },
         "sourceMaps": {
-          "files": 109,
-          "bytes": 470525
+          "files": 143,
+          "bytes": 683204
         },
         "other": {
           "files": 3,
-          "bytes": 16736
+          "bytes": 20844
         }
       }
     }
@@ -212,8 +212,9 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 20781289,
-      "installedFiles": 1537,
+      "installedBytes": 22451019,
+      "installedPayloadBytes": 22251621,
+      "installedFiles": 1850,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -251,12 +252,12 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.12.0",
+          "version": "0.14.8",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.12.0",
+          "version": "0.18.3",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -265,7 +266,7 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.12.0",
+              "version": "0.14.8",
               "dependencies": []
             },
             {
@@ -292,7 +293,7 @@
         },
         {
           "name": "@sectile/vue",
-          "version": "0.12.0",
+          "version": "0.18.3",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -301,12 +302,12 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.12.0",
+              "version": "0.14.8",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.12.0",
+              "version": "0.18.3",
               "dependencies": []
             },
             {
@@ -350,7 +351,7 @@
                   "dependencies": [
                     {
                       "name": "@babel/parser",
-                      "version": "7.29.8",
+                      "version": "7.29.9",
                       "dependencies": []
                     },
                     {
@@ -370,7 +371,7 @@
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.1",
+                      "version": "1.2.2",
                       "dependencies": []
                     }
                   ]
@@ -388,7 +389,7 @@
               "dependencies": [
                 {
                   "name": "@babel/parser",
-                  "version": "7.29.8",
+                  "version": "7.29.9",
                   "dependencies": [
                     {
                       "name": "@babel/types",
@@ -457,11 +458,11 @@
                 },
                 {
                   "name": "postcss",
-                  "version": "8.5.26",
+                  "version": "8.5.31",
                   "dependencies": [
                     {
                       "name": "nanoid",
-                      "version": "3.3.18",
+                      "version": "3.3.20",
                       "dependencies": []
                     },
                     {
@@ -471,14 +472,14 @@
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.1",
+                      "version": "1.2.2",
                       "dependencies": []
                     }
                   ]
                 },
                 {
                   "name": "source-map-js",
-                  "version": "1.2.1",
+                  "version": "1.2.2",
                   "dependencies": []
                 }
               ]
@@ -564,8 +565,9 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 20825183,
-      "installedFiles": 1555,
+      "installedBytes": 22458900,
+      "installedPayloadBytes": 22259502,
+      "installedFiles": 1859,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -597,32 +599,32 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.12.0",
+          "version": "0.14.8",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.12.0",
+          "version": "0.18.3",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.12.0",
+              "version": "0.14.8",
               "dependencies": []
             }
           ]
         },
         {
           "name": "@sectile/vue",
-          "version": "0.12.0",
+          "version": "0.18.3",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.12.0",
+              "version": "0.14.8",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.12.0",
+              "version": "0.18.3",
               "dependencies": []
             },
             {
@@ -639,7 +641,7 @@
                       "dependencies": [
                         {
                           "name": "@babel/parser",
-                          "version": "7.29.8",
+                          "version": "7.29.9",
                           "dependencies": [
                             {
                               "name": "@babel/types",
@@ -676,7 +678,7 @@
                         },
                         {
                           "name": "source-map-js",
-                          "version": "1.2.1",
+                          "version": "1.2.2",
                           "dependencies": []
                         }
                       ]
@@ -694,7 +696,7 @@
                   "dependencies": [
                     {
                       "name": "@babel/parser",
-                      "version": "7.29.8",
+                      "version": "7.29.9",
                       "dependencies": []
                     },
                     {
@@ -746,11 +748,11 @@
                     },
                     {
                       "name": "postcss",
-                      "version": "8.5.26",
+                      "version": "8.5.31",
                       "dependencies": [
                         {
                           "name": "nanoid",
-                          "version": "3.3.18",
+                          "version": "3.3.20",
                           "dependencies": []
                         },
                         {
@@ -760,14 +762,14 @@
                         },
                         {
                           "name": "source-map-js",
-                          "version": "1.2.1",
+                          "version": "1.2.2",
                           "dependencies": []
                         }
                       ]
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.1",
+                      "version": "1.2.2",
                       "dependencies": []
                     }
                   ]

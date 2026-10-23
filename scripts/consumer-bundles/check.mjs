@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 
 export function validateBaseline(baseline, current) {
   assert.equal(baseline.schemaVersion, 1, 'unsupported consumer bundle baseline');
+  assert.equal(current.schemaVersion, 1, 'unsupported current consumer bundle schema');
   const packageFixtures = current.packages === undefined
     ? baseline.fixtures
     : baseline.fixtures.filter((fixture) => current.packages.includes(fixture.package));
@@ -16,6 +17,7 @@ export function validateBaseline(baseline, current) {
       .map((entry) => [`${entry.bundler}:${entry.id}`, entry]),
   );
   assert.equal(current.results.length, expected.size, 'consumer bundle result count drifted');
+  assert.deepEqual(current.results.map((entry) => `${entry.bundler}:${entry.id}`).sort(), [...expected.keys()].sort(), 'consumer bundle result coverage drifted');
   for (const result of current.results) {
     const before = expected.get(`${result.bundler}:${result.id}`);
     assert.ok(before !== undefined, `${result.bundler}:${result.id}: missing baseline`);
@@ -33,7 +35,13 @@ export function validateBaseline(baseline, current) {
 
 export function validateCurrentResults(fixtures, results) {
   const byKey = new Map(results.map((entry) => [`${entry.bundler}:${entry.id}`, entry]));
+  assert.equal(results.length, byKey.size, 'duplicate consumer bundle results');
   assert.equal(byKey.size, fixtures.length * 2, 'every fixture requires independent Vite and esbuild results');
+  for (const fixture of fixtures) {
+    for (const bundler of ['esbuild', 'vite']) {
+      assert.ok(byKey.has(`${bundler}:${fixture.id}`), `${bundler}:${fixture.id}: consumer bundle result missing`);
+    }
+  }
   for (const result of results) {
     if (result.mode === 'side-effect') {
       assert.equal(result.raw, 0, `${result.bundler}:${result.id}: unused side-effect import did not erase`);

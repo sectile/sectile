@@ -223,6 +223,8 @@
           "role": "composites",
           "kind": "owner"
         },
+        "src/internal/composites/tree-selection.ts": { "role": "composites", "kind": "owner" },
+        "src/internal/composites/tree-select.ts": { "role": "composites", "kind": "owner" },
         "src/internal/composites/tree-view.ts": {
           "role": "composites",
           "kind": "owner"
@@ -447,6 +449,7 @@
           "role": "public",
           "kind": "owner"
         },
+        "src/transfer.ts": { "role": "public", "kind": "owner" },
         "src/result.ts": {
           "role": "foundation",
           "kind": "owner"
@@ -496,6 +499,10 @@
           "kind": "owner"
         },
         "src/structures/index-span.ts": {
+          "role": "structures",
+          "kind": "owner"
+        },
+        "src/structures/json.ts": {
           "role": "structures",
           "kind": "owner"
         },
@@ -567,6 +574,7 @@
           "role": "public",
           "kind": "owner"
         },
+        "src/tree-select.ts": { "role": "public", "kind": "owner" },
         "src/units.ts": {
           "role": "public",
           "kind": "owner"
@@ -932,6 +940,14 @@
             "values"
           ]
         },
+        "files": {
+          "reason": "Form owns file-field metadata admission; native FileList and transport effects remain in their host.",
+          "allows": ["foundation", "files"]
+        },
+        "uploads": {
+          "reason": "Form owns portable per-file upload attempt and progress transitions; hosts own transport, abort/dispose and scheduling.",
+          "allows": ["foundation", "files", "uploads"]
+        },
         "schema": {
           "reason": "form schema owns its named contracts and implementation; permitted imports are explicit.",
           "allows": [
@@ -958,7 +974,9 @@
             "path",
             "schema",
             "state-api",
-            "values"
+            "values",
+            "files",
+            "uploads"
           ]
         },
         "reference": {
@@ -1165,7 +1183,9 @@
         "src/values.ts": {
           "role": "values",
           "kind": "facade"
-        }
+        },
+        "src/files.ts": { "role": "files", "kind": "owner" },
+        "src/uploads.ts": { "role": "uploads", "kind": "owner" }
       }
     },
     "tabular": {
@@ -1433,10 +1453,16 @@
             "time-values"
           ]
         },
+        "time-picker": {
+          "reason": "Bounded time-part choice projection over canonical field formats and value admission.",
+          "allows": ["time-picker", "foundation", "time-field", "time-values"]
+        },
         "date-time-field": {
-          "reason": "Date-time input editing over value owners.",
+          "reason": "Date-time input editing and format composition over existing date/time field and value owners.",
           "allows": [
             "date-time-field",
+            "date-field",
+            "time-field",
             "foundation",
             "machine",
             "date-values",
@@ -1444,10 +1470,19 @@
             "date-time-values"
           ]
         },
+        "range-field-composition": {
+          "reason": "Private two-endpoint composition with family-owned field and value semantics.",
+          "allows": ["range-field-composition", "foundation", "machine"]
+        },
+        "date-time-range-field": {
+          "reason": "Date-time range editing composes existing fields and ordered values.",
+          "allows": ["date-time-range-field", "range-field-composition", "date-time-field", "date-time-values", "foundation", "machine"]
+        },
         "date-range-field": {
           "reason": "Two date field endpoints and range editing.",
           "allows": [
             "date-range-field",
+            "range-field-composition",
             "foundation",
             "machine",
             "date-values",
@@ -1458,6 +1493,7 @@
           "reason": "Two time field endpoints and range editing.",
           "allows": [
             "time-range-field",
+            "range-field-composition",
             "foundation",
             "machine",
             "time-values",
@@ -1562,9 +1598,11 @@
             "date-time-values",
             "date-field",
             "time-field",
+            "time-picker",
             "date-time-field",
             "date-range-field",
             "time-range-field",
+            "date-time-range-field",
             "calendar",
             "date-picker",
             "date-range-picker",
@@ -1605,14 +1643,20 @@
           "role": "date-field",
           "kind": "owner"
         },
+        "src/fields/date-format.ts": { "role": "date-field", "kind": "owner" },
         "src/fields/time.ts": {
           "role": "time-field",
           "kind": "owner"
         },
+        "src/fields/time-format.ts": { "role": "time-field", "kind": "owner" },
+        "src/internal/field-format.ts": { "role": "foundation", "kind": "owner" },
+        "src/internal/range-field.ts": { "role": "range-field-composition", "kind": "owner" },
+        "src/fields/date-time-range.ts": { "role": "date-time-range-field", "kind": "owner" },
         "src/fields/date-time.ts": {
           "role": "date-time-field",
           "kind": "owner"
         },
+        "src/fields/date-time-format.ts": { "role": "date-time-field", "kind": "owner" },
         "src/fields/date-range.ts": {
           "role": "date-range-field",
           "kind": "owner"
@@ -1627,6 +1671,10 @@
         },
         "src/pickers/date.ts": {
           "role": "date-picker",
+          "kind": "owner"
+        },
+        "src/pickers/time.ts": {
+          "role": "time-picker",
           "kind": "owner"
         },
         "src/pickers/date-range.ts": {
@@ -1894,8 +1942,56 @@
         "chart"
       ],
       "roles": {
+        "attributes": {
+          "reason": "Bounded data metadata connection owns transactional browser attribute application and compare-before-restore cleanup without control semantics.",
+          "allows": []
+        },
+        "stylesheet": {
+          "reason": "Document stylesheet connection owns browser insertion, explicit SSR adoption and restoration without Theme or control semantics.",
+          "allows": []
+        },
+        "layout-basis": {
+          "reason": "Native layout basis observation owns two explicit content-box targets and scalar CSS projection lifetime without Theme arithmetic or control semantics.",
+          "allows": []
+        },
+        "data-transfer": {
+          "reason": "Native string-format admission and drag/drop effects share one browser DataTransfer owner over existing Core result/text and DOM attribute/gesture lifetimes.",
+          "allows": ["data-transfer", "interaction-attributes", "foundation"]
+        },
+        "image": {
+          "reason": "One native image resource observation owns load/error listeners, revocable decode tickets and source invalidation without source, presentation or portable geometry ownership.",
+          "allows": []
+        },
+        "fullscreen": {
+          "reason": "Scoped native fullscreen capability, state and promise effects own two document listeners and one revocable operation without portable geometry or gallery state.",
+          "allows": []
+        },
+        "media-gesture": {
+          "reason": "Native two-contact input facts own scoped pointer capture and cancellation without portable media geometry or gallery state.",
+          "allows": ["foundation"]
+        },
+        "scroll-spy": {
+          "reason": "Scoped native heading discovery and scrollport measurement lifetime delegates interval lookup to the existing Virtual extent owner and clipping to Core geometry.",
+          "allows": ["viewport"]
+        },
+        "layout-motion": {
+          "reason": "Native flow measurement and retargetable effects own observers, animation frames and reduced-motion cleanup independently of semantic queues.",
+          "allows": ["overlay-presence-motion"]
+        },
+        "viewport": {
+          "reason": "Shared native visual-viewport facts stay independent of positioning and focus effect lifetimes or portable geometry decisions.",
+          "allows": []
+        },
+        "focus-visibility": {
+          "reason": "Scoped native focus visibility owns event subscriptions, current scrollport measurement and immediate scroll effects over Core geometry.",
+          "allows": ["viewport", "foundation"]
+        },
+        "appearance": {
+          "reason": "Explicit document media subscription owns native system appearance facts and revocation without Theme resolution, requested selection or paint semantics.",
+          "allows": []
+        },
         "foundation": {
-          "reason": "Public DOM identity encoding is a genuine foundational owner, independent of control implementations.",
+          "reason": "Native identity encoding, input admission and clock resource infrastructure are independent of control implementations.",
           "allows": [
             "foundation"
           ]
@@ -1964,7 +2060,8 @@
         "overlay-position-engine": {
           "reason": "Physical anchored-layout engine, source subscriptions, observers and scheduled positioning work.",
           "allows": [
-            "overlay-position-engine"
+            "overlay-position-engine",
+            "viewport"
           ]
         },
         "overlay-position-connection": {
@@ -1984,9 +2081,10 @@
           ]
         },
         "overlay-layer-manager": {
-          "reason": "Document-scoped layer stack registry and committed descendant closure execution.",
+          "reason": "Document-scoped layer stack registry, committed descendant closure and native input containment over Core-owned interactive layers.",
           "allows": [
-            "overlay-layer-manager"
+            "overlay-layer-manager",
+            "overlay-interact"
           ]
         },
         "overlay-layer-binding": {
@@ -2008,6 +2106,10 @@
             "overlay-interact"
           ]
         },
+        "overlay-surface-move": {
+          "reason": "Retained native surface focus capture and same-root/revision restoration guards are shared below popup and menu controllers without listeners or control semantics.",
+          "allows": []
+        },
         "overlay-popup": {
           "reason": "Shared popup connection coordinating focus, layer, modal, visibility and outside-interaction resources.",
           "allows": [
@@ -2016,6 +2118,7 @@
             "overlay-layer-manager",
             "overlay-modal",
             "overlay-interact",
+            "overlay-surface-move",
             "overlay-popup"
           ]
         },
@@ -2035,6 +2138,7 @@
             "overlay-layer-binding",
             "overlay-position-connection",
             "composite-focus",
+            "overlay-surface-move",
             "overlay-menu"
           ]
         },
@@ -2048,6 +2152,7 @@
             "overlay-popup",
             "overlay-position-connection",
             "overlay-presence-motion",
+            "overlay-layer-manager",
             "overlay-menu"
           ]
         },
@@ -2070,6 +2175,7 @@
             "choice-cascade",
             "composite-focus",
             "text",
+            "text-caret",
             "text-binding",
             "text-controlled"
           ]
@@ -2080,12 +2186,20 @@
             "text-contracts"
           ]
         },
+        "text-caret": {
+          "reason": "Read-only native input caret measurement owns temporary mirror and Range retirement, without text state, navigation or positioning policy.",
+          "allows": ["positioning"]
+        },
         "text-binding": {
           "reason": "Native input/search/composition listener owner translating one TextElement into TextInput events.",
           "allows": [
             "text-contracts",
             "text-binding"
           ]
+        },
+        "text-metrics": {
+          "reason": "Native font ink measurement and scoped cleanup, independent of editing transitions.",
+          "allows": ["text-metrics"]
         },
         "text-controlled": {
           "reason": "Controlled field input text and selection reconciliation without browser resource ownership.",
@@ -2096,6 +2210,7 @@
         "text": {
           "reason": "Public Text controller and connection owner over lower DOM text contracts and native binding.",
           "allows": [
+            "text-metrics",
             "interaction-attributes",
             "text-contracts",
             "text-binding",
@@ -2198,9 +2313,10 @@
           ]
         },
         "chart-renderers": {
-          "reason": "dom chart-renderers owns its named contracts and implementation; permitted imports are explicit.",
+          "reason": "Renderers own drawing and share fixed-size style admission with the chart-options input boundary.",
           "allows": [
             "chart-contracts",
+            "chart-options",
             "chart-renderers",
             "foundation"
           ]
@@ -2325,7 +2441,7 @@
           ]
         },
         "temporal-picker": {
-          "reason": "DOM date/date-time picker connections composing lower field, layer and positioning owners.",
+          "reason": "DOM date/date-time picker connections composing lower field, detached text-state projection, layer and positioning owners.",
           "allows": [
             "interaction-attributes",
             "interaction-visibility",
@@ -2334,7 +2450,8 @@
             "overlay-position-picker",
             "temporal-field",
             "temporal-picker",
-            "temporal-support"
+            "temporal-support",
+            "text-controlled"
           ]
         },
         "temporal-period": {
@@ -2379,6 +2496,18 @@
             "form-contracts",
             "form-submission"
           ]
+        },
+        "form-native-files": {
+          "reason": "Native FileList capability and atomic assignment/rollback without metadata policy or field state ownership.",
+          "allows": ["form-native-files"]
+        },
+        "form-file-input": {
+          "reason": "Native file event, controlled FileList effects and bounded input/form/drop resource ownership; metadata policy remains Form.",
+          "allows": ["form-file-input", "form-native-files", "interaction-attributes"]
+        },
+        "form-file-upload": {
+          "reason": "Single-file adapter execution, AbortController/disposer and revocable Promise/progress ownership over canonical Form upload transitions.",
+          "allows": ["form-file-upload"]
         },
         "form-connection": {
           "reason": "Single DOM Form connection state/resource owner and orchestration boundary.",
@@ -2460,6 +2589,11 @@
           "role": "form-contracts",
           "kind": "owner"
         },
+        "src/form/file-input/native-files.ts": { "role": "form-native-files", "kind": "owner" },
+        "src/form/file-input/connection.ts": { "role": "form-file-input", "kind": "owner" },
+        "src/form/file-upload.ts": { "role": "form-file-upload", "kind": "facade" },
+        "src/form/file-upload/connection.ts": { "role": "form-file-upload", "kind": "owner" },
+        "src/form/file-upload/group.ts": { "role": "form-file-upload", "kind": "owner" },
         "src/form/participants.ts": {
           "role": "form-participants",
           "kind": "owner"
@@ -2478,6 +2612,62 @@
         },
         "src/identity.ts": {
           "role": "foundation",
+          "kind": "owner"
+        },
+        "src/attributes.ts": {
+          "role": "attributes",
+          "kind": "owner"
+        },
+        "src/stylesheet.ts": {
+          "role": "stylesheet",
+          "kind": "owner"
+        },
+        "src/layout-basis.ts": {
+          "role": "layout-basis",
+          "kind": "owner"
+        },
+        "src/drag-drop.ts": {
+          "role": "data-transfer",
+          "kind": "owner"
+        },
+        "src/drag-drop-native.ts": {
+          "role": "data-transfer",
+          "kind": "owner"
+        },
+        "src/image.ts": {
+          "role": "image",
+          "kind": "owner"
+        },
+        "src/fullscreen.ts": {
+          "role": "fullscreen",
+          "kind": "owner"
+        },
+        "src/media-gesture.ts": {
+          "role": "media-gesture",
+          "kind": "owner"
+        },
+        "src/scroll-spy.ts": {
+          "role": "scroll-spy",
+          "kind": "owner"
+        },
+        "src/layout-motion.ts": {
+          "role": "layout-motion",
+          "kind": "owner"
+        },
+        "src/focus-visibility.ts": {
+          "role": "focus-visibility",
+          "kind": "owner"
+        },
+        "src/internal/viewport.ts": {
+          "role": "viewport",
+          "kind": "owner"
+        },
+        "src/appearance.ts": {
+          "role": "appearance",
+          "kind": "owner"
+        },
+        "src/layer-host.ts": {
+          "role": "overlays",
           "kind": "owner"
         },
         "src/index.ts": {
@@ -2528,12 +2718,30 @@
           "role": "chart-options",
           "kind": "owner"
         },
+        "src/internal/chart/style.ts": {
+          "role": "chart-options",
+          "kind": "owner"
+        },
         "src/scalar/checked-control.ts": {
           "role": "scalar-checked",
           "kind": "owner"
         },
         "src/composite/focus-entry.ts": {
           "role": "composite-focus",
+          "kind": "owner"
+        },
+        "src/composite/tree-controller.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-select.ts": { "role": "controls", "kind": "owner" },
+        "src/tree-select/connection.ts": { "role": "controls", "kind": "owner" },
+        "src/tree-select/controller.ts": { "role": "controls", "kind": "owner" },
+        "src/transfer.ts": { "role": "controls", "kind": "owner" },
+        "src/transfer/controller.ts": { "role": "controls", "kind": "owner" },
+        "src/transfer/connection.ts": { "role": "controls", "kind": "owner" },
+        "src/checkbox-tree.ts": {
+          "role": "controls",
           "kind": "owner"
         },
         "src/text/controlled-input.ts": {
@@ -2564,6 +2772,8 @@
           "role": "interaction-attributes",
           "kind": "owner"
         },
+        "src/interaction/clock.ts": { "role": "foundation", "kind": "owner" },
+        "src/interaction/gesture.ts": { "role": "foundation", "kind": "owner" },
         "src/overlay/layer/binding.ts": {
           "role": "overlay-layer-binding",
           "kind": "owner"
@@ -2588,6 +2798,10 @@
           "role": "overlay-popup",
           "kind": "owner"
         },
+        "src/overlay/surface-move.ts": {
+          "role": "overlay-surface-move",
+          "kind": "owner"
+        },
         "src/overlay/position/connection.ts": {
           "role": "overlay-position-connection",
           "kind": "owner"
@@ -2596,6 +2810,7 @@
           "role": "overlays",
           "kind": "owner"
         },
+        "src/overlay/tooltip-interaction.ts": { "role": "overlays", "kind": "owner" },
         "src/overlay/position/engine.ts": {
           "role": "overlay-position-engine",
           "kind": "owner"
@@ -2608,6 +2823,14 @@
           "role": "identity-token",
           "kind": "owner"
         },
+        "src/text/caret.ts": {
+          "role": "text-caret",
+          "kind": "owner"
+        },
+        "src/text/metrics.ts": {
+          "role": "text-metrics",
+          "kind": "owner"
+        },
         "src/text/contracts.ts": {
           "role": "text-contracts",
           "kind": "owner"
@@ -2618,6 +2841,10 @@
         },
         "src/listbox.ts": {
           "role": "controls",
+          "kind": "owner"
+        },
+        "src/context-menu.ts": {
+          "role": "overlays",
           "kind": "owner"
         },
         "src/menu-button.ts": {
@@ -2784,11 +3011,20 @@
           "role": "temporal-field",
           "kind": "owner"
         },
+        "src/temporal/format.ts": { "role": "temporal-support", "kind": "owner" },
         "src/temporal/date-picker.ts": {
           "role": "temporal-picker",
           "kind": "owner"
         },
         "src/temporal/date-range-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/date-time-range-field.ts": {
+          "role": "temporal-field",
+          "kind": "owner"
+        },
+        "src/temporal/internal/range-field.ts": {
           "role": "temporal-field",
           "kind": "owner"
         },
@@ -2820,6 +3056,11 @@
           "role": "temporal-support",
           "kind": "owner"
         },
+        "src/temporal/internal/range-field-options.ts": {
+          "role": "temporal-support",
+          "kind": "owner"
+        },
+        "src/temporal/internal/picker-field-options.ts": { "role": "temporal-support", "kind": "owner" },
         "src/temporal/internal/result.ts": {
           "role": "temporal-support",
           "kind": "owner"
@@ -3459,11 +3700,12 @@
           ]
         },
         "form-context": {
-          "reason": "Single Form/field context keys, empty state and shallow subscription/disposal owners below components.",
+          "reason": "Single Form/field contexts and shallow subscriptions borrow lower host availability to pause native subscriptions; remain below Form components.",
           "allows": [
             "form-context",
             "form-contracts",
-            "form-control"
+            "form-control",
+            "foundation"
           ]
         },
         "form-native": {
@@ -3522,11 +3764,12 @@
           ]
         },
         "form-api": {
-          "reason": "Existing public Form facade retains names and canonical bindings.",
+          "reason": "Focused Form facades retain canonical bindings and expose optional-domain-free field isolation through the existing context owner.",
           "allows": [
             "form-api",
             "form-contracts",
             "form-control",
+            "form-context",
             "form-root",
             "form-field",
             "form-selectors",
@@ -3557,6 +3800,14 @@
             "form-control"
           ]
         },
+        "form-file-input": {
+          "reason": "Focused Vue file composition owns shallow publication, refs, component lifetime and native Form preparation forwarding; DOM/Form retain native effects and policy.",
+          "allows": ["form-file-input", "foundation", "form-control", "form-part"]
+        },
+        "form-file-upload": {
+          "reason": "Component-scoped shallow upload publication and source/activity lifetime over the canonical native task owner.",
+          "allows": ["form-file-upload", "foundation"]
+        },
         "temporal-capability": {
           "reason": "Lower typed DOM connection and family capability definition without Vue component ownership.",
           "allows": [
@@ -3570,7 +3821,7 @@
           ]
         },
         "temporal-provider": {
-          "reason": "Single Vue reference-date context and construction-time fallback below picker runtime.",
+          "reason": "Single Vue reference-date, request seed and borrowed DOM formatting context below picker runtime.",
           "allows": [
             "temporal-provider"
           ]
@@ -3583,8 +3834,13 @@
             "temporal-provider",
             "foundation",
             "form-control",
+            "input-style",
             "presence-core"
           ]
+        },
+        "temporal-time-picker": {
+          "reason": "Time choice composition borrows native TimeField, Popover and Listbox owners rather than another calendar or text runtime.",
+          "allows": ["temporal-time-picker", "temporal-fields", "temporal-provider", "native-field", "overlay-profiles", "controls", "form-context", "form-control", "foundation"]
         },
         "temporal-profiles": {
           "reason": "Named Calendar and picker public components compose selected capability adapters and shared picker parts.",
@@ -3598,6 +3854,7 @@
           "reason": "Temporal field components use existing native-field, scheduling and Form participation owners.",
           "allows": [
             "temporal-fields",
+            "temporal-provider",
             "native-field",
             "foundation",
             "form-control"
@@ -3928,12 +4185,17 @@
           "role": "form-api",
           "kind": "facade"
         },
+        "src/form-boundary.ts": { "role": "form-api", "kind": "facade" },
         "src/grid.ts": {
           "role": "controls",
           "kind": "owner"
         },
         "src/host-provider.ts": {
           "role": "foundation",
+          "kind": "owner"
+        },
+        "src/context-menu.ts": {
+          "role": "controls",
           "kind": "owner"
         },
         "src/index.ts": {
@@ -3948,6 +4210,16 @@
           "role": "controls",
           "kind": "owner"
         },
+        "src/internal/tree-parts.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/checkbox-tree.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/tree-select.ts": { "role": "controls", "kind": "owner" },
+        "src/transfer.ts": { "role": "controls", "kind": "owner" },
         "src/internal/collection.ts": {
           "role": "foundation",
           "kind": "owner"
@@ -3957,6 +4229,14 @@
           "kind": "owner"
         },
         "src/internal/controlled-state.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/popup-presentation.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/internal/portal-move.ts": {
           "role": "foundation",
           "kind": "owner"
         },
@@ -4048,6 +4328,10 @@
           "role": "foundation",
           "kind": "owner"
         },
+        "src/internal/connection-lifetime.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
         "src/internal/tabs-context.ts": {
           "role": "controls",
           "kind": "owner"
@@ -4128,7 +4412,27 @@
           "role": "overlay-profiles",
           "kind": "owner"
         },
+        "src/component-handle.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
         "src/primitive.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/drag-drop.ts": {
+          "role": "controls",
+          "kind": "owner"
+        },
+        "src/media-gesture.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/image.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
+        "src/fullscreen.ts": {
           "role": "foundation",
           "kind": "owner"
         },
@@ -4188,6 +4492,14 @@
           "role": "temporal-provider",
           "kind": "owner"
         },
+        "src/temporal/internal/time-presentation.ts": {
+          "role": "temporal-fields",
+          "kind": "owner"
+        },
+        "src/temporal/date-time-range-field.ts": {
+          "role": "temporal-fields",
+          "kind": "owner"
+        },
         "src/text.ts": {
           "role": "controls",
           "kind": "owner"
@@ -4198,6 +4510,10 @@
         },
         "src/temporal/time-range-field.ts": {
           "role": "temporal-fields",
+          "kind": "owner"
+        },
+        "src/temporal/time-picker.ts": {
+          "role": "temporal-time-picker",
           "kind": "owner"
         },
         "src/timer.ts": {
@@ -4276,6 +4592,9 @@
           "role": "form-field",
           "kind": "owner"
         },
+        "src/form/file-input.ts": { "role": "form-file-input", "kind": "owner" },
+        "src/form/file-upload.ts": { "role": "form-file-upload", "kind": "owner" },
+        "src/form/file-upload/group.ts": { "role": "form-file-upload", "kind": "owner" },
         "src/form/native.ts": {
           "role": "form-native",
           "kind": "owner"

@@ -49,6 +49,7 @@
         "addDateYears",
         "applyDateFieldEvent",
         "compareDateValues",
+        "createDateFieldFormat",
         "createDateFieldState",
         "createDateRange",
         "createDateValue",
@@ -57,9 +58,13 @@
         "dateSegmentAt",
         "daysInMonth",
         "differenceInDateDays",
+        "formatDateFieldValue",
         "formatDateValue",
         "isLeapYear",
+        "parseDateFieldValue",
         "parseDateValue",
+        "reformatDateFieldState",
+        "tryCreateDateFieldFormat",
         "tryCreateDateFieldState",
         "tryCreateDateRange",
         "tryCreateDateValue"
@@ -94,6 +99,7 @@
       "runtimeExports": [
         "applyDateRangeFieldEvent",
         "createDateRangeFieldState",
+        "reformatDateRangeFieldState",
         "tryCreateDateRangeFieldState"
       ],
       "typeBearing": true,
@@ -127,13 +133,18 @@
         "addDateTimeMilliseconds",
         "applyDateTimeFieldEvent",
         "compareDateTimeValues",
+        "createDateTimeFieldFormat",
         "createDateTimeFieldState",
         "createDateTimeRange",
         "createDateTimeValue",
         "dateTimeSegmentAt",
+        "formatDateTimeFieldValue",
         "formatDateTimeRange",
         "formatDateTimeValue",
+        "parseDateTimeFieldValue",
         "parseDateTimeValue",
+        "reformatDateTimeFieldState",
+        "tryCreateDateTimeFieldFormat",
         "tryCreateDateTimeFieldState",
         "tryCreateDateTimeRange",
         "tryCreateDateTimeValue"
@@ -153,6 +164,25 @@
         "applyDateTimePickerEvent",
         "createDateTimePickerState",
         "tryCreateDateTimePickerState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./date-time-range-field",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyDateTimeRangeFieldEvent",
+        "createDateTimeRange",
+        "createDateTimeRangeFieldState",
+        "reformatDateTimeRangeFieldState",
+        "tryCreateDateTimeRange",
+        "tryCreateDateTimeRangeFieldState"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -250,13 +280,33 @@
         "addTimeMilliseconds",
         "applyTimeFieldEvent",
         "compareTimeValues",
+        "createTimeFieldFormat",
         "createTimeFieldState",
         "createTimeValue",
+        "formatTimeFieldValue",
         "formatTimeValue",
+        "parseTimeFieldValue",
         "parseTimeValue",
+        "reformatTimeFieldState",
         "timeSegmentAt",
+        "tryCreateTimeFieldFormat",
         "tryCreateTimeFieldState",
         "tryCreateTimeValue"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./time-picker",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTimePicker",
+        "tryCreateTimePicker"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -273,6 +323,7 @@
         "applyTimeRangeFieldEvent",
         "createTimeRange",
         "createTimeRangeFieldState",
+        "reformatTimeRangeFieldState",
         "tryCreateTimeRange",
         "tryCreateTimeRangeFieldState"
       ],

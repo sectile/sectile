@@ -8,15 +8,15 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 380 | 26 | 61 |
+| core | 417 | 26 | 91 |
 | chart | 80 | 0 | 15 |
-| dom | 425 | 171 | 35 |
-| form | 21 | 0 | 9 |
-| tabular | 33 | 0 | 11 |
-| temporal | 104 | 12 | 4 |
+| dom | 489 | 177 | 59 |
+| form | 26 | 0 | 9 |
+| tabular | 35 | 0 | 11 |
+| temporal | 129 | 14 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 740 | 319 | 10 |
+| vue | 838 | 351 | 16 |
 
 ## Variables
 
@@ -46,6 +46,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:color-text.parse | external | `O(tColor)` worst-case | `O(tColor)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:color.convert | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:color.gamut | external | `O(kGamut)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:combobox.select-canonical | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | packages/core/tests/composites/combobox.reference-law.test.mjs |
 | core:exact-ratio.arithmetic | external | `O(M(b) + b*D(b))` worst-case | `O(b)` | `O(b)` | `O(b)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:exact-ratio.compare | external | `O(M(b) + b)` worst-case | `O(b)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:exact-ratio.format-percentage | external | `O(b*D(b))` worst-case | `O(b)` | `O(b)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -65,13 +66,20 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:index-span.contains | trusted | `O(log a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:index-span.set-algebra | trusted | `O(a + bSpan)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:index-span.transform | trusted | `O(a)` worst-case | `O(1)` | `O(rSpan)` | `O(rSpan)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:layer-stack.configure | trusted | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | packages/core/tests/runtime/layer-stack.test.mjs |
 | core:layer-stack.ignored-dismissal | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
+| core:layer-stack.presentation-lifetime | trusted | `O(n + c)` worst-case | `O(n + c)` | `O(n + c)` | `O(n)` | allowed | packages/core/tests/runtime/layer-stack.test.mjs |
 | core:layer-stack.reject-oversize | external | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/layer-stack.test.mjs |
+| core:layer-stack.reparent | trusted | `O(n)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/core/tests/runtime/layer-stack.test.mjs |
+| core:menu.root-movement | trusted | `O(dAncestor + 1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/composites/menu.reference-law.test.mjs |
 | core:metric-index.construct | external | `O(x log x * d)` worst-case | `O(x*d)` | `O(1)` | `O(x*d + x)` | allowed | packages/core/tests/structures/metric-index.test.mjs |
 | core:metric-index.lookup-distance | trusted | `O(d)` worst-case | `O(1)` | `O(d)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:metric-index.query | trusted | `O(x*d + rMetric)` worst-case | `O(d + log x + rMetric)` | `O(rMetric)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:multi-thumb.bounds | external | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/composites/multi-thumb-slider.reference-law.test.mjs |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:reorder.borrow-owners | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/reorder.test.mjs |
 | core:reorder.sequence-transition | trusted | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:reorder.tree-availability | trusted | `O(1 + s + k)` worst-case | `O(1)` | `O(1)` | `O(k)` | allowed | packages/core/tests/runtime/reorder.test.mjs |
 | core:reorder.tree-transition | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:selection-expression.algebra | trusted | `O(eLeft + eRight)` expected | `O(eLeft + eRight)` | `O(eResult)` | `O(eResult)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:selection-expression.materialize | trusted | `O(nDomain)` worst-case | `O(1)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -83,10 +91,32 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:sequence.materialize | external | `O(n + k)` worst-case | `O(n + dPatch)` | `O(n + k)` | `O(n + k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:sequence.patch-limits | trusted | `O(1 + s)` expected | `O(1 + s)` | `O(1 + s)` | `O(1 + s)` | allowed | packages/core/tests/structures/sequence.reference-law.test.mjs |
 | core:sequence.patch-lookup | trusted | `O(dPatch)` expected | `O(dPatch)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:text.query | external | `O(n + p*(q + p))` worst-case | `O(p + q)` | `O(p + q)` | `O(p + q)` | allowed | packages/core/tests/editing/text.reference-law.test.mjs |
+| core:text.query-canonical | trusted | `O(p*(q + p))` expected | `O(p + q)` | `O(p + q)` | `O(p + q)` | forbidden | packages/core/tests/editing/text.reference-law.test.mjs, packages/core/type-tests/text.test.ts |
 | core:text.replace | external | `O(nText + nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:text.replace-canonical | trusted | `O(nInsert + nOut)` worst-case | `O(1)` | `O(nOut)` | `O(nOut)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:text.select-canonical | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | packages/core/tests/editing/text.reference-law.test.mjs |
 | core:toast.construct | external | `O(n + l)` expected | `O(n + l)` | `O(k + l)` | `O(k + l)` | allowed | packages/core/tests/composites/toast.test.mjs |
+| core:toast.inputs | all | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | packages/core/tests/composites/toast.test.mjs |
+| core:toast.reconcile | trusted | `O(1 + n + m + l)` expected | `O(1 + n + m + l)` | `O(1 + n + m + l)` | `O(1 + n + m + l)` | allowed | packages/core/tests/composites/toast.test.mjs, packages/dom/tests/toast.test.mjs |
 | core:toast.transition | trusted | `O(1 + s + l + k)` expected | `O(1 + s + l + k)` | `O(1 + s + l + k)` | `O(1 + s + l + k)` | allowed | packages/core/tests/composites/toast.test.mjs |
+| core:transfer.composition | all | `O(n + s log s + q)` worst-case | `O(n + s)` | `O(n + s)` | `O(n + s)` | allowed | packages/core/tests/runtime/transfer.test.mjs, packages/core/type-tests/transfer.test.ts |
+| core:transfer.domain-read | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/transfer.test.mjs |
+| core:tree-select.event | trusted | `O(v + s + q)` expected | `O(v + s)` | `O(v + s + q)` | `O(n + r + s + q)` | allowed | packages/core/tests/composites/tree-select.test.mjs, packages/core/type-tests/tree-select.test.ts |
+| core:tree-select.match-read | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n + r + m)` | forbidden | packages/core/tests/composites/tree-select.test.mjs |
+| core:tree-select.reconcile | trusted | `O(1 + v)` expected | `O(1 + v)` | `O(1 + v)` | `O(n + r + s + q)` | allowed | packages/core/tests/composites/tree-select.test.mjs, packages/core/type-tests/tree-select.test.ts |
+| core:tree-select.results | external | `O(n + m + r)` expected | `O(r + m)` | `O(r + m)` | `O(n + r + m)` | allowed | packages/core/tests/composites/tree-select.test.mjs, packages/core/type-tests/tree-select.test.ts |
+| core:tree-select.state | external | `O(n + r + e + s * log(s + 1) + q)` expected | `O(n + r + e + s)` | `O(n + r + s + q)` | `O(n + r + s + q)` | allowed | packages/core/tests/composites/tree-select.test.mjs, packages/core/type-tests/tree-select.test.ts |
+| core:tree-select.sync | external | `O(n + r + e + s * log(s + 1) + q)` expected | `O(n + r + e + s)` | `O(n + r + s + q)` | `O(n + r + s + q)` | allowed | packages/core/tests/composites/tree-select.test.mjs, packages/core/type-tests/tree-select.test.ts |
+| core:tree-selection.accept | trusted | `O(s + p + u + c)` expected | `O(s + p + u)` | `O(c)` | `O(n + p)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/dom/tests/tree-view.test.mjs |
+| core:tree-selection.construct | external | `O(n + d + s * log(s + 1))` expected | `O(n + s)` | `O(1)` | `O(n + s)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/core/type-tests/tree-selection.test.ts |
+| core:tree-selection.event | trusted | `O(v + s + q + p * log(p + 1))` expected | `O(s + p)` | `O(p)` | `O(p)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/core/type-tests/tree-selection.test.ts |
+| core:tree-selection.normalize | external | `O(s * log(s + 1))` expected | `O(s)` | `O(s)` | `O(s)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/core/type-tests/tree-selection.test.ts, packages/dom/tests/tree-view.test.mjs |
+| core:tree-selection.propose | trusted | `O(q + s + p * log(p + 1))` expected | `O(s + p)` | `O(p)` | `O(p)` | allowed | packages/core/tests/composites/tree-selection.test.mjs |
+| core:tree-selection.read | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/composites/tree-selection.test.mjs |
+| core:tree-selection.replace | external | `O(sOld + sNew * log(sNew + 1) + u + c)` expected | `O(sOld + sNew + u)` | `O(sNew + c)` | `O(n + sNew)` | allowed | packages/core/tests/composites/tree-selection.test.mjs |
+| core:tree-view.checked-state | external | `O(n + e + s * log(s + 1))` expected | `O(n + e + s)` | `O(n + s)` | `O(n + s)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/core/type-tests/tree-selection.test.ts, packages/dom/tests/tree-view.test.mjs |
+| core:tree-view.reconcile | trusted | `O(1 + v)` expected | `O(v)` | `O(1)` | `O(n)` | allowed | packages/core/tests/composites/tree-selection.test.mjs, packages/core/type-tests/tree-selection.test.ts, packages/dom/tests/tree-view.test.mjs |
 | core:tree.construct | external | `O(n)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/core/tests/structures/tree.reference-law.test.mjs |
 | core:tree.subtree-interval | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:tree.views | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -111,8 +141,12 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:chart.hit-coherence | connected | `O(n + c)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.navigation-dispatch | connected | `O(a + p)` worst-case | `O(a + p)` | `O(a)` | `O(a + p)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:chart.overlay-render | connected | `O(a + t + l + k)` worst-case | `O(a + t + l + k)` | `O(a + t + l + k)` | `O(a + t + l + k)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| dom:chart.style-update | connected | `O(a + k)` worst-case | `O(a)` | `O(1)` | `O(1)` | allowed | packages/dom/tests/chart-renderer.test.mjs, packages/dom/tests/chart-connection.test.mjs |
 | dom:chart.webgl2-bind | connected | `O(l + s)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/chart-renderer.test.mjs |
 | dom:chart.webgl2-render | connected | `O(l + k)` worst-case | `O(k)` | `O(1)` | `O(k)` | allowed | packages/chart/tests/projection/projection.semantic.test.mjs, packages/dom/tests/chart-renderer.test.mjs |
+| dom:checkbox-tree.event | connected | `O(n * log(n + 1))` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/dom/tests/tree-view.test.mjs, packages/dom/type-tests/checkbox-tree.test.ts, packages/core/tests/composites/tree-selection.test.mjs |
+| dom:checkbox-tree.presentation | connected | `O(1 + m)` expected | `O(1)` | `O(1)` | `O(n + m)` | allowed | packages/dom/tests/tree-view.test.mjs, packages/dom/type-tests/checkbox-tree.test.ts |
+| dom:focus-visibility.reveal | connected | `O(a)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/focus-visibility.test.mjs |
 | dom:form.initial-participants | external | `O(nParticipant + uParticipant log uParticipant + iIssue + rIssue + tTarget*aMax)` worst-case | `O(nParticipant + uParticipant + iIssue + rIssue + tTarget)` | `O(uParticipant + iIssue + rIssue)` | `O(uParticipant + iIssue + rIssue + tTarget)` | allowed | packages/dom/tests/form.test.mjs, packages/dom/benchmarks/form-initialization.mjs |
 | dom:form.participant-event-target | connected | `O(hTarget)` expected | `O(1)` | `O(1)` | `O(tTarget)` | forbidden | packages/dom/tests/form.test.mjs |
 | dom:form.subscribe | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -121,16 +155,28 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:grid.cell-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(r)` | forbidden | packages/dom/tests/grid-projection.test.mjs, packages/dom/type-tests/grid.test.ts |
 | dom:grid.event-target | connected | `O(h)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/grid-projection.test.mjs |
 | dom:grid.transition-projection | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/grid-projection.test.mjs, packages/dom/tests/grid.test.mjs |
+| dom:layout-basis.observe | connected | `O(e + (n + 1) * h)` expected | `O(n + 1)` | `O(n + 1)` | `O(n + 1)` | allowed | packages/dom/tests/layout-basis.test.mjs |
 | dom:menu.click-target | connected | `O(hPath)` expected | `O(hPath)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
 | dom:menu.item-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(nRegistered)` | forbidden | packages/dom/tests/menu.test.mjs |
 | dom:menu.submenu-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(s)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
 | dom:menu.transition-projection | connected | `O(1 + hPath)` expected | `O(1)` | `O(1)` | `O(hPath)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
-| dom:modal.isolation-refresh | connected | `O(m + a)` worst-case | `O(m + a)` | `O(1)` | `O(m)` | allowed | packages/dom/tests/dialog-browser.test.mjs |
+| dom:modal.isolation-refresh | connected | `O(m + a + p + b)` worst-case | `O(m + a + b)` | `O(1)` | `O(m + p + b)` | allowed | packages/dom/tests/dialog-browser.test.mjs |
+| dom:overlay.admission-prepare | connected | `O(n + aDom)` expected | `O(n)` | `O(n)` | `O(n)` | allowed | packages/dom/tests/popup-controls.test.mjs |
+| dom:overlay.dismissal-policy | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | packages/dom/tests/popup-controls.test.mjs, packages/vue/tests/presence.dom.test.mjs |
+| dom:overlay.host-policy | connected | `O(n + h + k)` expected | `O(h)` | `O(1)` | `O(n + h + k)` | allowed | packages/dom/tests/popup-controls.test.mjs |
+| dom:overlay.host-transfer | connected | `O(n + s)` expected | `O(n)` | `O(n)` | `O(n + s)` | allowed | packages/dom/tests/popup-controls.test.mjs |
+| dom:overlay.presentation-commit | connected | `O(n + u + c)` worst-case | `O(n)` | `O(n)` | `O(n + u)` | allowed | packages/dom/tests/popup-controls.test.mjs |
+| dom:overlay.reparent | connected | `O(n + u)` expected | `O(n)` | `O(n)` | `O(n + u)` | allowed | packages/dom/tests/popup-controls.test.mjs |
 | dom:position.connect | connected | `O(aDom)` worst-case | `O(aDom)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.disconnect | connected | `O(aDom)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| dom:reorder.drag-feedback | connected | `O(1+s+a)` worst-case | `O(1)` | `O(1)` | `O(1+a)` | forbidden | packages/dom/tests/reorder.test.mjs |
+| dom:reorder.item-projection | connected | `O(n + k + z)` amortized | `O(1)` | `O(k)` | `O(n + k + z)` | allowed | packages/dom/tests/reorder.test.mjs |
+| dom:reorder.target-routing | connected | `O(h)` expected | `O(1)` | `O(1)` | `O(k + z)` | forbidden | packages/dom/tests/reorder.test.mjs |
+| dom:scroll-spy.measure | connected | `O(m + n + a + L + j * h)` expected | `O(m + n + a + L)` | `O(n + L)` | `O(m + n + a + L)` | allowed | packages/dom/tests/scroll-spy.test.mjs |
+| dom:scroll-spy.project | connected | `O(log(n + 1))` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/scroll-spy.test.mjs, packages/virtual/src/indexes/extent.ts |
 | dom:tabular.cell-header-indexed-projection | connected | `O(c + h + qCell + qHeader)` worst-case | `O(c + h)` | `O(1)` | `O(c + h)` | allowed | packages/dom/tests/tabular.test.mjs |
 | dom:tabular.grid-event-target | connected | `O(hTarget)` worst-case | `O(1)` | `O(1)` | `O(kCell)` | forbidden | packages/dom/tests/tabular.test.mjs |
 | dom:tabular.grid-indexed-projection | connected | `O(r + c + qRow + qCell)` worst-case | `O(r + c)` | `O(1)` | `O(r + c)` | allowed | packages/dom/tests/tabular.test.mjs |
@@ -138,6 +184,14 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:tabular.row-indexed-lookup | connected | `O(nRow + qRow)` worst-case | `O(1)` | `O(1)` | `O(nRow)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:temporal.day-focus-entry | connected | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/calendar.test.mjs, packages/dom/tests/date-time.test.mjs |
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| dom:text.native-selection | connected | `O(n)` worst-case | `O(n)` | `O(1)` | `O(n)` | allowed | packages/dom/tests/text.test.mjs, packages/vue/tests/text.dom.test.mjs |
+| dom:toast.project | connected | `O(1 + s + r + c)` expected | `O(1)` | `O(1)` | `O(1 + r + c)` | allowed | packages/dom/tests/toast.test.mjs, packages/dom/tests/toast-browser.test.mjs |
+| dom:transfer.controller | all | `O(n + d + s * log(s + 1) + q + t + c)` expected | `O(n + d + s + h + t + c)` | `O(n + s)` | `O(n + d + s + t)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/type-tests/transfer.test.ts, packages/core/tests/runtime/transfer.test.mjs |
+| dom:transfer.presentation | connected | `O(1 + m + h)` expected | `O(m)` | `O(1)` | `O(n + m)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/type-tests/transfer.test.ts |
+| dom:transfer.typeahead | connected | `O(q + s + c)` expected | `O(q + c)` | `O(1)` | `O(q)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/tests/listbox.test.mjs, packages/dom/type-tests/transfer.test.ts, packages/vue/tests/transfer.dom.test.mjs |
+| dom:tree-select.controller | external | `O(n + r + d + e + s * log(s + 1) + q)` expected | `O(n + r + d + e + s + h)` | `O(n + r + s + q)` | `O(n + r + d + s + q)` | allowed | packages/dom/tests/tree-select.test.mjs, packages/dom/type-tests/tree-select.test.ts, packages/core/tests/composites/tree-select.test.mjs |
+| dom:tree-select.presentation | connected | `O(1 + m + q)` expected | `O(1)` | `O(1)` | `O(n + r + s + q + m)` | allowed | packages/dom/tests/tree-select.test.mjs, packages/dom/type-tests/tree-select.test.ts |
+| dom:tree-select.retire | trusted | `O(1)` expected | `O(1)` | `O(1)` | `O(n + r + s + q)` | forbidden | packages/dom/tests/tree-select.test.mjs |
 | dom:virtual.disconnect | connected | `O(nMounted + kPlacement + rFrame)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/virtual.test.mjs |
 | dom:virtual.frame | connected | `O(rFrame + eChanged + kPlacement)` worst-case | `O(eChanged + kPlacement)` | `O(kPlacement)` | `O(nMounted + kPlacement + rFrame)` | forbidden | packages/dom/tests/virtual.test.mjs |
 | dom:virtual.scroll | connected | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(kPlacement)` | forbidden | packages/dom/tests/virtual.test.mjs |
@@ -212,10 +266,16 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | virtual:track.query | trusted | `O(log nTrack + log nRegion + cCandidate + kPlacement log kPlacement)` worst-case | `O(cCandidate + kPlacement)` | `O(kPlacement)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:chart.declaration-reconcile | mounted | `O(aAxis + lLayer + nDatum)` worst-case | `O(aAxis + lLayer + nDatum)` | `O(1)` | `O(aAxis + lLayer + nDatum)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:chart.selector-bridge | mounted | `O(sState + sLayer*lLayer + sAxis*aAxis)` worst-case | `O(1)` | `O(1)` | `O(sState + sLayer + sAxis)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| vue:checkbox-tree.bridge | connected | `O(n * log(n + 1) + m)` expected | `O(n + m)` | `O(n)` | `O(n + m)` | allowed | packages/vue/tests/checkbox-tree.dom.test.mjs, packages/vue/type-tests/checkbox-tree.ts, packages/vue/type-tests/fixtures/checkbox-tree.vue |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:collection.item-slot-invalidation | mounted | `O(j + h + s)` expected | `O(h + s)` | `O(j)` | `O(r)` | forbidden | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/listbox.test.mjs |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:grid.cell-projection | mounted | `O(j)` expected | `O(r)` | `O(r)` | `O(r)` | allowed | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/structural-controls.test.mjs |
+| vue:text.edit-capability | mounted | `O(n + j)` worst-case | `O(n + j)` | `O(n + j)` | `O(n + j)` | allowed | packages/vue/tests/text.dom.test.mjs, packages/vue/type-tests/component-contracts.ts, packages/vue/type-tests/fixtures/text-actions.vue |
+| vue:text.query-capability | mounted | `O(n + p*(q + p))` expected | `O(p + q)` | `O(p + q)` | `O(n + p + q)` | allowed | packages/vue/tests/text.dom.test.mjs, packages/core/tests/editing/text.reference-law.test.mjs |
+| vue:toast.publication | mounted | `O(1 + n + e)` expected | `O(1 + n + e)` | `O(1 + n + e)` | `O(1 + n + e)` | allowed | packages/vue/tests/toast.dom.test.mjs, packages/vue/tests/toast.test.mjs |
+| vue:transfer.bridge | connected | `O(n * log(n + 1) + m + q + c)` expected | `O(n + m + q + c)` | `O(n + m)` | `O(n + m + q)` | allowed | packages/vue/tests/transfer.dom.test.mjs, packages/vue/type-tests/transfer.ts, packages/vue/type-tests/fixtures/transfer.vue |
+| vue:tree-select.bridge | connected | `O(n * log(n + 1) + m + q)` expected | `O(n + m)` | `O(n + m + q)` | `O(n + m + q)` | allowed | packages/vue/tests/tree-select.dom.test.mjs, packages/vue/type-tests/tree-select.ts, packages/vue/type-tests/fixtures/tree-select.vue |
 | vue:virtual.grid-reconfigure | mounted | `O(nItem)` worst-case | `O(rRepair + cLane)` | `O(rRepair + cLane)` | `O(nItem)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:virtual.item-projection | mounted | `O(kPlacement)` worst-case | `O(kPlacement)` | `O(kPlacement)` | `O(nMounted)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:virtual.masonry-reconfigure | mounted | `O(nItem log lLane + jChanged log nItem)` worst-case | `O(nItem + jChanged log nItem)` | `O(nItem)` | `O(nItem)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |

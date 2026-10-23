@@ -21,6 +21,81 @@
     }
   },
   "support": {
+    "file-upload": {
+      "hostInputs": { "dom": ["async-task"] },
+      "form": ["packages/form/tests/state/uploads.test.mjs"],
+      "dom": ["packages/dom/tests/file-upload.test.mjs", "packages/dom/tests/file-upload-group.test.mjs"],
+      "vue": ["packages/vue/tests/file-upload.dom.test.mjs", "packages/vue/tests/file-upload-group.dom.test.mjs", "packages/vue/tests/file-upload-ssr.test.mjs"]
+    },
+    "file-input": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "native-form"] },
+      "dom": ["packages/dom/tests/file-input.test.mjs", "packages/dom/tests/file-input-native.test.mjs"],
+      "vue": ["packages/vue/tests/file-input.dom.test.mjs", "packages/vue/tests/file-input-ssr.test.mjs"]
+    },
+    "context-menu": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "measurement"] },
+      "dom": ["packages/dom/tests/context-menu.test.mjs"],
+      "vue": ["packages/vue/tests/collection-popup.test.mjs", "packages/vue/tests/dynamic-collections.dom.test.mjs"]
+    },
+    "time-picker": {
+      "temporal": ["packages/temporal/tests/composites/time-picker.test.mjs"],
+      "vue": ["packages/vue/tests/native-fields.dom.test.mjs"]
+    },
+    "date-time-range-field": {
+      "hostInputs": { "dom": ["keyboard", "focus", "ime", "text"] },
+      "temporal": ["packages/temporal/tests/editing/date-time-range-field.test.mjs"],
+      "dom": ["packages/dom/tests/date-time.test.mjs"],
+      "vue": ["packages/vue/tests/native-fields.dom.test.mjs", "packages/vue/tests/form.dom.test.mjs"]
+    },
+    "tree-select": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus", "native-form", "text"] },
+      "core": ["packages/core/tests/composites/tree-select.test.mjs"],
+      "dom": ["packages/dom/tests/tree-select.test.mjs"],
+      "vue": ["packages/vue/tests/tree-select.dom.test.mjs"]
+    },
+    "transfer": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"] },
+      "core": ["packages/core/tests/runtime/transfer.test.mjs"],
+      "dom": ["packages/dom/tests/transfer.test.mjs"],
+      "vue": ["packages/vue/tests/transfer.dom.test.mjs"]
+    },
+    "checkbox-tree": {
+      "hostInputs": { "dom": ["keyboard", "pointer", "focus"] },
+      "dom": ["packages/dom/tests/tree-view.test.mjs"],
+      "vue": ["packages/vue/tests/checkbox-tree.dom.test.mjs"]
+    },
+    "drag-drop": {
+      "hostInputs": { "dom": ["pointer", "keyboard", "focus"] },
+      "dom": ["packages/dom/tests/drag-drop.test.mjs"],
+      "vue": ["packages/vue/tests/drag-drop.dom.test.mjs"]
+    },
+    "focus-visibility": {
+      "hostInputs": { "dom": ["focus", "scroll", "resize", "measurement"] },
+      "dom": ["packages/dom/tests/focus-visibility.test.mjs"]
+    },
+    "fullscreen": {
+      "hostInputs": { "dom": ["fullscreen"] },
+      "dom": ["packages/dom/tests/fullscreen.test.mjs"],
+      "vue": ["packages/vue/tests/fullscreen.dom.test.mjs"]
+    },
+    "image": {
+      "hostInputs": { "dom": ["image"] },
+      "dom": ["packages/dom/tests/image.test.mjs"],
+      "vue": ["packages/vue/tests/image.dom.test.mjs"]
+    },
+    "layout-motion": {
+      "hostInputs": { "dom": ["measurement", "resize"] },
+      "dom": ["packages/dom/tests/layout-motion.test.mjs"]
+    },
+    "media-gesture": {
+      "hostInputs": { "dom": ["pointer", "touch", "wheel", "measurement"] },
+      "dom": ["packages/dom/tests/media-gesture.test.mjs"],
+      "vue": ["packages/vue/tests/media-gesture.dom.test.mjs"]
+    },
+    "scroll-spy": {
+      "hostInputs": { "dom": ["scroll", "resize", "measurement"] },
+      "dom": ["packages/dom/tests/scroll-spy.test.mjs"]
+    },
     "chart": {
       "hostInputs": { "dom": ["keyboard", "pointer", "wheel", "touch", "focus", "resize"] },
       "chart": [
@@ -166,7 +241,7 @@
       "core": ["packages/core/tests/composites/meter-group.test.mjs", "packages/core/tests/composites/meter.test.mjs", "packages/core/tests/composites/progress.test.mjs", "packages/core/tests/composites/multi-thumb-slider.reference-law.test.mjs", "packages/core/tests/composites/slider.reference-law.test.mjs", "packages/core/tests/composites/spin-button.reference-law.test.mjs", "packages/core/tests/composites/timer.test.mjs", "packages/core/tests/composites/window-splitter.reference-law.test.mjs"],
       "dom": ["packages/dom/tests/meter-group.test.mjs", "packages/dom/tests/meter.test.mjs", "packages/dom/tests/progress.test.mjs", "packages/dom/tests/multi-thumb-slider.test.mjs", "packages/dom/tests/slider.test.mjs", "packages/dom/tests/spin-button.test.mjs", "packages/dom/tests/timer.test.mjs", "packages/dom/tests/window-splitter.test.mjs"],
       "terminal": ["packages/terminal/tests/meter-group.test.mjs", "packages/terminal/tests/meter.test.mjs", "packages/terminal/tests/progress.test.mjs", "packages/terminal/tests/multi-thumb-slider.test.mjs", "packages/terminal/tests/slider.test.mjs", "packages/terminal/tests/spin-button.test.mjs", "packages/terminal/tests/timer.test.mjs", "packages/terminal/tests/window-splitter.test.mjs"],
-      "vue": ["packages/vue/tests/meter-group.test.mjs", "packages/vue/tests/meter-group.dom.test.mjs", "packages/vue/tests/meter.test.mjs", "packages/vue/tests/meter.dom.test.mjs", "packages/vue/tests/progress.test.mjs", "packages/vue/tests/progress.dom.test.mjs", "packages/vue/tests/slider.test.mjs", "packages/vue/tests/sliders.dom.test.mjs", "packages/vue/tests/spin-button.test.mjs", "packages/vue/tests/timer.test.mjs", "packages/vue/tests/extended-controls.test.mjs"]
+      "vue": ["packages/vue/tests/meter-group.test.mjs", "packages/vue/tests/meter-group.dom.test.mjs", "packages/vue/tests/meter.test.mjs", "packages/vue/tests/meter.dom.test.mjs", "packages/vue/tests/progress.test.mjs", "packages/vue/tests/progress.dom.test.mjs", "packages/vue/tests/slider.test.mjs", "packages/vue/tests/sliders.dom.test.mjs", "packages/vue/tests/spin-button.test.mjs", "packages/vue/tests/timer.test.mjs", "packages/vue/tests/timer.dom.test.mjs", "packages/vue/tests/extended-controls.test.mjs"]
     },
     "tree-choice": {
       "hostInputs": { "dom": ["keyboard", "pointer", "focus"], "terminal": ["keyboard"] },

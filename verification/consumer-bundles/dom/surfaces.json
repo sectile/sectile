@@ -26,6 +26,7 @@
         "createColorPicker",
         "createCombobox",
         "createComboboxController",
+        "createContextMenu",
         "createDialog",
         "createDisclosure",
         "createDisclosureController",
@@ -86,6 +87,7 @@
         "getDisclosureTriggerAttributes",
         "getListboxItemAttributes",
         "getListboxRootAttributes",
+        "getMeterGroupAttributes",
         "getMeterGroupRootAttributes",
         "getMeterGroupSegmentAttributes",
         "getMeterGroupTrackAttributes",
@@ -106,6 +108,7 @@
         "getTabsListAttributes",
         "getTabsRootAttributes",
         "getTabsTriggerAttributes",
+        "getTimerRootAttributes",
         "getToggleButtonAttributes",
         "toAccordionEvent",
         "toCascadeListEvent",
@@ -136,6 +139,7 @@
         "tryCreateCheckboxGroup",
         "tryCreateColorPicker",
         "tryCreateCombobox",
+        "tryCreateContextMenu",
         "tryCreateDialog",
         "tryCreateDisclosure",
         "tryCreateDrawer",
@@ -175,7 +179,9 @@
         "tryCreateTooltip",
         "tryCreateTreeGrid",
         "tryCreateTreeView",
-        "tryCreateWindowSplitter"
+        "tryCreateWindowSplitter",
+        "tryResolveTimerInterval",
+        "writeClipboardText"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -219,6 +225,37 @@
       "rootEquivalentExport": "createAlertDialog",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./appearance",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectSystemAppearance"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./attributes",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectDataAttributes",
+        "getAnchorAttributes",
+        "guardAnchorActivation"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -323,6 +360,24 @@
       ]
     },
     {
+      "subpath": "./checkbox-tree",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectCheckboxTree",
+        "createCheckboxTree",
+        "createCheckboxTreeController",
+        "tryCreateCheckboxTree"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./color-picker",
       "classification": "named-subpath",
       "platform": "browser",
@@ -331,6 +386,7 @@
         "formatColorValue",
         "getColorAreaValue",
         "getColorCoordinates",
+        "getColorPickerInputAttributes",
         "parseColorValue",
         "setColorCoordinate",
         "tryCreateColorPicker"
@@ -358,6 +414,21 @@
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": "connectCombobox",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./context-menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createContextMenu",
+        "tryCreateContextMenu"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "createContextMenu",
       "fixtureModes": [
         "side-effect"
       ]
@@ -393,6 +464,24 @@
       "rootEquivalentExport": "createDisclosure",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./drag-drop",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectDragSource",
+        "connectDropTarget",
+        "createDataTransferFormat",
+        "tryCreateDataTransferFormat"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -441,6 +530,21 @@
       ]
     },
     {
+      "subpath": "./focus-visibility",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectFocusVisibility"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./form",
       "classification": "optional-domain",
       "platform": "browser",
@@ -455,6 +559,55 @@
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./form/file-input",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createFileInput",
+        "tryCreateFileInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./form/file-upload",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createFileUpload",
+        "createFileUploadGroup",
+        "tryCreateFileUpload",
+        "tryCreateFileUploadGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./fullscreen",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectFullscreen"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
       "rootEquivalentExport": null,
       "fixtureModes": [
         "side-effect",
@@ -493,6 +646,66 @@
       ]
     },
     {
+      "subpath": "./image",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectImage"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./layer-host",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectLayerHost",
+        "reserveLayerPresentation"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./layout-basis",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectLayoutBasis"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./layout-motion",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectLayoutMotion"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./listbox",
       "classification": "named-subpath",
       "platform": "browser",
@@ -515,6 +728,22 @@
         "side-effect",
         "named",
         "root-named"
+      ]
+    },
+    {
+      "subpath": "./media-gesture",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectMediaGesture",
+        "readMediaViewport"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -586,6 +815,7 @@
       "platform": "browser",
       "runtimeExports": [
         "createMeterGroup",
+        "getMeterGroupAttributes",
         "getMeterGroupRootAttributes",
         "getMeterGroupSegmentAttributes",
         "getMeterGroupTrackAttributes",
@@ -604,6 +834,7 @@
       "platform": "browser",
       "runtimeExports": [
         "createMultiThumbSlider",
+        "getMultiThumbSliderThumbAttributes",
         "tryCreateMultiThumbSlider"
       ],
       "typeBearing": true,
@@ -809,6 +1040,21 @@
       ]
     },
     {
+      "subpath": "./scroll-spy",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectScrollSpy"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/virtual",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./select",
       "classification": "named-subpath",
       "platform": "browser",
@@ -874,6 +1120,21 @@
       "rootEquivalentExport": "createStepper",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./stylesheet",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectStylesheet"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -977,6 +1238,7 @@
       "runtimeExports": [
         "createDateField",
         "formatDateValue",
+        "getDateFieldPlaceholder",
         "parseDateValue",
         "tryCreateDateField"
       ],
@@ -1050,6 +1312,7 @@
         "createDateTimeField",
         "formatDateTimeRange",
         "formatDateTimeValue",
+        "getDateTimeFieldPlaceholder",
         "tryCreateDateTimeField"
       ],
       "typeBearing": true,
@@ -1077,12 +1340,45 @@
       ]
     },
     {
+      "subpath": "./temporal/date-time-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDateTimeRangeField",
+        "tryCreateDateTimeRangeField",
+        "tryCreateDateTimeRangeFieldState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./temporal/date-time-range-picker",
       "classification": "optional-domain",
       "platform": "browser",
       "runtimeExports": [
         "createDateTimeRangePicker",
         "tryCreateDateTimeRangePicker"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/format",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "createTemporalFormatter",
+        "tryCreateTemporalFormatter"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/temporal",
@@ -1149,6 +1445,7 @@
       "runtimeExports": [
         "createTimeField",
         "formatTimeValue",
+        "getTimeFieldPlaceholder",
         "tryCreateTimeField"
       ],
       "typeBearing": true,
@@ -1217,8 +1514,10 @@
         "createText",
         "createTextController",
         "createTextState",
+        "observeTextInk",
         "toTextEvent",
-        "tryCreateText"
+        "tryCreateText",
+        "writeClipboardText"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -1233,7 +1532,9 @@
       "platform": "browser",
       "runtimeExports": [
         "createTimer",
-        "tryCreateTimer"
+        "getTimerRootAttributes",
+        "tryCreateTimer",
+        "tryResolveTimerInterval"
       ],
       "typeBearing": true,
       "optionalPeer": null,
@@ -1313,7 +1614,9 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "connectTooltipDescription",
         "createTooltip",
+        "getTooltipTriggerAttributes",
         "tryCreateTooltip"
       ],
       "typeBearing": true,
@@ -1321,6 +1624,25 @@
       "rootEquivalentExport": "createTooltip",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./transfer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectTransfer",
+        "createTransfer",
+        "createTransferController",
+        "toTransferEvent",
+        "tryCreateTransfer"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -1338,6 +1660,24 @@
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": "connectTreeGrid",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "connectTreeSelect",
+        "createTreeSelect",
+        "createTreeSelectController",
+        "toTreeSelectEvent",
+        "tryCreateTreeSelect"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
       "fixtureModes": [
         "side-effect"
       ]

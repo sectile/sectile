@@ -130,6 +130,14 @@
       "layer": "composites"
     },
     {
+      "path": "src/internal/composites/tree-select.ts",
+      "layer": "composites"
+    },
+    {
+      "path": "src/internal/composites/tree-selection.ts",
+      "layer": "composites"
+    },
+    {
       "path": "src/internal/composites/tree-view.ts",
       "layer": "composites"
     },
@@ -406,6 +414,10 @@
       "layer": "structures"
     },
     {
+      "path": "src/structures/json.ts",
+      "layer": "structures"
+    },
+    {
       "path": "src/structures/metric-index.ts",
       "layer": "structures"
     },
@@ -466,7 +478,15 @@
       "layer": "public"
     },
     {
+      "path": "src/transfer.ts",
+      "layer": "public"
+    },
+    {
       "path": "src/tree-grid.ts",
+      "layer": "public"
+    },
+    {
+      "path": "src/tree-select.ts",
       "layer": "public"
     },
     {
@@ -1351,6 +1371,91 @@
     {
       "source": "src/internal/composites/tree-grid.ts",
       "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/composites/tree-view.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/editing/text.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/state/expansion.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-select.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/internal/state/checked.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/internal/state/selection.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-selection.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/internal/composites/tree-view.ts",
+      "target": "src/internal/composites/tree-selection.ts",
       "kind": "import"
     },
     {
@@ -2629,6 +2734,21 @@
       "kind": "import"
     },
     {
+      "source": "src/structures/json.ts",
+      "target": "src/error-code.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/json.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/structures/json.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/structures/metric-index.ts",
       "target": "src/internal/kernel/foundation.ts",
       "kind": "import"
@@ -2919,6 +3039,46 @@
       "kind": "export"
     },
     {
+      "source": "src/transfer.ts",
+      "target": "src/internal/composites/listbox.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/internal/kernel/foundation.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/internal/kernel/machine.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/reorder.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/result.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/shared.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/structures/sequence.ts",
+      "kind": "import"
+    },
+    {
+      "source": "src/transfer.ts",
+      "target": "src/structures/tree.ts",
+      "kind": "import"
+    },
+    {
       "source": "src/tree-grid.ts",
       "target": "src/internal/composites/tree-grid.ts",
       "kind": "export"
@@ -2957,6 +3117,26 @@
       "source": "src/tree-grid.ts",
       "target": "src/structures/tree.ts",
       "kind": "import"
+    },
+    {
+      "source": "src/tree-select.ts",
+      "target": "src/internal/composites/tree-select.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-select.ts",
+      "target": "src/internal/composites/tree-select.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-select.ts",
+      "target": "src/internal/composites/tree-select.ts",
+      "kind": "export"
+    },
+    {
+      "source": "src/tree-view.ts",
+      "target": "src/internal/composites/tree-selection.ts",
+      "kind": "export"
     },
     {
       "source": "src/tree-view.ts",
@@ -3305,6 +3485,16 @@
       "facadeTargets": [
         "src/result.ts",
         "src/shared.ts"
+      ]
+    },
+    {
+      "subpath": "./json",
+      "source": "src/structures/json.ts",
+      "layer": "structures",
+      "facadeTargets": [
+        "src/error-code.ts",
+        "src/result.ts",
+        "src/result.ts"
       ]
     },
     {
@@ -3755,6 +3945,21 @@
       ]
     },
     {
+      "subpath": "./transfer",
+      "source": "src/transfer.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/listbox.ts",
+        "src/internal/kernel/foundation.ts",
+        "src/internal/kernel/machine.ts",
+        "src/reorder.ts",
+        "src/result.ts",
+        "src/shared.ts",
+        "src/structures/sequence.ts",
+        "src/structures/tree.ts"
+      ]
+    },
+    {
       "subpath": "./tree",
       "source": "src/structures/tree.ts",
       "layer": "structures",
@@ -3783,10 +3988,21 @@
       ]
     },
     {
+      "subpath": "./tree-select",
+      "source": "src/tree-select.ts",
+      "layer": "public",
+      "facadeTargets": [
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-select.ts"
+      ]
+    },
+    {
       "subpath": "./tree-view",
       "source": "src/tree-view.ts",
       "layer": "public",
       "facadeTargets": [
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/composites/tree-view.ts"
       ]
@@ -3975,9 +4191,10 @@
         "src/internal/kernel/machine.ts",
         "src/internal/runtime/revision.ts",
         "src/result.ts",
-        "src/shared.ts"
+        "src/shared.ts",
+        "src/structures/json.ts"
       ],
-      "transitiveDependentCount": 117,
+      "transitiveDependentCount": 122,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4005,6 +4222,7 @@
         "./identity",
         "./index-span",
         "./interaction",
+        "./json",
         "./layer-stack",
         "./listbox",
         "./menu",
@@ -4044,8 +4262,10 @@
         "./toggle-group",
         "./toolbar",
         "./tooltip",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view",
         "./units",
         "./window-splitter"
@@ -4173,13 +4393,15 @@
         "src/checkbox-group.ts",
         "src/internal/reference/composites/listbox.ts",
         "src/listbox.ts",
-        "src/toggle-group.ts"
+        "src/toggle-group.ts",
+        "src/transfer.ts"
       ],
-      "transitiveDependentCount": 4,
+      "transitiveDependentCount": 5,
       "publicSubpaths": [
         "./checkbox-group",
         "./listbox",
-        "./toggle-group"
+        "./toggle-group",
+        "./transfer"
       ]
     },
     {
@@ -4242,13 +4464,37 @@
       ]
     },
     {
+      "module": "src/internal/composites/tree-select.ts",
+      "directDependents": [
+        "src/tree-select.ts"
+      ],
+      "transitiveDependentCount": 1,
+      "publicSubpaths": [
+        "./tree-select"
+      ]
+    },
+    {
+      "module": "src/internal/composites/tree-selection.ts",
+      "directDependents": [
+        "src/internal/composites/tree-view.ts",
+        "src/tree-view.ts"
+      ],
+      "transitiveDependentCount": 5,
+      "publicSubpaths": [
+        "./tree-select",
+        "./tree-view"
+      ]
+    },
+    {
       "module": "src/internal/composites/tree-view.ts",
       "directDependents": [
+        "src/internal/composites/tree-select.ts",
         "src/internal/reference/composites/tree-view.ts",
         "src/tree-view.ts"
       ],
-      "transitiveDependentCount": 2,
+      "transitiveDependentCount": 4,
       "publicSubpaths": [
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -4257,17 +4503,19 @@
       "directDependents": [
         "src/combobox.ts",
         "src/internal/composites/combobox.ts",
+        "src/internal/composites/tree-select.ts",
         "src/internal/reference/composites/combobox.ts",
         "src/internal/reference/editing/text.ts",
         "src/text.ts"
       ],
-      "transitiveDependentCount": 8,
+      "transitiveDependentCount": 10,
       "publicSubpaths": [
         ".",
         "./combobox",
         "./number-field",
         "./quantity-field",
-        "./text"
+        "./text",
+        "./tree-select"
       ]
     },
     {
@@ -4359,6 +4607,8 @@
         "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/editing/text.ts",
         "src/internal/kernel/bounded-scalar.ts",
@@ -4398,9 +4648,10 @@
         "src/timer.ts",
         "src/toast.ts",
         "src/toggle-group.ts",
+        "src/transfer.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 113,
+      "transitiveDependentCount": 117,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4465,8 +4716,10 @@
         "./toggle-group",
         "./toolbar",
         "./tooltip",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view",
         "./units",
         "./window-splitter"
@@ -4486,7 +4739,7 @@
         "src/structures/sequence.ts",
         "src/structures/tree.ts"
       ],
-      "transitiveDependentCount": 57,
+      "transitiveDependentCount": 61,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4516,8 +4769,10 @@
         "./tabs",
         "./toggle-group",
         "./toolbar",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -4541,6 +4796,7 @@
         "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/editing/text.ts",
         "src/internal/runtime/revision.ts",
@@ -4557,9 +4813,10 @@
         "src/revision.ts",
         "src/select.ts",
         "src/spin-button.ts",
-        "src/tags-input.ts"
+        "src/tags-input.ts",
+        "src/transfer.ts"
       ],
-      "transitiveDependentCount": 79,
+      "transitiveDependentCount": 83,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4606,7 +4863,9 @@
         "./toggle-group",
         "./toolbar",
         "./tooltip",
+        "./transfer",
         "./tree-grid",
+        "./tree-select",
         "./tree-view",
         "./window-splitter"
       ]
@@ -4784,15 +5043,18 @@
       "module": "src/internal/state/checked.ts",
       "directDependents": [
         "src/checkbox.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/reference/state/checked.ts",
         "src/switch.ts",
         "src/toggle-button.ts"
       ],
-      "transitiveDependentCount": 4,
+      "transitiveDependentCount": 10,
       "publicSubpaths": [
         "./checkbox",
         "./switch",
-        "./toggle-button"
+        "./toggle-button",
+        "./tree-select",
+        "./tree-view"
       ]
     },
     {
@@ -4813,7 +5075,7 @@
         "src/internal/state/selection.ts",
         "src/multi-thumb-slider.ts"
       ],
-      "transitiveDependentCount": 46,
+      "transitiveDependentCount": 50,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -4836,7 +5098,9 @@
         "./tabs",
         "./toggle-group",
         "./toolbar",
+        "./transfer",
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -4844,12 +5108,14 @@
       "module": "src/internal/state/expansion.ts",
       "directDependents": [
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/reference/state/expansion.ts"
       ],
-      "transitiveDependentCount": 7,
+      "transitiveDependentCount": 9,
       "publicSubpaths": [
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -4874,13 +5140,15 @@
         "src/internal/composites/linear-choice.ts",
         "src/internal/composites/listbox.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/reference/composites/listbox.ts",
         "src/internal/reference/state/selection.ts",
         "src/rating.ts",
         "src/selection.ts"
       ],
-      "transitiveDependentCount": 27,
+      "transitiveDependentCount": 31,
       "publicSubpaths": [
         ".",
         "./checkbox-group",
@@ -4894,7 +5162,9 @@
         "./stepper",
         "./tabs",
         "./toggle-group",
+        "./transfer",
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -5066,12 +5336,14 @@
     {
       "module": "src/reorder.ts",
       "directDependents": [
-        "src/index.ts"
+        "src/index.ts",
+        "src/transfer.ts"
       ],
-      "transitiveDependentCount": 1,
+      "transitiveDependentCount": 2,
       "publicSubpaths": [
         ".",
-        "./reorder"
+        "./reorder",
+        "./transfer"
       ]
     },
     {
@@ -5097,6 +5369,8 @@
         "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/editing/text.ts",
         "src/internal/kernel/foundation.ts",
@@ -5124,6 +5398,7 @@
         "src/structures/geometry.ts",
         "src/structures/grid.ts",
         "src/structures/index-span.ts",
+        "src/structures/json.ts",
         "src/structures/metric-index.ts",
         "src/structures/range.ts",
         "src/structures/selection-expression.ts",
@@ -5136,10 +5411,11 @@
         "src/toast.ts",
         "src/toggle-button.ts",
         "src/toggle-group.ts",
+        "src/transfer.ts",
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 115,
+      "transitiveDependentCount": 120,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5167,6 +5443,7 @@
         "./identity",
         "./index-span",
         "./interaction",
+        "./json",
         "./layer-stack",
         "./listbox",
         "./menu",
@@ -5206,8 +5483,10 @@
         "./toggle-group",
         "./toolbar",
         "./tooltip",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view",
         "./units",
         "./window-splitter"
@@ -5275,6 +5554,8 @@
         "src/internal/composites/popup.ts",
         "src/internal/composites/slider.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/editing/text.ts",
         "src/internal/kernel/bounded-scalar.ts",
@@ -5342,10 +5623,11 @@
         "src/toast.ts",
         "src/toggle-button.ts",
         "src/toggle-group.ts",
+        "src/transfer.ts",
         "src/tree-grid.ts",
         "src/units.ts"
       ],
-      "transitiveDependentCount": 116,
+      "transitiveDependentCount": 121,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5373,6 +5655,7 @@
         "./identity",
         "./index-span",
         "./interaction",
+        "./json",
         "./layer-stack",
         "./listbox",
         "./menu",
@@ -5412,8 +5695,10 @@
         "./toggle-group",
         "./toolbar",
         "./tooltip",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view",
         "./units",
         "./window-splitter"
@@ -5505,6 +5790,14 @@
       ]
     },
     {
+      "module": "src/structures/json.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./json"
+      ]
+    },
+    {
       "module": "src/structures/metric-index.ts",
       "directDependents": [],
       "transitiveDependentCount": 0,
@@ -5563,6 +5856,7 @@
         "src/internal/composites/linear-choice.ts",
         "src/internal/composites/listbox.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/reference/composites/accordion.ts",
         "src/internal/reference/composites/carousel.ts",
         "src/internal/reference/composites/combobox.ts",
@@ -5583,9 +5877,10 @@
         "src/structures/selection-expression.ts",
         "src/structures/tree.ts",
         "src/tabs.ts",
-        "src/toggle-group.ts"
+        "src/toggle-group.ts",
+        "src/transfer.ts"
       ],
-      "transitiveDependentCount": 56,
+      "transitiveDependentCount": 60,
       "publicSubpaths": [
         ".",
         "./accordion",
@@ -5615,8 +5910,10 @@
         "./tabs",
         "./toggle-group",
         "./toolbar",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -5628,6 +5925,8 @@
         "src/internal/composites/cascade-choice.ts",
         "src/internal/composites/menu.ts",
         "src/internal/composites/tree-grid.ts",
+        "src/internal/composites/tree-select.ts",
+        "src/internal/composites/tree-selection.ts",
         "src/internal/composites/tree-view.ts",
         "src/internal/reference/composites/menu.ts",
         "src/internal/reference/composites/tree-grid.ts",
@@ -5638,9 +5937,10 @@
         "src/menu.ts",
         "src/navigation-menu.ts",
         "src/reorder.ts",
+        "src/transfer.ts",
         "src/tree-grid.ts"
       ],
-      "transitiveDependentCount": 20,
+      "transitiveDependentCount": 24,
       "publicSubpaths": [
         ".",
         "./cascade-list",
@@ -5650,8 +5950,10 @@
         "./menubar",
         "./navigation-menu",
         "./reorder",
+        "./transfer",
         "./tree",
         "./tree-grid",
+        "./tree-select",
         "./tree-view"
       ]
     },
@@ -5745,11 +6047,27 @@
       ]
     },
     {
+      "module": "src/transfer.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./transfer"
+      ]
+    },
+    {
       "module": "src/tree-grid.ts",
       "directDependents": [],
       "transitiveDependentCount": 0,
       "publicSubpaths": [
         "./tree-grid"
+      ]
+    },
+    {
+      "module": "src/tree-select.ts",
+      "directDependents": [],
+      "transitiveDependentCount": 0,
+      "publicSubpaths": [
+        "./tree-select"
       ]
     },
     {

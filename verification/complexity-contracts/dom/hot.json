@@ -251,6 +251,70 @@
       }
     },
     {
+      "id": "chart.style-update",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/internal/chart/connection.ts",
+      "benchmarkIDs": [
+        "VAL-012:dom-chart-retained-paint"
+      ],
+      "specificationCeiling": "O(a + k)",
+      "contract": {
+        "variables": [
+          {
+            "name": "a",
+            "meaning": "resolved axes consumed by the built-in renderer",
+            "ceiling": "Chart axis ceiling"
+          },
+          {
+            "name": "k",
+            "meaning": "retained visible primitives and vertices drawn",
+            "ceiling": "Chart projection representative ceiling"
+          }
+        ],
+        "time": {
+          "bound": "O(a + k)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(a)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(a + k)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Native renderer bounds apply; borrowed implementations own their drawing cost"
+        ],
+        "ceilings": [
+          "Four RGBA channels and two positive scalar style metrics",
+          "Existing projection cardinality ceilings"
+        ],
+        "deterministicWork": [
+          "No projection query, viewport measurement or projection callback",
+          "Unchanged successful style skips drawing",
+          "Same WebGL geometry requires zero buffer uploads"
+        ],
+        "resourceRationale": "One immutable fixed-size style and one pending-paint boolean; drawing reuses existing renderer resources.",
+        "proof": "Style admission compares six scalar values. The connection delegates one changed or failed-paint retry to the renderer with its existing projection; it does not call refresh or rebuild accessibility.",
+        "adversarialWitness": "Invalid input preserves the old style; a failed draw retries unchanged style without querying. All six retained WebGL geometry batches reuse buffers.",
+        "evidence": [
+          "packages/dom/tests/chart-renderer.test.mjs",
+          "packages/dom/tests/chart-connection.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A changed raster frame consumes the existing visible output; source data is not scanned."
+        }
+      }
+    },
+    {
       "id": "chart.webgl2-bind",
       "inherits": "linear-v1",
       "source": "packages/dom/src/internal/chart/renderers/webgl2.ts",
@@ -327,6 +391,64 @@
           "allowed": true,
           "rationale": "A new immutable geometry or color owner may require one equality-range scan before selecting full versus partial upload; compatible views retain source identity and inspect neither geometry values nor color bytes."
         }
+      }
+    },
+    {
+      "id": "checkbox-tree.event",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/checkbox-tree.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(n * log(n + 1))",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "canonical tree nodes bounding expanded IDs, selected leaves and targeted subtree", "ceiling": "Tree preorder maxItems" }],
+        "time": { "bound": "O(n * log(n + 1))", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "2", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One shared TreeView controller and existing delegated connection call Core checked transitions and live aggregation. Existing controlled reconciliation admits expanded and selected arrays; accepted leaf aggregation uses Core sparse ancestors or a bounded dense fold. No host descendant walk or duplicate selection reducer. Attribute checked/disabled reads remain constant-time.",
+        "adversarialWitness": "Unrendered eligible descendants, preserved disabled selected leaves, mixed parent states, invalid combined controlled sync and synchronous callback acceptance; external admission refuses reentrant writes.",
+        "evidence": ["packages/dom/tests/tree-view.test.mjs", "packages/dom/type-tests/checkbox-tree.test.ts", "packages/core/tests/composites/tree-selection.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A parent request can emit all leaves. Existing TreeView controlled reconciliation admits complete bounded arrays; Core alone owns aggregate work and sparse/dense crossover." }
+      }
+    },
+    {
+      "id": "checkbox-tree.presentation",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/checkbox-tree.ts",
+      "benchmarkIDs": ["dom:checkbox-tree-presentation"],
+      "specificationCeiling": "O(1 + m)",
+      "contract": {
+        "variables": [
+          { "name": "m", "meaning": "mounted item bindings in this connection", "ceiling": "caller-owned rendered item count" },
+          { "name": "n", "meaning": "borrowed tree and portable last-snapshot domain", "ceiling": "Tree maxItems" }
+        ],
+        "time": { "bound": "O(1 + m)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n + m)" },
+        "resources": { "allocations": "O(m)", "cacheEntries": "O(m)", "listeners": "2", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Attach borrows an already admitted controller in constant time. Item registration/release uses the existing expected-constant focus binding owner. Disconnect retires its scope before clearing mounted bindings, listeners, DOM, callbacks and borrowed-controller references; saved input/focus callbacks cannot reuse that scope. Only the public portable tree and last snapshot remain readable, without reconstructing or resetting a separately held controller.",
+        "adversarialWitness": "Release a focused virtual row, retain its old element and connection, reattach the same controller to another root, and focus only the new binding.",
+        "evidence": ["packages/dom/tests/tree-view.test.mjs", "packages/dom/type-tests/checkbox-tree.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Retirement releases this connection's m owned mounted bindings; it never scans tree nodes or selected leaves." }
+      }
+    },
+    {
+      "id": "focus-visibility.reveal",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/focus-visibility.ts",
+      "benchmarkIDs": ["dom:focus-visibility-refresh-work"],
+      "specificationCeiling": "O(a)",
+      "contract": {
+        "variables": [{ "name": "a", "meaning": "active target ancestor and native tree-root resolution paths", "ceiling": "owned document or shadow-tree depth" }],
+        "time": { "bound": "O(a)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "five per connection", "observers": "one ResizeObserver with at most four targets and one optional MutationObserver with one style target", "timers": "one pending animation frame", "subscriptions": "0" },
+        "assumptions": ["Native geometry/style/tree reads are platform operations. Arbitrary consumer getter execution is excluded; App's getter reads one current Portal reference in O(1)."],
+        "ceilings": ["one current logical root, no Portal registry", "one getter read per accepted reveal", "one ResizeObserver with at most four targets", "one optional style observer with one positioned target", "one pending frame per connection"],
+        "deterministicWork": ["ancestor work follows depth and never reads sibling children", "twenty resize or position-style invalidations coalesce to one reveal", "a declared inner scrollport is observed before it begins overflowing", "position-only updates observe one style attribute without a subtree or retry frame", "the nearest actual scroll owner alone receives an immediate effect", "infeasible clearance retains physically visible fitting controls or centers obscured fitting controls on the affected native axis", "borrowed Portal scope never gains background document scrolling", "retirement during root resolution prevents later effects", "disconnect clears listeners, observation targets, pending frames and getter references"],
+        "resourceRationale": "The App reuses its focus owner for one active logical Portal. Its ResizeObserver watches the primary root, focused target, nearest actual scroll owner and a distinct not-yet-overflowing scrollport candidate. One lazy MutationObserver watches only the active positioned ancestor's style; it does not inspect records or a subtree. Neither observer is multiplied by Portal count; no extra owner, scheduler, registry or retained ancestor vector is created.",
+        "proof": "Each scheduled reveal reads one optional scope getter, validates document/tree ownership and visits only the active ancestor path. Existing Core geometry supplies clipping, inset and nearest fitting. If optional padding/margin cannot fit a physically fitting control, one bounded fallback reuses nearest fitting for visibility and Core alignment for the obscured axis; it adds no measurements, retained records or scheduled work and settled visible controls do not scroll again. Observer membership uses fixed optional references with alias checks; unchanged membership allocates nothing. Native position commits schedule through the same coalescer, with no polling. A scope getter that retires the owner cannot continue into DOM effects.",
+        "adversarialWitness": "Depth0/10/100 with forbidden sibling reads; padding/margin/empty-inset/visible-control fallback on both axes and two-times native scaling; externally portalled focus with distinct actual/potential scrollports, delayed capacity or position-only changes, twenty invalidations, primary-root return, foreign/disconnected/throwing root getters, getter-triggered retirement and retained-callback/style-observer GC.",
+        "evidence": ["packages/dom/tests/focus-visibility.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Only the active ancestor path is measured; sibling collections, whole Portal sets and unrelated Apps are not enumerated." }
       }
     },
     {
@@ -676,6 +798,32 @@
       }
     },
     {
+      "id": "layout-basis.observe",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/layout-basis.ts",
+      "benchmarkIDs": ["dom:layout-basis-observe"],
+      "specificationCeiling": "O(e + (n + 1) * h) plus native style resolution; n = 0 for the default two-target path",
+      "contract": {
+        "variables": [
+          { "name": "e", "meaning": "native changed-entry batch", "ceiling": "n + 2 explicitly observed elements" },
+          { "name": "n", "meaning": "explicit descendant allocation border boxes", "ceiling": "128; zero when omitted" },
+          { "name": "h", "meaning": "native descendant containment traversal", "ceiling": "actual host-to-probe/allocation ancestor depth" }
+        ],
+        "time": { "bound": "O(e + (n + 1) * h)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n + 1)", "output": "O(n + 1)", "retained": "O(n + 1)" },
+        "resources": { "allocations": "O(n + 1)", "cacheEntries": "one n-entry owner-local target index", "listeners": "0", "observers": "1", "timers": "0", "subscriptions": "1 borrowed callback" },
+        "assumptions": ["Native ResizeObserver delivers only registered targets. Default mode observes host/probe content boxes; allocation mode observes the host and explicit descendants' border boxes plus probe content. Native style resolution is browser-owned. Target Map lookup is expected constant time."],
+        "ceilings": ["At most 130 targets, two style reads per ready delivery, one scalar projection of at most 128 code units; no unrelated mounted collection traversal."],
+        "benchmarkIDs": ["dom:layout-basis-observe"],
+        "deterministicWork": ["Production-bound fixtures count two default targets/two style reads and 130 allocation targets; a single changed allocation preserves unchanged size identities and prior snapshots. Sixteen ownership lifetimes retain peak one live observer and zero targets after cleanup."],
+        "resourceRationale": "One observer owns all explicit targets. Invalidation clears every measurement and releases the prior observer before replacement; disconnect clears the target index, measurement arrays, borrowed nodes, document/view and subscriber. Obsolete callbacks are ignored by observer identity.",
+        "proof": "One changed-entry traversal updates scalar or indexed allocation facts. Publication validates current descendant ownership and at most two styles; complete immutable allocation output is materialized once after changed facts and reused for equal deliveries. Default n=0 preserves O(e+h) behavior.",
+        "adversarialWitness": "Deliver sparse, partial, fragmented, missing-border and obsolete callbacks; move/disconnect descendants; mutate caller order; reject duplicate/foreign/over-capacity targets; fail acquisition on a later allocation; exercise throwing/reentrant subscribers.",
+        "evidence": ["packages/dom/tests/layout-basis.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Only the bounded declared allocation set is scanned to validate current descendant ownership and materialize requested full output. Native size updates are changed-entry indexed; unrelated mounted elements are never visited." }
+      }
+    },
+    {
       "id": "menu.click-target",
       "inherits": "linear-v1",
       "source": "packages/dom/src/overlay/menu/control.ts",
@@ -833,24 +981,192 @@
       "id": "modal.isolation-refresh",
       "inherits": "linear-v1",
       "source": "packages/dom/src/overlay/modal/effects.ts",
-      "benchmarkIDs": ["GH-169:modal-isolation-live-retention"],
-      "specificationCeiling": "O(m + a)",
+      "benchmarkIDs": ["GH-169:modal-isolation-live-retention", "dom:modal-isolation:canonical-order-work"],
+      "specificationCeiling": "O(m + a + p + b)",
       "contract": {
         "variables": [
           { "name": "m", "meaning": "modal-owned baseline snapshots retained at refresh start", "ceiling": "currently live isolated elements plus elements detached since the previous observer delivery" },
-          { "name": "a", "meaning": "current top-modal branch ancestors and direct children visited while recomputing isolation", "ceiling": "current document/modal branch topology" }
+          { "name": "a", "meaning": "current top-modal branch ancestors and direct children visited while recomputing isolation", "ceiling": "current document/modal branch topology" },
+          { "name": "p", "meaning": "currently owned modal effect entries", "ceiling": "100000 canonical active layers" },
+          { "name": "b", "meaning": "branch references retained across current modal effects, including detached exclusions", "ceiling": "caller-owned branch input cardinality" }
         ],
-        "time": { "bound": "O(m + a)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(m + a)", "output": "O(1)", "retained": "O(m)" },
-        "resources": { "allocations": "O(m + a)", "cacheEntries": "O(m)", "listeners": "0", "observers": "0 new observers per refresh; one document observer while any modal is active", "timers": "0", "subscriptions": "0" },
+        "time": { "bound": "O(m + a + p + b)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(m + a + b)", "output": "O(1)", "retained": "O(m + p + b)" },
+        "resources": { "allocations": "O(m + a + b)", "cacheEntries": "O(m + p + b)", "listeners": "0", "observers": "0 new observers per refresh; one document observer while any modal is active", "timers": "0", "subscriptions": "0" },
         "assumptions": ["MutationObserver delivers child-list changes while at least one modal is active.", "Connected baseline owners remain in the map so repeated isolation restores the original consumer state; disconnected owners are released after one refresh."],
         "ceilings": ["A detached snapshot survives only until the first isolation refresh after detachment.", "Last-modal release restores and clears every remaining snapshot and disconnects the document observer."],
-        "deterministicWork": ["At increasing churn cardinalities, each removed background receives exactly one detached baseline restore on the removal refresh.", "A later unrelated mutation and final modal close perform zero operations on previously removed backgrounds.", "A connected background retains its exact original inert and aria-hidden baseline across repeated refreshes."],
+        "deterministicWork": ["With 32 and 256 modal effect owners, a refresh reads each canonical rank exactly once and selects the highest admitted effect. Each of 64 and 512 detached exclusion branches receives one connectivity read.", "At increasing churn cardinalities, each removed background receives exactly one detached baseline restore on the removal refresh.", "A later unrelated mutation and final modal close perform zero operations on previously removed backgrounds.", "A connected background retains its exact original inert and aria-hidden baseline across repeated refreshes."],
         "resourceRationale": "The existing strong Map owns only live/relevant baselines between observer deliveries; disconnected keys are deleted after restoration and no second registry or observer is introduced.",
-        "proof": "applyTopModal first restores every currently retained baseline in reverse capture order and deletes disconnected keys, then recaptures only the current top-modal branch paths and their direct children. Connected keys retain their original snapshot; detached history cannot accumulate across later observer deliveries.",
+        "proof": "applyTopModal restores currently retained baselines and deletes disconnected keys, selects the highest admitted modal through one scan of owned effects with constant-time canonical rank queries, then recaptures only that modal's branch paths and direct children. Updating branches retains the same effect entry and scroll/baseline ownership. Connected keys retain their original snapshot; detached history cannot accumulate across later observer deliveries.",
         "adversarialWitness": "Repeatedly append, isolate, and remove 16, 256, and 2048 background nodes under one long-lived Dialog, then trigger an unrelated marker mutation and final close; removed-node restore counts are N, then zero, then zero while nested modal and live-baseline tests preserve exact restoration.",
         "evidence": ["packages/dom/tests/dialog-browser.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "A refresh must restore the modal-owned current baseline set before recomputing isolation, but disconnected historical entries are removed after that one required restoration." }
+      }
+    },
+    {
+      "id": "overlay.admission-prepare",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:layer-admission:prepared-work"],
+      "specificationCeiling": "O(n + aDom)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "canonical active and retained presentations", "ceiling": "100000" }, { "name": "aDom", "meaning": "aggregate native containment work for implicit parent discovery; zero for explicit parenting", "ceiling": "owned document ancestry and active surface count" }],
+        "time": { "bound": "O(n + aDom)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Existing Core reducers own capacity, generation and ordering validation; Map access is expected O(1).", "At most one candidate is held per synchronous popup operation; completion, rejection and disconnect clear it."],
+        "deterministicWork": ["At32/256 existing active entries, prepare performs n+1 Core sequence Map writes and zero publications; commit performs3(n+1)+2 projection/registration writes without repeating the Core transition."],
+        "resourceRationale": "One source-bound single-use closure borrows the canonical state and candidate. No independently owned ordered registry, index, history or asynchronous reservation queue is installed.",
+        "proof": "Preparation composes at most one prior-exit release, one open and one retention through Core. Commit compares exact source identity, consumes the candidate and uses the existing committed projection. Popup initial/reconcile/sync validation rejects before semantic acceptance and drains the candidate synchronously.",
+        "adversarialWitness": "Stale or consumed candidates cannot overwrite an intervening registration or revive a closed generation. An actual Core capacity rejection injected at the host seam leaves initial native resources, uncontrolled state/revision and controlled-sync state unchanged; later admission recovers.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "One structural opening materializes its canonical candidate once; existing document ancestry discovery and Core bounded transitions remain the owners." }
+      }
+    },
+    {
+      "id": "overlay.dismissal-policy",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:layer-dismissal:configure-work"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "active canonical layer count", "ceiling": "100000" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "O(1)", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Core configure-layer owns policy normalization and its immutable active-vector copy. Closed/exiting future updates validate a fixed one-layer Core state.", "Facade method binding is existing fixed lazy work;the counter acquires that binding before measuring native configuration."],
+        "deterministicWork": ["32/256 active popups update dismissal with zero Map writes;paint/rank indexes are not rebuilt and presentation subscribers are not notified.", "Accepted changes invalidate source-bound prepared ownership;equal popup configuration preserves its existing source."],
+        "resourceRationale": "Existing Popup owns at most one outside-pointer listener with stable identity. Need changes attach/remove exactly that listener;callback-only observation remains subscribed when dismissal is disabled. Disconnect releases it. No new registry,index,timer,observer or presentation subscription.",
+        "proof": "Manager delegates semantic policy to Core,then installs its returned state without projecting unchanged paint. Popup stores accepted future flags and reconciles listener need. Vue maps the two live props through this operation without recreating its native connection.",
+        "adversarialWitness": "All five popup families update active,exiting,closed and reopened owners without changing accepted generations. Invalid policy preserves accepted state;controlled dismissal remains a request;outside callbacks and teardown survive subscription changes.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs", "packages/vue/tests/presence.dom.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Only Core owns the active immutable-vector lookup/copy. DOM does not scan or copy retained paint for this user configuration boundary." }
+      }
+    },
+    {
+      "id": "overlay.host-policy",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": [
+        "dom:layer-host:bounded-work"
+      ],
+      "specificationCeiling": "O(n + h + k)",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "canonical active and retained presentations",
+            "ceiling": "100000"
+          },
+          {
+            "name": "h",
+            "meaning": "live caller-owned document host connections",
+            "ceiling": "live connection ownership"
+          },
+          {
+            "name": "k",
+            "meaning": "caller-owned profile identity length",
+            "ceiling": "explicit policy input length"
+          }
+        ],
+        "time": {
+          "bound": "O(n + h + k)",
+          "kind": "expected",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(h)",
+          "output": "O(1)",
+          "retained": "O(n + h + k)"
+        },
+        "resources": {
+          "allocations": "O(h)",
+          "cacheEntries": "O(n + h)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "Map and Set access is expected O(1).",
+          "Connect compares the profile key in O(k); prepare capacity and disconnect are O(1) expected.",
+          "Reconfigure validates the complete unique live participant set and retained generations before one policy assignment; the canonical presentation sequence remains the only paint-order owner."
+        ],
+        "deterministicWork": [
+          "At32/256 hosted entries preparation writes n+1 Core index entries; commit writes3(n+1)+3 entries, exactly one reservation more than headless, with zero unaffected deliveries."
+        ],
+        "resourceRationale": "One capability Map owns h live connections. One generation Map borrows at most n host records; retirement clears the connection identity and final canonical release removes each reservation. No host element, native resource, ordered stack or disconnected capability is retained by these records.",
+        "proof": "All capacity checks precede candidate publication and subtract only the same-ID replaced exit. Policy preparation visits each participant and occupied record at most once, then captures one fixed policy and the exact Core source/host epoch in a transient single-use commit. Commit rejects changed ownership before writes in expected O(1). Immediate reconfiguration composes this same path. Structural projection filters canonical presentations once and removes stale generation records in a separate bounded traversal.",
+        "adversarialWitness": "Two apps share one pair budget, exits hold capacity, a headless generation does not consume it, reopening replaces its own reservation, and retired or foreign document capabilities cannot admit. Full-consent reconfiguration rejects partial or duplicate participant lists and insufficient capacity; changed policy invalidates drafts.",
+        "evidence": [
+          "packages/dom/tests/popup-controls.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A shared document policy change requires consent from every live participant and must account for every occupied generation; ordinary admission uses retained counts."
+        }
+      }
+    },
+    {
+      "id": "overlay.host-transfer",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:layer-host:transfer-work"],
+      "specificationCeiling": "O(n + s)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "canonical active and retained presentations", "ceiling": "100000" }, { "name": "s", "meaning": "live presentation subscriptions", "ceiling": "s <= n" }],
+        "time": { "bound": "O(n + s)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n + s)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Map access is expected O(1). Already-hosted ownership transfers use one Map write and no projection. Closed owners configure the next opening without reserving a generation.", "Entering or leaving hosted participation derives filtered paint ranks; the existing Core state and generation are unchanged."],
+        "deterministicWork": ["At32/256 entries hosted transfer writes exactly1 reservation with0 changed-snapshot deliveries; first hosted participation writes3(n+1)+1 entries and leaving participation writes3(n+1),without a Core fold."],
+        "resourceRationale": "Transfer replaces the current generation reservation rather than adding another registration. No transfer token, native mutation, subscription, queue or history is retained. Future-open host configuration is installed before affected observers run.",
+        "proof": "A supplied target must be an active genuine document capability and aggregate capacity is checked before writes. Undefined target removes only the current reservation. Hosted transfer changes one record and invalidates prepared admissions. Entering or leaving participation invokes the existing single projection against the unchanged canonical state and delivers only affected ranks using a monotonic DOM projection revision. Final policy retirement runs even when an affected observer throws.",
+        "adversarialWitness": "A full or foreign/disconnected target preserves source. Active and exiting generations keep identity and semantic parent dismissal. An observer throw does not undo the accepted future-open host or skip later rank deliveries. Stale prepared candidates reject after transfer.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Entering or leaving hosted paint order can change all following hosted ranks; moving an already-hosted generation between hosts does not scan." }
+      }
+    },
+    {
+      "id": "overlay.presentation-commit",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:layer-presentation:committed-work"],
+      "specificationCeiling": "O(n + u + c)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "canonical active and exiting presentations", "ceiling": "Core layer presentation maxItems <= 100000" },
+          { "name": "u", "meaning": "admitted live generation subscriptions", "ceiling": "u <= n" },
+          { "name": "c", "meaning": "committed semantic close commands", "ceiling": "c <= n" }
+        ],
+        "time": { "bound": "O(n + u + c)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n + u)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(u)" },
+        "assumptions": ["Map lookup is expected O(1); application callback cost and Core semantic transition cost are separate.", "One subscription is admitted per active generation; terminal delivery and explicit disposal clear its callback.", "This operation projects a committed Core state, not implicit DOM ancestry discovery during registration."],
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
+        "proof": "A single presentation traversal constructs generation/rank indexes and reuses unchanged snapshots. One bounded subscription traversal delivers only changed snapshots, skips in-batch disposal and removes terminal subscriptions. A separate close-command traversal drains committed effects. Queries use the retained semantic rank Map, with no per-consumer scan or polling.",
+        "adversarialWitness": "Closing a lower layer shifts every surviving rank; callbacks reject writes before controller mutation, can dispose later subscribers, and may throw without preventing subsequent delivery or closure cleanup. Reopening admits a distinct generation and a stale disposer cannot remove its subscriber.",
+        "fullScan": { "allowed": true, "rationale": "A structural generation explicitly projects the complete immutable canonical presentation order exactly once." }
+      }
+    },
+    {
+      "id": "overlay.reparent",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:layer-reparent:committed-work"],
+      "specificationCeiling": "O(n + u)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "canonical active plus exiting presentations", "ceiling": "100000" }, { "name": "u", "meaning": "live generation subscriptions", "ceiling": "u <= n" }],
+        "time": { "bound": "O(n + u)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n + u)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "O(u)" },
+        "assumptions": ["Map/Set access is expected O(1); application callback execution cost is separate.", "Parent admission uses exact active registered surface identity in the current document manager; no native ancestry discovery or reverse index is added."],
+        "deterministicWork": ["At32/256active entries, one Core active index plus three DOM projection indexes perform4nMap writes, plus at most n+1 first-call facade method cache writes, and exactly n affected callbacks when the bottom entry moves behind the final parent."],
+        "resourceRationale": "Existing surfaces, Core state and generation subscriptions are reused; the operation adds no long-lived state or platform resource. Existing committed projection owns notification and cleanup.",
+        "proof": "A single active-surface scan resolves one unique parent or rejects. The canonical Core reparent reducer establishes the semantic and active-paint permutation. One existing commit publishes all ranks before affected callbacks; reentrant writes reject and callback failures drain subsequent delivery.",
+        "adversarialWitness": "Reparent the first layer behind the last with all ranks subscribed; the first callback attempts another write and throws while all later ranks remain delivered. Inactive/foreign/ambiguous/self/descendant parents reject before publication. Repeated disconnect and fresh admission leave rank0 and zero owned keydown listeners.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A structural reparent can affect every active rank; exact surface admission scans the already owned bounded registry once." }
       }
     },
     {
@@ -1043,12 +1359,159 @@
           "timers": "O(1)",
           "subscriptions": "0"
         },
-        "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection.",
-        "adversarialWitness": "Every ancestor clips and every side candidate overflows.",
+        "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection. A plain static BODY offset-parent sentinel uses one bounded computed-style decision and live signed document scroll instead of a body rect; exceptional body styles add at most one style read to the existing parent-rect path. No new ancestry walk, cache, listener, observer or retained state is added.",
+        "adversarialWitness": "Every ancestor clips and every side candidate overflows. Existing popover-positioning tests additionally exercise body margin, signed document scroll, positioned/transformed/contained/will-change bodies and element parents, exact five/six read counts, one completed update and zero post-disconnect resources.",
         "fullScan": {
           "allowed": false,
           "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections."
         }
+      }
+    },
+    {
+      "id": "reorder.drag-feedback",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/reorder.ts",
+      "benchmarkIDs": ["VAL-017:linear-work"],
+      "specificationCeiling": "O(1) unchanged placement; O(1+s+a) changed-placement admission, excluding existing hit routing",
+      "contract": {
+        "variables": [
+          { "name": "s", "meaning": "affected moving subtree visited by canonical admission", "ceiling": "canonical tree nodes" },
+          { "name": "a", "meaning": "cold canonical destination child-view admission", "ceiling": "destination sibling count" }
+        ],
+        "time": { "bound": "O(1+s+a)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1+a)" },
+        "resources": { "allocations": "O(1+a)", "cacheEntries": "2", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Existing capture and logical target are authoritative. Equivalent item placements or identical canonical insertion ports skip preview admission and DOM writes. One host-local move-event resolver serves both preview and commit; Core admission reuses the existing policy reentrancy lock. Host feedback retains two attribute bindings with four entries total. The retained/allocation ceiling includes cold canonical child-view admission; warm feedback itself is constant-space, and those child views retain the existing immutable Core owner lifetime. A new destination retires its predecessor before acquiring one ephemeral binding. Capture cleanup drains source,target and pointer release after clearing fields, even on restoration errors. No per-target binding Map or Vue publication is introduced. Existing connection listeners are separately governed; feedback adds none.",
+        "adversarialWitness": "Production connection tests perform 100 extra pointer moves within one destination and observe one policy query and three target writes total. Commit rechecks a changed permission and refuses. Virtual anchors resolve with all mounted rectangle readers configured to throw. Refused targets, target switching, caller writes, reentrant disposal and write/restoration failures release feedback and capture. The held-owner GC fixture now starts an active drag with an explicit target before retirement.",
+        "evidence": ["packages/dom/tests/reorder.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "No mounted item/target traversal in feedback; the existing Core admission may visit its affected subtree or lazily admit its canonical child view." }
+      }
+    },
+    {
+      "id": "reorder.item-projection",
+      "benchmarkIDs": [
+        "VAL-017:linear-work"
+      ],
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/reorder.ts",
+      "specificationCeiling": "O(n + k) registration batch; O(k + z) explicit source/target refresh",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "canonical admitted identities across sibling partitions",
+            "ceiling": "Sequence/Tree maxItems"
+          },
+          {
+            "name": "k",
+            "meaning": "mounted item output",
+            "ceiling": "authored mounted elements"
+          },
+          {
+            "name": "z",
+            "meaning": "registered explicit insertion targets",
+            "ceiling": "authored registered target elements"
+          }
+        ],
+        "time": {
+          "bound": "O(n + k + z)",
+          "kind": "amortized",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(k)",
+          "retained": "O(n + k + z)"
+        },
+        "resources": {
+          "allocations": "O(n + k + z)",
+          "cacheEntries": "O(k + z)",
+          "listeners": "6 per connection",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Each registration calls projectItem only for its host. Canonical Sequence/Tree owners resolve identity, depth and parent; first child views index disjoint sibling partitions once and remain cached by the immutable Tree. Complete refresh visits mounted k once; explicit source replacement additionally validates registered z insertion targets and prunes stale column hosts. Column/header and card keyboard translation borrows the existing roots/child Sequences and delegates the transaction to constrained Core Reorder. Columns uses existing conditional attribute bindings and coalesces focus to one microtask. No raw canonical-array filtering, depth reconstruction or alternate move store.",
+        "adversarialWitness": "Existing 1k/4k sequence/tree registration fixtures retain exactly k position writes and zero raw canonical-array scans. Columns fixtures prove logical keyboard/header moves, controlled refusal/synchronous acceptance, capacity/read-only guards and canonical empty/virtual anchors. Disposed handles/listeners release roots and callback payloads under GC; six listeners drain to0 and conditional attributes restore despite capture/acquisition failures.",
+        "evidence": [
+          "packages/dom/tests/reorder.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Only explicit state replacement/mutation refresh visits mounted k and source replacement checks registered z targets; registration projects one host and lazily initializes its existing sibling view."
+        }
+      }
+    },
+    {
+      "id": "reorder.target-routing",
+      "benchmarkIDs": ["VAL-017:linear-work"],
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/reorder.ts",
+      "specificationCeiling": "O(h) target routing; expected O(1) host release",
+      "contract": {
+        "variables": [
+          { "name": "h", "meaning": "event target ancestors up to the nearest registered item", "ceiling": "authored DOM depth" },
+          { "name": "k", "meaning": "mounted item hosts", "ceiling": "authored mounted elements" },
+          { "name": "z", "meaning": "registered insertion target hosts", "ceiling": "authored mounted targets" }
+        ],
+        "time": { "bound": "O(h)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(k + z)" },
+        "resources": { "allocations": "O(k + z)", "cacheEntries": "O(k + z)", "listeners": "6 per connection", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Registered item and explicit-position tokens reuse one reverse WeakMap ancestry helper. Native interactive origins use bounded ancestry. Columns point hit testing is platform-owned; owner routing visits at most the hit/registered ancestry, without the ordinary Reorder mounted-candidate fallback scan. Release deletes exact host bindings, and active target retirement cancels capture. Unchanged target registration preserves identity. Disconnect clears both strong Maps and replaces reverse WeakMaps. Ordinary Reorder geometry fallback remains a separately explicit mounted scan.",
+        "adversarialWitness": "At 1k/4k ordinary hosts, a descendant keyboard origin still performs two parent reads and zero contains calls. Columns tests resolve empty/virtual insertion anchors with every mounted rectangle reader configured to throw, prove inline header placement when a card is hit, and cancel target replacement/removal/source invalidation. Nested registered rows win over enclosing targets; stale or caller-written markers confer no ownership.",
+        "evidence": ["packages/dom/tests/reorder.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Target routing and item release use owner lookup, not mounted-host iteration." }
+      }
+    },
+    {
+      "id": "scroll-spy.measure",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/scroll-spy.ts",
+      "benchmarkIDs": ["dom:scroll-spy-native-resources"],
+      "specificationCeiling": "O(m + n + a + L) discovery; O(n + a) geometry invalidation; O(j * h) native mutation filtering",
+      "contract": {
+        "variables": [
+          { "name": "m", "meaning": "content flow elements", "ceiling": "explicit content subtree" },
+          { "name": "n", "meaning": "observed heading candidates", "ceiling": "existing Virtual extent-index item capacity" },
+          { "name": "a", "meaning": "content ancestor chain", "ceiling": "actual native ancestry" },
+          { "name": "j", "meaning": "delivered native mutation records", "ceiling": "native changed-record batch" },
+          { "name": "h", "meaning": "native exclusion ownership-check depth", "ceiling": "actual content subtree depth" },
+          { "name": "L", "meaning": "consumed heading labels and identities", "ceiling": "authored native text and generated scoped IDs" }
+        ],
+        "time": { "bound": "O(m + n + a + L + j * h)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(m + n + a + L)", "output": "O(n + L)", "retained": "O(m + n + a + L)" },
+        "resources": { "allocations": "O(m + n + a + L)", "cacheEntries": "one owner-local extent index and scoped native heading/observer targets", "listeners": "at most 7", "observers": "2", "timers": "0 timers; at most 1 pending animation frame", "subscriptions": "at most 2 borrowed callbacks" },
+        "assumptions": ["Headings use normal block-flow order in one explicit content element and scroll root; native ID lookup and Set access are expected constant time. Native selector, style and rectangle costs remain browser-owned."],
+        "ceilings": ["Heading count is admitted by the existing extent owner; no global document heading scan or global registry. Fixed heading levels bound the hierarchy stack by six."],
+        "benchmarkIDs": ["dom:scroll-spy-native-resources"],
+        "deterministicWork": ["One ResizeObserver and one MutationObserver per connection. Churn cancels the single frame, disconnects every target, compare-restores generated IDs and releases the content graph while public handles/snapshots/native callbacks remain retained."],
+        "resourceRationale": "Content flow boxes must be observed because sibling redistribution can move headings without changing aggregate article height. One excluded presentation subtree keeps only its root flow box observed; its child boxes and internal mutations cannot feed back into heading discovery. All targets remain scoped to content and ancestors; disconnect clears target references, generated-ID ownership and borrowed callbacks.",
+        "proof": "One native subtree collection propagates hidden-ancestor facts once rather than walking ancestry per heading. Geometry-only delivery measures headings and clipping ancestors without rebuilding heading metadata. Core owns rectangle intersection and Virtual owns extent construction/query.",
+        "adversarialWitness": "Nested inner/outer clipping, dynamic labels and membership, CSS-hidden headings, same-height sibling redistribution, invalid geometry and recovery, initial throwing subscribers and held native callbacks after repeated disconnect.",
+        "evidence": ["packages/dom/tests/scroll-spy.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Structural native discovery and invalidated flow layout can change every subsequent heading coordinate; the explicit content subtree is visited only at that boundary, not on ordinary own-root scrolling." }
+      }
+    },
+    {
+      "id": "scroll-spy.project",
+      "inherits": "constant-v1",
+      "source": "packages/dom/src/scroll-spy.ts",
+      "benchmarkIDs": ["dom:scroll-spy-own-scroll"],
+      "specificationCeiling": "O(log(n + 1))",
+      "contract": {
+        "variables": [ { "name": "n", "meaning": "admitted headings in the retained extent index", "ceiling": "existing Virtual extent-index item capacity" } ],
+        "time": { "bound": "O(log(n + 1))", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0 new entries; reuse the current heading/extent owner", "listeners": "0 new listeners", "observers": "0 new observers", "timers": "at most one coalesced frame; no permanent loop", "subscriptions": "0 new subscriptions" },
+        "assumptions": ["The explicit root's own scroll changes, with native geometry current and no simultaneous structural/resize invalidation. Ancestor scroll refreshes clipping separately."],
+        "ceilings": ["Two existing indexed extent lookups and one Core rectangle intersection; no heading or content traversal."],
+        "benchmarkIDs": ["dom:scroll-spy-own-scroll"],
+        "deterministicWork": ["Actual production-bound scroll cases at 1/128/4096 headings count zero element geometry reads, unchanged observer targets and one coalesced pending frame."],
+        "resourceRationale": "The current immutable heading metadata and retained extent index are reused. Only scalar range coordinates and a fixed-size snapshot can be published.",
+        "proof": "Own-root scroll takes a scalar fast path. The scheduled callback translates the cached native viewport into content coordinates, intersects cached flow clipping and projects each edge through Virtual locateOffset; the native index bounds its leaf scan.",
+        "adversarialWitness": "Fractional positions, several visible sections, article end and entirely clipped viewports; repeated events coalesce before delivery.",
+        "evidence": ["packages/dom/tests/scroll-spy.test.mjs", "packages/virtual/src/indexes/extent.ts"],
+        "fullScan": { "allowed": false, "rationale": "Cached native flow geometry and the existing extent index identify both viewport edges without measuring headings or rebuilding observation." }
       }
     },
     {
@@ -1431,7 +1894,7 @@
         "resources": {
           "allocations": "O(n)",
           "cacheEntries": "0",
-          "listeners": "4",
+          "listeners": "up to 9 element listeners plus one focused document listener",
           "observers": "0",
           "timers": "O(1)",
           "subscriptions": "0"
@@ -1446,6 +1909,187 @@
           "allowed": true,
           "rationale": "Autocomplete, history, and selectionless input types expose the resulting value but not a trustworthy changed range, so exact reconciliation may inspect the complete owned value."
         }
+      }
+    },
+    {
+      "id": "text.native-selection",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/text/element-binding.ts",
+      "benchmarkIDs": ["VAL-046:dom-text-native-selection-work"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "native text code units", "ceiling": "connected native control value length" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "one fixed offset pair", "listeners": "up to 9 element listeners plus one focused document listener", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Two native offsets are read first; an unchanged pair returns before reading text. A changed pair requires one native value read/equality check, conservatively O(n) native materialization/comparison, followed by existing constant-work canonical Core selection. No JavaScript text scan, replacement construction or candidate traversal. The existing native text baseline is borrowed; only a fixed selection pair is added. Plain text opts in; other family owners retain their current observation policy.",
+        "deterministicWork": ["one native value getter read for a changed pair at 100000 code units", "zero additional native value reads for duplicate select/selectionchange delivery"],
+        "resourceRationale": "Element selection/focus listeners live with the binding; a Document fallback exists only while focused and is removed on blur/suspend/disconnect. No registry, polling or frame loop. Existing IME finalizer belongs to native reconciliation, not selection observation.",
+        "adversarialWitness": "Repeated document/element events after a long-text caret move, stale native text and surrogate rejection, active IME deferral, focus/suspend/resume/disconnect churn and a held document after control retirement.",
+        "evidence": ["packages/dom/tests/text.test.mjs", "packages/vue/tests/text.dom.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Native value access/equality may materialize or compare the full owned string; semantic selection itself reuses canonical Core local boundary checks." }
+      }
+    },
+    {
+      "id": "toast.project",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/toast.ts",
+      "benchmarkIDs": ["dom:toast:projection-work"],
+      "specificationCeiling": "O(1 + s + r + c)",
+      "contract": {
+        "variables": [
+          { "name": "s", "meaning": "canonical item prefix needed to resolve registered IDs", "ceiling": "at most item count; zero without registrations" },
+          { "name": "r", "meaning": "registered Toast elements", "ceiling": "connection-owned registration Map size" },
+          { "name": "c", "meaning": "registered close elements", "ceiling": "connection-owned close Map size" }
+        ],
+        "time": { "bound": "O(1 + s + r + c)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1 + r + c)" },
+        "resources": { "allocations": "O(1 + s + r + c)", "cacheEntries": "O(r + c)", "listeners": "O(1 + c)", "observers": "0", "timers": "O(1)", "subscriptions": "0" },
+        "assumptions": ["Core owns canonical item uniqueness and semantics; native ID Map lookup is expected constant time.", "Bounds describe one ordinary projection, excluding separate reentrant application work and registration frequency.", "Iterator machinery has a conservative linear allocation ceiling; explicit projection-owned epoch/predicate allocation is constant."],
+        "ceilings": ["Canonical items are visited at most once per projection, with an early stop once all registrations are found.", "No item iteration without registrations; a first-item Toast and close registration require one item visit.", "No second ID index, per-state cache, per-item projection record allocation or predicate closure is constructed."],
+        "deterministicWork": ["At 1000, 4000 and 16000 items, 17 item plus 17 close registrations including absent IDs visit exactly n items, replacing 33760, 135760 and 543760 predicate visits respectively.", "Empty registration projects zero items; first-item-only registration projects one item.", "Reentrant role/hidden writes preserve the newer projection or disposed caller state."],
+        "resourceRationale": "Existing registration Maps borrow only their current item or active scalar. Replacement refresh clears those fields; unregister/disconnect deletes registrations. One epoch/predicate guards publication, and HiddenBinding does not retain the predicate. Existing native listener/clock owners are unchanged.",
+        "proof": "Refresh clears existing registration metadata, performs one prefix walk with Map.get lookups, then paints each registered element using value iterators. An unresolved counter ends the walk early. Epoch checks stop obsolete native writes, including HiddenBinding property/attribute boundaries.",
+        "adversarialWitness": "Late and absent IDs in large canonical queues, no registrations, early sparse registrations, item dismissal, registration replacement, reentrant state changes and disposal.",
+        "evidence": ["packages/dom/tests/toast.test.mjs", "packages/dom/tests/toast-browser.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "An absent registered ID requires searching the full canonical list once; per-registration full-list scans are not required." }
+      }
+    },
+    {
+      "id": "transfer.controller",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/transfer/controller.ts",
+      "benchmarkIDs": ["dom:transfer-controller-work"],
+      "specificationCeiling": "O(n + d + s * log(s + 1) + q + t + c)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "shared tree node cardinality", "ceiling": "Core Tree maxItems" },
+          { "name": "d", "meaning": "disabled direct pane items", "ceiling": "d <= n" },
+          { "name": "s", "meaning": "selected pane identities", "ceiling": "s <= n" },
+          { "name": "q", "meaning": "focus eligibility candidates", "ceiling": "q <= n and Core maxScan" },
+          { "name": "t", "meaning": "buffered typeahead Unicode code points", "ceiling": "configured maxQueryLength, default256" },
+          { "name": "c", "meaning": "normalized label code units processed by optional typeahead", "ceiling": "caller text output over admitted candidates" },
+          { "name": "h", "meaning": "synchronous caller notification depth", "ceiling": "caller-owned synchronous stack" }
+        ],
+        "time": { "bound": "O(n + d + s * log(s + 1) + q + t + c)", "kind": "expected", "runtimeState": "all" },
+        "space": { "auxiliary": "O(n + d + s + h + t + c)", "output": "O(n + s)", "retained": "O(n + d + s + t)" },
+        "resources": { "allocations": "O(n + d + s + h + t + c)", "cacheEntries": "O(d)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Native delegates membership, pane selection/cursors and controlled reconciliation to one Core Transfer state. A contains-only union view borrows child domains for bounded disabled admission. Input mapping reuses Listbox; effect frames are fenced by accepted cursors, interaction and revision. Canonical navigation retains selection/domain owners and performs zero selected sorts/Map writes at16/128/4096items. The bound includes explicit construction/source synchronization, not a full scan on each event; caller callback work is excluded and temporary nested frames follow its stack.",
+        "adversarialWitness": "Controlled move refusal and synchronous full acceptance, independent selected/highlighted control, disabled/readonly/stale input, disposal in reducer and reconciliation phases, callback exceptions, and held-method payload GC are exercised. Retirement clears hooks/policies/disabled/completion even when update throws.",
+        "evidence": ["packages/dom/tests/transfer.test.mjs", "packages/dom/type-tests/transfer.test.ts", "packages/core/tests/runtime/transfer.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Explicit node replacement and complete move output use Core admission; ordinary same-domain navigation borrows canonical state without selected normalization." }
+      }
+    },
+    {
+      "id": "transfer.presentation",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/transfer/connection.ts",
+      "benchmarkIDs": ["dom:transfer-presentation-work"],
+      "specificationCeiling": "O(1 + m + h)",
+      "contract": {
+        "variables": [
+          { "name": "m", "meaning": "registered mounted pane rows", "ceiling": "m <= n current direct pane items" },
+          { "name": "n", "meaning": "borrowed portable source nodes", "ceiling": "Core Tree maxItems" },
+          { "name": "h", "meaning": "event target ancestor depth", "ceiling": "DOM ancestry to the pane root" }
+        ],
+        "time": { "bound": "O(1 + m + h)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(m)", "output": "O(1)", "retained": "O(n + m)" },
+        "resources": { "allocations": "O(m)", "cacheEntries": "O(m)", "listeners": "6", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One Transfer controller owns both pane semantics. DOM retains only mounted row associations and fixed-key attribute restoration records. Canonical cursor updates project at most four rows and two roots; unchanged attributes perform no writes. Explicit render and membership/selection/interaction changes visit registered rows, never unmounted nodes. Shared registered-identity/native-target routing walks target ancestors. Suspend removes six listeners; disconnect clears scope before draining row/root restoration and owned controller/relay retirement. Borrowed disconnect preserves the semantic owner; owned facade destroy also retires facade application hooks.",
+        "adversarialWitness": "16/128/4096 mounted-row cursor traces enforce bounded attribute reads/writes. Two-pane accepted/refused and synchronously accepted moves, unmounted active descendants, nested controls, replaced rows, acquisition/cleanup exceptions, suspend/resume churn and held-handle root/payload GC exercise the public connection.",
+        "evidence": ["packages/dom/tests/transfer.test.mjs", "packages/dom/type-tests/transfer.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit full DOM refresh and changed semantic pane output visit m registered rows; ordinary cursor navigation remains bounded by changed rows." }
+      }
+    },
+    {
+      "id": "transfer.typeahead",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/transfer/controller.ts",
+      "benchmarkIDs": ["dom:transfer-typeahead-work"],
+      "specificationCeiling": "O(q + s + c)",
+      "contract": {
+        "variables": [
+          { "name": "q", "meaning": "buffered query Unicode code points", "ceiling": "configured maxQueryLength, default256" },
+          { "name": "s", "meaning": "candidate pane items visited", "ceiling": "min(pane cardinality, Core maxScan)" },
+          { "name": "c", "meaning": "normalized label code units processed", "ceiling": "caller output across admitted candidates" }
+        ],
+        "time": { "bound": "O(q + s + c)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(q + c)", "output": "O(1)", "retained": "O(q)" },
+        "resources": { "allocations": "O(q + c)", "cacheEntries": "2 query frames", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Existing Core Listbox matching borrows each pane Sequence and enforces maxScan; no label or selection index is built. Two clock/query frames retain at most twice the configured Unicode query ceiling. Appending or repeated-key detection processes q; printable-key admission checks one UTF-16 pair without allocating a key array. The bound excludes arbitrary callback execution but includes normalized text output read by matching. Disposal/reentrancy checks surround callbacks and cancel the active scan before consuming stale tails. Accepted focus uses the existing Transfer event/revision owner. Membership/disabled changes and disposal reset query frames; retirement clears text/clock/normalizer hooks.",
+        "adversarialWitness": "16/128/4096 pane traces with maxScan4 invoke exactly4 text resolvers. Independent pane prefixes, repeated letters, timeout and rollback, Unicode max-length restart, controlled cursor refusal/acceptance, readonly navigation, disabled/stale/IME/native input, callback exceptions/retirement and held-controller hook GC are exercised.",
+        "evidence": ["packages/dom/tests/transfer.test.mjs", "packages/dom/tests/listbox.test.mjs", "packages/dom/type-tests/transfer.test.ts", "packages/vue/tests/transfer.dom.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A no-match or wrap request may inspect the admitted pane candidates up to maxScan; it does not rebuild topology or selected state." }
+      }
+    },
+    {
+      "id": "tree-select.controller",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/tree-select/controller.ts",
+      "benchmarkIDs": ["dom:tree-select-controller-work"],
+      "specificationCeiling": "O(n + r + d + e + s * log(s + 1) + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "result navigation nodes", "ceiling": "n" },
+          { "name": "d", "meaning": "root disabled IDs", "ceiling": "source Tree maxItems" },
+          { "name": "e", "meaning": "external expansion entries", "ceiling": "source Tree maxItems" },
+          { "name": "s", "meaning": "external selected entries", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "query text code units", "ceiling": "finite immutable caller string" },
+          { "name": "h", "meaning": "synchronous caller reentrant notification depth", "ceiling": "caller-owned synchronous call stack" }
+        ],
+        "time": { "bound": "O(n + r + d + e + s * log(s + 1) + q)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(n + r + d + e + s + h)", "output": "O(n + r + s + q)", "retained": "O(n + r + d + s + q)" },
+        "resources": { "allocations": "O(n + r + d + e + s + h)", "cacheEntries": "O(d)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One existing semantic/revision controller delegates every transition, controlled reconciliation and external frame to Core. Disabled identity admission reuses the existing owner. Native maps keys/effects and borrows canonical selected state; deterministic32/512/4096-leaf traces show zero selected-tuple sorting on navigation, raw response delivery and unrelated sync. The bound covers explicit construction/full external sync, not an assertion that every event scans n. Temporary reentrant frames follow the caller stack; no retained event queue exists.",
+        "adversarialWitness": "Controlled refusal with synchronous parent acceptance, same-request response, stale revision/request payload getters, predicate/input reentrancy and atomic combined controlled frames.",
+        "evidence": ["packages/dom/tests/tree-select.test.mjs", "packages/dom/type-tests/tree-select.test.ts", "packages/core/tests/composites/tree-select.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Explicit external result/value admission uses Core full boundaries; ordinary canonical navigation shares selected owners." }
+      }
+    },
+    {
+      "id": "tree-select.presentation",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/tree-select/connection.ts",
+      "benchmarkIDs": ["dom:tree-select-presentation-work"],
+      "specificationCeiling": "O(1 + m + q)",
+      "contract": {
+        "variables": [
+          { "name": "m", "meaning": "registered mounted rows", "ceiling": "source Tree size n" },
+          { "name": "n", "meaning": "borrowed portable source tree nodes", "ceiling": "Tree maxItems" },
+          { "name": "r", "meaning": "portable last result nodes", "ceiling": "n" },
+          { "name": "s", "meaning": "portable selected IDs", "ceiling": "n" },
+          { "name": "q", "meaning": "portable query code units", "ceiling": "finite immutable caller string" }
+        ],
+        "time": { "bound": "O(1 + m + q)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n + r + s + q + m)" },
+        "resources": { "allocations": "O(m)", "cacheEntries": "O(m)", "listeners": "7 native plus 2 existing layer document listeners", "observers": "delegated to existing position owner", "timers": "delegated to existing position owner", "subscriptions": "delegated to existing layer owner" },
+        "proof": "One map retains at most one mounted row per source identity. Registration/release has expected constant index work and projects one row. Explicit render visits exactly registered rows and projects canonical Core depth/selection/expansion; no source traversal or portable reducer exists here. Layer, visibility and position resources reuse their existing owners. Disconnect clears the scope before draining all cleanup; only portable source/last snapshot survive. Native hooks and platform references are collectible with facade and saved methods held. Facade destroy separately retires its shared subscriber/application-update scope.",
+        "adversarialWitness": "Initial request activates once over detach/reattach and suspension. IME query commits, stale responses, source-branch refusal, mounted active descendant release, failed initial transport cleanup and held-handle GC.",
+        "evidence": ["packages/dom/tests/tree-select.test.mjs", "packages/dom/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit host projection visits m mounted rows, never the entire unmounted source domain. Platform layout resources and semantic transitions have separate owners/bounds." }
+      }
+    },
+    {
+      "id": "tree-select.retire",
+      "inherits": "constant-v1",
+      "source": "packages/dom/src/tree-select/controller.ts",
+      "benchmarkIDs": ["dom:tree-select-controller-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "portable source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "portable last result navigation nodes", "ceiling": "n" },
+          { "name": "s", "meaning": "portable last selected values", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "portable last query code units", "ceiling": "finite immutable query string" }
+        ],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n + r + s + q)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Retire input before clearing the fixed callback/policy/completion scope and disabled-ID reference in finally. Existing interaction state refuses future writes. Held controllers retain only portable source/last snapshots; keyboard, event and sync refusal happen before caller getters. GC exercises held controllers and saved bound methods. There is no DOM connection or platform resource in this controller prerequisite.",
+        "adversarialWitness": "Final update callback throws, repeated disposal, getter-bearing late input, and callback/policy payload GC while controller/method handles remain held.",
+        "evidence": ["packages/dom/tests/tree-select.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Retirement clears a fixed scope; source tree/last snapshot remain intentionally portable." }
       }
     },
     {

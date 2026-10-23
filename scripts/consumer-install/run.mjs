@@ -2,20 +2,28 @@
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { validateInstallBaseline } from './check.mjs';
-import { inspectPackedPackageDirectory } from '../lib/packed-package-contract.mjs';
+import { inspectPackedPackageDirectory, packageMetadataFiles } from '../lib/packed-package-contract.mjs';
 import { execFilePortable } from '../../tools/tooling/portable-process.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
 
 const repoRoot = resolve('.');
 const mode = process.argv[2] ?? 'check';
-assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check>');
+assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check> [--report=<new-path>] [--tarball-directory=<directory>]');
+const baselinePath = resolve(repoRoot, 'verification/consumer-install/baseline.json');
+const reportArguments = process.argv.slice(3).filter(argument => argument.startsWith('--report='));
+assert.ok(reportArguments.length <= 1, 'consumer install verification accepts at most one --report option');
+const reportArgument = reportArguments[0]?.slice('--report='.length);
+assert.notEqual(reportArgument, '', 'consumer install report requires a new output path');
+const reportPath = reportArgument === undefined ? undefined : resolve(repoRoot, reportArgument);
+assert.notEqual(reportPath, baselinePath, 'a diagnostic report cannot overwrite the canonical install baseline');
 const tarballDirectoryArgument = process.argv.slice(3)
   .find((argument) => argument.startsWith('--tarball-directory='));
 const unexpectedArguments = process.argv.slice(3).filter((argument) => (
   argument !== '--'
   && argument !== tarballDirectoryArgument
+  && argument !== reportArguments[0]
 ));
 assert.deepEqual(unexpectedArguments, [], `unexpected consumer-install arguments: ${unexpectedArguments.join(', ')}`);
 if (tarballDirectoryArgument !== undefined) {
@@ -48,13 +56,16 @@ try {
   }
   const packages = {};
   for (const packageName of packageNames) packages[packageName] = await inspectTarball(temporaryRoot, packageName, tarballs[packageName]);
-  const installs = await Promise.all(['npm', 'pnpm'].map((packageManager) => inspectVueInstall(temporaryRoot, packageManager, tarballs)));
+  // Keep the two real package-manager witnesses without overlapping install heaps.
+  const installs = [];
+  for (const packageManager of ['npm', 'pnpm']) installs.push(await inspectVueInstall(temporaryRoot, packageManager, tarballs));
   const report = Object.freeze({
     schemaVersion: 2,
     packages,
     installs,
   });
-  const baselinePath = resolve(repoRoot, 'verification/consumer-install/baseline.json');
+  // Preserve complete observations even when admission against historical budgets fails.
+  if (reportPath !== undefined) await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
   if (mode === 'record') await writeFile(baselinePath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
   else validateInstallBaseline(JSON.parse(await readFile(baselinePath, 'utf8')), report);
   console.log(JSON.stringify({ status: 'passed', mode, packages: packageNames.length, installs: installs.length }));
@@ -98,6 +109,16 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   }
   await run(process.execPath, ['--input-type=module', '-e', "await import('@sectile/vue');"], directory);
   await run(process.execPath, ['--input-type=module', '-e', [
+    "import assert from 'node:assert/strict';",
+    "const { trySnapshotJSON, tryMeasureJSON, tryParseJSON, tryStringifyJSON } = await import('@sectile/core/json');",
+    "const input = { values: [null, false, 0] }; const options = { limits: { maxInputBytes: 128, maxInputValues: 16, maxInputDepth: 4, maxStringCodeUnits: 32 } };",
+    "const snapshot = trySnapshotJSON(input, options); assert.equal(snapshot.ok, true); assert.deepEqual(snapshot.value.data, input); assert.notEqual(snapshot.value.data, input);",
+    "const measured = tryMeasureJSON(input, options); assert.equal(measured.ok, true); assert.deepEqual(measured.value, snapshot.value.work);",
+    "const encoded = tryStringifyJSON(input, options); assert.equal(encoded.ok, true); assert.equal(encoded.value.source, JSON.stringify(input)); assert.deepEqual(encoded.value.work, measured.value);",
+    "const raw = ' {\"zero\":0,\"flag\":false} '; const parsed = tryParseJSON(raw, options); assert.equal(parsed.ok, true); assert.deepEqual(parsed.value.data, { zero: 0, flag: false }); assert.equal(parsed.value.work.sourceBytes, Buffer.byteLength(raw));",
+    "assert.equal(tryParseJSON('{\"id\":1,\"id\":2}', options).error.code, 'invalid-json-text');",
+  ].join(' ')], directory);
+  await run(process.execPath, ['--input-type=module', '-e', [
     "const { stableIDElementToken } = await import('@sectile/dom/identity');",
     "if (stableIDElementToken('%') === stableIDElementToken('-25')) throw new Error('DOM identity encoding collision');",
   ].join(' ')], directory);
@@ -137,7 +158,7 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     },
     {
       packageName: 'virtual',
-      imports: ['@sectile/vue/virtual/list'],
+      imports: ['@sectile/vue/virtual/list', '@sectile/dom/scroll-spy'],
       removed: ['@sectile/vue/virtual'],
     },
   ];
@@ -166,6 +187,7 @@ async function inspectVueInstall(root, packageManager, tarballs) {
   return Object.freeze({
     packageManager,
     installedBytes: installation.bytes,
+    installedPayloadBytes: installation.payloadBytes,
     installedFiles: installation.files,
     dependencyNames: Object.freeze([...dependencyNames].sort()),
     dependencyTree,
@@ -238,8 +260,13 @@ function collectNormalizedNames(entries, names) {
 async function directoryMetrics(path) {
   const files = await filesUnder(path);
   let bytes = 0;
-  for (const file of files) bytes += (await stat(file)).size;
-  return Object.freeze({ files: files.length, bytes });
+  let payloadBytes = 0;
+  for (const file of files) {
+    const size = (await stat(file)).size;
+    bytes += size;
+    if (!packageMetadataFiles.includes(basename(file))) payloadBytes += size;
+  }
+  return Object.freeze({ files: files.length, bytes, payloadBytes });
 }
 
 async function filesUnder(path) {

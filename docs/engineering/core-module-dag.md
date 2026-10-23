@@ -2,46 +2,46 @@
 
 > Generated from `verification/core-layers/manifest.json` and Core source imports.
 
-Modules: 120; edges: 503; public subpaths: 71; cycles: 0; upward edges: 0.
+Modules: 125; edges: 535; public subpaths: 74; cycles: 0; upward edges: 0.
 
 ## Layers
 
 | Layer | Modules |
 |---|---:|
-| composites | 11 |
+| composites | 13 |
 | editing | 2 |
 | foundation | 3 |
 | kernel | 6 |
-| public | 58 |
+| public | 60 |
 | reference | 24 |
 | runtime | 1 |
 | state | 5 |
-| structures | 10 |
+| structures | 11 |
 
 ## Highest public blast radius
 
 | Module | Transitive dependents | Public subpaths |
 |---|---:|---:|
-| `src/error-code.ts` | 117 | 70 |
-| `src/result.ts` | 115 | 70 |
-| `src/shared.ts` | 116 | 70 |
-| `src/internal/kernel/foundation.ts` | 113 | 68 |
-| `src/internal/kernel/machine.ts` | 79 | 48 |
-| `src/internal/kernel/indexed-sequence.ts` | 57 | 31 |
-| `src/structures/sequence.ts` | 56 | 31 |
-| `src/internal/state/cursor.ts` | 46 | 23 |
-| `src/internal/state/selection.ts` | 27 | 14 |
+| `src/error-code.ts` | 122 | 73 |
+| `src/result.ts` | 120 | 73 |
+| `src/shared.ts` | 121 | 73 |
+| `src/internal/kernel/foundation.ts` | 117 | 70 |
+| `src/internal/kernel/machine.ts` | 83 | 50 |
+| `src/internal/kernel/indexed-sequence.ts` | 61 | 33 |
+| `src/structures/sequence.ts` | 60 | 33 |
+| `src/internal/state/cursor.ts` | 50 | 25 |
+| `src/internal/state/selection.ts` | 31 | 16 |
+| `src/structures/tree.ts` | 24 | 13 |
 | `src/internal/kernel/decimal.ts` | 18 | 12 |
-| `src/structures/tree.ts` | 20 | 11 |
 | `src/internal/kernel/bounded-scalar.ts` | 14 | 9 |
 | `src/internal/kernel/exact-ratio.ts` | 15 | 9 |
 | `src/structures/range.ts` | 13 | 9 |
+| `src/internal/editing/text.ts` | 10 | 6 |
 | `src/internal/composites/linear-choice.ts` | 6 | 5 |
-| `src/internal/editing/text.ts` | 8 | 5 |
+| `src/internal/state/checked.ts` | 10 | 5 |
+| `src/internal/composites/listbox.ts` | 5 | 4 |
 | `src/internal/composites/menu.ts` | 5 | 4 |
 | `src/internal/composites/popup.ts` | 4 | 4 |
-| `src/internal/composites/slider.ts` | 6 | 4 |
-| `src/menu.ts` | 3 | 4 |
 
 ## Public subpaths
 
@@ -73,6 +73,7 @@ Modules: 120; edges: 503; public subpaths: 71; cycles: 0; upward edges: 0.
 | `./identity` | `src/identity.ts` | public | `src/internal/kernel/foundation.ts`, `src/shared.ts`, `src/shared.ts`, `src/shared.ts`, `src/shared.ts` |
 | `./index-span` | `src/structures/index-span.ts` | structures | `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./interaction` | `src/interaction.ts` | public | `src/result.ts`, `src/shared.ts` |
+| `./json` | `src/structures/json.ts` | structures | `src/error-code.ts`, `src/result.ts`, `src/result.ts` |
 | `./layer-stack` | `src/layer-stack.ts` | public | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/internal/kernel/machine.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./listbox` | `src/listbox.ts` | public | `src/internal/composites/listbox.ts`, `src/internal/composites/listbox.ts` |
 | `./menu` | `src/menu.ts` | public | `src/internal/composites/menu.ts`, `src/internal/composites/menu.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/tree.ts` |
@@ -113,8 +114,10 @@ Modules: 120; edges: 503; public subpaths: 71; cycles: 0; upward edges: 0.
 | `./toggle-group` | `src/toggle-group.ts` | public | `src/internal/composites/listbox.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./toolbar` | `src/toolbar.ts` | public | `src/internal/composites/linear-action.ts`, `src/internal/composites/linear-action.ts` |
 | `./tooltip` | `src/tooltip.ts` | public | `src/internal/state/open-state.ts`, `src/internal/state/open-state.ts` |
+| `./transfer` | `src/transfer.ts` | public | `src/internal/composites/listbox.ts`, `src/internal/kernel/foundation.ts`, `src/internal/kernel/machine.ts`, `src/reorder.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/sequence.ts`, `src/structures/tree.ts` |
 | `./tree` | `src/structures/tree.ts` | structures | `src/internal/kernel/foundation.ts`, `src/internal/kernel/indexed-sequence.ts`, `src/result.ts`, `src/shared.ts`, `src/shared.ts`, `src/structures/sequence.ts` |
 | `./tree-grid` | `src/tree-grid.ts` | public | `src/internal/composites/tree-grid.ts`, `src/internal/composites/tree-grid.ts`, `src/internal/composites/tree-grid.ts`, `src/internal/composites/tree-grid.ts`, `src/result.ts`, `src/shared.ts`, `src/structures/grid.ts`, `src/structures/tree.ts` |
-| `./tree-view` | `src/tree-view.ts` | public | `src/internal/composites/tree-view.ts`, `src/internal/composites/tree-view.ts` |
+| `./tree-select` | `src/tree-select.ts` | public | `src/internal/composites/tree-select.ts`, `src/internal/composites/tree-select.ts`, `src/internal/composites/tree-select.ts` |
+| `./tree-view` | `src/tree-view.ts` | public | `src/internal/composites/tree-selection.ts`, `src/internal/composites/tree-view.ts`, `src/internal/composites/tree-view.ts` |
 | `./units` | `src/units.ts` | public | `src/internal/kernel/decimal.ts`, `src/internal/kernel/foundation.ts`, `src/result.ts`, `src/shared.ts` |
 | `./window-splitter` | `src/window-splitter.ts` | public | `src/internal/composites/slider.ts`, `src/internal/composites/slider.ts` |

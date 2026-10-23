@@ -91,6 +91,8 @@ function classify(packageName, subpath, runtimeCount) {
 }
 
 function optionalPeer(packageName, subpath) {
+  if ((packageName === 'dom' || packageName === 'vue') && subpath.startsWith('./form/')) return '@sectile/form';
+  if (packageName === 'dom' && subpath === './scroll-spy') return '@sectile/virtual';
   if (packageName === 'dom' && subpath.startsWith('./temporal/')) return '@sectile/temporal';
   if (packageName === 'vue' && subpath.startsWith('./temporal/')) return '@sectile/temporal';
   if (packageName === 'vue' && subpath.startsWith('./virtual/')) return '@sectile/virtual';
@@ -122,11 +124,24 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'core:./anchored-layout',
     'core:./color',
     'core:./color-text',
+    'core:./json',
+    'core:./transfer',
     'chart:./projection',
+    'dom:./attributes',
     'dom:./identity',
+    'dom:./image',
+    'dom:./fullscreen',
+    'dom:./media-gesture',
+    'dom:./layout-basis',
+    'dom:./layout-motion',
+    'dom:./focus-visibility',
     'dom:./listbox',
+    'dom:./transfer',
+    'dom:./drag-drop',
+    'dom:./checkbox-tree',
     'dom:./popover',
     'dom:./presence',
+    'dom:./stylesheet',
     'form:./form',
     'tabular:./data-table',
     'temporal:./calendar',
@@ -135,6 +150,11 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'virtual:./linear-layout',
     'virtual:./surface',
     'vue:./listbox',
+    'vue:./drag-drop',
+    'vue:./image',
+    'vue:./fullscreen',
+    'vue:./media-gesture',
+    'vue:./checkbox-tree',
   ]);
   return representatives.has(`${packageName}:${subpath}`);
 }

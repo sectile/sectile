@@ -729,6 +729,25 @@
       }
     },
     {
+      "id": "combobox.select-canonical",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/composites/combobox.ts",
+      "benchmarkIDs": ["VAL-019:combobox-select-canonical"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "borrowed candidate/selected IDs and immutable text code units", "ceiling": "existing Sequence, selection and text owners" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "existing weak canonical owner marks", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "After canonical domain/state admission, selection delegates to the constant-work Text owner and reuses the same popup flag, cursor and selection. Candidate matching, eligibility resolution, traversal and focus commands are not part of this transition.",
+        "deterministicWork": ["zero matcher/eligibility callbacks", "zero candidate-domain traversal or selection materialization"],
+        "resourceRationale": "Only fixed state/result wrappers are new; all candidate/text/selection storage remains borrowed from its existing owner.",
+        "adversarialWitness": "Move selection with 4096 candidates and preserve both closed/open popup states, current candidate and selected identity without callback work.",
+        "evidence": ["packages/core/tests/composites/combobox.reference-law.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Selection does not change the committed query or candidate source." }
+      }
+    },
+    {
       "id": "exact-ratio.arithmetic",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/range.ts",
@@ -1574,6 +1593,26 @@
       }
     },
     {
+      "id": "layer-stack.configure",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/layer-stack.ts",
+      "benchmarkIDs": ["core:layer-stack:configure-work"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "accepted active layer count", "ceiling": "100000" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Canonical semantic state already validates identities and parent order;foreign records use the existing complete factory normalization.", "A configuration event replaces the complete mode/dismiss policy and preserves identity,parent and position."],
+        "deterministicWork": ["At16,4096,100000entries,last-entry configuration performs exactly n lookup visits and n slice slots;equal policy performs n lookup visits and zero vector-copy slots.", "Changed semantic policy shares the entire presentation vector;generation,order,phase and retained exit records are unchanged."],
+        "resourceRationale": "One normalized fixed layer record and one changed immutable vector;no per-layer record copy,retained index,history or platform resource. Equal policy retains both state identities.",
+        "proof": "configureLayer looks up the target once,normalizes only its fixed policy,compares its accepted scalars,then slices the layer vector only on change. The presentation reducer publishes the same presentation vector with the changed semantic stack.",
+        "adversarialWitness": "Final active layer at the supported ceiling;retained exits remain paint-only while updated modal/dismiss policy changes interactive IDs and canonical dismissal. Missing IDs,incomplete/invalid policies and mutable foreign records are checked.",
+        "evidence": ["packages/core/tests/runtime/layer-stack.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Current canonical vector owns identity lookup and immutable output. This explicit user configuration boundary does not introduce a retained index or scan/copy the retained presentation vector." }
+      }
+    },
+    {
       "id": "layer-stack.ignored-dismissal",
       "inherits": "constant-v1",
       "source": "packages/core/src/layer-stack.ts",
@@ -1595,6 +1634,27 @@
       }
     },
     {
+      "id": "layer-stack.presentation-lifetime",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/layer-stack.ts",
+      "benchmarkIDs": ["core:layer-presentation:lifetime-work"],
+      "specificationCeiling": "O(n + c)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "active plus retained exiting presentations", "ceiling": "maxItems <= 100000" }, { "name": "c", "meaning": "canonical semantic close commands", "ceiling": "active layers <= n" }],
+        "time": { "bound": "O(n + c)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(n + c)", "output": "O(n + c)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n + c)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Factory-issued immutable runtime state is required; unowned copies reject by canonical provenance before field reads.", "Existing semantic layer transitions own ancestry, dismissal policy and close commands; presentations compose that result.", "Ignored trusted dismissal is O(1) and does not traverse either presentation or semantic lists."],
+        "ceilings": ["Active plus exiting entries share the admitted inclusive capacity; no retained ID history or per-generation cache.", "Each changed operation materializes one presentation output list and shares unchanged entries and semantic commands."],
+        "deterministicWork": ["16, 4096 and 100000 entries perform zero semantic/presentation maps or iterations for ignored dismissal.", "At those scales, changed dismissal visits each presentation exactly once, agrees with the existing semantic owner and preserves unaffected presentation identity."],
+        "resourceRationale": "One immutable accepted state plus transient output; shared weak canonical provenance releases unreachable states. No platform resources are created.",
+        "proof": "Constructor validates capacity before semantic input materialization. Retain/release use one bounded search and output pass. Close builds a closed-ID Set from existing commands and scans paint once. Reparent composes the semantic permutation with one active-ID Map and one active-slot output pass while preserving exiting slots and generations. Open appends one fresh generation; safe counters reject exhaustion. Missing release and ignored dismissal preserve state identity.",
+        "adversarialWitness": "Ancestor close while paint is retained, same-ID reopen with old exits, stale completion, active cancellation, capacity held by exits, forged state and invalid generations.",
+        "evidence": ["packages/core/tests/runtime/layer-stack.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Changed immutable order/phase output may affect every presentation rank; ignored trusted semantic events retain their constant-time path." }
+      }
+    },
+    {
       "id": "layer-stack.reject-oversize",
       "inherits": "constant-v1",
       "source": "packages/core/src/layer-stack.ts",
@@ -1613,6 +1673,44 @@
         "adversarialWitness": "Large unique getter-backed inputs, sparse maximum array length with throwing first-entry and map accessors, inclusive ceiling and invalid supported IDs/parents/modes/policies.",
         "evidence": ["packages/core/tests/runtime/layer-stack.test.mjs"],
         "fullScan": { "allowed": false, "rationale": "Cardinality alone proves this input cannot be accepted; reading IDs cannot change the rejection." }
+      }
+    },
+    {
+      "id": "layer-stack.reparent",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/layer-stack.ts",
+      "benchmarkIDs": ["core:layer-stack:reparent-work"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "accepted active layers or active plus exiting paint entries", "ceiling": "100000" }],
+        "time": { "bound": "O(n)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(n)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Canonical order is parent-before-child; Set and Map membership is expected O(1). Foreign input is factory-normalized before reparenting.", "One structural event constructs one immutable semantic order and one presentation order; generations and entry capacity are unchanged."],
+        "deterministicWork": ["At16,4096,100000entries, later-parent reparent visits the semantic list once for subtree membership and paint once for active indexing, performs exactly n active Map writes and at most n Set membership reads."],
+        "resourceRationale": "Only transient subtree membership and active-ID indexes are allocated; no retained ancestry cache, history or platform resource.",
+        "proof": "One endpoint scan establishes target positions. Earlier-parent changes share order; later-parent changes collect the interleaved subtree with one forward membership scan and emit its stable permutation once. The presentation reducer fills only active slots from that semantic order, leaving exiting entries untouched.",
+        "adversarialWitness": "A large interleaved subtree moves behind the final independent parent. Descendant/self/missing targets reject before commit; retained exiting slots, active generations and unrelated relative order survive. Mutable foreign records are normalized before canonical provenance.",
+        "evidence": ["packages/core/tests/runtime/layer-stack.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A reparented immutable order can change every active rank; trusted ignored dismissals are a separate constant-time path." }
+      }
+    },
+    {
+      "id": "menu.root-movement",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/menu.ts",
+      "benchmarkIDs": ["VAL-009:menu-root-navigation-work"],
+      "specificationCeiling": "O(dAncestor + 1)",
+      "contract": {
+        "variables": [{ "name": "dAncestor", "meaning": "current item's ancestor depth", "ceiling": "Tree maxDepth" }],
+        "time": { "bound": "O(dAncestor + 1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The canonical state skips external validation. A scalar indexed parent walk locates the root; one indexed root rank and one positional lookup select the wrapped destination. Output contains one root cursor, at most one open branch and one focus command. No ancestors array, domain materialization or retained index is created.",
+        "adversarialWitness": "Production-bound transitions on 1k/10k/100k identities at depth 32 perform exactly 33 parent lookups, one root rank and one root access; root-array access throws. Independent semantic fixtures cover nested paths, expanded/closed mode, disabled destination, wrapping and empty roots.",
+        "deterministicWork": ["Fixed-depth root movement has identical indexed lookup counts across 1k/10k/100k domains."],
+        "evidence": ["packages/core/tests/composites/menu.reference-law.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Only the current ancestor path and one root sibling are relevant." }
       }
     },
     {
@@ -1804,6 +1902,21 @@
       }
     },
     {
+      "id": "multi-thumb.bounds",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/multi-thumb-slider.ts",
+      "benchmarkIDs": ["VAL-017:constant-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "external" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The canonical Sequence index lookup is constant; the query validates at most three adjacent ticks and computes two bounds without traversing the domain.",
+        "adversarialWitness": "Production-bound access observation has equal tick-read counts at 5 and 10000 thumbs and touches only the queried tick and its two neighbors.",
+        "deterministicWork": ["one retained Sequence index lookup", "at most three validated adjacent ticks", "no domain traversal"],
+        "evidence": ["packages/core/tests/composites/multi-thumb-slider.reference-law.test.mjs"]
+      }
+    },
+    {
       "id": "range.arithmetic",
       "inherits": "constant-v1",
       "source": "packages/core/src/structures/range.ts",
@@ -1823,6 +1936,26 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Scalar range arithmetic cannot traverse range count."
+        }
+      }
+    },
+    {
+      "id": "reorder.borrow-owners",
+      "benchmarkIDs": [
+        "VAL-017:constant-work"
+      ],
+      "inherits": "constant-v1",
+      "source": "packages/core/src/reorder.ts",
+      "specificationCeiling": "O(1) canonical; O(n) external validation",
+      "contract": {
+        "proof": "getSequenceReorderOrder and getTreeReorderHierarchy each read one existing canonical WeakMap owner. No owner or index is reconstructed. Caller-authored structural states take one existing constructor validation and are not cached; mutable external input is revalidated on the next call. Borrowed Sequence patch depth remains bounded by the existing MAX_PATCH_DEPTH owner policy.",
+        "adversarialWitness": "The production Reorder fixture preserves borrowed owner and child-view identity, old/new state isolation, and rejects duplicate/cyclic structural states after caller mutation.",
+        "evidence": [
+          "packages/core/tests/runtime/reorder.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Canonical owner access reads the retained WeakMap entry; only external structural state validation traverses n."
         }
       }
     },
@@ -1869,6 +2002,30 @@
       }
     },
     {
+      "id": "reorder.tree-availability",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": ["VAL-019:tree-reorder-availability-work"],
+      "specificationCeiling": "O(1 + s + k)",
+      "contract": {
+        "variables": [
+          { "name": "s", "meaning": "moved subtree nodes visited by the optional depth policy", "ceiling": "s <= Tree maxItems" },
+          { "name": "k", "meaning": "destination children on the first existing child-view admission; zero for a warm view", "ceiling": "k <= Tree maxItems" }
+        ],
+        "time": { "bound": "O(1 + s + k)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(k)" },
+        "resources": { "allocations": "O(k + 1)", "cacheEntries": "O(k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "evidence": ["packages/core/tests/runtime/reorder.test.mjs"],
+        "assumptions": ["State is canonical and borrows the existing immutable Tree; application callback CPU is excluded."],
+        "ceilings": ["Affected subtree and first destination child view are each bounded by Tree maxItems."],
+        "deterministicWork": ["100 warm leaf queries over514 nodes perform0 Map writes and leave the source and empty destination unchanged."],
+        "resourceRationale": "Only constant policy/result records are created by the query. A cold destination view belongs to the existing immutable Tree; no query cache, next Tree or callback lifetime is introduced.",
+        "proof": "The query and single-node reducer share one admission helper. Canonical state borrows retained Tree membership, parent and subtree intervals, captures placement and policy fields once, and checks root/depth/permission/capacity without constructing a next node vector, Tree or position index. Depth visits only the moved subtree; increasing capacity borrows the existing child count, whose first view may retain O(k) work. Warm leaf queries take O(1), excluding application callback CPU. Structural caller states retain the existing complete O(n) admission path; they are outside this trusted-state bound. No policy callback or alternate query index is retained.",
+        "adversarialWitness": "Existing Reorder production tests assert independently specified accepted/refused placements, unchanged source, single getter reads, structural caller validation and thrown callback propagation.100 warmed leaf queries over514 nodes perform0 Map writes, detecting accidental next-tree position-index construction. Commit rechecks a permission changed after a successful advisory query.",
+        "fullScan": { "allowed": true, "rationale": "An explicit depth policy must inspect the complete affected subtree; unrelated canonical nodes are not scanned. External structural states require complete validation separately." }
+      }
+    },
+    {
       "id": "reorder.tree-transition",
       "inherits": "linear-v1",
       "source": "packages/core/src/reorder.ts",
@@ -1902,8 +2059,8 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "A canonical state retains the current Tree and input-order index. Caller-owned source, parent, and optional sibling target are captured into fixed scalar locals once; cycle, source, target, parent, and last-sibling queries reuse the retained indexes; one output vector and exactly one next Tree are constructed.",
-        "adversarialWitness": "A getter-backed reparent proves source, parent, and optional sibling target are each observed once while moving a root with a maximum-size subtree under the last branch still performs constant indexed resolution followed by one complete immutable output and one next-tree validation.",
+        "proof": "A canonical state retains the current Tree and input-order index. Caller-owned source, parent, and optional sibling target are captured once. Single moves use indexed resolution. Batch moves capture j <= n unique roots once, validate disjoint subtree intervals with one preorder pass, and preserve supplied root order with one input-order output pass. Optional constraints capture policy fields once, check preserved roots and permissions per moved root, scan at most n disjoint subtree nodes for depth, and query increasing destination capacity once from the existing Tree's child Sequence count. The first destination view may cost O(k) for k children; subsequent reads borrow it in O(1), and permission refusal precedes that admission. No next Tree/output vector is built on rejection. One output vector and exactly one next Tree are constructed on acceptance; O(n+j) remains O(n) because j <= n, excluding application callback CPU. Empty and unchanged sibling placement return the existing state.",
+        "adversarialWitness": "Getter-backed single/batch moves and policies observe each caller field/ID once. Ordered multi-root moves retain descendants and reject overlap, duplicates, cycles, missing IDs and invalid anchors atomically. Dense transfers at16/128/4096 roots, both unrestricted and constrained, bound Map writes by16*(n+2), ruling out one next Tree per root. Permission rejection writes0 Maps; depth covers complete moved subtrees, mixed-source capacity counts only incoming roots, and overfull local reordering remains possible. Reorder tests also cover unchanged interleaved records and structural caller admission.",
         "fullScan": {
           "allowed": true,
           "rationale": "The next immutable tree and public full node snapshot must each account for all n nodes; the current tree is not reconstructed."
@@ -2302,6 +2459,42 @@
       }
     },
     {
+      "id": "text.query",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": ["VAL-019:text-query-external"],
+      "specificationCeiling": "O(n + p*(q + p))",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "external current/composition UTF-16 code units", "ceiling": "submitted editing state" }, { "name": "p", "meaning": "trigger UTF-16 code units", "ceiling": "caller trigger length" }, { "name": "q", "meaning": "query UTF-16 ceiling", "ceiling": "explicit maxQueryCodeUnits" }],
+        "time": { "bound": "O(n + p*(q + p))", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(p + q)", "output": "O(p + q)", "retained": "O(p + q)" },
+        "resources": { "allocations": "O(p + q)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Existing Text state admission completely validates external UTF-16/selection/composition before projection. Only the configured query/trigger window is copied and searched afterwards; returned queries contain offsets and bounded strings, not a source-state reference.",
+        "adversarialWitness": "A forged source with a lone surrogate outside an otherwise valid trigger suffix is rejected by full admission.",
+        "evidence": ["packages/core/tests/editing/text.reference-law.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "External editing state must establish the existing complete Text invariants before the bounded projection." }
+      }
+    },
+    {
+      "id": "text.query-canonical",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": ["VAL-019:text-query-canonical"],
+      "specificationCeiling": "O(p*(q + p))",
+      "contract": {
+        "variables": [{ "name": "p", "meaning": "trigger UTF-16 code units", "ceiling": "caller trigger length" }, { "name": "q", "meaning": "query UTF-16 ceiling", "ceiling": "explicit maxQueryCodeUnits" }],
+        "time": { "bound": "O(p*(q + p))", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(p + q)", "output": "O(p + q)", "retained": "O(p + q)" },
+        "resources": { "allocations": "O(p + q)", "cacheEntries": "0 additional", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Existing weak canonical provenance skips full source validation. At most q+p code units are scanned backward and copied in that one pass, using a module-owned stateless whitespace expression; two adjacent code units protect the lower cut. Default word-start projection is O(p+q); optional last-trigger search is conservatively O(p*(p+q)). Reversing/joining copied character atoms produces a bounded token before query slicing rather than slicing the full source.",
+        "deterministicWork": ["at most q+p+1 source charAt reads on32 and100000-code-unit sources", "at most two source charCodeAt boundary reads"],
+        "resourceRationale": "No new canonical registry or retained state; output stores only trigger/query and offsets. Temporary character storage and any retained token slice are bounded by p+q.",
+        "adversarialWitness": "Long unbroken text ending in an inline trigger, zero-query ceilings, Unicode triggers and nearest-trigger recognition agree with an independent full-prefix reference.",
+        "evidence": ["packages/core/tests/editing/text.reference-law.test.mjs", "packages/core/type-tests/text.test.ts"],
+        "fullScan": { "allowed": false, "rationale": "Canonical provenance already proves source validity; only the explicit trigger/query window is relevant." }
+      }
+    },
+    {
       "id": "text.replace",
       "inherits": "linear-v1",
       "source": "packages/core/src/internal/editing/text.ts",
@@ -2401,6 +2594,25 @@
       }
     },
     {
+      "id": "text.select-canonical",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/editing/text.ts",
+      "benchmarkIDs": ["VAL-019:text-select-canonical"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "borrowed immutable snapshot and composition text code units", "ceiling": "finite live text-owner strings" }],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "one weak provenance mark per live state", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The existing private WeakSet proves canonical source text. Selection captures two offsets once and checks only adjacent UTF-16 code units; the new immutable snapshot/state shares the original text and composition rather than constructing replacement text. Unchanged selection preserves state identity.",
+        "deterministicWork": ["at most four charCodeAt reads for the two selection boundaries", "no canonical source text scan, slice or concatenation"],
+        "resourceRationale": "Only fixed snapshot/state/result wrappers are fresh; referenced immutable text and composition remain shared and the existing provenance registry has weak owner lifetime.",
+        "adversarialWitness": "Move anchor and focus near the end of a 100000-code-unit canonical string, reject a surrogate split and reject a forged ill-formed source through full external admission.",
+        "evidence": ["packages/core/tests/editing/text.reference-law.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Canonical text is already validated; only local offset boundaries change. Forged/external states still use the existing complete validation boundary." }
+      }
+    },
+    {
       "id": "toast.construct",
       "inherits": "linear-v1",
       "source": "packages/core/src/toast.ts",
@@ -2423,6 +2635,52 @@
         "adversarialWitness": "Large unique numeric IDs, duplicate numeric 0/-0 versus distinct string 0, and duplicates before a one-item visible slice.",
         "evidence": ["packages/core/tests/composites/toast.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Externally supplied items require complete normalization and uniqueness validation once before publication." }
+      }
+    },
+    {
+      "id": "toast.inputs",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/toast.ts",
+      "benchmarkIDs": ["core:toast:input-projection"],
+      "specificationCeiling": "O(n)",
+      "contract": {
+        "variables": [{ "name": "n", "meaning": "input Toast items", "ceiling": "finite input length" }],
+        "time": { "bound": "O(n)", "kind": "worst-case", "runtimeState": "all" },
+        "space": { "auxiliary": "O(1)", "output": "O(n)", "retained": "O(n)" },
+        "resources": { "allocations": "O(n)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["Input descriptors are stable during projection; arbitrary accessor cost is separate.", "Scalar strings/IDs are borrowed, while the input DTO array and records are owned immutable output."],
+        "ceilings": ["One projection pass; no countdown fields, normalization or retained source-state index."],
+        "deterministicWork": ["At 1000, 4000 and 16000 items, each input ID getter is read once."],
+        "resourceRationale": "Output has one frozen DTO per item and one frozen array. No source input, callback, previous state or index is retained.",
+        "proof": "getToastInputs maps input items once, copies the documented controlled fields, excludes null description and freezes the owned records/array.",
+        "adversarialWitness": "Large foreign readonly item descriptors, persistent duration, remaining countdown progress and literal ID type preservation.",
+        "evidence": ["packages/core/tests/composites/toast.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A complete public input array requires one materialization pass." }
+      }
+    },
+    {
+      "id": "toast.reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/toast.ts",
+      "benchmarkIDs": ["GH-24:toast-transition-work"],
+      "specificationCeiling": "O(1 + n + m + l)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "previous item count", "ceiling": "finite state length" },
+          { "name": "m", "meaning": "proposed or external item count", "ceiling": "finite input length" },
+          { "name": "l", "meaning": "normalized external or foreign text code units", "ceiling": "zero for canonical proposal reconciliation" }
+        ],
+        "time": { "bound": "O(1 + n + m + l)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1 + n + m + l)", "output": "O(1 + n + m + l)", "retained": "O(1 + n + m + l)" },
+        "resources": { "allocations": "O(1 + n + m + l)", "cacheEntries": "O(1)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "assumptions": ["ID Map lookup is expected constant time; caller descriptors are stable during one call.", "Canonical proposal states are immutable and factory-owned; foreign states require validation.", "Input equivalence excludes remainingMs because elapsed time is internal, not controlled input."],
+        "ceilings": ["Canonical input proposals and same-array clock proposals take O(1) time/space and preserve item-array identity.", "External synchronization validates all supplied items and retains countdown only for matching ID and duration.", "Input equivalence takes O(1) for identical arrays or unequal lengths, otherwise O(n) time/O(1) auxiliary."],
+        "deterministicWork": ["At 1000, 4000 and 16000 items, reconciled canonical states accept pause and same-array clock progress with zero normalization and zero item mapping.", "Foreign alias mutation after reconciliation remains rejected rather than receiving canonical provenance."],
+        "resourceRationale": "Only temporary per-operation ID indexes and immutable output are allocated. The existing weak provenance owner marks only results derived from canonical states; no retained index or previous-state reference is added.",
+        "proof": "Proposal reconciliation shares previous items for non-clock or identical-array proposals; changed clock proposals index proposed IDs once and project previous membership once. External reconciliation normalizes once, indexes previous IDs once and projects normalized items once. Provenance is propagated only from canonical previous/proposed inputs. Equivalence compares controlled fields without materialization.",
+        "adversarialWitness": "Large canonical queues, timeout removals, retained same-duration progress, changed-duration resets, foreign mutable aliases, invalid limits, duplicate external IDs and incompatible public generic domains.",
+        "evidence": ["packages/core/tests/composites/toast.test.mjs", "packages/dom/tests/toast.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Changed clock membership needs full output projection; external items and foreign states require complete validation. Canonical constant-size follow-up events do not scan items." }
       }
     },
     {
@@ -2449,6 +2707,474 @@
         "adversarialWitness": "Large queues under unbounded defaults, every canonical producer, caller-owned mutable item arrays, changed per-call limits, overflow command order, duplicate IDs, invalid elapsed time and controlled zero-remaining-time proposals.",
         "evidence": ["packages/core/tests/composites/toast.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Foreign state needs validation, and content-changing events may scan or materialize their collection. Canonical flag changes and inert ticks do neither." }
+      }
+    },
+    {
+      "id": "transfer.composition",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/transfer.ts",
+      "benchmarkIDs": ["core:transfer:atomic:4096"],
+      "specificationCeiling": "O(n + s log s + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "shared tree node cardinality including buckets", "ceiling": "Tree maxItems" },
+          { "name": "s", "meaning": "selected pane identities", "ceiling": "s <= n" },
+          { "name": "q", "meaning": "eligible focus candidates visited", "ceiling": "q <= n and maxScan" }
+        ],
+        "time": { "bound": "O(n + s log s + q)", "kind": "worst-case", "runtimeState": "all" },
+        "space": { "auxiliary": "O(n + s)", "output": "O(n + s)", "retained": "O(n + s)" },
+        "resources": { "allocations": "O(n + s)", "cacheEntries": "O(n + s)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Cold selected inputs are bounded by their borrowed pane size before indexed capture; caller iterators are not consumed. One canonical TreeReorder owns membership. Explicit moves capture j<=n roots once and call its atomic batch event once; pane rebase delegates Selection normalization and Listbox eligible edge navigation. Keyboard events delegate Listbox without rebuilding topology. Membership refusal preserves the complete previous transaction. Weak owner entries retain only live immutable snapshots.",
+        "adversarialWitness": "Independent bucket examples cover complete moves/refusals, disabled/capacity/stale rejection, source and empty-pane focus repair, controlled selection rebasing and callback scan exhaustion. Dense16/128/4096moves bound Map writes by18*(n+2); retired-state WeakRef collection is checked with its successor and a borrowed view retained.",
+        "evidence": ["packages/core/tests/runtime/transfer.test.mjs", "packages/core/type-tests/transfer.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit accepted membership changes must emit a complete immutable node snapshot; ordinary pane navigation borrows existing domains." }
+      }
+    },
+    {
+      "id": "transfer.domain-read",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/transfer.ts",
+      "benchmarkIDs": ["core:transfer:borrowed-domain"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "A weak owner lookup returns one retained child Sequence without constructing a Tree, scanning nodes or duplicating an item index. Only a fixed Result wrapper is temporary.",
+        "adversarialWitness": "Repeated reads preserve Sequence identity, and navigation at16/128/4096items performs zero Map writes and preserves the borrowed domain.",
+        "evidence": ["packages/core/tests/runtime/transfer.test.mjs"]
+      }
+    },
+    {
+      "id": "tree-select.event",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-state-work"],
+      "specificationCeiling": "O(v + s + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "borrowed full source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "borrowed result navigation nodes", "ceiling": "n" },
+          { "name": "v", "meaning": "existing TreeView/Expansion admission, navigation, raw result projection or explicit view replacement work", "ceiling": "full source plus current result tree node counts" },
+          { "name": "s", "meaning": "selected values updated only on selection events", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "query validation code units", "ceiling": "finite immutable caller string" }
+        ],
+        "time": { "bound": "O(v + s + q)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(v + s)", "output": "O(v + s + q)", "retained": "O(n + r + s + q)" },
+        "resources": { "allocations": "O(v + s)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Issued immutable states share the full-domain Selection on navigation/open/close/query/results. Existing TreeView owns edge and hierarchy navigation; existing Expansion owns persistent branch changes; existing Selection owns only actual value changes. Query requests contain only query text; identity rejects stale responses before payload reads. Query clear/result admission explicitly replaces the navigation view, without selected-tuple normalization.",
+        "adversarialWitness": "A-to-B-to-A stale response getters, projected branch eligibility, empty results, refused immutable proposals and selected-sort counters at32/512/4096 leaves.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs", "packages/core/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Existing visible navigation and explicit result/expansion replacement can scan their domains; ordinary navigation/query never rescans selected values." }
+      }
+    },
+    {
+      "id": "tree-select.match-read",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-results-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "borrowed full source tree nodes", "ceiling": "canonical Tree preorder maxItems" },
+          { "name": "r", "meaning": "retained navigation projection nodes", "ceiling": "n" },
+          { "name": "m", "meaning": "retained distinct matches", "ceiling": "n" }
+        ],
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(n + r + m)" },
+        "resources": { "allocations": "0", "cacheEntries": "O(m)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Borrow the one membership Set admitted by this immutable result projection; one Set.has and no collection traversal or allocation per read.",
+        "adversarialWitness": "Repeated matches/context-only ancestors, false membership and caller mutation after capture.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Result rows read the retained membership index." }
+      }
+    },
+    {
+      "id": "tree-select.reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-state-work"],
+      "specificationCeiling": "O(1 + v)",
+      "contract": {
+        "variables": [
+          { "name": "v", "meaning": "existing TreeView mixed visibility or explicit navigation replacement work", "ceiling": "source plus result tree nodes" },
+          { "name": "n", "meaning": "borrowed full source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "borrowed result navigation nodes", "ceiling": "n" },
+          { "name": "s", "meaning": "shared selected values", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "borrowed query text code units", "ceiling": "finite immutable query string" }
+        ],
+        "time": { "bound": "O(1 + v)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(1 + v)", "output": "O(1 + v)", "retained": "O(n + r + s + q)" },
+        "resources": { "allocations": "O(1 + v)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Borrow issued selected/open/search/expansion/cursor parts and use existing TreeView canonical reconciliation. Proven view parts share identity without traversal; only mixed visibility or source-domain replacement invokes existing view admission. A refused query keeps its protocol, while same-request results remain admissible. Selection is never normalized or copied.",
+        "adversarialWitness": "All32 boolean part combinations, hidden mixed cursors, refused query transitions, same-request result acceptance and large selected-snapshot identity/work counters.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs", "packages/core/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Only existing mixed visibility or explicit source-view replacement may scan navigation; selected values are shared." }
+      }
+    },
+    {
+      "id": "tree-select.results",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-results-work"],
+      "specificationCeiling": "O(n + m + r)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "full source tree nodes", "ceiling": "canonical Tree preorder maxItems" },
+          { "name": "m", "meaning": "distinct application match inputs", "ceiling": "n; rejected before indexed getters" },
+          { "name": "r", "meaning": "match and ancestor navigation nodes", "ceiling": "n" }
+        ],
+        "time": { "bound": "O(n + m + r)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(r + m)", "output": "O(r + m)", "retained": "O(n + r + m)" },
+        "resources": { "allocations": "O(r + m)", "cacheEntries": "O(m)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "One bounded indexed input capture creates the owned membership Set. Ancestor walks stop at already included nodes, so each included parent is observed once before one canonical preorder pass emits r links. Existing Tree construction owns the navigation index; complete matches borrow the source Tree. Retention includes the borrowed full source owner, not an extra full-tree index.",
+        "adversarialWitness": "Shared ancestor chains to depth2048, reverse match order, empty/full matches, custom array iterator, invalid length and over-ceiling throwing first getter.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs", "packages/core/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit application search-result admission orders a new immutable navigation domain; never per item/render." }
+      }
+    },
+    {
+      "id": "tree-select.state",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-state-work"],
+      "specificationCeiling": "O(n + r + e + s * log(s + 1) + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "admitted result tree nodes", "ceiling": "n" },
+          { "name": "e", "meaning": "external expansion inputs", "ceiling": "source Tree maxItems" },
+          { "name": "s", "meaning": "external selected inputs", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "query code units", "ceiling": "finite immutable caller string" }
+        ],
+        "time": { "bound": "O(n + r + e + s * log(s + 1) + q)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(n + r + e + s)", "output": "O(n + r + s + q)", "retained": "O(n + r + s + q)" },
+        "resources": { "allocations": "O(n + r + e + s)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Bounded indexed selected/expanded capture feeds existing TreeView/Selection/Expansion admission. Full value and persistent expansion ownership remain separate from result navigation; source/result Tree owners and query text are borrowed immutably, with no duplicate selected index or runtime registry.",
+        "adversarialWitness": "Foreign result provenance before selected getters, selection cardinality, malformed text, custom iterators and over-ceiling indexed arrays.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs", "packages/core/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit external state construction admits complete domain values; it is not the canonical event path." }
+      }
+    },
+    {
+      "id": "tree-select.sync",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-select.ts",
+      "benchmarkIDs": ["core:tree-select-state-work"],
+      "specificationCeiling": "O(n + r + e + s * log(s + 1) + q)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "source tree nodes", "ceiling": "source Tree maxItems" },
+          { "name": "r", "meaning": "result navigation nodes", "ceiling": "n" },
+          { "name": "e", "meaning": "supplied expansion entries", "ceiling": "source Tree maxItems" },
+          { "name": "s", "meaning": "supplied selected entries", "ceiling": "source Tree maxItems" },
+          { "name": "q", "meaning": "changed query code units", "ceiling": "finite immutable caller string" }
+        ],
+        "time": { "bound": "O(n + r + e + s * log(s + 1) + q)", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(n + r + e + s)", "output": "O(n + r + s + q)", "retained": "O(n + r + s + q)" },
+        "resources": { "allocations": "O(n + r + e + s)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Capture one optional external frame, delegate query/results events and Selection/Expansion/TreeView admission, validate all parts before returning effects. Unchanged query preserves its request; absent or identical selected arrays skip normalization. Canonically equal external values reuse prior owners. Stale result payloads are refused before access; rejected frames cannot mutate accepted snapshots. An explicit first fallback repairs only an omitted hidden cursor through existing TreeView first-eligible navigation; the default preserve and explicit cursor admission remain strict.",
+        "adversarialWitness": "Coordinated results/current changes, same-query value-only updates, pending request preservation, invalid cardinality after a proposed query change, indexed iterator/ceiling refusal and zero selected sorts on unrelated frames.",
+        "evidence": ["packages/core/tests/composites/tree-select.test.mjs", "packages/core/type-tests/tree-select.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Explicit external value/projection admission may validate full supplied data; absent/identity-equal selected values are borrowed." }
+      }
+    },
+    {
+      "id": "tree-selection.accept",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(s + p + u + c)",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "tree nodes", "ceiling": "Tree maxItems" },
+          { "name": "s", "meaning": "previous selected leaves", "ceiling": "tree node count" },
+          { "name": "p", "meaning": "canonical proposed selected leaves", "ceiling": "tree node count" },
+          { "name": "u", "meaning": "changed ancestor work capped by the dense fold", "ceiling": "minimum of changed eligible leaf depths and node count" },
+          { "name": "c", "meaning": "changed checked-value output", "ceiling": "tree node count" }
+        ],
+        "time": { "bound": "O(s + p + u + c)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(s + p + u)", "output": "O(c)", "retained": "O(n + p)" },
+        "resources": { "allocations": "O(s + p + u + c)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "The existing private Selection domain brand admits only this model's canonical leaf state, without normalizing or copying its selected values. Reuse replace's sparse-ancestor/dense-fold publication owner. Identical state acceptance is constant-time. Retained snapshots share the existing portable leaf domain, not the aggregation owner or its count map; no cache/registry is added.",
+        "adversarialWitness": "Other models including empty domains, public Tree preorder states, prototype forgeries and wrapped states refuse before reading foreign fields. Old snapshots remain immutable and do not keep the aggregation owner alive.",
+        "evidence": ["packages/core/tests/composites/tree-selection.test.mjs", "packages/dom/tests/tree-view.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Changed complete selected snapshots require a delta comparison; dense aggregate changes use the existing node fold." }
+      }
+    },
+    {
+      "id": "tree-selection.construct",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": [
+        "core:tree-selection-work"
+      ],
+      "specificationCeiling": "O(n + d + s * log(s + 1))",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "tree nodes",
+            "ceiling": "canonical Tree preorder maxItems"
+          },
+          {
+            "name": "d",
+            "meaning": "disabled input identities",
+            "ceiling": "canonical Tree preorder maxItems"
+          },
+          {
+            "name": "s",
+            "meaning": "selected input identities",
+            "ceiling": "canonical Tree preorder maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(n + d + s * log(s + 1))",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(n + s)",
+          "output": "O(1)",
+          "retained": "O(n + s)"
+        },
+        "resources": {
+          "allocations": "O(n + s)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Existing Tree preorder/parent/subtree facts are admitted once. One leaf domain and one reverse fold retain eligible and checked descendant counts. Selection owns canonical leaf input ordering; disabled input is bounded before consumption.",
+        "adversarialWitness": "Deep ancestors, disabled self/subtree propagation, empty eligible branches and over-ceiling arrays with throwing first getters.",
+        "evidence": [
+          "packages/core/tests/composites/tree-selection.test.mjs",
+          "packages/core/type-tests/tree-selection.test.ts"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Explicit cold tree/policy construction admits and retains node-sized facts."
+        }
+      }
+    },
+    {
+      "id": "tree-selection.event",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-view.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(v + s + q + p * log(p + 1))",
+      "contract": {
+        "variables": [
+          { "name": "v", "meaning": "existing TreeView event admission and navigation work", "ceiling": "tree node count plus accepted selection count" },
+          { "name": "s", "meaning": "accepted selected leaves", "ceiling": "canonical Tree maxItems" },
+          { "name": "q", "meaning": "target subtree nodes", "ceiling": "tree node count" },
+          { "name": "p", "meaning": "proposed selected leaves", "ceiling": "canonical Tree maxItems" }
+        ],
+        "time": { "bound": "O(v + s + q + p * log(p + 1))", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(s + p)", "output": "O(p)", "retained": "O(p)" },
+        "resources": { "allocations": "O(s + p)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Reuse TreeView admission/navigation and the existing TreeSelection subtree proposal. Non-check events add constant owner/policy work and never read selected aggregation. Check events compare accepted leaf values and emit one immutable Selection candidate without accepting it.",
+        "adversarialWitness": "Hidden and disabled targets refuse; foreign owners and stale or synchronously replaced projections refuse without changing accepted TreeView state.",
+        "evidence": ["packages/core/tests/composites/tree-selection.test.mjs", "packages/core/type-tests/tree-selection.test.ts"],
+        "fullScan": { "allowed": true, "rationale": "Existing TreeView admission may validate foreign state; explicit root checks can propose every eligible leaf. Navigation adds no aggregation scan." }
+      }
+    },
+    {
+      "id": "tree-selection.normalize",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(s * log(s + 1))",
+      "contract": {
+        "variables": [{ "name": "s", "meaning": "external selected input identities", "ceiling": "canonical Tree maxItems before element reads" }],
+        "time": { "bound": "O(s * log(s + 1))", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(s)", "output": "O(s)", "retained": "O(s)" },
+        "resources": { "allocations": "O(s)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Reuse the same bounded index snapshot and canonical leaf Selection admission as replace without publishing aggregate counts or checked values. The guard precedes length and element reads; external iterators are not consumed.",
+        "adversarialWitness": "Duplicate/out-of-order leaves, branch IDs, custom iterators, over-ceiling inputs and an element getter attempting replacement during normalization.",
+        "evidence": ["packages/core/tests/composites/tree-selection.test.mjs", "packages/core/type-tests/tree-selection.test.ts", "packages/dom/tests/tree-view.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Explicit external array admission validates every bounded input identity once." }
+      }
+    },
+    {
+      "id": "tree-selection.propose",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": [
+        "core:tree-selection-work"
+      ],
+      "specificationCeiling": "O(q + s + p * log(p + 1))",
+      "contract": {
+        "variables": [
+          {
+            "name": "q",
+            "meaning": "target subtree nodes",
+            "ceiling": "tree node count"
+          },
+          {
+            "name": "s",
+            "meaning": "current selected leaves",
+            "ceiling": "canonical Tree maxItems"
+          },
+          {
+            "name": "p",
+            "meaning": "proposed selected leaves",
+            "ceiling": "canonical Tree maxItems"
+          }
+        ],
+        "time": {
+          "bound": "O(q + s + p * log(p + 1))",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "space": {
+          "auxiliary": "O(s + p)",
+          "output": "O(p)",
+          "retained": "O(p)"
+        },
+        "resources": {
+          "allocations": "O(s + p)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Visit only the existing Tree subtree interval, changing eligible terminal IDs in a local candidate set. Selection emits one canonical immutable leaf array; the live projection is not mutated.",
+        "adversarialWitness": "Root proposal includes every eligible leaf but preserves disabled selected values; refused/unchanged proposals preserve current value identity.",
+        "evidence": [
+          "packages/core/tests/composites/tree-selection.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A root request explicitly targets the whole tree and can emit every eligible leaf."
+        }
+      }
+    },
+    {
+      "id": "tree-selection.read",
+      "inherits": "constant-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": [
+        "core:tree-selection-work"
+      ],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": {
+          "bound": "O(1)",
+          "kind": "expected",
+          "runtimeState": "trusted"
+        },
+        "proof": "Checked and disabled reads use one owner-local node lookup and scalar counts; selected reads return the current immutable Selection array without copying.",
+        "adversarialWitness": "Repeated reads of leaves and ancestors after sparse/dense replacement require no Tree port calls.",
+        "evidence": [
+          "packages/core/tests/composites/tree-selection.test.mjs"
+        ]
+      }
+    },
+    {
+      "id": "tree-selection.replace",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-selection.ts",
+      "benchmarkIDs": [
+        "core:tree-selection-work"
+      ],
+      "specificationCeiling": "O(sOld + sNew * log(sNew + 1) + u + c)",
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "tree nodes",
+            "ceiling": "canonical Tree preorder maxItems"
+          },
+          {
+            "name": "sOld",
+            "meaning": "previous selected leaves",
+            "ceiling": "canonical Tree maxItems"
+          },
+          {
+            "name": "sNew",
+            "meaning": "admitted controlled input",
+            "ceiling": "canonical Tree maxItems"
+          },
+          {
+            "name": "u",
+            "meaning": "affected ancestor work, capped by a full node fold",
+            "ceiling": "minimum of changed eligible leaf depths and node count"
+          },
+          {
+            "name": "c",
+            "meaning": "changed checked-value output",
+            "ceiling": "tree node count"
+          }
+        ],
+        "time": {
+          "bound": "O(sOld + sNew * log(sNew + 1) + u + c)",
+          "kind": "expected",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(sOld + sNew + u)",
+          "output": "O(sNew + c)",
+          "retained": "O(n + sNew)"
+        },
+        "resources": {
+          "allocations": "O(sOld + sNew + u + c)",
+          "cacheEntries": "O(n)",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "proof": "Normalize the explicit input through Selection before mutation. Sparse leaf deltas touch only ancestors; summed depths select a single full reverse fold when cheaper. Failed/reentrant admission leaves previous state unchanged.",
+        "adversarialWitness": "One leaf among1/128/4096 leaves bounds Map writes and avoids preorder reads; dense changes take at most two preorder passes. Independent aggregation checks both paths.",
+        "evidence": [
+          "packages/core/tests/composites/tree-selection.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "External selected input requires validation; a node scan is selected only when the sparse ancestor estimate reaches node count."
+        }
+      }
+    },
+    {
+      "id": "tree-view.checked-state",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-view.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(n + e + s * log(s + 1))",
+      "contract": {
+        "variables": [
+          { "name": "n", "meaning": "tree nodes for a requested visible-cursor view", "ceiling": "Tree maxItems" },
+          { "name": "e", "meaning": "external finite expansion iterable entries", "ceiling": "caller-owned finite iterable cardinality; canonical output is node-bounded" },
+          { "name": "s", "meaning": "external selected leaf input", "ceiling": "Tree maxItems before element reads" }
+        ],
+        "time": { "bound": "O(n + e + s * log(s + 1))", "kind": "expected", "runtimeState": "external" },
+        "space": { "auxiliary": "O(n + e + s)", "output": "O(n + s)", "retained": "O(n + s)" },
+        "resources": { "allocations": "O(n + e + s)", "cacheEntries": "O(n)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Reuse the model's bounded leaf admission once, existing Tree expansion normalization/visible-view owner, and immutable cursor/state constructors. A current selected-array identity reuses its canonical Selection directly; construction never accepts the proposal into the live projection.",
+        "adversarialWitness": "Foreign model provenance, hidden cursor, non-null range anchor, custom selected-array iterators and over-ceiling first getters; rejected state construction does not publish checked counts.",
+        "evidence": ["packages/core/tests/composites/tree-selection.test.mjs", "packages/core/type-tests/tree-selection.test.ts", "packages/dom/tests/tree-view.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Explicit external state construction admits selection/expansion and may create a visible-cursor view once." }
+      }
+    },
+    {
+      "id": "tree-view.reconcile",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/internal/composites/tree-view.ts",
+      "benchmarkIDs": ["core:tree-selection-work"],
+      "specificationCeiling": "O(1 + v)",
+      "contract": {
+        "variables": [
+          { "name": "v", "meaning": "visibility validation for a mixed cursor/expansion pair", "ceiling": "tree node count; zero for a pair already proven by either canonical input" },
+          { "name": "n", "meaning": "portable Tree/domain facts retained by the resulting canonical parts", "ceiling": "Tree maxItems" }
+        ],
+        "time": { "bound": "O(1 + v)", "kind": "expected", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(v)", "output": "O(1)", "retained": "O(n)" },
+        "resources": { "allocations": "O(1 + v)", "cacheEntries": "O(v)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Existing TreeView canonical-owner proof permits reuse of immutable selection/expansion/cursor objects. Single-mode cardinality and mixed-pair visibility remain validated. Unchanged compositions return their input state; no selected values are enumerated or materialized. Foreign inputs take the existing full constructor boundary instead of this trusted bound.",
+        "adversarialWitness": "Every controlled-part combination agrees with full construction, including a cursor hidden by a mixed expansion. Foreign invalid selected values and invalid single cardinality still refuse.",
+        "evidence": ["packages/core/tests/composites/tree-selection.test.mjs", "packages/core/type-tests/tree-selection.test.ts", "packages/dom/tests/tree-view.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Only a newly combined cursor/expansion relationship may need the existing visible-domain view; canonical navigation does not scan selected values." }
       }
     },
     {

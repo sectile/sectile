@@ -18,6 +18,32 @@
     }
   },
   "families": {
+    "timer": {
+      "core": {
+        "subpath": "./timer",
+        "root": false,
+        "runtime": ["applyTimerEvent", "createTimerState", "getTimerParts", "getTimerProgress", "tryCreateTimerState"],
+        "types": ["TimerCommand", "TimerEvent", "TimerParts", "TimerPolicies", "TimerState", "TimerUpdate"]
+      },
+      "dom": {
+        "subpath": "./timer",
+        "root": true,
+        "runtime": ["createTimer", "getTimerRootAttributes", "tryCreateTimer", "tryResolveTimerInterval"],
+        "types": ["TimerAction", "TimerAttributeRecord", "TimerCompleteHandler", "TimerConnection", "TimerErrorCode", "TimerItemType", "TimerOptions", "TimerRootAttributesOptions", "TimerTickHandler", "TimerUpdateHandler"]
+      },
+      "terminal": {
+        "subpath": "./timer",
+        "root": true,
+        "runtime": ["createTimer", "tryCreateTimer"],
+        "types": ["TimerCompleteHandler", "TimerConnection", "TimerOptions", "TimerTickHandler", "TimerUpdateHandler"]
+      },
+      "vue": {
+        "subpath": "./timer",
+        "root": true,
+        "runtime": ["TimerActionTrigger", "TimerArea", "TimerControl", "TimerItem", "TimerRoot", "TimerSeparator"],
+        "types": ["TimerCompleteHandler", "TimerPartProps", "TimerRootProps", "TimerSlotProps", "TimerTickHandler"]
+      }
+    },
     "meter": {
       "core": {
         "subpath": "./meter",
@@ -80,8 +106,8 @@
       "dom": {
         "subpath": "./meter-group",
         "root": true,
-        "runtime": ["createMeterGroup", "getMeterGroupRootAttributes", "getMeterGroupSegmentAttributes", "getMeterGroupTrackAttributes", "tryCreateMeterGroup"],
-        "types": ["MeterGroupAttributeRecord", "MeterGroupConnection", "MeterGroupControlledValues", "MeterGroupOptions", "MeterGroupRootAttributesOptions", "MeterGroupSegmentAttributesOptions", "MeterGroupValueFormatter"]
+        "runtime": ["createMeterGroup", "getMeterGroupAttributes", "getMeterGroupRootAttributes", "getMeterGroupSegmentAttributes", "getMeterGroupTrackAttributes", "tryCreateMeterGroup"],
+        "types": ["MeterGroupAttributeRecord", "MeterGroupAttributes", "MeterGroupConnection", "MeterGroupControlledValues", "MeterGroupOptions", "MeterGroupRootAttributesOptions", "MeterGroupSegmentAttributesOptions", "MeterGroupValueFormatter"]
       },
       "vue": {
         "subpath": "./meter-group",

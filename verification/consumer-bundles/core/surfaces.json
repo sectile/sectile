@@ -248,6 +248,7 @@
         "getColorAreaValue",
         "getColorCoordinates",
         "parseColorValue",
+        "reconcileColorPickerState",
         "setColorCoordinate",
         "tryCreateColorPickerState",
         "tryCreateColorValue"
@@ -513,14 +514,35 @@
       ]
     },
     {
+      "subpath": "./json",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "tryMeasureJSON",
+        "tryParseJSON",
+        "trySnapshotJSON",
+        "tryStringifyJSON"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./layer-stack",
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "applyLayerPresentationEvent",
         "applyLayerStackEvent",
+        "createLayerPresentationState",
         "createLayerStackState",
         "getInteractiveLayerIDs",
         "getTopLayer",
+        "tryCreateLayerPresentationState",
         "tryCreateLayerStackState"
       ],
       "typeBearing": true,
@@ -660,6 +682,7 @@
       "runtimeExports": [
         "applyMultiThumbSliderEvent",
         "createMultiThumbSliderState",
+        "getMultiThumbSliderThumbBounds",
         "tryCreateMultiThumbSliderState"
       ],
       "typeBearing": true,
@@ -788,6 +811,7 @@
       "runtimeExports": [
         "applyQuantityFieldEvent",
         "createQuantityFieldState",
+        "getQuantityFieldDisplayUnits",
         "parseQuantityInput",
         "tryCreateQuantityFieldState"
       ],
@@ -869,8 +893,11 @@
       "runtimeExports": [
         "applySequenceReorderEvent",
         "applyTreeReorderEvent",
+        "canMoveTreeReorderNode",
         "createSequenceReorderState",
         "createTreeReorderState",
+        "getSequenceReorderOrder",
+        "getTreeReorderHierarchy",
         "tryCreateSequenceReorderState",
         "tryCreateTreeReorderState"
       ],
@@ -1101,6 +1128,7 @@
         "commitTextComposition",
         "createTextEditingState",
         "createTextSnapshot",
+        "findTextQuery",
         "isTextCodeUnitBoundary",
         "isWellFormedPlainText",
         "normalizeTextEditingState",
@@ -1144,7 +1172,11 @@
       "platform": "browser",
       "runtimeExports": [
         "applyToastEvent",
+        "areToastInputsEqual",
         "createToastState",
+        "getToastInputs",
+        "reconcileToastProposal",
+        "reconcileToastState",
         "tryCreateToastState"
       ],
       "typeBearing": true,
@@ -1219,6 +1251,26 @@
       ]
     },
     {
+      "subpath": "./transfer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTransferEvent",
+        "createTransferState",
+        "getTransferItems",
+        "reconcileTransferState",
+        "synchronizeTransferState",
+        "tryCreateTransferState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./tree",
       "classification": "named-subpath",
       "platform": "browser",
@@ -1254,12 +1306,38 @@
       ]
     },
     {
+      "subpath": "./tree-select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "applyTreeSelectEvent",
+        "createTreeSelectResults",
+        "createTreeSelectState",
+        "reconcileTreeSelectState",
+        "synchronizeTreeSelectState",
+        "tryCreateTreeSelectResults",
+        "tryCreateTreeSelectState"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
       "subpath": "./tree-view",
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "applyTreeViewCheckEvent",
         "applyTreeViewEvent",
+        "createTreeSelection",
+        "createTreeViewCheckState",
         "createTreeViewState",
+        "reconcileTreeViewState",
+        "tryCreateTreeSelection",
+        "tryCreateTreeViewCheckState",
         "tryCreateTreeViewState"
       ],
       "typeBearing": true,

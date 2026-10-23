@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { readBuildConfig } from '../tools/tooling/build.mjs';
-import { inspectSourceMapPackages, packageNames, validateSourceMapBudget } from './lib/source-map-policy.mjs';
+import { inspectSourceMapPackages, packageNames, validateSourceMapReport } from './lib/source-map-policy.mjs';
 
 const mode = process.argv[2] ?? 'check';
 assert.ok(mode === 'check' || mode === 'record', `unknown source-map mode: ${mode}`);
@@ -38,7 +38,7 @@ if (mode === 'record') {
   await mkdir('verification/source-maps', { recursive: true });
   await writeFile(baselinePath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 }
-else validateSourceMapBudget(report, JSON.parse(await readFile(baselinePath, 'utf8')));
+else validateSourceMapReport(report, JSON.parse(await readFile(baselinePath, 'utf8')));
 console.log(JSON.stringify({
   status: 'passed',
   mode,

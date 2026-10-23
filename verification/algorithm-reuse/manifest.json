@@ -15,6 +15,14 @@
   ],
   "rules": [
     {
+      "id": "core-json-fixed-lexical-domains",
+      "detectors": ["linear-membership"],
+      "paths": ["packages/core/src/structures/json.ts"],
+      "classification": "bounded-small",
+      "owner": null,
+      "rationale": "JSON admission checks fixed domains: four execution-limit keys per option field and eight single-character escape spellings per text escape. Membership work is constant per visit, with total text visits bounded by source bytes; neither scans caller-owned collections or requires a retained index."
+    },
+    {
       "id": "core-trusted-transition-validation",
       "detectors": ["whole-state-validation"],
       "prefixes": ["packages/core/src/internal/composites/"],

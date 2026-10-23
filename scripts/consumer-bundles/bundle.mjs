@@ -61,6 +61,7 @@ export function deriveFixtures(fragments) {
 
 function representativeNamedExport(packageName, subpath, surface) {
   const preferred = new Map([
+    ['core:./json', 'trySnapshotJSON'],
     ['core:./index-span', 'createIndexSpanSet'],
     ['core:./selection-expression', 'createSelectionExpression'],
     ['core:./metric-index', 'createMetricIndex'],
@@ -71,6 +72,13 @@ function representativeNamedExport(packageName, subpath, surface) {
     ['core:./range', 'createExactRatio'],
     ['chart:./projection', 'cloneChartProjection'],
     ['dom:./identity', 'stableIDElementToken'],
+    ['dom:./checkbox-tree', 'createCheckboxTree'],
+    ['dom:./tree-select', 'createTreeSelect'],
+    ['dom:./drag-drop', 'connectDragSource'],
+    ['vue:./checkbox-tree', 'CheckboxTreeRoot'],
+    ['vue:./tree-select', 'TreeSelectRoot'],
+    ['vue:./drag-drop', 'useDragSource'],
+    ['vue:./form/file-input', 'FileInputRoot'],
   ]).get(`${packageName}:${subpath}`);
   if (preferred !== undefined) {
     assert.ok(surface.runtimeExports.includes(preferred), `${packageName}:${subpath}: representative export missing`);

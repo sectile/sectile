@@ -36,6 +36,8 @@ export function validateSourceMapFiles(contents) {
   const javascript = paths.filter((path) => path.endsWith('.js'));
   const declarations = paths.filter((path) => path.endsWith('.d.ts'));
   const maps = paths.filter((path) => path.endsWith('.js.map'));
+  const stylesheets = paths.filter(path => path.endsWith('.css') && !path.endsWith('.source.css'));
+  const cssMaps = paths.filter(path => path.endsWith('.css.map'));
   const declarationMaps = paths.filter((path) => path.endsWith('.d.ts.map'));
   assert.deepEqual(declarationMaps, [], `declaration maps are forbidden: ${declarationMaps.join(', ')}`);
   const referenced = new Set();
@@ -52,11 +54,21 @@ export function validateSourceMapFiles(contents) {
     referenced.add(mapPath);
   }
   assert.deepEqual([...referenced].sort(), maps, 'every JavaScript map must be referenced exactly once');
+  const cssReferenced = [];
+  for (const path of stylesheets) {
+    const references = [...contents.get(path).matchAll(/\/\*[#@]\s*sourceMappingURL=([^\s*]+)\s*\*\//gu)].map(match => match[1]);
+    assert.equal(references.length, 1, `${path}: exactly one external CSS sourceMappingURL required`);
+    const mapPath = normalize(join(dirname(path), references[0]));
+    assert.equal(mapPath, `${path}.map`, `${path}: CSS map must be adjacent`);
+    assert.ok(contents.has(mapPath), `${path}: dangling CSS source map`);
+    cssReferenced.push(mapPath);
+  }
+  assert.deepEqual(cssReferenced.sort(), cssMaps, 'every CSS map must be referenced exactly once');
   for (const path of declarations) {
     const source = contents.get(path);
     assert.ok(!/sourceMappingURL=/u.test(source), `${path}: stale declaration-map reference`);
   }
-  for (const path of maps) {
+  for (const path of [...maps, ...cssMaps]) {
     const map = JSON.parse(contents.get(path));
     assert.equal(map.version, 3, `${path}: unsupported source-map version`);
     assert.ok(Array.isArray(map.sources) && map.sources.length > 0, `${path}: source list required`);
@@ -64,8 +76,13 @@ export function validateSourceMapFiles(contents) {
     assert.equal(map.file, path.slice(path.lastIndexOf('/') + 1, -4), `${path}: source-map file target drifted`);
     assertPortableSourcePath(path, map.sourceRoot ?? '');
     for (const source of map.sources) assertPortableSourcePath(path, source);
+    if (path.endsWith('.css.map')) {
+      assert.ok(!map.sourceRoot, `${path}: CSS sourceRoot must be empty`);
+      for (const source of map.sources) assert.ok(contents.has(normalize(join(dirname(path), source))), `${path}: CSS source must be shipped: ${source}`);
+    }
   }
-  return Object.freeze({ javascriptFiles: javascript.length, declarationFiles: declarations.length, sourceMapFiles: maps.length, declarationMapFiles: 0 });
+  return Object.freeze({ javascriptFiles: javascript.length, declarationFiles: declarations.length, sourceMapFiles: maps.length, declarationMapFiles: 0,
+    ...(stylesheets.length || cssMaps.length ? { cssFiles: stylesheets.length, cssSourceMapFiles: cssMaps.length } : {}) });
 }
 
 function assertPortableSourcePath(mapPath, source) {
@@ -74,16 +91,15 @@ function assertPortableSourcePath(mapPath, source) {
     `${mapPath}: private or URL source path is forbidden: ${source}`);
 }
 
-export function validateSourceMapBudget(current, baseline) {
+export function validateSourceMapReport(current, baseline) {
   assert.equal(current.schemaVersion, baseline.schemaVersion, 'source-map baseline schema drifted');
   const expected = new Map(baseline.packages.map((entry) => [entry.package, entry]));
+  assert.equal(expected.size, baseline.packages.length, 'duplicate source-map baseline packages');
+  assert.deepEqual(current.packages.map(({ package: name }) => name).sort(), [...expected.keys()].sort(), 'source-map package coverage drifted');
   for (const entry of current.packages) {
     const before = expected.get(entry.package);
     assert.ok(before !== undefined, `${entry.package}: source-map baseline missing`);
-    for (const key of ['tarballBytes', 'unpackedBytes']) {
-      const ceiling = Math.ceil(before.packed[key] * 1.05) + 16;
-      assert.ok(entry.packed[key] <= ceiling, `${entry.package}: ${key} ${entry.packed[key]} exceeds ${ceiling}`);
-    }
+    // The root consumer-install gate owns payload and category ceilings.
     assert.equal(entry.declarationMapFiles, 0, `${entry.package}: declaration maps must remain absent`);
   }
 }

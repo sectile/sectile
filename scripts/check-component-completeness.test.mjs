@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-test('generic Core support subpaths do not require host component projections', () => {
+test('support subpaths stay separate from renderer-neutral component coverage', () => {
   const result = spawnSync(process.execPath, ['scripts/check-component-completeness.mjs'], {
     cwd: process.cwd(),
     encoding: 'utf8',

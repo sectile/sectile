@@ -64,10 +64,18 @@
         "ColorPickerTextInput",
         "ColorPickerValueText",
         "ComboboxContent",
+        "ComboboxEditor",
         "ComboboxEmpty",
         "ComboboxInput",
         "ComboboxItem",
+        "ComboboxResults",
         "ComboboxRoot",
+        "ContextMenuContent",
+        "ContextMenuItem",
+        "ContextMenuRoot",
+        "ContextMenuSeparator",
+        "ContextMenuSubContent",
+        "ContextMenuTrigger",
         "DialogClose",
         "DialogContent",
         "DialogDescription",
@@ -181,6 +189,7 @@
         "SelectRoot",
         "SelectTrigger",
         "SelectValue",
+        "SequenceReorderHandle",
         "SequenceReorderItem",
         "SequenceReorderRoot",
         "SliderRange",
@@ -237,8 +246,13 @@
         "TreeGridCell",
         "TreeGridDisclosure",
         "TreeGridEditor",
+        "TreeGridGroup",
+        "TreeGridHeader",
+        "TreeGridHeaderCell",
         "TreeGridRoot",
         "TreeGridRow",
+        "TreeReorderDropTarget",
+        "TreeReorderHandle",
         "TreeReorderItem",
         "TreeReorderRoot",
         "TreeViewDisclosure",
@@ -442,12 +456,31 @@
       ]
     },
     {
+      "subpath": "./checkbox-tree",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "CheckboxTreeDisclosure",
+        "CheckboxTreeGroup",
+        "CheckboxTreeItem",
+        "CheckboxTreeRoot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./color-picker",
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
         "ColorPickerAlphaSlider",
         "ColorPickerArea",
+        "ColorPickerAreaSurface",
         "ColorPickerAreaThumb",
         "ColorPickerChannelInput",
         "ColorPickerControl",
@@ -475,14 +508,49 @@
       "platform": "browser",
       "runtimeExports": [
         "ComboboxContent",
+        "ComboboxEditor",
         "ComboboxEmpty",
         "ComboboxInput",
         "ComboboxItem",
+        "ComboboxResults",
         "ComboboxRoot"
       ],
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": "ComboboxContent",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./component-handle",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createComponentHandle"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./context-menu",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "ContextMenuContent",
+        "ContextMenuItem",
+        "ContextMenuRoot",
+        "ContextMenuSeparator",
+        "ContextMenuSubContent",
+        "ContextMenuTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": "ContextMenuContent",
       "fixtureModes": [
         "side-effect"
       ]
@@ -573,6 +641,24 @@
       "rootEquivalentExport": "DisclosureContent",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./drag-drop",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "createDataTransferFormat",
+        "tryCreateDataTransferFormat",
+        "useDragSource",
+        "useDropTarget"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -672,6 +758,72 @@
       ]
     },
     {
+      "subpath": "./form-boundary",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "provideFormBoundary",
+        "provideFormControlReset",
+        "useFormFieldDefaults"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./form/file-input",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "FileInputClear",
+        "FileInputDropzone",
+        "FileInputInput",
+        "FileInputRoot",
+        "FileInputTrigger"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./form/file-upload",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "useFileUpload",
+        "useFileUploadGroup"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/form",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./fullscreen",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "useFullscreen"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./grid",
       "classification": "named-subpath",
       "platform": "browser",
@@ -692,9 +844,19 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "HostPortal",
         "HostProvider",
+        "provideHostActive",
+        "provideHostLayer",
+        "provideHostLayerParent",
+        "provideHostPopup",
+        "provideHostPortal",
+        "useHostActive",
         "useHostDirection",
         "useHostId",
+        "useHostLayer",
+        "useHostLayerParent",
+        "useHostPopup",
         "useHostPortalTarget"
       ],
       "typeBearing": true,
@@ -702,6 +864,21 @@
       "rootEquivalentExport": "HostProvider",
       "fixtureModes": [
         "side-effect"
+      ]
+    },
+    {
+      "subpath": "./image",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "useImage"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
       ]
     },
     {
@@ -724,10 +901,28 @@
       ]
     },
     {
+      "subpath": "./media-gesture",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "useMediaGesture"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./menu",
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "ContextMenuContent",
+        "ContextMenuRoot",
+        "ContextMenuTrigger",
         "MenuButtonContent",
         "MenuButtonRoot",
         "MenuButtonTrigger",
@@ -740,7 +935,7 @@
       ],
       "typeBearing": true,
       "optionalPeer": null,
-      "rootEquivalentExport": "MenuButtonContent",
+      "rootEquivalentExport": "ContextMenuContent",
       "fixtureModes": [
         "side-effect"
       ]
@@ -942,6 +1137,7 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "Anchor",
         "Primitive",
         "renderPrimitive"
       ],
@@ -1025,14 +1221,17 @@
       "classification": "named-subpath",
       "platform": "browser",
       "runtimeExports": [
+        "SequenceReorderHandle",
         "SequenceReorderItem",
         "SequenceReorderRoot",
+        "TreeReorderDropTarget",
+        "TreeReorderHandle",
         "TreeReorderItem",
         "TreeReorderRoot"
       ],
       "typeBearing": true,
       "optionalPeer": null,
-      "rootEquivalentExport": "SequenceReorderItem",
+      "rootEquivalentExport": "SequenceReorderHandle",
       "fixtureModes": [
         "side-effect"
       ]
@@ -1341,6 +1540,23 @@
       ]
     },
     {
+      "subpath": "./temporal/date-time-range-field",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "DateTimeRangeFieldEndInput",
+        "DateTimeRangeFieldRoot",
+        "DateTimeRangeFieldStartInput"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
       "subpath": "./temporal/date-time-range-picker",
       "classification": "optional-domain",
       "platform": "browser",
@@ -1433,12 +1649,20 @@
       "runtimeExports": [
         "RangeCalendarCell",
         "RangeCalendarContent",
+        "RangeCalendarEndInput",
         "RangeCalendarGrid",
+        "RangeCalendarMonthCell",
+        "RangeCalendarMonthViewTrigger",
         "RangeCalendarNextMonth",
+        "RangeCalendarNextWeek",
         "RangeCalendarNextYear",
         "RangeCalendarPreviousMonth",
+        "RangeCalendarPreviousWeek",
         "RangeCalendarPreviousYear",
-        "RangeCalendarRoot"
+        "RangeCalendarRoot",
+        "RangeCalendarStartInput",
+        "RangeCalendarWeekViewTrigger",
+        "RangeCalendarYearViewTrigger"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/temporal",
@@ -1454,6 +1678,7 @@
       "platform": "browser",
       "runtimeExports": [
         "TemporalProvider",
+        "useTemporalFormatter",
         "useTemporalReferenceDate"
       ],
       "typeBearing": true,
@@ -1470,6 +1695,31 @@
       "platform": "browser",
       "runtimeExports": [
         "TimeField"
+      ],
+      "typeBearing": true,
+      "optionalPeer": "@sectile/temporal",
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect",
+        "named"
+      ]
+    },
+    {
+      "subpath": "./temporal/time-picker",
+      "classification": "optional-domain",
+      "platform": "browser",
+      "runtimeExports": [
+        "TimePickerAnchor",
+        "TimePickerClose",
+        "TimePickerColumn",
+        "TimePickerContent",
+        "TimePickerDescription",
+        "TimePickerInput",
+        "TimePickerItem",
+        "TimePickerPortal",
+        "TimePickerRoot",
+        "TimePickerTitle",
+        "TimePickerTrigger"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/temporal",
@@ -1663,6 +1913,23 @@
       ]
     },
     {
+      "subpath": "./transfer",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "TransferItem",
+        "TransferList",
+        "TransferMove",
+        "TransferRoot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
       "subpath": "./tree-grid",
       "classification": "named-subpath",
       "platform": "browser",
@@ -1670,12 +1937,34 @@
         "TreeGridCell",
         "TreeGridDisclosure",
         "TreeGridEditor",
+        "TreeGridGroup",
+        "TreeGridHeader",
+        "TreeGridHeaderCell",
         "TreeGridRoot",
         "TreeGridRow"
       ],
       "typeBearing": true,
       "optionalPeer": null,
       "rootEquivalentExport": "TreeGridCell",
+      "fixtureModes": [
+        "side-effect"
+      ]
+    },
+    {
+      "subpath": "./tree-select",
+      "classification": "named-subpath",
+      "platform": "browser",
+      "runtimeExports": [
+        "TreeSelectContent",
+        "TreeSelectDisclosure",
+        "TreeSelectGroup",
+        "TreeSelectInput",
+        "TreeSelectItem",
+        "TreeSelectRoot"
+      ],
+      "typeBearing": true,
+      "optionalPeer": null,
+      "rootEquivalentExport": null,
       "fixtureModes": [
         "side-effect"
       ]

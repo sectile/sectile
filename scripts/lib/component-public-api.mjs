@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 
 const packageNames = Object.freeze(['core', 'dom', 'terminal', 'vue']);
-const familyNames = Object.freeze(['meter', 'meter-group', 'progress']);
+const familyNames = Object.freeze(['meter', 'meter-group', 'progress', 'timer']);
 
 export function validateComponentPublicApiManifest(manifest) {
   assert.equal(manifest?.schemaVersion, 1, 'Unsupported component public API schema.');

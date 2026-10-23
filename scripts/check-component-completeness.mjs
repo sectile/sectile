@@ -15,14 +15,39 @@ const hostPackagePaths = {
 };
 const vuePackagePath = 'packages/vue/package.json';
 const supportSubpaths = new Set([
+  'json',
   'package.json', 'adapter-runtime', 'sequence', 'selection', 'selection-expression', 'metric-index', 'geometry', 'anchored-layout', 'color', 'color-text', 'extent-index', 'range', 'index-span', 'grid-control', 'tree', 'result', 'revision', 'interaction', 'identity',
   'collection-window', 'virtual-layout', 'virtual', 'layer-stack', 'reorder', 'position', 'presence',
   'form',
-  'appearance', 'keyboard', 'layout', 'node', 'screen', 'units',
+  'appearance', 'attributes', 'layer-host', 'layout-basis', 'stylesheet', 'keyboard', 'layout', 'node', 'screen', 'units',
   'model', 'query', 'source', 'data-table', 'data-grid', 'data-tree-grid',
   'tabular', 'temporal', 'chart',
 ]);
-const vueOnlySubpaths = new Set(['host-provider', 'primitive']);
+const vueOnlySubpaths = new Set(['component-handle', 'form-boundary', 'host-provider', 'primitive']);
+// Selected compositions reuse existing primitives. One map declares their
+// actual public projection paths, separately from universal primitive parity.
+const compositionSupportSubpaths = {
+  'file-input': { dom: 'form/file-input', vue: 'form/file-input' },
+  'file-upload': { form: 'uploads', dom: 'form/file-upload', vue: 'form/file-upload' },
+  'context-menu': { dom: 'context-menu', vue: 'context-menu' },
+  'tree-select': { core: 'tree-select', dom: 'tree-select', vue: 'tree-select' },
+  transfer: { core: 'transfer', dom: 'transfer', vue: 'transfer' },
+  'time-picker': { temporal: 'time-picker', vue: 'temporal/time-picker' },
+  'date-time-range-field': { temporal: 'date-time-range-field', dom: 'temporal/date-time-range-field', vue: 'temporal/date-time-range-field' },
+};
+// Platform projections/compositions do not create renderer-neutral Core entries.
+// This same host map also requires their concrete support evidence below.
+const hostCapabilitySubpaths = {
+  'checkbox-tree': ['dom', 'vue'],
+  'drag-drop': ['dom', 'vue'],
+  'focus-visibility': ['dom'],
+  fullscreen: ['dom', 'vue'],
+  image: ['dom', 'vue'],
+  'layout-motion': ['dom'],
+  'media-gesture': ['dom', 'vue'],
+  'scroll-spy': ['dom'],
+};
+const isHostCapability = (host, subpath) => hostCapabilitySubpaths[subpath]?.includes(host) === true;
 const migrationBaselineIDs = new Set([
   'accordion', 'alert-dialog', 'calendar', 'carousel', 'checkbox', 'combobox',
   'dialog', 'disclosure', 'feed', 'grid', 'listbox', 'menu', 'menu-button',
@@ -30,8 +55,9 @@ const migrationBaselineIDs = new Set([
   'switch', 'tabs', 'text', 'toggle-button', 'toolbar', 'tooltip', 'tree-grid',
   'tree-view', 'window-splitter',
 ]);
-const isSupportSubpath = (subpath) => (
+const isSupportSubpath = (host, subpath) => (
   supportSubpaths.has(subpath)
+  || Object.values(compositionSupportSubpaths).some(projections => projections[host] === subpath)
   || subpath.startsWith('temporal/')
   || subpath.startsWith('virtual/')
 );
@@ -39,7 +65,7 @@ const isSupportSubpath = (subpath) => (
 const manifest = JSON.parse(await readFile('verification/component-completeness.json', 'utf8'));
 const evidence = JSON.parse(await readFile('verification/component-evidence.json', 'utf8'));
 const allowedHostInputs = {
-  dom: new Set(['focus', 'ime', 'keyboard', 'measurement', 'native-form', 'pointer', 'resize', 'scroll', 'text', 'timer', 'touch', 'wheel']),
+  dom: new Set(['async-task', 'focus', 'fullscreen', 'image', 'ime', 'keyboard', 'measurement', 'native-form', 'pointer', 'resize', 'scroll', 'text', 'timer', 'touch', 'wheel']),
   terminal: new Set(['keyboard', 'text', 'timer']),
 };
 assert.equal(manifest.schemaVersion, 1, 'Unsupported component completeness schema.');
@@ -52,10 +78,11 @@ assert.equal(requirementSet.size, manifest.requirements.length,
 
 const componentsFor = async (path) => {
   const pkg = JSON.parse(await readFile(path, 'utf8'));
+  const host = path.split('/')[1];
   return Object.keys(pkg.exports)
     .filter((subpath) => subpath.startsWith('./'))
     .map((subpath) => subpath.slice(2))
-    .filter((subpath) => !isSupportSubpath(subpath))
+    .filter((subpath) => !isSupportSubpath(host, subpath) && !isHostCapability(host, subpath))
     .sort();
 };
 
@@ -75,7 +102,7 @@ const vuePackage = JSON.parse(await readFile(vuePackagePath, 'utf8'));
 const vueComponents = Object.keys(vuePackage.exports)
   .filter((subpath) => subpath.startsWith('./'))
   .map((subpath) => subpath.slice(2))
-  .filter((subpath) => !isSupportSubpath(subpath) && !vueOnlySubpaths.has(subpath))
+  .filter((subpath) => !isSupportSubpath('vue', subpath) && !vueOnlySubpaths.has(subpath) && !isHostCapability('vue', subpath))
   .sort();
 assert.deepEqual(vueComponents, await componentsFor('packages/core/package.json'),
   `${vuePackagePath} must project every direct @sectile/core component subpath.`);
@@ -118,6 +145,8 @@ for (const family of declaredFamilies) {
 }
 
 const supportHosts = {
+  ...Object.fromEntries(Object.entries(compositionSupportSubpaths).map(([name, projections]) => [name, Object.keys(projections)])),
+  ...hostCapabilitySubpaths,
   chart: ['chart', 'dom', 'vue'],
   form: ['form', 'dom', 'vue'],
   'layer-stack': ['core', 'dom', 'terminal', 'vue'],
@@ -125,6 +154,16 @@ const supportHosts = {
   virtual: ['virtual', 'dom', 'vue'],
 };
 for (const [support, hosts] of Object.entries(supportHosts)) {
+  if (Object.hasOwn(hostCapabilitySubpaths, support)) {
+    assert.ok(!canonical.includes(support), `${support}: a portable component cannot be classified as a host capability.`);
+  }
+  if (Object.hasOwn(hostCapabilitySubpaths, support) || Object.hasOwn(compositionSupportSubpaths, support)) {
+    for (const host of hosts) {
+      const pkg = JSON.parse(await readFile(`packages/${host}/package.json`, 'utf8'));
+      const subpath = compositionSupportSubpaths[support]?.[host] ?? support;
+      assert.ok(Object.hasOwn(pkg.exports, './' + subpath), `${support}: missing declared ${host} export ./${subpath}.`);
+    }
+  }
   const supportEvidence = evidence.support?.[support];
   assert.ok(supportEvidence !== undefined, `${support} host evidence must be declared.`);
   for (const host of hosts) {

@@ -77,6 +77,14 @@ test('rejects incomplete exports, development files, workspace protocols, and de
   assert.throws(() => validatePackedPackageContents(declarationMap), /declaration maps are forbidden/u);
 });
 
+test('rejects unapproved root and distribution payloads', () => {
+  for (const path of ['unexpected.bin', 'dist/archive.zip', 'dist/private.ts', 'dist/README.md']) {
+    const input = fixture();
+    input.paths.push(path);
+    assert.throws(() => validatePackedPackageContents(input), /unexpected packed file/u);
+  }
+});
+
 test('rejects manifest drift and tarball paths outside package/', () => {
   const { manifest, sourceManifest } = fixture();
   manifest.exports['.'].import = './dist/other.js';

@@ -3,6 +3,22 @@
   "package": "@sectile/dom",
   "entries": [
     {
+      "id": "WI-008:dom-cascade-list-direction",
+      "change": "signature-changed",
+      "before": { "subpath": "./cascade-list" },
+      "symbols": ["CascadeListOptions", "toCascadeListEvent"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./cascade-list" },
+      "removalReason": "Adds optional reading direction to options and keyboard translation. Existing callers retain ltr behavior; rtl callers can mirror horizontal expansion and navigation."
+    },
+    { "id": "WI-008:dom-color-input-projection", "change": "signature-changed", "before": { "subpath": "./color-picker" }, "symbols": ["ColorPickerOptions", "getColorPickerInputAttributes"], "replacement": { "package": "@sectile/dom", "subpath": "./color-picker" }, "removalReason": "Adds optional area selection and shared native/text/hue/alpha input projection; prior construction calls remain supported." },
+    { "id": "WI-008:dom-editable-binding", "change": "signature-changed", "before": { "subpath": "./editable" }, "symbols": ["EditableConnection", "EditableBindingOptions"], "replacement": { "package": "@sectile/dom", "subpath": "./editable" }, "removalReason": "Connection implementations and mocks must provide syncOptions; use the factory-owned connection to preserve editing state while replacing native bindings." },
+    { "id": "WI-008:dom-meter-group-projection", "change": "signature-changed", "before": { "subpath": "./meter-group" }, "symbols": ["MeterGroupAttributes", "getMeterGroupAttributes"], "replacement": { "package": "@sectile/dom", "subpath": "./meter-group" }, "removalReason": "Adds the aggregate root/track/segment attribute projection over the existing canonical group; existing focused projections remain available." },
+    { "id": "WI-008:dom-slider-retained-domain", "change": "signature-changed", "before": { "subpath": "./multi-thumb-slider" }, "symbols": ["MultiThumbSliderConnection", "MultiThumbSliderThumbAttributeOptions", "getMultiThumbSliderThumbAttributes"], "replacement": { "package": "@sectile/dom", "subpath": "./multi-thumb-slider" }, "removalReason": "Connection implementations and mocks must expose the retained domain sequence. The stateless thumb projection consumes that domain rather than reconstructing it." },
+    { "id": "WI-008:dom-quantity-option-ownership", "change": "signature-changed", "before": { "subpath": "./quantity-field" }, "symbols": ["QuantityFieldOptions"], "replacement": { "package": "@sectile/dom", "subpath": "./quantity-field" }, "removalReason": "Adds optional manageUnitOptions for host-owned option rendering; existing callers retain the default native option owner." },
+    { "id": "WI-008:dom-tree-reorder-targets", "change": "signature-changed", "before": { "subpath": "./reorder" }, "symbols": ["TreeReorderConnection", "TreeReorderOptions", "TreeReorderDropTarget"], "replacement": { "package": "@sectile/dom", "subpath": "./reorder" }, "removalReason": "Tree connection implementations and mocks must provide setDropTarget, removeDropTarget and canMove. Policies and column/read-only/direction options retain Core move semantics; new Core event variants require exhaustive consumers to handle atomic moves." },
+    { "id": "WI-008:dom-timer-registration", "change": "signature-changed", "before": { "subpath": "./timer" }, "symbols": ["TimerConnection", "TimerErrorCode", "tryCreateTimer", "getTimerRootAttributes"], "replacement": { "package": "@sectile/dom", "subpath": "./timer" }, "removalReason": "Connection mocks need registerItem/registerAction retirement functions. Result consumers must handle dom.timer-interval-invalid in addition to Core errors; old setItemAttributes/setActionAttributes remain available." },
+    { "id": "WI-008:dom-toast-queue-binding", "change": "signature-changed", "before": { "subpath": "./toast" }, "symbols": ["ToastConnection", "ToastQueueOptions", "ToastConfiguration", "ToastErrorCode"], "replacement": { "package": "@sectile/dom", "subpath": "./toast" }, "removalReason": "Connection implementations and mocks need setViewport and syncConfiguration; queue construction may omit the viewport. Handle dom.toast-interval-invalid, and preserve explicit null duration as persistent rather than defaulting it." },
+    {
       "id": "WI-008:dom-accordion-keyboard-closure",
       "change": "signature-changed",
       "before": { "subpath": "./accordion" },
@@ -102,9 +118,9 @@
       "id": "WI-030:dom-root-grid-control-closure",
       "change": "signature-changed",
       "before": { "subpath": "." },
-      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent", "TextConnection.handleEvent", "FacadeConnection<TextConnection>.send", "GridConnection.setCellAttributes"],
+      "symbols": ["GridEditMode", "GridPolicies", "GridState", "GridEvent", "TextConnection.handleEvent", "FacadeConnection<TextConnection>.send", "GridConnection.setCellAttributes", "DOMPopupConnection.prepareMove", "DOMPopupConnection.completeMove"],
       "replacement": { "package": "@sectile/dom", "subpath": "." },
-      "removalReason": "Programmatic text transitions use handleEvent or send; handleBeforeInput is reserved for observing native beforeinput without cancellation."
+      "removalReason": "Programmatic text transitions use handleEvent or send; handleBeforeInput is reserved for observing native beforeinput without cancellation. Popup connection implementations and mocks must supply prepareMove/completeMove; standard Dialog, AlertDialog, Drawer, Popover and Tooltip factories provide them. Pair a retained native move with these operations, or completeMove(false) to cancel; ordinary openings and close-focus defaults remain unchanged."
     },
     {
       "id": "WI-047:dom-form-outcomes",
@@ -147,8 +163,9 @@
       "id": "WI-036:select-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./select" },
-      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI declaration closure"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" }
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI declaration closure", "SelectOptions.layerHost"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Q9 adds optional SelectOptions.layerHost using the existing LayerHostConnection contract. Omission retains ordinary construction; a supplied host admits the popup into that host's canonical order, and null leaves it inactive. Vue UI obtains this from HostProvider; no new component prop is required."
     },
     {
       "id": "WI-036:menu-button-positioning-surface",
@@ -162,9 +179,9 @@
       "id": "WI-036:cascade-select-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-select" },
-      "symbols": ["CascadeSelectOptions positioning options", "automatic trigger-relative positioning", "CascadeSelectOptions.manageVisibility"],
+      "symbols": ["CascadeSelectOptions positioning options", "automatic trigger-relative positioning", "CascadeSelectOptions.manageVisibility", "CascadeSelectOptions.layerHost"],
       "replacement": { "package": "@sectile/dom", "subpath": "./cascade-select" },
-      "removalReason": "Cascade Select now positions its popup by default; pass position=false to preserve consumer-owned layout."
+      "removalReason": "Cascade Select now positions its popup by default; pass position=false to preserve consumer-owned layout. Q9 adds optional layerHost: omission retains ordinary construction, a supplied LayerHostConnection owns admission and order, and null leaves it inactive. Vue UI inherits this from HostProvider without a new component prop."
     },
     {
       "id": "WI-036:tooltip-positioning-surface",
@@ -214,9 +231,9 @@
       "id": "WI-046:combobox-text-native-dispatch",
       "change": "signature-changed",
       "before": { "subpath": "./combobox" },
-      "symbols": ["TextInput declaration closure", "ComboboxConnectionOptions positioning options", "automatic input-relative positioning", "ComboboxOptions.manageVisibility"],
+      "symbols": ["TextInput declaration closure", "ComboboxConnectionOptions positioning options", "automatic input-relative positioning", "ComboboxOptions.manageVisibility", "ComboboxConnectionOptions.layerHost"],
       "replacement": { "package": "@sectile/dom", "subpath": "./combobox" },
-      "removalReason": "Combobox text transitions retain the same TextInput union, and popup positioning is now automatic by default; pass position=false to preserve consumer-owned layout."
+      "removalReason": "Combobox text transitions retain the same TextInput union, and popup positioning is now automatic by default; pass position=false to preserve consumer-owned layout. Q9 adds optional layerHost to connection/construction options: omission retains ordinary construction, a supplied LayerHostConnection owns popup admission and order, and null leaves popups inactive. Inline presentation still owns no separate layer. Vue UI inherits the host without a new component prop."
     },
     {
       "id": "WI-008:slider-semantic-controller-closure",
