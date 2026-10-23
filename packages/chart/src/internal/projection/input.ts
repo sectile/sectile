@@ -2,7 +2,10 @@ import type { ChartResult } from '../../result.js';
 import type { ChartProjectionInput } from './project.js';
 import { chartFail, chartOK } from '../result.js';
 
-export function captureChartProjectionInput(input: ChartProjectionInput): ChartResult<ChartProjectionInput> {
+export function captureChartProjectionInput(
+  input: ChartProjectionInput,
+  previousCapture?: ChartResult<ChartProjectionInput>,
+): ChartResult<ChartProjectionInput> {
   if (input === null || typeof input !== 'object') return invalidProjection('Chart projection input must be an object.');
   try {
     const viewport = input.viewport;
@@ -19,6 +22,27 @@ export function captureChartProjectionInput(input: ChartProjectionInput): ChartR
     const previous = input.previous;
     if (transform !== undefined && (transform === null || typeof transform !== 'object')) return invalidProjection('Chart view transform must be an object.');
     if (insets !== undefined && (insets === null || typeof insets !== 'object')) return invalidProjection('Chart plot insets must be an object.');
+    const xScaleValue = transform?.xScale;
+    const xOffset = transform?.xOffset;
+    const yScaleValue = transform?.yScale;
+    const yOffset = transform?.yOffset;
+    const top = insets?.top;
+    const right = insets?.right;
+    const bottom = insets?.bottom;
+    const left = insets?.left;
+    const previousInput = previousCapture?.ok === true ? previousCapture.value : undefined;
+    if (previousInput !== undefined
+      && previousInput.viewport.width === width && previousInput.viewport.height === height
+      && previousInput.viewport.devicePixelRatio === devicePixelRatio
+      && previousInput.maximumRepresentatives === maximumRepresentatives
+      && previousInput.xScale === xScale && previousInput.yScale === yScale
+      && previousInput.view === view && previousInput.previous === previous
+      && (previousInput.viewTransform === undefined) === (transform === undefined)
+      && previousInput.viewTransform?.xScale === xScaleValue && previousInput.viewTransform?.xOffset === xOffset
+      && previousInput.viewTransform?.yScale === yScaleValue && previousInput.viewTransform?.yOffset === yOffset
+      && (previousInput.insets === undefined) === (insets === undefined)
+      && previousInput.insets?.top === top && previousInput.insets?.right === right
+      && previousInput.insets?.bottom === bottom && previousInput.insets?.left === left) return previousCapture!;
     const captured: { -readonly [Key in keyof ChartProjectionInput]: ChartProjectionInput[Key] } = {
       viewport: devicePixelRatio === undefined ? { width, height } : { width, height, devicePixelRatio },
     };
@@ -26,10 +50,10 @@ export function captureChartProjectionInput(input: ChartProjectionInput): ChartR
     if (xScale !== undefined) captured.xScale = xScale;
     if (yScale !== undefined) captured.yScale = yScale;
     if (transform !== undefined) captured.viewTransform = {
-        xScale: transform.xScale, xOffset: transform.xOffset, yScale: transform.yScale, yOffset: transform.yOffset,
+        xScale: xScaleValue!, xOffset: xOffset!, yScale: yScaleValue!, yOffset: yOffset!,
     };
     if (view !== undefined) captured.view = view;
-    if (insets !== undefined) captured.insets = { top: insets.top, right: insets.right, bottom: insets.bottom, left: insets.left };
+    if (insets !== undefined) captured.insets = { top: top!, right: right!, bottom: bottom!, left: left! };
     if (previous !== undefined) captured.previous = previous;
     return chartOK(captured);
   } catch {

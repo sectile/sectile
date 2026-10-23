@@ -49,6 +49,34 @@ test('controller serializes model and interaction transitions by revision', () =
   assert.equal(controller.getModel().size, 3);
 });
 
+test('cached projections still observe mutable input fields once per request', () => {
+  const controller = createChartController(options());
+  let width = 100, xOffset = 0, top = 0;
+  let widthReads = 0, offsetReads = 0, topReads = 0;
+  const input = {
+    viewport: { get width() { widthReads++; return width; }, height: 100 },
+    viewTransform: { xScale: 1, get xOffset() { offsetReads++; return xOffset; }, yScale: 1, yOffset: 0 },
+    insets: { get top() { topReads++; return top; }, right: 0, bottom: 0, left: 0 },
+  };
+  const first = controller.project(input);
+  assert.equal(first.ok, true);
+  assert.equal(controller.project(input).value, first.value);
+  assert.deepEqual([widthReads, offsetReads, topReads], [2, 2, 2]);
+  width = 200;
+  const resized = controller.project(input);
+  assert.equal(resized.value.viewport.width, 200);
+  assert.notEqual(resized.value, first.value);
+  xOffset = 0.25;
+  const moved = controller.project(input);
+  assert.notEqual(moved.value, resized.value);
+  top = 10;
+  const inset = controller.project(input);
+  assert.notEqual(inset.value, moved.value);
+  assert.equal(controller.project(input).value, inset.value);
+  assert.deepEqual([widthReads, offsetReads, topReads], [6, 6, 6]);
+  controller.dispose();
+});
+
 test('CHT-04: controlled ownership remains shape-stable and converges only through sync', () => {
   const controller = createChartController({ ...options(), controlled: { cursor: 1 } });
   const commands = [];

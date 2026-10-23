@@ -316,10 +316,14 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
   public project(input: ChartProjectionInput): ChartResult<ChartProjection<ID>> {
     if (this.#disposed) return disposedController();
     if (input === null || typeof input !== 'object') return invalidController('Chart projection input must be an object.');
-    const captured = captureChartProjectionInput(input);
+    const previousCache = this.#projectionCache;
+    const captured = captureChartProjectionInput(input, previousCache?.request);
     if (!captured.ok) return captured;
     input = captured.value;
     const view = input.view ?? this.#snapshot.state.view ?? undefined;
+    if (previousCache !== null && this.#projectionCache === previousCache
+      && captured === previousCache.request && previousCache.generation === this.#model.generation
+      && previousCache.view === view) return previousCache.result;
     const transform = input.viewTransform ?? IDENTITY_CHART_VIEW_TRANSFORM;
     const insets = input.insets === undefined ? DEFAULT_CHART_PLOT_INSETS : input.insets;
     const cacheable = cacheSafeViewport(input.viewport)
@@ -327,7 +331,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
       && input.view === undefined && validCacheInsets(insets);
     if (cacheable && this.#projectionCache !== null
       && sameProjectionRequest(this.#projectionCache, this.#model, input, transform, view, insets)) {
-      return chartOK(this.#projectionCache.projection);
+      return this.#projectionCache.result;
     }
     const resolved = {
       ...input,
@@ -336,7 +340,7 @@ class ImmutableChartController<ID extends StableID> implements ChartController<I
     };
     const projection = tryCreateChartProjection(this.#definition ?? this.#model, resolved);
     if (cacheable && projection.ok) {
-      this.#projectionCache = projectionCache(this.#model, input, transform, view, insets, projection.value);
+      this.#projectionCache = projectionCache(this.#model, input, transform, view, insets, projection, captured);
     }
     return projection;
   }
@@ -632,6 +636,7 @@ function sameCapabilityWindow(
 }
 
 interface ProjectionCache<ID extends StableID> {
+  readonly request: ChartResult<ChartProjectionInput>;
   readonly generation: number;
   readonly width: number;
   readonly height: number;
@@ -646,14 +651,16 @@ interface ProjectionCache<ID extends StableID> {
   readonly insetBottom: number;
   readonly insetLeft: number;
   readonly view: ChartProjectionInput['view'];
-  readonly projection: ChartProjection<ID>;
+  readonly result: Readonly<{ ok: true; value: ChartProjection<ID> }>;
 }
 
 function projectionCache<ID extends StableID>(
   model: ChartModelState<ID>, input: ChartProjectionInput, transform: ChartProjectionInput['viewTransform'] & {},
-  view: ChartProjectionInput['view'], insets: ChartPlotInsets, projection: ChartProjection<ID>,
+  view: ChartProjectionInput['view'], insets: ChartPlotInsets, result: Readonly<{ ok: true; value: ChartProjection<ID> }>,
+  request: ChartResult<ChartProjectionInput>,
 ): ProjectionCache<ID> {
   return {
+    request,
     generation: model.generation,
     width: input.viewport.width,
     height: input.viewport.height,
@@ -668,7 +675,7 @@ function projectionCache<ID extends StableID>(
     insetBottom: insets.bottom,
     insetLeft: insets.left,
     view,
-    projection,
+    result: Object.freeze(result),
   };
 }
 
