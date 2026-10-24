@@ -20,6 +20,13 @@ func flag(_ source: TISInputSource, _ key: CFString) -> Bool {
 let previous = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
 let sources = TISCreateInputSourceList(nil, true).takeRetainedValue() as! [TISInputSource]
 let requested = CommandLine.arguments.dropFirst().first
+if requested == "--inspect" {
+    let result: [String: Any] = ["current": sourceID(previous), "enabled": sources.filter {
+        flag($0, kTISPropertyInputSourceIsEnabled) && flag($0, kTISPropertyInputSourceIsSelectCapable)
+    }.map(sourceID)]
+    print(String(data: try JSONSerialization.data(withJSONObject: result), encoding: .utf8)!)
+    exit(0)
+}
 guard let selected = sources.first(where: { requested == nil ? sourceID($0).contains("2SetKorean") : sourceID($0) == requested! }) else {
     fputs("Required input source unavailable: \(requested ?? "Korean two-set"). Installed: \(sources.map(sourceID))\n", stderr)
     exit(1)

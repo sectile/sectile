@@ -14,7 +14,22 @@ const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-veri
 });
 let browser, context, page, source;
 const swift = '.tasks/browser/input-source';
-const nativeKeys = codes => execFileSync('osascript', ['-e', `tell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.08`).join('\n')}\nend tell`], { timeout: 10000 });
+const nativeKeys = (codes, control = false) => {
+  assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
+  // Quartz virtual-key events leave character translation to the active OS IME.
+  const program = `ObjC.import('Cocoa'); ObjC.import('CoreGraphics');
+    const source = $.CGEventSourceCreate($.kCGEventSourceStateHIDSystemState);
+    function post(code, down) {
+      const event = $.CGEventCreateKeyboardEvent(source, code, down);
+      ${control ? '$.CGEventSetFlags(event, $.kCGEventFlagMaskControl);' : ''}
+      $.CGEventPost($.kCGHIDEventTap, event); $.CFRelease(event);
+    }
+    ${control ? 'post(59, true);' : ''}
+    for (const code of ${JSON.stringify(codes)}) { post(code, true); post(code, false); $.NSThread.sleepForTimeInterval(0.08); }
+    ${control ? 'post(59, false);' : ''}
+    $.CFRelease(source); $.NSThread.sleepForTimeInterval(0.3);`;
+  execFileSync('osascript', ['-l', 'JavaScript', '-e', program], { timeout: 10000 });
+};
 try {
   const url = await new Promise((resolve, reject) => {
     let log = '';
@@ -56,7 +71,8 @@ try {
       await page.locator(`#${id}`).focus();
       const selected = JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
-      execFileSync('osascript', ['-e', 'tell application "System Events"\nkey code 49 using control down\ndelay 0.5\nend tell'], { timeout: 10000 });
+      nativeKeys([49], true);
+      (report.sources ??= []).push(JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' })));
       nativeKeys([5, 40, 1]); // g k s -> 한, through the OS two-set IME.
       if (id === 'combo') await page.evaluate(() => window.sectileProbe.changeItems());
       nativeKeys([15, 46, 3, 36]); // r m f, Return -> 글 and commit.
