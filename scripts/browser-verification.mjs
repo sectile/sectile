@@ -10,6 +10,10 @@ import { validateTarballEntries } from './lib/packed-package-contract.mjs';
 
 const nativeIME = process.argv.includes('--macos-ime');
 const shardArgument = process.argv.find(argument => argument.startsWith('--shard='));
+const tarballArgument = process.argv.find(argument => argument.startsWith('--tarball-directory='));
+assert.deepEqual(process.argv.slice(2).filter(argument => argument !== '--macos-ime' && argument !== shardArgument && argument !== tarballArgument), [], 'unexpected browser verification argument');
+assert.notEqual(tarballArgument?.slice('--tarball-directory='.length), '', 'tarball directory must not be empty');
+const tarballDirectory = resolve(tarballArgument?.slice('--tarball-directory='.length) ?? '.tasks/verification/publication-packs');
 const shard = shardArgument?.slice('--shard='.length).split('/').map(Number) ?? [1,1];
 assert.ok(shard.length === 2 && shard.every(Number.isSafeInteger) && shard[0] >= 1 && shard[0] <= shard[1] && shard[1] <= 4, 'invalid browser shard');
 if (nativeIME) assert.equal(process.platform, 'darwin', 'native macOS IME verification requires macOS');
@@ -23,7 +27,7 @@ const aliases = [];
 report.artifacts = [];
 for (const name of publishedPackageDirectories) {
   const manifest = JSON.parse(readFileSync(`packages/${name}/package.json`, 'utf8'));
-  const tarball = resolve('.tasks/verification/publication-packs', `sectile-${name}-${manifest.version}.tgz`);
+  const tarball = join(tarballDirectory, `sectile-${name}-${manifest.version}.tgz`);
   // Preparation owns complete package admission. Recheck extraction safety,
   // then load the bytes once instead of repeating its full verification.
   validateTarballEntries(execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' }).trim().split('\n'));
@@ -42,7 +46,7 @@ aliases.sort((a,b) => b.find.length - a.find.length);
 const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-verification.mjs'], {
   env: { ...process.env, SECTILE_BROWSER_PORT: '0', SECTILE_BROWSER_ALIASES: JSON.stringify(aliases) }, stdio: ['ignore', 'pipe', 'pipe'],
 });
-let browser, context, page, source, inputProcess;
+let browser, context, page, source, inputProcess, nativeSource;
 const swift = '.tasks/browser/input-source';
 const nativeKeys = codes => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
@@ -115,19 +119,10 @@ try {
     execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
     for (const family of fields) for (const reference of ['native','native-textarea'].includes(family) ? [false] : [true,false]) {
       report.current = { family, reference };
-      // Each IME witness gets a fresh native document, like an isolated browser
-      // test. Token commits/editor closure can clear or hide the previous input;
-      // removing it inside the same document leaked OS marked-text context into
-      // the next plain HTML peer. Finish focus before retiring that document.
+      // Finish the previous witness before selecting the next OS input context.
       await page.evaluate(() => document.activeElement?.blur());
-      await page.goto(`${url}/interactions`);
-      await page.waitForFunction(() => window.sectileProbe !== undefined);
       const id = reference ? 'native-reference' : family;
-      await page.evaluate(({family,reference}) => reference ? window.sectileProbe.reference(family) : window.sectileProbe.field(family), {family,reference});
-      await page.evaluate(() => { window.sectileProbe.nativeMutations.length = 0; });
-      await page.locator(`#${id}`).focus();
-      const selected = source === undefined ? JSON.parse(execFileSync(swift, [], { encoding: 'utf8' })) : null;
-      if (selected !== null) {
+      const selected = nativeSource ??= JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
       const menuScript = `on run argv
         set targetName to item 1 of argv
@@ -154,8 +149,13 @@ try {
         end tell
         error "Native input menu item unavailable: " & targetName
       end run`;
-      execFileSync('osascript', ['-e', menuScript, selected.name], { timeout: 20000, stdio: ['ignore', 'pipe', 'inherit'] });
-      }
+      // Select both through the focused application's OS menu. CLI TIS selection
+      // alone does not reset Chromium's per-application input-method context.
+      for (const name of [selected.asciiName, selected.name])
+        execFileSync('osascript', ['-e', menuScript, name], { timeout: 20000, stdio: ['ignore', 'pipe', 'inherit'] });
+      await page.evaluate(({family,reference}) => reference ? window.sectileProbe.reference(family) : window.sectileProbe.field(family), {family,reference});
+      await page.evaluate(() => { window.sectileProbe.nativeMutations.length = 0; });
+      await page.locator(`#${id}`).focus();
       // The CLI's source query is diagnostic; the focused browser's actual
       // composition events and committed text are the authoritative witness.
       await page.bringToFront();
@@ -196,6 +196,16 @@ try {
       assert.ok(events.some(event => event.type === 'compositionend'), `${id}: composition never committed`);
       if (id === 'pin') assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, '한');
       if (id === 'tags') assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글']);
+      if (family === 'tags') {
+        // OS setup must not hide a same-input continuation defect. Match
+        // the token's accepted clear with the same write on its plain HTML peer.
+        if (reference) await page.locator(`#${id}`).evaluate(element => { element.value = ''; });
+        await typeNative([5,40,1,15,46,3,5,40,1]);
+        assert.equal(await page.locator(`#${id}`).inputValue(), '한글한', `${id}: continued composition after clear`);
+        nativeKeys([36]);
+        if (!reference) assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글','한글한']);
+        report.results.push({ family, reference, continuation: 'passed' });
+      }
       report.results.push({ id, family, reference, text: await page.locator(`#${id}`).inputValue(),
         compositionStarts: events.filter(event=>event.type==='compositionstart').length,
         compositionEnds: events.filter(event=>event.type==='compositionend').length, frameworkWrites: 0, reconfigured: !reference });

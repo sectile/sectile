@@ -15,7 +15,8 @@ test('number field explicit commands use exact values, current drafts and option
   }
   const draft = createNumberFieldState('-0.2',createTextEditingState('0.2'));
   assert.equal(unwrap(applyNumberFieldEvent(draft,{type:'step',delta:'0.1'})).state.value,'0.3');
-  assert.equal(applyNumberFieldEvent(createNumberFieldState('1'),{type:'step',delta:'no'}).ok,false);
+  for (const delta of ['no', 1, 1n, null, undefined, { toString() { throw new Error('Decimal admission must not coerce objects'); } }])
+    assert.equal(applyNumberFieldEvent(createNumberFieldState('1'),{type:'step',delta}).ok,false);
   assert.equal(applyNumberFieldEvent(createNumberFieldState('1'),{type:'set-value',value:'3'},{max:'2'}).ok,false);
   assert.equal(applyNumberFieldEvent(draft,{type:'set-value',value:null},{required:true}).ok,false);
   assert.equal(unwrap(applyNumberFieldEvent(draft,{type:'set-value',value:null})).state.value,null);

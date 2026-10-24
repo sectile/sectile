@@ -21,6 +21,7 @@ func flag(_ source: TISInputSource, _ key: CFString) -> Bool {
 let previous = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
 let sources = TISCreateInputSourceList(nil, true).takeRetainedValue() as! [TISInputSource]
 let requested = CommandLine.arguments.dropFirst().first
+var asciiName: String?
 if requested == "--type" {
     let arguments = Array(CommandLine.arguments.dropFirst(2))
     let command = arguments.first == "--command"
@@ -83,7 +84,9 @@ if requested == nil {
         exit(1)
     }
     RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+    asciiName = textProperty(ascii, kTISPropertyLocalizedName) ?? sourceID(ascii)
 }
-let result = ["selected": sourceID(selected), "previous": sourceID(previous),
+var result = ["selected": sourceID(selected), "previous": sourceID(previous),
               "name": textProperty(selected, kTISPropertyLocalizedName) ?? sourceID(selected)]
+if let asciiName { result["asciiName"] = asciiName }
 print(String(data: try JSONSerialization.data(withJSONObject: result), encoding: .utf8)!)

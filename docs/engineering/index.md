@@ -51,3 +51,7 @@ digests. The existing deep-verification workflow runs Chromium on Linux and
 real Hangul input in headed Chromium across four standard macOS runner shards.
 Those checks cover candidate bytes; published-consumer acceptance additionally
 requires the released registry versions.
+Use `--tarball-directory=<directory>` to run the same journey against the frozen
+release bundle or registry-downloaded tarballs matching the checkout's package
+versions. The report records the tested artifact digests; a directory name alone
+does not establish registry provenance.

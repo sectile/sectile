@@ -157,7 +157,7 @@ export function applyNumberFieldEvent(
       if (event.type === 'step') {
         const base = applyNumberFieldEvent(valid.value, 'commit', policies);
         if (!base.ok) return base;
-        const delta = parseDecimal(event.delta);
+        const delta = typeof event.delta === 'string' ? parseDecimal(event.delta) : null;
         if (delta === null) return fail('transition-rejection', 'invalid-number-field-value', 'Number field step requires finite decimal text.');
         value = decimalToString(addDecimal(parseDecimal(base.value.state.value ?? '0')!, delta));
       } else value = event.value;
