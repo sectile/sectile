@@ -18,7 +18,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, createSSRApp, h, nextTick, ref, shallowRef } = await import('vue');
+const { createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef, Suspense } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { NumberField } = await import('../.verification-dist/number-field.js');
 const { QuantityFieldRoot } = await import('../.verification-dist/quantity-field.js');
@@ -520,6 +520,50 @@ test('controlled Vue TextField defers external values until composition settles'
 
   app.unmount();
   host.remove();
+});
+
+test('TextField first connection uses the latest controlled value across repeated deferred mounts', async () => {
+  const value = ref('setup'), entry = shallowRef(); const updates = [], errors = [];
+  const Waiting = defineComponent({ async setup() { const pending = entry.value.pending; await pending; return () => h('p', 'Ready'); } });
+  const host = document.createElement('div'); document.body.append(host);
+  const app = createApp({ render: () => entry.value ? h(Suspense, { key: entry.value.key }, {
+    default: () => h('form', [h(TextField, { type: 'search', name: 'query', modelValue: value.value,
+      'onUpdate:modelValue': next => updates.push(next) }), h(Waiting)]), fallback: () => h('p', 'Loading'),
+  }) : null });
+  app.config.errorHandler = collectClearError(errors); app.mount(host);
+  let release;
+  try {
+    for (const [key, latest] of ['or', '', 'last'].entries()) {
+      value.value = 'setup';
+      const pending = new Promise(resolve => { release = resolve; }); entry.value = { key, pending };
+      await nextTick(); assert.equal(host.querySelector('input'), null);
+      for (const next of ['first', 'second', latest]) { value.value = next; await nextTick(); }
+      release(); await settleClear();
+      const input = host.querySelector('input'); assert.ok(input);
+      assert.equal(input.value, latest); assert.equal(new window.FormData(host.querySelector('form')).get('query'), latest);
+      value.value = 'post-mount'; await nextTick(); assert.equal(input.value, 'post-mount');
+      entry.value = undefined; await nextTick();
+    }
+    assert.deepEqual(updates, []); assert.deepEqual(errors, []);
+  } finally { release?.(); app.unmount(); host.remove(); }
+});
+
+test('TextField deferred mount preserves uncontrolled defaults and never activates a cancelled branch', async () => {
+  for (const cancel of [false, true]) {
+    let release; const pending = new Promise(resolve => { release = resolve; });
+    const defaultValue = ref('initial'), errors = [], host = document.createElement('div'); document.body.append(host);
+    const Waiting = defineComponent({ async setup() { await pending; return () => h('p', 'Ready'); } });
+    const app = createApp({ render: () => h(Suspense, {}, { default: () => h('div', [h(TextField, { defaultValue: defaultValue.value }), h(Waiting)]) }) });
+    app.config.errorHandler = collectClearError(errors); app.mount(host);
+    try {
+      defaultValue.value = 'changed before mount'; await nextTick();
+      if (cancel) app.unmount();
+      release(); await settleClear();
+      if (cancel) assert.equal(host.querySelector('input'), null);
+      else assert.equal(host.querySelector('input').value, 'initial');
+      assert.deepEqual(errors, []);
+    } finally { release(); if (!cancel) app.unmount(); host.remove(); }
+  }
 });
 
 test('controlled Vue TextField hydrates its initial value and syncs later values through the DOM connection', async () => {

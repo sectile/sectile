@@ -273,7 +273,7 @@ const TextFieldImplementation = defineComponent({
 
     onMounted(() => {
       mounted = true;
-      mountConnection(createTextState(initialValue));
+      mountConnection(createTextState(controlled ? String(props.modelValue) : initialValue));
     });
     onUpdated(() => {
       if (!mounted || element.value === null || connectedElement === element.value) return;
