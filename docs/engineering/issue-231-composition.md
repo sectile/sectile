@@ -9,8 +9,8 @@
   `2026-10-24T19:46:56Z`; this record does not accept unrelated proposals.
 - Execution authority: the maintainer requested implementation directly on main,
   without a PR, and asked Sectile to choose necessary APIs from its own evidence.
-- State: implementation checkpoint; hosted close and native macOS IME remain
-  pending. This is not a release verification or separate code-review approval.
+- State: source and packed-candidate close passed; registry-release acceptance
+  remains pending. This is not a separate code-review or release approval.
 
 ## Ownership and decision
 
@@ -312,3 +312,51 @@ This is a read-only plan for the full unreleased change set, not an executed
 version change or publication approval. Exact released bytes can be supplied to
 the same browser owner with `--tarball-directory`; its digest report must be tied
 to the registry publication evidence before issue 227 AC-12 is marked complete.
+
+The remaining picker classification is explicit: TimePickerInput renders the
+tested TimeField owner through its existing value-control port. Day-based
+Date/DateTime range picker inputs reuse the common picker host and scalar/range
+field adapters. Month/year picker display inputs are read-only and do not expose
+free-form editing. Their distinct formats and selection semantics remain in the
+existing Temporal and Vue package suites.
+
+Runner billing was checked against the repository's public visibility and
+[GitHub's current Actions billing documentation](https://docs.github.com/en/billing/concepts/product-billing/github-actions):
+standard GitHub-hosted compute is free for public repositories. The workflow uses
+standard Ubuntu/macOS labels, four bounded native shards and one-day artifact
+retention; this statement does not assert account-wide storage usage.
+
+## Hosted close at 34440cc44
+
+[Run 40138752921](https://github.com/sectile/sectile/actions/runs/40138752921)
+passed on `34440cc444490dadb1dc42dc86f51f37af753aee`. Preparation,
+all six Linux lanes, all 85 deterministic verification units, the packed Chromium
+journey, all four native macOS shards and the required-result aggregate succeeded.
+This supersedes the pending hosted checkpoints above for this code snapshot;
+the failed reproductions remain historical evidence.
+
+The Chromium journey covered all 30 catalog cases with the corrected compound
+connections, accepted native history/write traces, nested popup focus and AX
+quarantine, retained Drawer focus, gesture admission and Reorder preview/commit.
+Each macOS shard passed 16 real native witnesses, 64 in total including matched
+plain controls. Every measured first phrase was `한글` (or the specialized
+single-cell `한`), composition start/end was observed, live reconfiguration kept
+focus, and the composing value/selection write trace was empty. Both continued
+Tags witnesses reported requested and observed `한글한`, with the Sectile token
+equal to native output. The earlier reused-client failures are not current
+failures of this isolated process setup. No physical-keyboard or screen-reader
+software coverage is inferred.
+
+The full run took about eight minutes. Linux lanes took about 58–96 seconds after
+preparation; native jobs took about 5m40s–6m50s, with equal native witness counts
+and additional continuation coverage in shard 3. Standard runners and existing
+job owners are retained. Successful aggregation saves measured unit timings for
+the next balanced Linux plan.
+
+Issue 231's B1–B6/P1–P5 implementation and remaining composition decisions now
+have source, package/public-surface, lifecycle and applicable browser evidence.
+Issue 227's native ownership coverage has the same source/packed evidence, but
+AC-12 still requires the maintainer's release decision and registry provenance
+for the resulting DOM/Vue versions. No package version, tag, registry or GitHub
+release was changed. No new PR was created. Existing untracked
+`docs/engineering/proposals/coverflow-presentation.md` remains outside this work.
