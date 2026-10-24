@@ -89,7 +89,8 @@ try {
     for (const id of fields) {
       await page.evaluate(id => window.sectileProbe.field(id), id);
       await page.locator(`#${id}`).focus();
-      const selected = JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
+      const selected = source === undefined ? JSON.parse(execFileSync(swift, [], { encoding: 'utf8' })) : null;
+      if (selected !== null) {
       source ??= selected.previous;
       const menuScript = `on run argv
         set targetName to item 1 of argv
@@ -117,6 +118,7 @@ try {
         error "Native input menu item unavailable: " & targetName
       end run`;
       execFileSync('osascript', ['-e', menuScript, selected.name], { timeout: 20000, stdio: ['ignore', 'pipe', 'inherit'] });
+      }
       // The CLI's source query is diagnostic; the focused browser's actual
       // composition events and committed text are the authoritative witness.
       await page.bringToFront();
@@ -239,7 +241,7 @@ try {
   report.status = 'failed'; report.error = error.stack;
   report.observed = await page?.evaluate(() => ({ active: document.activeElement?.id,
     inputs: [...document.querySelectorAll('input')].map(input => ({ id: input.id, value: input.value })),
-    events: window.sectileProbe?.events, writes: window.sectileProbe?.writes,
+    events: window.sectileProbe?.events, writes: window.sectileProbe?.writes, valueWrites: window.sectileProbe?.valueWrites,
   })).catch(() => undefined);
   await context?.tracing.stop({ path: `${output}/trace.zip` }).catch(() => {});
   throw error;

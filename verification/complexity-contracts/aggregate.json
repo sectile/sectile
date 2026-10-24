@@ -7311,6 +7311,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "dom:./tooltip:createTooltipGroup",
+      "package": "dom",
+      "subpath": "./tooltip",
+      "exportName": "createTooltipGroup",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "dom:./tooltip:getTooltipTriggerAttributes",
       "package": "dom",
       "subpath": "./tooltip",
@@ -19907,6 +19916,15 @@
       "subpath": "./tooltip",
       "exportName": "TooltipTrigger",
       "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./tooltip:createTooltipGroup",
+      "package": "vue",
+      "subpath": "./tooltip",
+      "exportName": "createTooltipGroup",
+      "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
     },

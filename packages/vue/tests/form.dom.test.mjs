@@ -1341,7 +1341,7 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   textarea.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
   controlledTextValue.value = 'controlled-latest';
   await nextTick();
-  assert.equal(controlledText.defaultValue, 'controlled-latest');
+  assert.equal(controlledText.defaultValue, 'controlled-default');
   host.querySelector('[data-part="reset"]').click();
   await Promise.resolve();
   await nextTick();

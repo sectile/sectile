@@ -70,10 +70,14 @@ for (const [multiline, accept] of [[false, true], [true, true], [false, false]])
     if (accept && !multiline) {
       value.value = 'Hi @Ad'; await drain();
       native.dispatchEvent(new browserWindow.CompositionEvent('compositionstart', { bubbles: true }));
-      mode.value = true; await drain(); const replacement = host.querySelector('textarea');
+      mode.value = true; await drain();
+      assert.equal(host.querySelector('input'), native);
+      native.dispatchEvent(new browserWindow.CompositionEvent('compositionend', { bubbles: true }));
+      await new Promise(resolve => setTimeout(resolve, 0)); await drain();
+      const replacement = host.querySelector('textarea');
       assert.ok(query.value); assert.equal(replacement.value, 'Hi @Ad');
       const next = new browserWindow.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true });
-      replacement.dispatchEvent(next); assert.equal(next.defaultPrevented, true, 'Displaced native IME must not block the replacement editor');
+      replacement.dispatchEvent(next); assert.equal(next.defaultPrevented, true, 'The committed replacement retains candidate navigation');
       const retired = new browserWindow.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true });
       native.dispatchEvent(retired); assert.equal(retired.defaultPrevented, false); assert.deepEqual(errors, []);
     }

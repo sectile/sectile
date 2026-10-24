@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "54f581c8e7c986a895acee5ab6842b62317ea35a8b8018989ab69bc7ff411088",
+    "publicSignatureFingerprint": "4a020786a9ed0fd6865c2a0353370dab718e6b1d7ecdeca8cab8e160be2c3311",
     "subpaths": [
       ".",
       "./accordion",
@@ -561,7 +561,7 @@
     }
   ],
   "acceptance": {
-    "classification": "breaking",
-    "reason": "theme-vue-ui-aggregate-core-api-reviewed-components-md-20261020-two-subpaths-30-errors-required-controller-members-expanded-events-reorder-union-and-toast-null-default"
+    "classification": "minor",
+    "reason": "issue-231-number-field-exact-set-value-and-step-events-additive-no-default-or-error-code-change"
   }
 }
