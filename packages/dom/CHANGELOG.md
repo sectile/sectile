@@ -1,5 +1,16 @@
 # @sectile/dom
 
+## 0.20.0
+
+### Changes
+
+- fix(temporal): preserve native history in fully connected range fields (34440cc44)
+- fix(tree-select): preserve browser-owned query edits through controlled settlement (bf921678f)
+- feat(inputs): complete numeric intents and native editing ownership (2a0d46d0a)
+- feat(reorder): expose tentative interaction and explicit confirmation (40c8a2bec)
+- feat(media-gesture): admit authored interactive drag origins (67a1a2c60)
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.19.0
 
 ### Changes

@@ -1,5 +1,11 @@
 # @sectile/tabular
 
+## 0.17.1
+
+### Changes
+
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.17.0
 
 ### Changes

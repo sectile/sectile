@@ -1,5 +1,11 @@
 # @sectile/terminal
 
+## 0.15.1
+
+### Changes
+
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.15.0
 
 ### Changes

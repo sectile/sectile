@@ -1,5 +1,21 @@
 # @sectile/vue
 
+## 0.20.0
+
+### Changes
+
+- fix(temporal): preserve native history in fully connected range fields (34440cc44)
+- fix(tree-select): preserve browser-owned query edits through controlled settlement (bf921678f)
+- test(input): compare native IME peers and preserve textarea Return behavior (44481b97d)
+- test(browser): exercise public packed inputs and scope timing evidence (7b48a637d)
+- fix(verification): align deferred composition contracts and native source lifetime (04bfe4b9f)
+- feat(inputs): complete numeric intents and native editing ownership (2a0d46d0a)
+- fix(vue): initialize deferred TextField from current controlled value (07719293d)
+- feat(reorder): expose tentative interaction and explicit confirmation (40c8a2bec)
+- feat(media-gesture): admit authored interactive drag origins (67a1a2c60)
+- fix(vue): restore retained Drawer focus after inline projection (f957c5f29)
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.19.0
 
 ### Changes

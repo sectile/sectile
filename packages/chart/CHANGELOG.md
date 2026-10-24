@@ -1,5 +1,11 @@
 # @sectile/chart
 
+## 0.16.1
+
+### Changes
+
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.16.0
 
 ### Changes

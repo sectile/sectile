@@ -1,5 +1,15 @@
 # @sectile/core
 
+## 0.16.0
+
+### Changes
+
+- fix(inputs): reject decimal coercion and reset native IME source per witness (16a1a652d)
+- test(browser): exercise public packed inputs and scope timing evidence (7b48a637d)
+- fix(verification): align deferred composition contracts and native source lifetime (04bfe4b9f)
+- feat(inputs): complete numeric intents and native editing ownership (2a0d46d0a)
+- fix: repair interaction delegation and balance continuous verification (03b35fe3b)
+
 ## 0.15.0
 
 ### Changes
