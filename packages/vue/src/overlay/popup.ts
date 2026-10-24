@@ -650,7 +650,6 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       watch(retainedReopen, refreshAfterRender, { flush: 'post' });
       return (): VNodeChild => {
         if (root.unmountOnExit.value && !present.value) return null;
-        const exiting = !root.inline.value && !root.open.value && present.value;
         return h(Primitive, mergeProps(attrs, {
           as: props.as, asChild: props.asChild,
           elementRef: (candidate: unknown) => {
@@ -659,7 +658,6 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
             root.registerElement('content', node);
           },
           id: root.contentID, role: root.inline.value ? undefined : config.role, hidden: !root.active.value || !present.value, dir: direction.value,
-          ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
           style: config.positioned === true && root.position.value
             ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
             : undefined,

@@ -76,11 +76,13 @@ Deterministic verification units are the canonical execution boundary for broad 
 
 ### Close
 
-Close first checks that every completed work item already has its declared
-validation artifacts. Missing validation code reopens the owning work item.
+Close first checks that the current verification plan covers each affected
+contract and that every selected unit has one passing result for the tested SHA.
+Historical work-item lists and source-string markers are records, not recurring
+proof that current behavior was exercised. Missing validation code reopens the owning work item.
 Close then owns execution, diagnosis, fixes, and reruns in dependency order:
 
-1. validation-artifact coverage check;
+1. affected-contract and verification-plan coverage check;
 2. targeted tests, then full tests;
 3. workspace typecheck and build;
 4. semantic authority, complexity, reuse, and crossover checks;

@@ -269,7 +269,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           ? config.nativeInputType
           : 'text',
         inputmode: projected.value.native ? undefined : presentation.value.inputMode ?? config.inputMode,
-        placeholder: projected.value.native ? undefined : presentation.value.placeholder,
+        placeholder: attrs['placeholder'] ?? (projected.value.native ? undefined : presentation.value.placeholder),
         disabled: projected.value.disabled,
         readonly: projected.value.readonly,
         required: projected.value.required,

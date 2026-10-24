@@ -9,7 +9,7 @@ import { createHydrationFixture } from '../tests/browser/hydration-fixture.mjs';
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixtureRoot = resolve(packageRoot, 'tests/browser');
 const port = Number.parseInt(process.env['SECTILE_BROWSER_PORT'] ?? '4178', 10);
-if (!Number.isSafeInteger(port) || port < 1 || port > 65_535)
+if (!Number.isSafeInteger(port) || port < 0 || port > 65_535)
   throw new TypeError('SECTILE_BROWSER_PORT must be a valid TCP port.');
 
 const vite = await createViteServer({
@@ -36,6 +36,11 @@ const template = `<!doctype html>
 </html>`;
 
 const server = createHTTPServer(async (request, response) => {
+  if (new URL(request.url ?? '/', 'http://localhost').pathname === '/interactions') {
+    response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+    response.end('<!doctype html><html lang="en"><body><div id="probe"></div><script type="module" src="/interaction-fixture.mjs"></script></body></html>');
+    return;
+  }
   if (new URL(request.url ?? '/', 'http://localhost').pathname !== '/') {
     vite.middlewares(request, response);
     return;
@@ -52,7 +57,7 @@ const server = createHTTPServer(async (request, response) => {
 });
 
 await new Promise((resolveListen) => server.listen(port, '127.0.0.1', resolveListen));
-console.log(`browser verification ready: http://127.0.0.1:${port}/`);
+console.log(`browser verification ready: http://127.0.0.1:${server.address().port}/`);
 
 for (const signal of ['SIGINT', 'SIGTERM']) {
   process.once(signal, async () => {

@@ -2,14 +2,14 @@
 
 > Generated from `verification/algorithm-reuse/manifest.json` and all 9 package source trees.
 
-Findings: 521; migration owners: WI-020, WI-027, WI-040.
+Findings: 520; migration owners: WI-020, WI-027, WI-040.
 
 ## Classifications
 
 | Classification | Count |
 |---|---:|
 | bounded-small | 33 |
-| migration-required | 65 |
+| migration-required | 64 |
 | result-proportional | 187 |
 | reuse | 236 |
 
@@ -17,11 +17,11 @@ Findings: 521; migration owners: WI-020, WI-027, WI-040.
 
 | Category | Count |
 |---|---:|
-| controller-connection-rebuild | 37 |
-| discarded-canonical-index | 64 |
+| controller-connection-rebuild | 36 |
+| discarded-canonical-index | 63 |
 | measurement-authority | 46 |
 | private-algorithm-bypass | 4 |
-| raw-full-domain-scan | 319 |
+| raw-full-domain-scan | 320 |
 | repeated-immutable-view | 13 |
 | whole-domain-validation | 38 |
 
@@ -81,7 +81,6 @@ Findings: 521; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/reorder.ts:411` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/reorder.ts:415` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/slider.ts:268` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/spin-button.ts:219` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/switch.ts:133` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tabs.ts:144` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tags-input.ts:201` | controller-rebuild |

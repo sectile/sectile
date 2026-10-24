@@ -2790,6 +2790,10 @@
           "role": "overlay-modal",
           "kind": "owner"
         },
+        "src/overlay/modal/isolation.ts": {
+          "role": "overlay-modal",
+          "kind": "owner"
+        },
         "src/overlay/position/picker.ts": {
           "role": "overlay-position-picker",
           "kind": "owner"

@@ -69,6 +69,7 @@ class FakeElement {
   addEventListener(type, listener) { const listeners = this.listeners.get(type) ?? new Set(); listeners.add(listener); this.listeners.set(type, listeners); }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
   setAttribute(name, value) { this.attributes.set(name, value); }
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
   removeAttribute(name) { this.attributes.delete(name); }
   querySelectorAll() { return []; }
   contains(target) { return target === this; }

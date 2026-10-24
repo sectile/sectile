@@ -1,11 +1,8 @@
+import { acquireIsolation, type IsolationLease } from './isolation.js';
+
 export interface ModalEffects {
   update(additionalBranches: readonly HTMLElement[]): void;
-  release(): void;
-}
-
-interface HiddenSnapshot {
-  readonly inert: boolean;
-  readonly ariaHidden: string | null;
+  release(beforeIsolation?: () => void): void;
 }
 
 interface ScrollSnapshot {
@@ -22,30 +19,34 @@ interface ModalEntry {
 interface ModalState {
   readonly document: Document;
   readonly entries: ModalEntry[];
-  readonly hidden: Map<HTMLElement, HiddenSnapshot>;
+  readonly hidden: Map<HTMLElement, IsolationLease>;
   readonly scroll: ScrollSnapshot;
   readonly observer: MutationObserver | undefined;
+  revision: number;
 }
 
 const states = new WeakMap<Document, ModalState>();
 
 export function acquireModalEffects(surface: HTMLElement, additionalBranches: readonly HTMLElement[], getOrder: () => number | null): ModalEffects {
   const document = surface.ownerDocument;
-  if (document?.body === undefined || document.body === null) return Object.freeze({ update(): void {}, release(): void {} });
+  if (document?.body === undefined || document.body === null) return Object.freeze({ update(): void {}, release(beforeIsolation?: () => void): void { beforeIsolation?.(); } });
   const state = states.get(document) ?? createState(document);
   const entry: ModalEntry = { id: Symbol('sectile-modal'), branches: [surface, ...additionalBranches], getOrder };
   state.entries.push(entry);
   let released = false;
-  const release = (): void => {
+  const release = (beforeIsolation?: () => void): void => {
     if (released) return;
     released = true;
+    state.revision++;
     const index = state.entries.findIndex((candidate) => candidate.id === entry.id);
     if (index >= 0) state.entries.splice(index, 1);
     if (state.entries.length > 0) {
-      applyTopModal(state);
+      applyTopModal(state, beforeIsolation);
       return;
     }
-    try { restoreIsolation(state); }
+    try {
+      for (const lease of state.hidden.values()) lease.release();
+    }
     finally {
       state.hidden.clear();
       try {
@@ -58,6 +59,7 @@ export function acquireModalEffects(surface: HTMLElement, additionalBranches: re
         finally { states.delete(document); }
       }
     }
+    beforeIsolation?.();
   };
   try { applyTopModal(state); }
   catch (error) {
@@ -78,14 +80,14 @@ function createState(document: Document): ModalState {
   const Observer = document.defaultView?.MutationObserver;
   let state: ModalState;
   const observer = Observer === undefined ? undefined : new Observer(() => { if (state.entries.length > 0) applyTopModal(state); });
-  state = { document, entries: [], hidden: new Map(), scroll: lockScroll(document), observer };
+  state = { document, entries: [], hidden: new Map(), scroll: lockScroll(document), observer, revision: 0 };
   states.set(document, state);
   observer?.observe(document.body, { childList: true, subtree: true });
   return state;
 }
 
-function applyTopModal(state: ModalState): void {
-  restoreIsolation(state, true);
+function applyTopModal(state: ModalState, beforeIsolation?: () => void): void {
+  const revision = ++state.revision;
   let top: ModalEntry | undefined;
   let topOrder = -1;
   for (const entry of state.entries) {
@@ -93,16 +95,10 @@ function applyTopModal(state: ModalState): void {
     if (order !== null && order > topOrder) { top = entry; topOrder = order; }
   }
   const branches = top?.branches.filter((branch) => branch.isConnected) ?? [];
-  if (branches.length === 0) return;
-  const preserveAriaHidden = new Set(branches.slice(1));
   const allowedChildren = new Map<HTMLElement, Set<HTMLElement>>();
   for (const surface of branches) {
     let branch: HTMLElement | null = surface;
     while (branch !== null && branch !== state.document.body) {
-      capture(state, branch);
-      branch.inert = false;
-      if (preserveAriaHidden.has(branch)) restoreAriaHidden(state, branch);
-      else branch.removeAttribute('aria-hidden');
       const parent = branch.parentElement as HTMLElement | null;
       if (parent === null) break;
       const allowed = allowedChildren.get(parent) ?? new Set<HTMLElement>();
@@ -111,42 +107,28 @@ function applyTopModal(state: ModalState): void {
       branch = parent;
     }
   }
+  const hidden = new Set<HTMLElement>();
   for (const [parent, allowed] of allowedChildren) {
     for (const child of parent.children) {
       const element = child as HTMLElement;
-      capture(state, element);
-      if (allowed.has(element)) {
-        element.inert = false;
-        if (preserveAriaHidden.has(element)) restoreAriaHidden(state, element);
-        else element.removeAttribute('aria-hidden');
-      } else {
-        element.inert = true;
-        element.setAttribute('aria-hidden', 'true');
-      }
+      if (!allowed.has(element)) hidden.add(element);
     }
   }
-}
-
-function restoreAriaHidden(state: ModalState, element: HTMLElement): void {
-  const value = state.hidden.get(element)?.ariaHidden;
-  if (value === null || value === undefined) element.removeAttribute('aria-hidden');
-  else element.setAttribute('aria-hidden', value);
-}
-
-function capture(state: ModalState, element: HTMLElement): void {
-  if (state.hidden.has(element)) return;
-  state.hidden.set(element, {
-    inert: element.inert,
-    ariaHidden: element.getAttribute('aria-hidden'),
-  });
-}
-
-function restoreIsolation(state: ModalState, releaseDisconnected = false): void {
-  for (const [element, snapshot] of [...state.hidden.entries()].reverse()) {
-    element.inert = snapshot.inert;
-    if (snapshot.ariaHidden === null) element.removeAttribute('aria-hidden');
-    else element.setAttribute('aria-hidden', snapshot.ariaHidden);
-    if (releaseDisconnected && !element.isConnected) state.hidden.delete(element);
+  for (const [element, lease] of state.hidden) {
+    if (hidden.has(element)) continue;
+    state.hidden.delete(element);
+    lease.release();
+  }
+  // Focus return can now reach the parent; retire its focused child afterward.
+  try { beforeIsolation?.(); }
+  finally {
+    for (const element of hidden) {
+      if (state.revision !== revision) break;
+      if (state.hidden.has(element)) continue;
+      const lease = acquireIsolation(element);
+      state.hidden.set(element, lease);
+      lease.set(true);
+    }
   }
 }
 

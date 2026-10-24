@@ -489,7 +489,8 @@
     "benchmark:form": "pnpm --silent run build && node benchmarks/form-initialization.mjs",
     "typecheck:public": "pnpm --silent run build && pnpm --silent run typecheck:public:prepared",
     "typecheck": "tsc --project tsconfig.json --pretty false",
-    "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs",
+    "test": "pnpm --silent run build:verification && pnpm --silent run test:prepared",
+    "test:prepared": "node --test --test-concurrency=4 tests/*.test.mjs",
     "verify:reproducible-build": "sectile-check-build",
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },

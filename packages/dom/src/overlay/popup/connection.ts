@@ -27,6 +27,7 @@ import {
 } from '../layer/manager.js';
 export type { DOMLayerReparentErrorCode, DOMLayerPresentationErrorCode, DOMLayerPresentationSnapshot, DOMLayerPresentationListener, DOMLayerPresentationSubscription, LayerHostConnection, LayerHostTransferErrorCode } from '../layer/manager.js';
 import { acquireModalEffects, type ModalEffects } from '../modal/effects.js';
+import { acquireIsolation, type IsolationLease } from '../modal/isolation.js';
 import { createHiddenBinding, type HiddenBinding } from '../../interaction/visibility.js';
 import { captureSurfaceMoveFocus, restoreSurfaceMoveFocus, type SurfaceMoveFocus } from '../surface-move.js';
 import {
@@ -239,6 +240,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   readonly #layerID: string;
   readonly #layers: DOMLayerManager;
   readonly #visibility: HiddenBinding | undefined;
+  readonly #isolation: IsolationLease;
   readonly #register: () => void;
   readonly #clearAdmission: () => void;
   readonly #syncHost: (host: LayerHostConnection | undefined) => Result<void, LayerHostTransferErrorCode>;
@@ -262,6 +264,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     this.#options = options;
     this.#runtime = runtime;
     this.#visibility = options.manageVisibility === false ? undefined : createHiddenBinding(options.root);
+    this.#isolation = acquireIsolation(options.root);
     this.#layerID = layerID;
     this.#layers = layers;
     this.#register = register;
@@ -399,6 +402,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     try { this.#modalEffects?.release(); } catch (error) { if (!failed) { failed = true; failure = error; } }
     this.#modalEffects = undefined;
     try { this.#removeFocusGuards(true); } catch (error) { if (!failed) { failed = true; failure = error; } }
+    try { this.#isolation.set(true); } catch (error) { if (!failed) { failed = true; failure = error; } }
     try { this.#visibility?.setHidden(true); } catch (error) { if (!failed) { failed = true; failure = error; } }
     try { this.#options.onPresentationSuspend?.(); } catch (error) { if (!failed) { failed = true; failure = error; } }
     if (failed) throw failure;
@@ -460,7 +464,11 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (result.ok) this.#stopPresentation = result.value;
     return result;
   }
-  public completeLayerExit(generation: number): Result<void> { return this.#layers.completeExit(this.#layerID, generation); }
+  public completeLayerExit(generation: number): Result<void> {
+    const result = this.#layers.completeExit(this.#layerID, generation);
+    if (result.ok && !this.#isOpen() && this.#options.root.hidden) this.#isolation.set(false);
+    return result;
+  }
   public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#layers.reparent(this.#layerID, parent); }
   public syncLayerHost(host: LayerHostConnection | undefined): Result<void, LayerHostTransferErrorCode> { return this.#syncHost(host); }
   public syncDismissal(options: PopupDismissalOptions): Result<void> {
@@ -608,6 +616,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
       this.#modalEffects = undefined;
       this.#removeFocusGuards(true);
       this.#visibility?.disconnect();
+      this.#isolation.release();
     }
     if (failed) throw firstError;
   }
@@ -620,6 +629,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (previous !== undefined && this.#publishedRevision === revision) return;
     this.#publishedRevision = revision;
     const open = this.#isOpen();
+    if (open) this.#isolation.set(false);
     if (!open) this.#focusHover?.cancelPending();
     try {
       if (open && previous !== true) {
@@ -629,27 +639,40 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
       } else if (!open && previous === true) {
         try { this.#layers.close(this.#layerID); }
         finally {
-          this.#modalEffects?.release();
+          const effects = this.#modalEffects;
           this.#modalEffects = undefined;
           this.#removeFocusGuards();
+          const retire = (): void => {
+            if (this.#isOpen() || this.#disconnected) return;
+            if (this.#behavior.restoreFocus && this.#closeReason !== 'ancestor-closed') {
+              const target = this.#behavior.restoreFocusTarget ?? this.#options.trigger;
+              if (target !== undefined && target.ownerDocument === this.#options.root.ownerDocument
+                && !this.#options.root.contains(target) && availableFocusTarget(target)) focusElement(target);
+            }
+            if (this.#isOpen() || this.#disconnected) return;
+            const focused = this.#options.root.ownerDocument?.activeElement;
+            if (this.#behavior.restoreFocus && this.#closeReason !== 'ancestor-closed'
+              && focused !== null && focused !== undefined && this.#options.root.contains(focused)) (focused as HTMLElement).blur?.();
+            this.#isolation.set(true);
+          };
+          if (effects !== undefined) effects.release(retire);
+          else retire();
         }
       }
     } finally {
-      this.#visibility?.setHidden(!open);
-      if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
-      if (!open) { this.#initialFocusApplied = false; this.#moveFocus = undefined; }
-      if (open) { if (!preserveFocus) this.#applyInitialFocus(); }
-      else if (previous === true && this.#behavior.restoreFocus) {
-        const target = this.#behavior.restoreFocusTarget;
-        if (target == null) focusElement(this.#options.trigger);
-        else if (target.ownerDocument === this.#options.root.ownerDocument && target.isConnected
-          && !this.#options.root.contains(target) && !target.closest('[inert],[hidden],[aria-hidden="true"],:disabled')) focusElement(target);
+      if (this.#publishedRevision === revision && !this.#disconnected) {
+        this.#visibility?.setHidden(!open);
+        if (!open) this.#isolation.set(!this.#options.root.hidden);
+        if (this.#options.trigger !== undefined && this.#options.triggerMode !== 'focus-hover') this.#options.trigger.setAttribute('aria-expanded', String(open));
+        if (!open) { this.#initialFocusApplied = false; this.#moveFocus = undefined; }
+        if (open) { if (!preserveFocus) this.#applyInitialFocus(); }
       }
     }
   }
   #applyInitialFocus(): void {
     if (this.#initialFocusApplied || !this.#behavior.autoFocus || this.#options.root.hidden) return;
-    const target = this.#behavior.initialFocus ?? firstFocusable(this.#options.root) ?? this.#options.root;
+    const requested = this.#behavior.initialFocus;
+    const target = requested !== undefined && availableFocusTarget(requested) ? requested : firstFocusable(this.#options.root) ?? this.#options.root;
     focusElement(target);
     this.#initialFocusApplied = this.#options.root.ownerDocument?.activeElement === target;
   }
@@ -697,7 +720,17 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
 
 const FOCUSABLE = 'button,[href],input,select,textarea,[tabindex]';
 function focusable(root: HTMLElement): HTMLElement[] {
-  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => !element.hasAttribute('disabled') && element.tabIndex >= 0);
+  return [...root.querySelectorAll<HTMLElement>(FOCUSABLE)].filter((element) => element.tabIndex >= 0 && availableFocusTarget(element));
+}
+function availableFocusTarget(element: HTMLElement): boolean {
+  if (element.isConnected === false || element.hasAttribute?.('disabled') || element.closest?.('[hidden],[inert],[aria-hidden="true"],:disabled')) return false;
+  const view = element.ownerDocument?.defaultView;
+  if (view?.getComputedStyle === undefined) return true;
+  for (let node: HTMLElement | null = element; node !== null; node = node.parentElement) {
+    const style = view.getComputedStyle(node);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || style.contentVisibility === 'hidden') return false;
+  }
+  return true;
 }
 function firstFocusable(root: HTMLElement): HTMLElement | null { return focusable(root)[0] ?? null; }
 function lastFocusable(root: HTMLElement): HTMLElement | null { return focusable(root).at(-1) ?? null; }

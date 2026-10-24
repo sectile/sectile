@@ -1,15 +1,33 @@
 name: deep-verification
 
 on:
+  pull_request:
+  push:
+    branches: [main]
   workflow_dispatch:
   schedule:
     - cron: '17 3 * * 1'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: verification-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  deep:
-    runs-on: ubuntu-latest
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      count: ${{ steps.plan.outputs.count }}
+      browser: ${{ steps.plan.outputs.browser }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -19,6 +37,164 @@ jobs:
         with:
           python-version: '3.13'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm verify:theory
-      - run: pnpm verify:reproducible-build
-      - run: pnpm verify
+      - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .tasks/ci/timings.json
+          key: verification-times-${{ github.ref }}-${{ github.sha }}
+          restore-keys: |
+            verification-times-${{ github.ref }}-
+            verification-times-refs/heads/main-
+      - id: plan
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          if test -f .tasks/ci/timings.json; then export SECTILE_CI_TIMINGS=.tasks/ci/timings.json; fi
+          if test "$EVENT" = pull_request || { test "$EVENT" = push && test "$BASE" != 0000000000000000000000000000000000000000; }; then
+            node scripts/ci.mjs plan "--base=$BASE"
+          else
+            node scripts/ci.mjs plan --full
+          fi
+      - if: steps.plan.outputs.count != '0'
+        run: node scripts/ci.mjs prepare
+      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: verification-prepared
+          include-hidden-files: true
+          path: |
+            packages/*/dist/
+            packages/*/.verification-dist/
+            .tasks/ci/plan.json
+            .tasks/verification/publication-packs/
+          retention-days: 1
+          if-no-files-found: error
+
+  verify:
+    needs: prepare
+    if: needs.prepare.outputs.count != '0'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13'
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: verification-prepared
+      - run: node scripts/ci.mjs run '${{ matrix.lane }}'
+      - if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: verification-lane-${{ matrix.lane }}
+          include-hidden-files: true
+          path: .tasks/ci/lane-*.json
+          retention-days: 1
+          if-no-files-found: error
+
+  browser:
+    needs: prepare
+    if: needs.prepare.outputs.browser == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: verification-prepared
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: node scripts/browser-verification.mjs
+      - if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: browser-failure
+          include-hidden-files: true
+          path: .tasks/browser/
+          retention-days: 1
+
+  macos-ime:
+    needs: prepare
+    if: needs.prepare.outputs.browser == 'true'
+    runs-on: macos-15
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: verification-prepared
+      - run: pnpm exec playwright install chromium
+      - run: node scripts/browser-verification.mjs --macos-ime
+      - if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: macos-ime-failure
+          include-hidden-files: true
+          path: .tasks/browser/
+          retention-days: 1
+
+  result:
+    if: always()
+    needs: [prepare, verify, browser, macos-ime]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.x
+          package-manager-cache: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: verification-prepared
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: verification-lane-*
+          merge-multiple: true
+          path: .tasks/ci
+      - env:
+          PREPARE: ${{ needs.prepare.result }}
+          VERIFY: ${{ needs.verify.result }}
+          BROWSER: ${{ needs.browser.result }}
+          IME: ${{ needs.macos-ime.result }}
+          EXPECT_BROWSER: ${{ needs.prepare.outputs.browser }}
+          COUNT: ${{ needs.prepare.outputs.count }}
+        run: |
+          test "$PREPARE" = success
+          if test "$COUNT" != 0; then test "$VERIFY" = success; fi
+          if test "$EXPECT_BROWSER" = true; then test "$BROWSER" = success; test "$IME" = success; fi
+          node scripts/ci.mjs check
+      - uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: .tasks/ci/timings.json
+          key: verification-times-${{ github.ref }}-${{ github.sha }}

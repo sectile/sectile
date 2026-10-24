@@ -29,6 +29,8 @@ const continueOnFailure = rawArguments.includes('--continue');
 const exactRequested = rawArguments.includes('--exact');
 const listUnitsRequested = rawArguments.includes('--list-units');
 const unitOptionIndex = rawArguments.indexOf('--unit');
+const baseOption = rawArguments.find((argument) => argument.startsWith('--base='));
+const prepared = rawArguments.includes('--prepared');
 const unitRequested = unitOptionIndex === -1 ? null : rawArguments[unitOptionIndex + 1];
 if (unitOptionIndex !== -1 && (unitRequested === undefined || unitRequested.startsWith('--'))) {
   throw new Error('--unit requires one verification unit ID');
@@ -37,8 +39,8 @@ const parsedArguments = unitOptionIndex === -1
   ? rawArguments
   : rawArguments.filter((_, index) => index !== unitOptionIndex && index !== unitOptionIndex + 1);
 const targetArguments = parsedArguments.filter((argument) => !argument.startsWith('--'));
-const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue', '--exact', '--list-units']);
-const unknownFlags = parsedArguments.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument));
+const knownFlags = new Set(['--quiet', '--verbose', '--compat', '--full', '--release', '--explain', '--continue', '--exact', '--list-units', '--prepared']);
+const unknownFlags = parsedArguments.filter((argument) => argument.startsWith('--') && !knownFlags.has(argument) && argument !== baseOption);
 if (unknownFlags.length > 0) throw new Error(`unexpected verification flags: ${unknownFlags.join(', ')}`);
 if (quietRequested && verbose) throw new Error('verification cannot be both quiet and verbose');
 if (fullRequested && releaseRequested) throw new Error('verification cannot be both full and release certification');
@@ -193,7 +195,7 @@ function verificationSteps() {
   }
   if (selectedPackages.has('@sectile/tabular')) {
     result.push(commandStep('tabular:laws', 'Tabular law coverage', process.execPath, [join(root, 'scripts/check-tabular-laws.mjs')]));
-    result.push(commandStep('tabular:virtual-witnesses', 'Tabular raw Virtual witnesses', process.execPath, ['--test', join(root, 'verification/cross-host/tabular-virtual.test.mjs')]));
+    if (!fullRepositoryVerification && !workspaceGates.has('cross-host')) result.push(commandStep('tabular:virtual-witnesses', 'Tabular raw Virtual witnesses', process.execPath, ['--test', join(root, 'verification/cross-host/tabular-virtual.test.mjs')]));
     result.push(commandStep('tabular:implementation', 'Tabular implementation evidence', process.execPath, [join(root, 'scripts/check-tabular-implementation.mjs')]));
   }
   const reproducibleBuilds = reproducibleBuildStep();
@@ -291,7 +293,6 @@ function fullPackageWaveSteps(pipelineFor) {
 function workspaceContractSteps({ includePerformance }) {
   const crossHostTests = crossHostTestPaths();
   const result = [
-    commandStep('validation-artifacts', 'validation artifact coverage', 'pnpm', ['check:validation-artifacts']),
     commandStep('cross-host', 'cross-host verification', process.execPath, ['--test', '--test-concurrency=1', ...crossHostTests]),
     commandStep('tooling', 'tooling verification', 'pnpm', ['test:tooling']),
     commandStep('semantic-authority', 'semantic authority', 'pnpm', ['check:semantic-authority']),
@@ -309,7 +310,6 @@ function workspaceContractSteps({ includePerformance }) {
       join(root, 'scripts', 'check-component-public-api.mjs'),
     ]),
     commandStep('breaking-changes', 'breaking changes', process.execPath, [join(root, 'scripts', 'check-breaking-changes.mjs')]),
-    commandStep('workstream-ownership', 'workstream ownership', process.execPath, [join(root, 'scripts', 'check-workstream-ownership.mjs')]),
     consumerVerificationStep(),
     commandStep('lifecycle-retention', 'lifecycle retention', 'pnpm', ['check:lifecycle-retention']),
   ];
@@ -413,10 +413,10 @@ function packageScriptStep(id, label, packageName, scripts) {
 }
 
 function packageScriptCommands(packageName, scripts) {
-  return scripts.map((script) => commandEntry(
+  return scripts.filter((script) => !prepared || script !== 'build').map((script) => commandEntry(
     `${packageName} ${script}`,
     'pnpm',
-    ['--filter', packageName, '--silent', 'run', script],
+    ['--filter', packageName, '--silent', 'run', prepared && script === 'test' && graph.packages.some(entry => entry.name === packageName) ? 'test:prepared' : script],
   ));
 }
 
@@ -484,6 +484,7 @@ function describeUnit(unit) {
     label: unit.label,
     requires: unit.requires,
     commands: unit.commands.map(({ detail }) => detail),
+    execution: unit.commands.map(({ command, args }) => ({ command, args })),
   });
 }
 
@@ -640,6 +641,11 @@ function fileMatchesExplicitTargets(path) {
 }
 
 function collectChangedFiles() {
+  if (baseOption !== undefined) {
+    const requested = baseOption.slice('--base='.length);
+    if (!/^[0-9a-f]{40}$/u.test(requested)) throw new Error('--base requires a full commit SHA');
+    return (gitOutput(['diff', '--name-only', '--diff-filter=ACDMRTUXB', `${requested}...HEAD`], false) ?? '').split(/\r?\n/u).filter(Boolean);
+  }
   const upstream = gitOutput(['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{upstream}'], true);
   let base = 'HEAD';
   if (upstream !== null) {

@@ -123,8 +123,8 @@ export const SpinButtonRoot = defineComponent({
       disabled: flags.value.disabled,
       readonly: flags.value.readonly,
     }));
-    const min = computed(() => String(props.min));
-    const max = computed(() => String(props.max));
+    const min = computed(() => connection.value?.range.lower ?? String(props.min));
+    const max = computed(() => connection.value?.range.upper ?? String(props.max));
     const label = computed(() => props.label);
     const update = (): void => {
       if (connection.value === undefined) return;
@@ -145,10 +145,8 @@ export const SpinButtonRoot = defineComponent({
     };
     const connect = (input: HTMLInputElement): void => {
       const pendingDraft = proposedDraft;
-      disconnect();
-      proposedDraft = pendingDraft;
-      inputElement.value = input;
-      connection.value = createSpinButton({
+      // Validate the whole replacement before retiring the accepted connection.
+      const nextConnection = createSpinButton({
         input,
         min: String(props.min),
         max: String(props.max),
@@ -175,6 +173,10 @@ export const SpinButtonRoot = defineComponent({
         },
         onUpdate: update,
       });
+      disconnect();
+      proposedDraft = pendingDraft;
+      inputElement.value = input;
+      connection.value = nextConnection;
       update();
     };
     const reset = (): void => {
@@ -212,11 +214,13 @@ export const SpinButtonRoot = defineComponent({
         connect(inputElement.value);
       }, 0);
     };
-    watch([() => props.modelValue, () => props.draft], () => {
+    watch([() => props.min, () => props.max, () => props.step, () => props.pageStep, () => props.policies,
+      () => props.modelValue, () => props.draft, () => flags.value.disabled, () => flags.value.readonly], (next, previous) => {
       proposedDraft = noDraftProposal;
-      sync();
+      if (next.slice(0, 5).some((value, index) => value !== previous[index]) || next[7] !== previous[7] || next[8] !== previous[8]) requestReconnect();
+      else if (inputComposing && reconnectPending) return;
+      else sync();
     });
-    watch([() => flags.value.disabled, () => flags.value.readonly], requestReconnect);
     provide<SpinButtonContext>(spinButtonKey, {
       state, min, max, label, connection, connect, disconnect, reset, setInputComposing,
       step: (event) => {

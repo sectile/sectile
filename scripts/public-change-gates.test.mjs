@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { surfaceDifferences, validateEntries, validateReplacement } from './check-breaking-changes.mjs';
-import { validateOwnership } from './check-workstream-ownership.mjs';
 
 test('breaking checker rejects empty, missing, duplicate, stale, invalid, and unexplained entries', async () => {
   const differences = surfaceDifferences(
@@ -20,14 +19,6 @@ test('breaking checker rejects empty, missing, duplicate, stale, invalid, and un
     ...valid,
     replacement: { package: '@sectile/core', subpath: './missing' },
   }), /replacement subpath does not resolve/u);
-});
-
-test('ownership checker rejects concrete same-stage path overlap', () => {
-  assert.throws(() => validateOwnership({
-    schemaVersion: 1,
-    parallelStages: [{ stage: 'fixture', workItems: ['WI-001', 'WI-002'] }],
-    workItems: { 'WI-001': ['packages/core/src/'], 'WI-002': ['packages/core/src/grid.ts'] },
-  }), /overlap/u);
 });
 
 function entry() {

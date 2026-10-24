@@ -2,10 +2,28 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 import {
+  balanceVerificationUnits,
+  validateVerificationReports,
   collectDependencyClosure,
   deriveAffectedSelection,
   deriveAffectedWorkspaceGates,
 } from './lib/verification-plan.mjs';
+
+test('CI spreads expensive units and accounts for every result exactly once', () => {
+  const units = ['a', 'b', 'c', 'd'].map(id => ({ id }));
+  const lanes = balanceVerificationUnits(units, 2, { a: 10, b: 8, c: 4, d: 2 });
+  assert.deepEqual(lanes.map(lane => lane.weight), [12, 12]);
+  assert.deepEqual(new Set(lanes.flatMap(lane => lane.units)), new Set(['a', 'b', 'c', 'd']));
+  assert.deepEqual(balanceVerificationUnits([], 6), []);
+  assert.throws(() => balanceVerificationUnits([{ id: 'a' }, { id: 'a' }], 2), /duplicate/u);
+  const plan = { sha: 'source', units };
+  const report = { sha: 'source', results: units.map(({ id }) => ({ id, status: 'passed' })) };
+  validateVerificationReports(plan, [report]);
+  assert.throws(() => validateVerificationReports(plan, []), /incomplete/u);
+  assert.throws(() => validateVerificationReports(plan, [report, report]), /duplicate/u);
+  assert.throws(() => validateVerificationReports(plan, [{ ...report, sha: 'other' }]), /another source/u);
+  assert.throws(() => validateVerificationReports(plan, [{ sha: 'source', results: [{ id: 'a', status: 'failed' }] }]), /failed/u);
+});
 
 import { loadPublishedPackageGraph } from './lib/workspace-graph.mjs';
 

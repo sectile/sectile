@@ -1,3 +1,34 @@
+/** Longest-first scheduling; stable IDs make identical plans reproducible. */
+export function balanceVerificationUnits(units, laneCount, durations = {}) {
+  if (!Number.isInteger(laneCount) || laneCount < 1 || laneCount > 6) throw new Error('CI lane count must be between 1 and 6');
+  if (new Set(units.map(({ id }) => id)).size !== units.length) throw new Error('duplicate verification unit');
+  const weight = (unit) => {
+    const value = durations[unit.id];
+    return Number.isFinite(value) && value > 0 ? value : 1;
+  };
+  const lanes = Array.from({ length: Math.min(laneCount, units.length) }, (_, index) => ({ id: String(index + 1), weight: 0, units: [] }));
+  for (const unit of [...units].sort((a, b) => weight(b) - weight(a) || a.id.localeCompare(b.id))) {
+    const lane = lanes.reduce((best, candidate) => candidate.weight < best.weight ? candidate : best);
+    lane.units.push(unit.id);
+    lane.weight += weight(unit);
+  }
+  return lanes;
+}
+
+export function validateVerificationReports(plan, reports) {
+  const expected = new Set(plan.units.map(({ id }) => id));
+  const observed = new Set();
+  for (const report of reports) {
+    if (report.sha !== plan.sha) throw new Error('verification report belongs to another source SHA');
+    for (const result of report.results) {
+      if (!expected.has(result.id) || observed.has(result.id)) throw new Error(`unexpected or duplicate verification result: ${result.id}`);
+      if (result.status !== 'passed') throw new Error(`verification failed: ${result.id}`);
+      observed.add(result.id);
+    }
+  }
+  if (observed.size !== expected.size) throw new Error('verification results are incomplete');
+}
+
 export function deriveAffectedSelection(graph, changedFiles, options = {}) {
   const directPackages = new Set();
   const runtimePackages = new Set();

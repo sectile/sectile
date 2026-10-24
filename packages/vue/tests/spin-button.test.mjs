@@ -24,7 +24,7 @@ class TestHTMLInputElement {
   }
 
   addEventListener(type, listener) { this.listeners.set(type, listener); }
-  removeEventListener(type) { this.listeners.delete(type); }
+  removeEventListener(type, listener) { if (this.listeners.get(type) === listener) this.listeners.delete(type); }
   setAttribute(name, value) { this.props[name] = value; }
 }
 

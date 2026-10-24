@@ -494,7 +494,8 @@
     "typecheck": "tsc --project tsconfig.json --pretty false",
     "typecheck:public": "pnpm --silent run build && pnpm --silent run typecheck:public:prepared",
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false && sectile-typecheck-sfc --project type-tests/tsconfig.vue.json --noEmit",
-    "test": "pnpm --silent run build:verification && node --test --test-concurrency=4 tests/*.test.mjs",
+    "test": "pnpm --silent run build:verification && pnpm --silent run test:prepared",
+    "test:prepared": "node --test --test-concurrency=4 tests/*.test.mjs",
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {

@@ -17,6 +17,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction/attributes.js';
 import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
+import { eventOrigin, protectsNativeInteraction } from './interaction/gesture.js';
 
 export type { CarouselPolicies, CarouselPosition } from '@sectile/core/carousel';
 
@@ -177,6 +178,9 @@ class DOMCarousel<ID extends StableID> implements CarouselConnection<ID> {
     if (!options.root.id) options.root.id = this.#baseID;
 
     this.#keydown = (event) => {
+      if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+      const origin = typeof event.composedPath === 'function' ? eventOrigin(event) : undefined;
+      if (origin !== undefined && origin !== options.root && protectsNativeInteraction(origin, options.root)) return;
       if (event.key === ' ' && event.target !== options.root) return;
       const vertical = options.orientation === 'vertical';
       const horizontal = vertical ? null : horizontalArrow(event.key, options.direction);
