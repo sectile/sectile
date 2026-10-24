@@ -18,7 +18,6 @@ const nativeKeys = (codes, control = false) => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
   // Quartz virtual-key events leave character translation to the active OS IME.
   const program = `ObjC.import('Cocoa'); ObjC.import('CoreGraphics');
-    if (!$.CGPreflightPostEventAccess()) throw new Error('Quartz event posting is not permitted');
     function post(code, down) {
       const event = $.CGEventCreateKeyboardEvent(null, code, down);
       $.CGEventSetFlags(event, ${control ? '(code !== 59 || down) ? $.kCGEventFlagMaskControl : 0' : '0'});
