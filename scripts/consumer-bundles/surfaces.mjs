@@ -33,7 +33,9 @@ export async function deriveSurfaceFragment(repoRoot, packageName) {
     const peer = optionalPeer(packageName, subpath);
     if (shouldMeasureNamed(packageName, subpath, classification)) fixtureModes.push('named');
     if (subpath === '.') fixtureModes.push('namespace');
-    const rootEquivalentExport = subpath === '.' ? null : exports.find((name) => rootRuntime.includes(name)) ?? null;
+    const reorderOwner = subpath === './reorder' ? packageName === 'vue' ? 'TreeReorderRoot' : 'createReorder' : undefined;
+    const rootEquivalentExport = subpath === '.' ? null
+      : exports.find((name) => name === reorderOwner && rootRuntime.includes(name)) ?? exports.find((name) => rootRuntime.includes(name)) ?? null;
     if (rootEquivalentExport !== null && shouldMeasureRootEquivalent(packageName, subpath, classification)) {
       fixtureModes.push('root-named');
     }
@@ -132,6 +134,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'dom:./image',
     'dom:./fullscreen',
     'dom:./media-gesture',
+    'dom:./reorder',
     'dom:./layout-basis',
     'dom:./layout-motion',
     'dom:./focus-visibility',
@@ -154,6 +157,7 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'vue:./image',
     'vue:./fullscreen',
     'vue:./media-gesture',
+    'vue:./reorder',
     'vue:./checkbox-tree',
   ]);
   return representatives.has(`${packageName}:${subpath}`);

@@ -1231,9 +1231,11 @@
       ],
       "typeBearing": true,
       "optionalPeer": null,
-      "rootEquivalentExport": "SequenceReorderHandle",
+      "rootEquivalentExport": "TreeReorderRoot",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {

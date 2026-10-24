@@ -36,7 +36,10 @@ treeReorder.removeItem(cell);
 sequenceReorder.removeItem('a');
 // @ts-expect-error Release requires the mounted host, not its stable identity.
 treeReorder.removeItem('b');
-const controlledSequence: SequenceReorderOptions<'a'> = { root, ids: ['a'], controlled: true, handleOnly: true, label: 'Order', roleDescription: 'sortable' };
+const controlledSequence: SequenceReorderOptions<'a'> = { root, ids: ['a'], controlled: true, handleOnly: true, label: 'Order', roleDescription: 'sortable', keyboardMode: 'preview',
+  onInteractionChange: change => { const exact: 'a' | null = change.interaction.sourceID; void exact; } };
+const preview = sequenceReorder.getPreviewState(); if (preview.ok) { const ids: readonly ('a'|'b')[] = preview.value.ids; void ids; }
+sequenceReorder.cancelInteraction(); treeReorder.refreshDropTarget();
 const controlledTree: TreeReorderOptions<'a'> = { root, nodes: [{ id: 'a', parentID: null }], controlled: true, handleOnly: true, label: 'Hierarchy', roleDescription: 'sortable' };
 void [controlledSequence, controlledTree];
 const board: TreeReorderOptions<'column' | 'card'> = { root, nodes: [{ id:'column',parentID:null },{ id:'card',parentID:'column' }], layout:'columns',direction:'rtl',readOnly:false,

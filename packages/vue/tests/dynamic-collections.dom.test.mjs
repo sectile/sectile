@@ -81,7 +81,7 @@ test('Vue controlled column moves remain proposals and use updated policy and so
     assert.deepEqual(state.getChildren(null), ['left']); assert.equal(root.value.move('b', { parentID: 'right' }), false);
   } finally { unmount(fixture.app, fixture.host); }
 });
-test('Vue column Reorder suspends its six native listeners across Host, KeepAlive and root replacement', async () => {
+test('Vue column Reorder suspends its root listeners across Host, KeepAlive and root replacement', async () => {
   const active = shallowRef(true), visible = shallowRef(true), as = shallowRef('div'), root = shallowRef();
   const listeners = new Map(), add = HTMLElement.prototype.addEventListener, remove = HTMLElement.prototype.removeEventListener;
   const count = () => [...listeners.values()].reduce((sum, types) => sum + [...types.values()].reduce((sum, set) => sum + set.size, 0), 0); let state, fixture;
@@ -95,14 +95,38 @@ test('Vue column Reorder suspends its six native listeners across Host, KeepAliv
   try {
     fixture = mount(() => h(HostProvider, { active: active.value }, () => h(KeepAlive, null, { default: () => visible.value
       ? h(TreeReorderRoot, { ref: root, nodes: boardNodes, layout: 'columns', as: as.value }, { default: current => { state = current; return boardParts(current); } }) : null })));
-    await settle(); assert.equal(count(), 6); assert.equal(root.value.move('a', { parentID: 'right' }), true); await settle();
+    await settle(); assert.equal(count(), 7); assert.equal(root.value.move('a', { parentID: 'right' }), true); await settle();
     for (let cycle = 0; cycle < 3; cycle++) { active.value = false; await settle(); assert.equal(count(), 0); assert.equal(root.value.move('b', { parentID: 'right' }), false);
       assert.equal(state.canMove('b', { get parentID() { throw Error('inactive target'); } }), false);
-      active.value = true; await settle(); assert.equal(count(), 6); assert.equal(state.getParent('a'), 'right'); }
-    visible.value = false; await settle(); assert.equal(count(), 0); visible.value = true; await settle(); assert.equal(count(), 6);
-    as.value = 'section'; await settle(); assert.equal(count(), 6); assert.equal(root.value.element.tagName, 'SECTION'); assert.equal(state.getParent('a'), 'right');
+      active.value = true; await settle(); assert.equal(count(), 7); assert.equal(state.getParent('a'), 'right'); }
+    visible.value = false; await settle(); assert.equal(count(), 0); visible.value = true; await settle(); assert.equal(count(), 7);
+    as.value = 'section'; await settle(); assert.equal(count(), 7); assert.equal(root.value.element.tagName, 'SECTION'); assert.equal(state.getParent('a'), 'right');
     unmount(fixture.app, fixture.host); fixture = undefined; assert.equal(count(), 0);
   } finally { if (fixture) unmount(fixture.app, fixture.host); HTMLElement.prototype.addEventListener = add; HTMLElement.prototype.removeEventListener = remove; }
+});
+test('Vue Reorder projects preview separately from controlled order and retires saved preview ports', async () => {
+  for (const tree of [false,true]) {
+    let state; const proposals=[], lifecycle=[];
+    const Root=tree?TreeReorderRoot:SequenceReorderRoot, Item=tree?TreeReorderItem:SequenceReorderItem;
+    const fixture=mount(()=>h(Root,{keyboardMode:'preview',controlled:true,
+      ...(tree?{nodes:boardNodes,layout:'columns'}:{items:['a','b']}),
+      [tree?'onUpdate:nodes':'onUpdate:items']:value=>proposals.push(value),
+      'onInteraction-change':change=>lifecycle.push(change)}, {default:current=>{
+        state=current;return tree?boardParts(current):current.items.map(value=>h(Item,{value,key:value},()=>value));
+      }}));
+    try {
+      await settle();const a=fixture.host.querySelector('[data-value="a"]');a.focus();
+      const key=name=>a.dispatchEvent(new window.KeyboardEvent('keydown',{key:name,bubbles:true,cancelable:true}));
+      key(' ');key('ArrowDown');await settle();
+      assert.equal(state.interaction.sourceID,'a');assert.equal(proposals.length,0);
+      const preview=state.getPreviewState();assert.equal(preview.ok,true);
+      assert.deepEqual(tree?state.getChildren('left'):state.items,['a','b']);
+      key('Enter');await settle();assert.equal(proposals.length,1);
+      assert.equal(state.interaction.sourceID,null);assert.equal(lifecycle.at(-2).accepted,false);assert.equal(lifecycle.at(-1).type,'end');
+      const saved=state.cancelInteraction;unmount(fixture.app,fixture.host);fixture.app=undefined;
+      assert.doesNotThrow(saved);
+    }finally{if(fixture.app)unmount(fixture.app,fixture.host);}
+  }
 });
 test('saved Vue column Reorder ports retire without retaining platform roots or policy closures', { skip: typeof global.gc !== 'function' }, async () => {
   const retained = heldBoardPorts(); retained.close(); await settle();
@@ -154,7 +178,7 @@ test('Vue column attachment failure drains acquired listeners and permits valid 
   HTMLElement.prototype.addEventListener = function(type, listener, ...rest) {
     const result = add.call(this, type, listener, ...rest);
     if (this.dataset.scope === 'tree-reorder' && this.dataset.part === 'root') {
-      const set = listeners.get(type) ?? new Set(); set.add(listener); listeners.set(type, set); if (count() === 6) armed = true;
+      const set = listeners.get(type) ?? new Set(); set.add(listener); listeners.set(type, set); if (count() === 7) armed = true;
     }
     return result;
   };
@@ -165,7 +189,7 @@ test('Vue column attachment failure drains acquired listeners and permits valid 
   app.config.errorHandler = error => errors.push(error);
   try {
     app.mount(host); armed = false; assert.ok(errors.includes(failure)); assert.equal(count(), 0);
-    HTMLElement.prototype.setAttribute = set; disabled.value = true; await settle(); assert.equal(count(), 6);
+    HTMLElement.prototype.setAttribute = set; disabled.value = true; await settle(); assert.equal(count(), 7);
   } finally { armed = false; app.unmount(); host.remove(); HTMLElement.prototype.addEventListener = add; HTMLElement.prototype.removeEventListener = remove; HTMLElement.prototype.setAttribute = set; }
   assert.equal(count(), 0);
 });

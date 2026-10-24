@@ -9,6 +9,7 @@ import { SpinButtonRoot, SpinButtonInput } from '../../.verification-dist/spin-b
 import { createPopover } from '@sectile/dom/popover';
 import { createCarousel } from '@sectile/dom/carousel';
 import { connectMediaGesture } from '@sectile/dom/media-gesture';
+import { SequenceReorderRoot, SequenceReorderItem } from '../../.verification-dist/reorder.js';
 
 const host = document.querySelector('#probe');
 const style = document.createElement('style');
@@ -38,6 +39,14 @@ Object.defineProperty(HTMLInputElement.prototype, 'value', { ...value, set(next)
 
 window.sectileProbe = {
   events, writes,
+  async reorder() {
+    reset(); const changes=[], lifecycle=[];let state;
+    app=createApp({render:()=>h(SequenceReorderRoot,{items:['a','b','c'],keyboardMode:'preview',
+      'onUpdate:items':value=>changes.push(value),'onInteraction-change':value=>lifecycle.push(value)},
+    {default:current=>{state=current;return current.items.map(value=>h(SequenceReorderItem,{value,key:value,id:`reorder-${value}`},()=>value));}})});
+    app.mount(host);await settle();
+    this.reorderState=()=>({items:state.items,interaction:state.interaction,preview:state.getPreviewState(),changes,lifecycle});
+  },
   async native() {
     reset(); events.length = 0; writes.length = 0;
     const text = ref(''), combo = ref(''), items = ref([{ id: 'a', label: '한글' }]);

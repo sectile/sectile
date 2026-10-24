@@ -31137,6 +31137,69 @@
     {
       "package": "dom",
       "surface": "hot",
+      "id": "media-gesture.pointer-admission",
+      "source": "packages/dom/src/media-gesture.ts",
+      "benchmarkIDs": [
+        "VAL-017:linear-work"
+      ],
+      "specificationCeiling": "O(h) origin admission; O(1) pending contact movement",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "h",
+            "meaning": "native origin ancestry within the gesture root",
+            "ceiling": "authored DOM depth"
+          }
+        ],
+        "time": {
+          "bound": "O(h)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "2 contacts; 2 suppressed click IDs",
+          "listeners": "at most 13 with wheel and pending admission",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Existing native-control ancestry admission runs once per pointerdown. Explicit opt-in retains at most one pending primary contact before claiming the existing two-contact gesture. Movement compares a scalar squared distance; three temporary document listeners retire on claim, cancel or disconnect. Default protected origins decline before allocating contact records. No gesture reducer or media projection is introduced.",
+        "adversarialWitness": "Existing DOM/Vue MediaGesture tests preserve unclaimed button click and keyboard activation, suppress only claimed pointer clicks, cancel pending observation on blur/hidden/disconnect, promote a second contact and drain partial listener acquisition. Explicit GC churn holds retired callbacks while roots and application payloads become unreachable.",
+        "evidence": [
+          "packages/dom/tests/media-gesture.test.mjs",
+          "packages/vue/tests/media-gesture.dom.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "Contact count is capped at two and origin protection follows only the native ancestry."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
       "id": "menu.click-target",
       "source": "packages/dom/src/overlay/menu/control.ts",
       "benchmarkIDs": [
@@ -32249,7 +32312,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "Existing capture and logical target are authoritative. Equivalent item placements or identical canonical insertion ports skip preview admission and DOM writes. One host-local move-event resolver serves both preview and commit; Core admission reuses the existing policy reentrancy lock. Host feedback retains two attribute bindings with four entries total. The retained/allocation ceiling includes cold canonical child-view admission; warm feedback itself is constant-space, and those child views retain the existing immutable Core owner lifetime. A new destination retires its predecessor before acquiring one ephemeral binding. Capture cleanup drains source,target and pointer release after clearing fields, even on restoration errors. No per-target binding Map or Vue publication is introduced. Existing connection listeners are separately governed; feedback adds none.",
+        "proof": "Existing capture and logical target are authoritative. Equivalent item placements or identical canonical insertion ports skip preview admission and DOM writes; public pointer facts may still publish changed coordinates. One host-local move-event resolver serves both preview and commit; Core admission reuses the existing policy reentrancy lock. Host feedback retains two attribute bindings with four entries total. The retained/allocation ceiling includes cold canonical child-view admission; warm feedback itself is constant-space, and those child views retain the existing immutable Core owner lifetime. A new destination retires its predecessor before acquiring one ephemeral binding. Capture cleanup drains source,target and pointer release after clearing fields, even on restoration errors. No per-target binding Map is introduced. Existing connection listeners are separately governed; feedback adds none.",
         "adversarialWitness": "Production connection tests perform 100 extra pointer moves within one destination and observe one policy query and three target writes total. Commit rechecks a changed permission and refuses. Virtual anchors resolve with all mounted rectangle readers configured to throw. Refused targets, target switching, caller writes, reentrant disposal and write/restoration failures release feedback and capture. The held-owner GC fixture now starts an active drag with an explicit target before retirement.",
         "evidence": [
           "packages/dom/tests/reorder.test.mjs"
@@ -32257,6 +32320,80 @@
         "fullScan": {
           "allowed": false,
           "rationale": "No mounted item/target traversal in feedback; the existing Core admission may visit its affected subtree or lazily admit its canonical child view."
+        }
+      }
+    },
+    {
+      "package": "dom",
+      "surface": "hot",
+      "id": "reorder.interaction-preview",
+      "source": "packages/dom/src/reorder.ts",
+      "benchmarkIDs": [
+        "VAL-017:linear-work"
+      ],
+      "specificationCeiling": "O(1) snapshot/cached preview; O(n) explicit preview/keyboard step; existing O(m+h) hit routing",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "n",
+            "meaning": "canonical order cardinality",
+            "ceiling": "Sequence/Tree maxItems"
+          },
+          {
+            "name": "m",
+            "meaning": "registered native item candidates",
+            "ceiling": "authored mounted items"
+          },
+          {
+            "name": "h",
+            "meaning": "native hit ancestry",
+            "ceiling": "authored DOM depth"
+          }
+        ],
+        "time": {
+          "bound": "O(n+m+h)",
+          "kind": "worst-case",
+          "runtimeState": "connected"
+        },
+        "space": {
+          "auxiliary": "O(n)",
+          "output": "O(n)",
+          "retained": "O(n+m)"
+        },
+        "resources": {
+          "allocations": "O(n)",
+          "cacheEntries": "1 proposal and 1 full preview",
+          "listeners": "9 total: 7 root, 1 document, 1 window",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "at most 2 caller hooks"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "DOM owns one native interaction, destination event and immutable metadata snapshot. Changed destinations use existing Core admission; identical destinations reuse admission and cached full preview. Only explicit getPreviewState or keyboard stepping invokes the existing canonical Core reducer; accepted runtime order remains separate until one commit. A changed proposal retires the previous preview. No alternate reducer, hierarchy index or auto-scroll loop is retained. Capture is released before order publication, with source/revision and target validity checked again after release.",
+        "adversarialWitness": "Production tests exercise all three layouts with accepted and refused controlled commits, repeated preview borrowing, 30 same-destination moves with no extra policy calls, stationary-point target refresh, cancellation by blur/source updates, reentrant retirement and zero listeners after disconnect. Vue ports retire on unmount and browser keys prove preview, Escape and one confirmation.",
+        "evidence": [
+          "packages/dom/tests/reorder.test.mjs",
+          "packages/vue/tests/dynamic-collections.dom.test.mjs",
+          "scripts/browser-verification.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "An explicitly requested full preview or keyboard step materializes the canonical Core output. Pointer facts never materialize an order; ordinary geometry fallback retains its existing mounted-candidate scan."
         }
       }
     },

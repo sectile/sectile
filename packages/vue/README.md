@@ -73,3 +73,19 @@ restores that action after exit and rendering finish. A valid internal
 original focused action. Unavailable targets are skipped, and a newer focus
 owner outside the content is preserved. Closing without requesting inline does
 not schedule a later focus transfer for an unrelated presentation change.
+
+`SequenceReorderRoot` and `TreeReorderRoot` expose `interaction`,
+`getPreviewState()`, `cancelInteraction()` and `refreshDropTarget()` in their
+default slot. Accepted `items` or `nodes` stay unchanged during preview, so a
+composition can render a lifted item or an insertion marker independently.
+`getPreviewState()` returns a Result containing the full proposed Core state;
+request it only when that complete order is needed. `interaction.clientPoint`
+and `refreshDropTarget()` support application-owned auto-scroll without a second
+pointer sensor. The `interaction-change` event reports start, preview,
+commit/cancel and end; commit's `accepted` flag distinguishes an immediate canonical update
+from a controlled proposal awaiting new props.
+
+Set `keyboardMode="preview"` to lift with Space, preview with direction/Home/End
+keys, commit with Enter or Space, and cancel with Escape. Alt+direction keys keep
+their immediate behavior. Host suspension and unmount retire the native owner
+and its preview; they leave no scrolling task running.

@@ -67,3 +67,23 @@ skewed, reflected or perspective bases return an unavailable Result. Each call
 reads the current box without retaining it. Wheel pixels use this local basis;
 lines use resolved pixel line-height and pages use viewport height. An unresolved
 line-height declines line input rather than assuming a size.
+
+`@sectile/dom/reorder` separates accepted order from interaction preview in
+sequence, tree and column layouts. `getInteractionSnapshot()` borrows the current
+source ID, input kind, destination, admission and client point. The optional
+`onInteractionChange` reports start, preview, commit/cancel and end; commit's
+`accepted` flag reports an immediate canonical change. A controlled owner still
+receives one `onOrderChange` proposal and may accept it later through `syncOrder`.
+`getPreviewState()` explicitly requests a full Core-derived state and reuses it
+until the destination changes. It can cost O(n); pointer movement only resolves
+the destination and admission, without materializing that full state.
+
+Alt+direction keys continue to move immediately. Opt into `keyboardMode: 'preview'`
+to lift with Space, preview with direction/Home/End keys, commit with Enter or
+Space, and cancel with Escape. Pointer cancellation, lost capture, window blur,
+hidden documents, source removal and accepted external order changes retire the
+interaction. Keyboard focus leaving its source also cancels it.
+`cancelInteraction()` explicitly retires a preview. For application-owned
+auto-scroll, use `clientPoint` and call `refreshDropTarget()` after scrolling;
+Reorder owns no auto-scroll timer or frame loop. Disconnect removes all seven
+root listeners, the document visibility listener and the window blur listener.

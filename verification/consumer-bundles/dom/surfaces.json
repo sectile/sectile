@@ -1036,7 +1036,9 @@
       "optionalPeer": null,
       "rootEquivalentExport": "createReorder",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {

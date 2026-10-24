@@ -23,6 +23,8 @@ import {
   type TreeReorderConnection,
   type TreeReorderOptions,
   type TreeReorderDropTarget as NativeDropTarget,
+  type ReorderInteractionSnapshot,
+  type ReorderInteractionChange,
 } from '@sectile/dom/reorder';
 import {
   createSequenceReorderState,
@@ -31,7 +33,8 @@ import {
   getTreeReorderHierarchy,
   applyTreeReorderEvent,
 } from '@sectile/core/reorder';
-import { unwrap } from '@sectile/core/result';
+import { unwrap, failResult } from '@sectile/core/result';
+import type { Result } from '@sectile/core';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { useHostActive, useHostDirection } from './host-provider.js';
 import { useNextTickTask } from './internal/scheduled-task.js';
@@ -39,6 +42,7 @@ import { useNextTickTask } from './internal/scheduled-task.js';
 export type TreeReorderNode<ID extends string = string> = Omit<TreeReorderOptions<ID>['nodes'][number], 'parentID'> & { readonly parentID: NoInfer<ID> | null };
 export interface SequenceReorderRootProps<ID extends string = string> {
   readonly items: readonly ID[];
+  readonly keyboardMode?: 'immediate' | 'preview';
   readonly controlled?: boolean;
   readonly handleOnly?: boolean;
   readonly label?: string;
@@ -50,6 +54,7 @@ export interface SequenceReorderRootProps<ID extends string = string> {
 }
 export interface TreeReorderRootProps<ID extends string = string> {
   readonly nodes: readonly TreeReorderNode<ID>[];
+  readonly keyboardMode?: 'immediate' | 'preview';
   readonly controlled?: boolean;
   readonly handleOnly?: boolean;
   readonly label?: string;
@@ -66,11 +71,19 @@ export interface TreeReorderRootProps<ID extends string = string> {
 export interface ReorderRootSlotProps<ID extends string = string> {
   readonly items: readonly ID[];
   readonly disabled: boolean;
+  readonly interaction: ReorderInteractionSnapshot<ID>;
+  getPreviewState: SequenceReorderConnection<ID>['getPreviewState'];
+  cancelInteraction(): void;
+  refreshDropTarget(): void;
 }
 export interface TreeReorderRootSlotProps<ID extends string = string> {
   readonly nodes: readonly TreeReorderNode<ID>[];
   readonly disabled: boolean;
   readonly readonly: boolean;
+  readonly interaction: ReorderInteractionSnapshot<ID>;
+  getPreviewState: TreeReorderConnection<ID>['getPreviewState'];
+  cancelInteraction(): void;
+  refreshDropTarget(): void;
   getChildren(parentID: NoInfer<ID> | null): readonly ID[];
   getParent(id: NoInfer<ID>): ID | null;
   canMove(id: NoInfer<ID>, target: TreeReorderTarget<NoInfer<ID>>): boolean;
@@ -86,8 +99,9 @@ export interface ReorderItemProps<ID extends string = string> {
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
-export type SequenceReorderRootEmits<ID extends string = string> = { 'update:items': [items: readonly NoInfer<ID>[]] };
-export type TreeReorderRootEmits<ID extends string = string> = { 'update:nodes': [nodes: readonly TreeReorderNode<NoInfer<ID>>[]] };
+export type SequenceReorderRootEmits<ID extends string = string> = { 'update:items': [items: readonly NoInfer<ID>[]]; 'interaction-change': [change: ReorderInteractionChange<NoInfer<ID>>] };
+export type TreeReorderRootEmits<ID extends string = string> = { 'update:nodes': [nodes: readonly TreeReorderNode<NoInfer<ID>>[]]; 'interaction-change': [change: ReorderInteractionChange<NoInfer<ID>>] };
+export type { ReorderInteractionSnapshot, ReorderInteractionChange } from '@sectile/dom/reorder';
 export interface SequenceReorderRootSlots<ID extends string = string> { default?: (state: ReorderRootSlotProps<ID>) => VNodeChild }
 export interface TreeReorderRootSlots<ID extends string = string> { default?: (state: TreeReorderRootSlotProps<ID>) => VNodeChild }
 export type TreeReorderTarget<ID extends string = string> = NativeDropTarget<ID>;
@@ -124,6 +138,14 @@ interface TreeContext extends ReorderContext {
   unregisterTarget(element: HTMLElement): void;
 }
 const emptyItems: readonly string[] = /* @__PURE__ */ Object.freeze([]);
+const idleInteraction: ReorderInteractionSnapshot<string> = /* @__PURE__ */ Object.freeze({ sourceID: null, input: null, target: null, allowed: false, clientPoint: null });
+function previewPort<State>(source: { getPreviewState(): Result<State>; cancelInteraction(): void; refreshDropTarget(): void }) {
+  let port: typeof source | undefined = source;
+  return { value: {
+    getPreviewState: (): Result<State> => port?.getPreviewState() ?? failResult('transition-rejection', 'invalid-boundary', 'Reorder component is unmounted.'),
+    cancelInteraction: (): void => { port?.cancelInteraction(); }, refreshDropTarget: (): void => { port?.refreshDropTarget(); },
+  }, retire: (): void => { port = undefined; } };
+}
 function treeContextPort(source: TreeContext) {
   let port: TreeContext | undefined = source;
   const value: TreeContext = { position: id => port?.position(id) ?? 0, level: id => port?.level(id) ?? 0, size: id => port?.size(id) ?? 0,
@@ -144,6 +166,7 @@ const sequenceKey = /* @__PURE__ */ Symbol('SectileSequenceReorderRoot');
 const treeKey = /* @__PURE__ */ Symbol('SectileTreeReorderRoot');
 
 const rootProps = {
+  keyboardMode: { type: String as PropType<'immediate' | 'preview'>, default: 'immediate' },
   handleOnly: { type: Boolean, default: false },
   label: { type: String, default: undefined },
   roleDescription: { type: String, default: undefined },
@@ -160,19 +183,25 @@ const SequenceRootImplementation = /* @__PURE__ */ defineComponent({
   props: /* @__PURE__ */ Object.assign({}, rootProps, {
     items: { type: Array as PropType<readonly string[]>, required: true as const },
   }),
-  emits: { 'update:items': (_items: readonly string[]): boolean => true },
+  emits: { 'update:items': (_items: readonly string[]): boolean => true, 'interaction-change': (_change: ReorderInteractionChange<string>): boolean => true },
   slots: Object as SlotsType<{ default: (props: ReorderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const root = shallowRef<HTMLElement>();
     const connection = shallowRef<SequenceReorderConnection<string>>();
     const current = shallowRef(createSequenceReorderState(props.items));
+    const interaction = shallowRef(idleInteraction);
+    const active = useHostActive();
+    const preview = previewPort({ getPreviewState: () => connection.value?.getPreviewState() ?? { ok: true, value: current.value },
+      cancelInteraction: () => connection.value?.cancelInteraction(), refreshDropTarget: () => connection.value?.refreshDropTarget() });
     const registrations = new Map<string, HTMLElement>();
     const connect = (): void => {
       connection.value?.disconnect();
-      if (root.value === undefined) return;
+      connection.value = undefined; interaction.value = idleInteraction;
+      if (root.value === undefined || !active.value) return;
       connection.value = createReorder({
         root: root.value,
         ids: props.controlled ? props.items : current.value.ids,
+        keyboardMode: props.keyboardMode,
         controlled: props.controlled,
         handleOnly: props.handleOnly,
         ...reorderLabelOptions(props, attrs),
@@ -182,6 +211,8 @@ const SequenceRootImplementation = /* @__PURE__ */ defineComponent({
           if (!props.controlled) current.value = connection.value!.getSnapshot().state;
           emit('update:items', items);
         },
+        onInteractionChange: change => emit('interaction-change', change),
+        onUpdate: () => { if (connection.value) { current.value = connection.value.getSnapshot().state; interaction.value = connection.value.getInteractionSnapshot(); } },
       });
       for (const [id, element] of registrations) connection.value.setItemAttributes(element, id);
       current.value = connection.value.getSnapshot().state;
@@ -202,8 +233,9 @@ const SequenceRootImplementation = /* @__PURE__ */ defineComponent({
       },
     });
     onMounted(connect);
-    onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.orientation, () => props.disabled, () => props.controlled, () => props.handleOnly, () => props.label, () => props.roleDescription], connect);
+    onBeforeUnmount(() => { preview.retire(); const previous = connection.value; connection.value = undefined;
+      try { previous?.disconnect(); } finally { root.value = undefined; registrations.clear(); } });
+    watch([active, () => props.keyboardMode, () => props.orientation, () => props.disabled, () => props.controlled, () => props.handleOnly, () => props.label, () => props.roleDescription], connect);
     watch(() => props.items, (items) => {
       current.value = connection.value === undefined
         ? createSequenceReorderState(items)
@@ -219,7 +251,8 @@ const SequenceRootImplementation = /* @__PURE__ */ defineComponent({
       'aria-label': props.label ?? attrs['aria-label'],
       'aria-roledescription': props.roleDescription ?? attrs['aria-roledescription'] ?? 'sortable',
       'data-orientation': props.orientation,
-    }), { default: () => slots['default']?.({ items: items.value, disabled: props.disabled }) });
+    }), { default: () => slots['default']?.({ items: items.value, disabled: props.disabled, interaction: interaction.value,
+      ...preview.value }) });
   },
 });
 
@@ -264,12 +297,15 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
     direction: { type: String as PropType<'ltr' | 'rtl'>, default: undefined },
     policies: { type: Object as PropType<TreeReorderOptions<string>['policies']>, default: undefined },
   }),
-  emits: { 'update:nodes': (_nodes: readonly TreeReorderNode[]): boolean => true },
+  emits: { 'update:nodes': (_nodes: readonly TreeReorderNode[]): boolean => true, 'interaction-change': (_change: ReorderInteractionChange<string>): boolean => true },
   slots: Object as SlotsType<{ default: (props: TreeReorderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots, expose }) {
     const root = shallowRef<HTMLElement>();
     const connection = shallowRef<TreeReorderConnection<string>>();
     const current = shallowRef(createTreeReorderState(props.nodes, props.layout === 'columns' ? { maxDepth: 1 } : undefined));
+    const interaction = shallowRef(idleInteraction);
+    const preview = previewPort({ getPreviewState: () => connection.value?.getPreviewState() ?? { ok: true, value: current.value },
+      cancelInteraction: () => connection.value?.cancelInteraction(), refreshDropTarget: () => connection.value?.refreshDropTarget() });
     const registrations = new Map<string, HTMLElement>();
     const targets = new Map<HTMLElement, NativeDropTarget<string>>();
     const active = useHostActive(), inheritedDirection = useHostDirection();
@@ -290,6 +326,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
       generation += 1;
       const previous = connection.value;
       connection.value = undefined; connectedElement = undefined;
+      interaction.value = idleInteraction;
       previous?.disconnect();
     };
     const validTarget = (target: NativeDropTarget<string>): boolean => applyTreeReorderEvent(current.value, {
@@ -315,6 +352,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
           root: root.value,
           nodes: props.controlled ? props.nodes : current.value.nodes,
           controlled: props.controlled, handleOnly: props.handleOnly,
+          keyboardMode: props.keyboardMode,
           ...reorderLabelOptions(props, attrs),
           orientation: props.orientation, disabled: props.disabled,
           readOnly: props.readonly, layout: props.layout, direction: direction.value,
@@ -324,7 +362,8 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
             if (connection.value) current.value = connection.value.getSnapshot().state;
             emit('update:nodes', nodes);
           },
-          onUpdate: () => { if (isCurrent() && connection.value) current.value = connection.value.getSnapshot().state; },
+          onInteractionChange: change => { if (isCurrent()) emit('interaction-change', change); },
+          onUpdate: () => { if (isCurrent() && connection.value) { current.value = connection.value.getSnapshot().state; interaction.value = connection.value.getInteractionSnapshot(); } },
         });
         if (!isCurrent()) { native.disconnect(); return; }
         connection.value = native; connectedElement = root.value;
@@ -405,6 +444,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
     onMounted(() => { mounted = true; connect(); });
     onBeforeUnmount(() => {
       alive = false; pendingFocus = undefined; repairFocus.cancel();
+      preview.retire();
       exposure.retire(); context.retire();
       try { retire(); } finally { registrations.clear(); targets.clear(); root.value = undefined; }
     });
@@ -412,7 +452,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
     watch(active, () => {
       pendingFocus = undefined; repairFocus.cancel(); connect();
     }, { flush: 'post' });
-    watch([() => props.orientation, () => props.disabled, () => props.readonly, () => props.controlled, () => props.handleOnly,
+    watch([() => props.keyboardMode, () => props.orientation, () => props.disabled, () => props.readonly, () => props.controlled, () => props.handleOnly,
       () => props.label, () => props.roleDescription, () => props.layout, () => props.policies, direction], () => connect(true), { flush: 'post' });
     watch(() => props.nodes, (nodes) => {
       current.value = connection.value === undefined
@@ -435,6 +475,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
       'data-layout': props.layout,
       'data-readonly': props.readonly ? '' : undefined,
     }), { default: () => slots['default']?.({ nodes: nodes.value, disabled: props.disabled, readonly: props.readonly,
+      interaction: interaction.value, ...preview.value,
       getChildren: context.value.getChildren, getParent: context.value.getParent, canMove: exposure.value.canMove }) });
   },
 });

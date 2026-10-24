@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "0a7aad755f640384971f2cc952a1c49380cd22c14004449f68dc983db453bd49",
+  "fingerprint": "3409b4a3c08e3d5b09ab4843f28a2bd5c79b7f32c9543b37727c3f53ae0ae2ef",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -659,7 +659,7 @@
     },
     {
       "path": "dist/reorder.d.ts",
-      "sha256": "000b9ae9f90d0526d508e0ac536a0f5f189383264538cb5de7671b9dd9e2af59"
+      "sha256": "5bc3caeb007109c8f7042b0acf7fa0d1fd4d82d622ed1224ce61306cec9b1ea5"
     },
     {
       "path": "dist/scalar/checked-control.d.ts",

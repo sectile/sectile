@@ -511,7 +511,7 @@ test('Reorder columns keeps controlled proposals, capacity/read-only refusal and
 test('Reorder columns restores owned attributes and drains acquisition/disposal failure paths', async () => {
   const board = columnsFixture({}, (root,rows) => { root.setAttribute('aria-label','authored'); root.setAttribute('aria-roledescription','original'); rows.get('a').setAttribute('aria-posinset','original-position'); });
   const listener = [...board.root.listeners.get('keydown')][0];
-  assert.equal(board.root.attributes.get('aria-label'), 'authored'); assert.equal([...board.root.listeners.values()].reduce((sum,set) => sum + set.size,0),6);
+  assert.equal(board.root.attributes.get('aria-label'), 'authored'); assert.equal([...board.root.listeners.values()].reduce((sum,set) => sum + set.size,0),7);
   assert.throws(()=>board.owner.setItemAttributes(board.root,'todo'),/own item/);
   board.root.emit('keydown', keyboard(board.rows.get('a'),'End')); board.rows.get('b').setAttribute('aria-posinset','external');
   board.root.emit('pointerdown',pointer(board.rows.get('a'),1,0));
@@ -584,6 +584,64 @@ function columnsFixture(options = {}, prepare) {
 function pointer(target, pointerId, clientY) {
   return { target, pointerId, clientX: 0, clientY, button: 0, preventDefault() {} };
 }
+
+test('Reorder preview composes existing keyboard moves and publishes one final proposal in every layout', () => {
+  for (const layout of ['sequence', 'tree', 'columns']) for (const controlled of [false, true]) {
+    const root = new FakeElement(), changes = [], lifecycle = [];
+    const nodes = [{ id: 'root', parentID: null }, ...['a','b','c'].map(id => ({ id, parentID: 'root' }))];
+    const owner = createReorder({ root, keyboardMode: 'preview', controlled,
+      ...(layout === 'sequence' ? { ids: ['a','b','c'] } : { nodes, layout }),
+      onOrderChange: value => changes.push(value), onInteractionChange: change => lifecycle.push(change) });
+    const a = new FakeElement(); a.parentElement = root; owner.setItemAttributes(a, 'a');
+    const key = name => root.emit('keydown', { target: a, key: name, preventDefault() {} });
+    const initial = owner.getSnapshot().state;
+    key(' '); key('ArrowDown'); key('ArrowDown');
+    assert.equal(owner.getSnapshot().state, initial); assert.equal(changes.length, 0);
+    const preview = owner.getPreviewState(); assert.equal(preview.ok, true);
+    assert.equal(owner.getPreviewState(), preview, 'full preview is borrowed until the proposal changes');
+    assert.deepEqual((preview.value.ids ?? preview.value.nodes.map(node => node.id)).slice(-3), ['b','c','a']);
+    assert.equal(owner.getInteractionSnapshot().sourceID, 'a');
+    key('Enter'); assert.equal(changes.length, 1);
+    assert.equal(owner.getInteractionSnapshot().sourceID, null);
+    assert.equal(lifecycle.at(-2).type, 'commit'); assert.equal(lifecycle.at(-2).accepted, !controlled); assert.equal(lifecycle.at(-1).type,'end');
+    assert.equal(owner.getSnapshot().state === initial, controlled);
+    key(' '); key('Home'); key('Escape'); assert.equal(changes.length, 1);
+    assert.equal(lifecycle.at(-2).type, 'cancel'); assert.equal(lifecycle.at(-1).type,'end'); owner.disconnect();
+  }
+});
+
+test('pointer preview admits once per destination, refreshes after external scroll and retires resources', () => {
+  const doc = new FakeElement(), view = new FakeElement(); doc.defaultView = view;
+  const root = new FakeElement(); root.ownerDocument = doc;
+  const a = new FakeElement(), b = new FakeElement(40), changes = [];
+  a.parentElement = root; b.parentElement = root;
+  let admissions = 0;
+  const owner = createReorder({ root, nodes: [{ id:'a',parentID:null },{ id:'b',parentID:null }],
+    policies: { canMove: () => { admissions += 1; return true; } }, onOrderChange: value => changes.push(value) });
+  owner.setItemAttributes(a,'a'); owner.setItemAttributes(b,'b');
+  root.emit('pointerdown',pointer(a,3,0)); root.emit('pointermove',pointer(b,3,55));
+  const count = admissions, preview = owner.getPreviewState();
+  const afterRead = admissions;
+  for(let turn=0;turn<30;turn++) root.emit('pointermove',pointer(b,3,56 + turn / 100));
+  assert.equal(admissions,afterRead); assert.equal(owner.getPreviewState(),preview);
+  assert.equal(count,1); assert.equal(owner.getSnapshot().revision,0); assert.equal(changes.length,0);
+  doc.elementFromPoint=()=>a; owner.refreshDropTarget(); assert.equal(owner.getInteractionSnapshot().allowed,false);
+  doc.elementFromPoint=()=>b; owner.refreshDropTarget(); assert.equal(owner.getInteractionSnapshot().allowed,true);
+  view.emit('blur',{}); assert.equal(root.capture,null); assert.equal(owner.getInteractionSnapshot().sourceID,null);
+  root.emit('pointerdown',pointer(a,4,0)); root.emit('pointermove',pointer(b,4,55));
+  owner.syncOrder([{id:'b',parentID:null},{id:'a',parentID:null}]); assert.equal(root.capture,null);
+  owner.disconnect();
+  for(const element of [root,doc,view]) assert.equal([...element.listeners.values()].reduce((n,set)=>n+set.size,0),0);
+});
+
+test('preview callbacks can retire or reject an interaction without publishing an order', () => {
+  const root = new FakeElement(), a = new FakeElement(), b = new FakeElement(40); a.parentElement=root;b.parentElement=root;
+  let owner, proposals=0;
+  owner=createReorder({root,ids:['a','b'],onOrderChange:()=>{proposals++;},onInteractionChange:change=>{if(change.type==='preview')owner.disconnect();}});
+  owner.setItemAttributes(a,'a');owner.setItemAttributes(b,'b');
+  root.emit('pointerdown',pointer(a,5,0));root.emit('pointermove',pointer(b,5,55));
+  assert.equal(root.capture,null); assert.equal(proposals,0); assert.equal(owner.getPreviewState().ok,false);
+});
 
 class FakeElement {
   attributes = new Map();

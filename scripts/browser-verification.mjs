@@ -101,6 +101,16 @@ try {
       // composition events and committed text are the authoritative witness.
       await page.bringToFront();
       await page.locator(`#${id}`).click();
+      if (id === 'native') {
+        // Cold input-method startup can precede its marked-text session. Prime
+        // that OS session on the plain input before measuring the three fields.
+        await typeNative([5, 40, 1, 36]);
+        await page.waitForFunction(() => window.sectileProbe.events.some(event => event.id === 'native' && event.type === 'compositionend'), null, { timeout: 5000 });
+        report.imeWarmup = await page.locator('#native').inputValue();
+        execFileSync('osascript', ['-e', 'tell application "System Events"\nkeystroke "a" using command down\nkey code 51\nend tell'], { timeout: 10000 });
+        await page.waitForFunction(() => document.querySelector('#native').value === '');
+        await page.evaluate(() => { window.sectileProbe.events.length = 0; window.sectileProbe.writes.length = 0; });
+      }
       // Keep one native typing session; no source-query process interrupts IME.
       await Promise.all([
         typeNative([5, 40, 1, 15, 46, 3, 36]), // g k s r m f, Return -> 한글.
@@ -174,6 +184,17 @@ try {
     assert.equal(media.activations, 2); assert.equal(media.ordinary, 1); assert.equal(media.starts, 1);
     assert.ok(media.moves > 0); assert.deepEqual(media.ends, ['complete']);
     report.results.push({ media });
+    await page.evaluate(() => window.sectileProbe.reorder());
+    await page.locator('#reorder-a').focus(); await page.keyboard.press('Space'); await page.keyboard.press('ArrowDown');
+    let reorder = await page.evaluate(() => window.sectileProbe.reorderState());
+    assert.deepEqual(reorder.items, ['a','b','c']); assert.deepEqual(reorder.preview.value.ids, ['b','a','c']);
+    assert.equal(reorder.changes.length, 0); assert.equal(reorder.interaction.sourceID, 'a');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Space'); await page.keyboard.press('End'); await page.keyboard.press('Enter');
+    reorder = await page.evaluate(() => window.sectileProbe.reorderState());
+    assert.deepEqual(reorder.items, ['b','c','a']); assert.equal(reorder.changes.length, 1);
+    assert.equal(reorder.interaction.sourceID, null); assert.equal(await page.evaluate(() => document.activeElement.id), 'reorder-a');
+    report.results.push({ reorderPreview: 'passed' });
   }
   assert.deepEqual(warnings, []);
   assert.deepEqual(errors, []);

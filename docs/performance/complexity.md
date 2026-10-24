@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 417 | 26 | 91 |
 | chart | 80 | 0 | 15 |
-| dom | 489 | 177 | 59 |
+| dom | 489 | 177 | 61 |
 | form | 26 | 0 | 9 |
 | tabular | 35 | 0 | 11 |
 | temporal | 129 | 14 | 4 |
@@ -156,6 +156,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:grid.event-target | connected | `O(h)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/grid-projection.test.mjs |
 | dom:grid.transition-projection | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/grid-projection.test.mjs, packages/dom/tests/grid.test.mjs |
 | dom:layout-basis.observe | connected | `O(e + (n + 1) * h)` expected | `O(n + 1)` | `O(n + 1)` | `O(n + 1)` | allowed | packages/dom/tests/layout-basis.test.mjs |
+| dom:media-gesture.pointer-admission | connected | `O(h)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/media-gesture.test.mjs, packages/vue/tests/media-gesture.dom.test.mjs |
 | dom:menu.click-target | connected | `O(hPath)` expected | `O(hPath)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
 | dom:menu.item-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(nRegistered)` | forbidden | packages/dom/tests/menu.test.mjs |
 | dom:menu.submenu-registration | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(s)` | forbidden | packages/dom/tests/menu.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/browser/popup-presence-focus-fixture.mjs |
@@ -173,6 +174,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:reorder.drag-feedback | connected | `O(1+s+a)` worst-case | `O(1)` | `O(1)` | `O(1+a)` | forbidden | packages/dom/tests/reorder.test.mjs |
+| dom:reorder.interaction-preview | connected | `O(n+m+h)` worst-case | `O(n)` | `O(n)` | `O(n+m)` | allowed | packages/dom/tests/reorder.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, scripts/browser-verification.mjs |
 | dom:reorder.item-projection | connected | `O(n + k + z)` amortized | `O(1)` | `O(k)` | `O(n + k + z)` | allowed | packages/dom/tests/reorder.test.mjs |
 | dom:reorder.target-routing | connected | `O(h)` expected | `O(1)` | `O(1)` | `O(k + z)` | forbidden | packages/dom/tests/reorder.test.mjs |
 | dom:scroll-spy.measure | connected | `O(m + n + a + L + j * h)` expected | `O(m + n + a + L)` | `O(n + L)` | `O(m + n + a + L)` | allowed | packages/dom/tests/scroll-spy.test.mjs |
