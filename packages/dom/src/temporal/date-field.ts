@@ -127,7 +127,7 @@ class DOMDateField implements DateFieldConnection {
     }
     return result.ok;
   }
-  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; input.placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(this.getSnapshot().state.format); input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render(); }
+  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; const placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(this.getSnapshot().state.format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render(); }
   public disconnect(): void { this.#binding.disconnect(); }
   #text(input: TextInput): boolean { const event = toTextEvent(input); return event !== null && this.handleEvent({ type: 'text', event }); }
   #syncSelection(): void {

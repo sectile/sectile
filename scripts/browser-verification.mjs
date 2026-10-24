@@ -6,6 +6,9 @@ import { basename } from 'node:path';
 import { chromium } from 'playwright';
 
 const nativeIME = process.argv.includes('--macos-ime');
+const shardArgument = process.argv.find(argument => argument.startsWith('--shard='));
+const shard = shardArgument?.slice('--shard='.length).split('/').map(Number) ?? [1,1];
+assert.ok(shard.length === 2 && shard.every(Number.isSafeInteger) && shard[0] >= 1 && shard[0] <= shard[1] && shard[1] <= 4, 'invalid browser shard');
 if (nativeIME) assert.equal(process.platform, 'darwin', 'native macOS IME verification requires macOS');
 const output = '.tasks/browser'; mkdirSync(output, { recursive: true });
 const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), nativeIME, status: 'running', results: [] };
@@ -51,23 +54,40 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${url}/interactions`);
   await page.waitForFunction(() => window.sectileProbe !== undefined);
-  await page.evaluate(() => window.sectileProbe.native());
-  for (const id of ['native', 'text', 'combo']) {
-    await page.locator(`#${id}`).focus(); await page.keyboard.type('abc');
+  const catalog = await page.evaluate(() => window.sectileProbe.inputFamilies);
+  const selected = catalog.filter((_, index) => index % shard[1] === shard[0] - 1);
+  const fields = nativeIME ? ['native','native-textarea', ...selected.filter(id => id !== 'native' && id !== 'native-textarea')] : selected;
+  report.shard = shard; report.families = selected;
+  for (const id of fields) {
+    if(id !== 'pin') {
+      await page.evaluate(id=>window.sectileProbe.reference(id),id);
+      await page.locator('#native-reference').focus();await page.keyboard.press('ControlOrMeta+a');await page.keyboard.type('abc');
+      await page.keyboard.press('ControlOrMeta+z');
+    }
+    const nativeUndo = id === 'pin' ? undefined : await page.locator('#native-reference').inputValue();
+    if(id !== 'pin') await page.evaluate(()=>document.querySelector('#native-reference').remove());
+    await page.evaluate(id => window.sectileProbe.field(id), id);
+    const initial = await page.locator(`#${id}`).inputValue();
+    if (id === 'pin') { report.results.push({ id, history: 'specialized per-cell admission; checked through native composition' }); continue; }
+    await page.locator(`#${id}`).focus(); await page.keyboard.press('ControlOrMeta+a');
+    await page.evaluate(() => { window.sectileProbe.valueWrites.length = 0; });
+    await page.keyboard.type('abc');
+    assert.deepEqual(await page.evaluate(() => window.sectileProbe.valueWrites), [], `${id}: accepted native edit caused a value/selection projection`);
     await page.keyboard.press('ControlOrMeta+z');
-    assert.equal(await page.locator(`#${id}`).inputValue(), '');
+    const undone = await page.locator(`#${id}`).inputValue();
+    assert.equal(undone, nativeUndo ?? initial, `${id}: native undo; writes=${JSON.stringify(await page.evaluate(()=>window.sectileProbe.valueWrites.slice(-12)))}`);
     await page.keyboard.press('ControlOrMeta+Shift+z');
-    assert.equal(await page.locator(`#${id}`).inputValue(), 'abc');
+    assert.equal(await page.locator(`#${id}`).inputValue(), 'abc', `${id}: native redo`);
     report.results.push({ id, undoRedo: 'passed' });
   }
   if (nativeIME) {
     execFileSync('swiftc', ['scripts/browser/macos-input-source.swift', '-o', swift], { timeout: 60000, stdio: 'inherit' });
-    await page.evaluate(() => window.sectileProbe.native());
     await page.bringToFront();
     const application = basename(chromium.executablePath());
     assert.match(application, /^[A-Za-z -]+$/u);
     execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
-    for (const id of ['native', 'text', 'combo']) {
+    for (const id of fields) {
+      await page.evaluate(id => window.sectileProbe.field(id), id);
       await page.locator(`#${id}`).focus();
       const selected = JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
@@ -112,23 +132,37 @@ try {
         await page.waitForFunction(() => document.querySelector('#native').value === '');
         await page.evaluate(() => { window.sectileProbe.events.length = 0; window.sectileProbe.writes.length = 0; });
       }
+      await page.keyboard.press('ControlOrMeta+a');
       // Keep one native typing session; no source-query process interrupts IME.
       await Promise.all([
-        typeNative([5, 40, 1, 15, 46, 3, 36]), // g k s r m f, Return -> 한글.
-        id === 'combo' ? page.waitForFunction(() => window.sectileProbe.events.some(event => event.id === 'combo' && event.type === 'compositionstart'), null, { timeout: 5000 })
-          .then(() => page.evaluate(() => window.sectileProbe.changeItems())) : Promise.resolve(),
+        typeNative(id === 'pin' ? [5,40,1] : [5,40,1,15,46,3]),
+        page.waitForFunction(id => window.sectileProbe.events.some(event => event.id === id && event.type === 'compositionstart'), id, { timeout: 5000 })
+          .then(() => page.evaluate(() => window.sectileProbe.reconfigure())),
       ]);
+      const expected = id === 'pin' ? '한' : '한글';
+      assert.equal(await page.locator(`#${id}`).inputValue(), expected, `${id}: live composition value`);
+      assert.equal(await page.evaluate(() => document.activeElement.id), id, `${id}: composition focus`);
+      assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], `${id}: framework rewrote a live composition`);
+      nativeKeys([36]);
       (report.sources ??= []).push(JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' })));
-      await page.waitForFunction(id => document.querySelector(`#${id}`).value === '한글', id);
-      if (id !== 'native') await page.waitForFunction(id => window.sectileProbe.models()[id] === '한글', id);
+      if (['native','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled'].includes(id))
+        await page.waitForFunction(({id,expected}) => document.querySelector(`#${id}`).value === expected, {id,expected});
+      if (id === 'text' || id === 'combo') await page.waitForFunction(id => window.sectileProbe.models()[id] === '한글', id);
       const events = await page.evaluate(id => window.sectileProbe.events.filter(event => event.id === id), id);
       assert.ok(events.some(event => event.type === 'compositionstart'), `${id}: input bypassed the OS IME`);
       assert.ok(events.some(event => event.type === 'compositionend'), `${id}: composition never committed`);
-      report.results.push({ id, text: await page.locator(`#${id}`).inputValue(), events });
+      if (id === 'pin') assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, '한');
+      if (id === 'tags') assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글']);
+      report.results.push({ id, text: await page.locator(`#${id}`).inputValue(),
+        compositionStarts: events.filter(event=>event.type==='compositionstart').length,
+        compositionEnds: events.filter(event=>event.type==='compositionend').length, frameworkWrites: 0, reconfigured: true });
       // Native Backspace must remove both committed syllables.
-      nativeKeys([51, 51]);
-      await page.waitForFunction(id => document.querySelector(`#${id}`).value === '', id);
-      if (id !== 'native') await page.waitForFunction(id => window.sectileProbe.models()[id] === '', id);
+      if (await page.locator(`#${id}`).isVisible() && await page.locator(`#${id}`).inputValue() === '한글') {
+        nativeKeys([51, 51]);
+        await page.waitForFunction(id => document.querySelector(`#${id}`).value === '', id);
+        if (id === 'text' || id === 'combo') await page.waitForFunction(id => window.sectileProbe.models()[id] === '', id);
+      }
+      assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], `${id}: framework rewrote a live composition`);
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], 'framework rewrote a live composition');
   } else {

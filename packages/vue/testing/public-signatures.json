@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "89acde50721ec6f5fb1bfe663ff7af3f547290ef964c173da547264a1ebf7e29",
+  "fingerprint": "1d1ba4ddefc6f74b82825251d079f2f2660938207e574106a1bbe8709a35c830",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -507,7 +507,7 @@
     },
     {
       "path": "dist/input/native-field.d.ts",
-      "sha256": "5710951d5d015e49142b133046039f04b4e388bbadd565f8093a29e491d2e419"
+      "sha256": "8ad5c46c966bb85e7fe8834f7b50fb4d649e1d00f16475ae7ff2404a90eca5f5"
     },
     {
       "path": "dist/internal/cascade-choice.d.ts",
@@ -551,7 +551,7 @@
     },
     {
       "path": "dist/number-field.d.ts",
-      "sha256": "919a0075924fa17c017441ba64bdd8cc2fed1f559c616e956783049bee6f7855"
+      "sha256": "de2e21a57f5824fef76db0ce06db8d7405288b273a54e055a4dff53fb4f80e9e"
     },
     {
       "path": "dist/overlay/alert-dialog.d.ts",
@@ -571,11 +571,11 @@
     },
     {
       "path": "dist/overlay/popup.d.ts",
-      "sha256": "667c6405074727224ebd53f71f5ec5f4c9a4c52f9fdb28d5d8af785836362b7c"
+      "sha256": "51eb6f28f4aeabee4055cd35deed377a1c03b1f5680b3752929cfc107182b574"
     },
     {
       "path": "dist/overlay/tooltip.d.ts",
-      "sha256": "02520853b8ea3b446c704e86fc9eed7e13094be6270b815d476a6de5df5f756e"
+      "sha256": "2d1db0d21b925c104a2282b26a46c5db66964954cddfeda616032b7f775b74ec"
     },
     {
       "path": "dist/pagination.d.ts",

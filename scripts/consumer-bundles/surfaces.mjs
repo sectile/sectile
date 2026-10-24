@@ -33,7 +33,8 @@ export async function deriveSurfaceFragment(repoRoot, packageName) {
     const peer = optionalPeer(packageName, subpath);
     if (shouldMeasureNamed(packageName, subpath, classification)) fixtureModes.push('named');
     if (subpath === '.') fixtureModes.push('namespace');
-    const reorderOwner = subpath === './reorder' ? packageName === 'vue' ? 'TreeReorderRoot' : 'createReorder' : undefined;
+    const reorderOwner = subpath === './reorder' ? packageName === 'vue' ? 'TreeReorderRoot' : 'createReorder'
+      : subpath === './tooltip' ? packageName === 'vue' ? 'TooltipRoot' : 'createTooltip' : undefined;
     const rootEquivalentExport = subpath === '.' ? null
       : exports.find((name) => name === reorderOwner && rootRuntime.includes(name)) ?? exports.find((name) => rootRuntime.includes(name)) ?? null;
     if (rootEquivalentExport !== null && shouldMeasureRootEquivalent(packageName, subpath, classification)) {
@@ -135,6 +136,8 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'dom:./fullscreen',
     'dom:./media-gesture',
     'dom:./reorder',
+    'dom:./number-field',
+    'dom:./tooltip',
     'dom:./layout-basis',
     'dom:./layout-motion',
     'dom:./focus-visibility',
@@ -158,6 +161,8 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'vue:./fullscreen',
     'vue:./media-gesture',
     'vue:./reorder',
+    'vue:./number-field',
+    'vue:./tooltip',
     'vue:./checkbox-tree',
   ]);
   return representatives.has(`${packageName}:${subpath}`);

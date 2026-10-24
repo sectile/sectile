@@ -252,7 +252,8 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     const input = this.#options.input;
     input.type = this.#options.native === true ? 'datetime-local' : 'text';
     input.inputMode = this.#options.native === true ? '' : 'text';
-    input.placeholder = this.#options.native === true ? '' : getDateTimeFieldPlaceholder(this.getSnapshot().state.format);
+    const placeholder = this.#options.native === true ? '' : getDateTimeFieldPlaceholder(this.getSnapshot().state.format);
+    if (input.placeholder !== placeholder) input.placeholder = placeholder;
     input.required = this.#options.required ?? this.#options.policies?.required ?? false;
     setInteractionAttributes(input, this.#options, true, true);
     if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label);

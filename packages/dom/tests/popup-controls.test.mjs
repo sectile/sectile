@@ -5,11 +5,34 @@ import { createDialog } from '../.verification-dist/dialog.js';
 import { createDrawer } from '../.verification-dist/drawer.js';
 import { createPopover } from '../.verification-dist/popover.js';
 import { createSelect } from '../.verification-dist/select.js';
-import { createTooltip } from '../.verification-dist/tooltip.js';
+import { createTooltip, createTooltipGroup } from '../.verification-dist/tooltip.js';
 import { connectLayerHost, reserveLayerPresentation } from '../.verification-dist/layer-host.js';
 import { getDOMLayerManager } from '../.verification-dist/overlay/layer/manager.js';
 import { createDOMLayerBinding } from '../.verification-dist/overlay/layer/binding.js';
 import { applyLayerPresentationEvent, createLayerPresentationState } from '@sectile/core/layer-stack';
+
+test('Tooltip delay groups follow accepted visibility, preserve immediate focus and retire pending timers', t => {
+  t.mock.timers.enable({apis:['setTimeout','Date'],now:1000});
+  const document=new Fake(), group=createTooltipGroup({skipDelay:300});let proposals=0;
+  const make=controlled=>{const root=new Fake(document),trigger=new Fake(document);
+    const owner=createTooltip({root,trigger,position:false,group,openDelay:100,closeDelay:20,
+      ...(controlled?{open:false}:{}),onOpenChange:()=>{proposals++;}});
+    return {root,trigger,owner,open:()=>owner.getSnapshot().state.open};};
+  const a=make(false),b=make(false), enter=part=>part.trigger.emit('mouseenter',{currentTarget:part.trigger}),
+    leave=part=>part.trigger.emit('mouseleave',{currentTarget:part.trigger,relatedTarget:null});
+  try {
+    enter(a);assert.equal(a.open(),false);t.mock.timers.tick(99);assert.equal(a.open(),false);
+    t.mock.timers.tick(1);assert.equal(a.open(),true);leave(a);t.mock.timers.tick(20);assert.equal(a.open(),false);
+    enter(b);assert.equal(b.open(),true);leave(b);t.mock.timers.tick(20);t.mock.timers.tick(301);
+    enter(a);assert.equal(a.open(),false);a.trigger.emit('focus');assert.equal(a.open(),true);
+    leave(a);a.trigger.emit('blur');assert.equal(a.open(),false);t.mock.timers.tick(301);
+    enter(a);const before=proposals;a.owner.destroy();t.mock.timers.tick(1000);assert.equal(proposals,before);
+  } finally {a.owner.destroy();b.owner.destroy();}
+  for(const part of [a.root,a.trigger,b.root,b.trigger,document]) assert.equal([...part.listeners.values()].reduce((n,set)=>n+set.size,0),0);
+  const refused=make(true),next=make(false);
+  try {enter(refused);t.mock.timers.tick(100);assert.equal(refused.open(),false);enter(next);assert.equal(next.open(),false);}
+  finally {refused.owner.destroy();next.owner.destroy();}
+});
 
 test('Select delivers only the latest focus intent when its option mounts and cancels retired requests', () => {
   const document = new Fake(), root = new Fake(document), trigger = new Fake(document), popup = new Fake(document);

@@ -50,6 +50,8 @@ export interface NumberFieldState {
 
 export type NumberFieldEvent =
   | { readonly type: 'text'; readonly event: TextEvent }
+  | { readonly type: 'set-value'; readonly value: string | null }
+  | { readonly type: 'step'; readonly delta: string }
   | 'commit'
   | 'cancel';
 
@@ -149,6 +151,19 @@ export function applyNumberFieldEvent(
   const bounds = normalizeBounds(policies);
   if (!bounds.ok) return bounds;
   if (typeof event === 'object') {
+    if (event.type === 'set-value' || event.type === 'step') {
+      if (valid.value.inputState.composition !== null) return fail('transition-rejection', 'number-field-composition-active', 'Number field cannot commit while text composition is active.');
+      let value: string | null;
+      if (event.type === 'step') {
+        const base = applyNumberFieldEvent(valid.value, 'commit', policies);
+        if (!base.ok) return base;
+        const delta = parseDecimal(event.delta);
+        if (delta === null) return fail('transition-rejection', 'invalid-number-field-value', 'Number field step requires finite decimal text.');
+        value = decimalToString(addDecimal(parseDecimal(base.value.state.value ?? '0')!, delta));
+      } else value = event.value;
+      const next = tryCreateNumberFieldState(value);
+      return next.ok ? applyNumberFieldEvent(next.value, 'commit', { ...policies, evaluator: literalEvaluator }) : next;
+    }
     if (event.type !== 'text' || typeof event.event !== 'object' || event.event === null) {
       return fail('transition-rejection', 'invalid-number-field-text-event', 'Number field input must be a semantic text event.');
     }

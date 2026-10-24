@@ -1065,7 +1065,9 @@
       "optionalPeer": null,
       "rootEquivalentExport": "NumberField",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {
@@ -1905,13 +1907,16 @@
         "TooltipContent",
         "TooltipPortal",
         "TooltipRoot",
-        "TooltipTrigger"
+        "TooltipTrigger",
+        "createTooltipGroup"
       ],
       "typeBearing": true,
       "optionalPeer": null,
-      "rootEquivalentExport": "TooltipContent",
+      "rootEquivalentExport": "TooltipRoot",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {

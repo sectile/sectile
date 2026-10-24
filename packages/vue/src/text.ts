@@ -5,6 +5,7 @@ import {
   mergeProps,
   nextTick,
   onBeforeUnmount,
+  onBeforeUpdate,
   onMounted,
   onUpdated,
   shallowRef,
@@ -124,6 +125,8 @@ const TextFieldImplementation = defineComponent({
     const element = shallowRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
     const controlled = useControlledStateInvariant('TextField', 'modelValue', () => props.modelValue);
     const initialValue = String(controlled ? props.modelValue : props.defaultValue);
+    const multiline = shallowRef(props.multiline);
+    let replacement: { readonly state: TextState; readonly focused: boolean } | null = null;
     const renderServerValue = typeof window === 'undefined';
     let controller: TextController | null = null;
     let connection: TextConnection | null = null;
@@ -215,6 +218,10 @@ const TextFieldImplementation = defineComponent({
         reconnectPending = true;
         return;
       }
+      if (multiline.value !== props.multiline) {
+        if (!props.multiline && /[\r\n]/u.test(connectedElement?.value ?? '')) return;
+        multiline.value = props.multiline; return;
+      }
       const state = proposedState
         ?? controller?.getSnapshot().state
         ?? createTextState(String(controlled ? props.modelValue : props.defaultValue));
@@ -275,9 +282,15 @@ const TextFieldImplementation = defineComponent({
       mounted = true;
       mountConnection(createTextState(controlled ? String(props.modelValue) : initialValue));
     });
+    onBeforeUpdate(() => {
+      const previous = connectedElement;
+      if (!mounted || !previous || (previous.tagName === 'TEXTAREA') === multiline.value) return;
+      replacement = { state: captureNativeTextState(previous, previous.value), focused: previous.ownerDocument.activeElement === previous };
+    });
     onUpdated(() => {
       if (!mounted || element.value === null || connectedElement === element.value) return;
-      let state = proposedState ?? controller?.getSnapshot().state ?? createTextState(initialValue);
+      const preserved = replacement; replacement = null;
+      let state = preserved?.state ?? proposedState ?? controller?.getSnapshot().state ?? createTextState(initialValue);
       // Replacing the native editor ends its IME session, not a text commit.
       if (state.composition !== null) {
         const cancelled = cancelTextComposition(state);
@@ -290,6 +303,10 @@ const TextFieldImplementation = defineComponent({
       reconnectTimer = null;
       proposedState = null;
       mountConnection(state);
+      if (preserved?.focused && !flags.value.disabled) {
+        const focused = element.value.ownerDocument.activeElement;
+        if (focused === null || focused === element.value.ownerDocument.body) element.value.focus({ preventScroll: true });
+      }
     });
     onBeforeUnmount(() => {
       clearPort.request = null;
@@ -307,6 +324,7 @@ const TextFieldImplementation = defineComponent({
       connectedElement = null;
       controller = null;
       proposedState = null;
+      replacement = null;
     });
 
     watch(() => props.modelValue, (value) => {
@@ -318,7 +336,7 @@ const TextFieldImplementation = defineComponent({
       proposedState = null;
       synchronizeControlledState(state, proposal);
     });
-    watch([() => flags.value.disabled, () => flags.value.readonly], requestReconnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly, () => props.multiline], requestReconnect);
 
     const commitLazyValue = (): void => {
       if (!props.modelModifiers.lazy || controller === null) return;
@@ -418,12 +436,12 @@ const TextFieldImplementation = defineComponent({
       } finally { if (clearing === operation) clearing = null; }
     };
 
-    return (): VNodeChild => h(props.multiline ? 'textarea' : 'input', mergeProps(
+    return (): VNodeChild => h(multiline.value ? 'textarea' : 'input', mergeProps(
       attrs,
       {
         ref: element,
-        ...(!props.multiline ? { type: props.type } : {}),
-        ...(renderServerValue ? { value: initialValue } : { defaultValue: controlled ? String(props.modelValue) : initialValue }),
+        ...(!multiline.value ? { type: props.type } : {}),
+        ...(renderServerValue ? { value: initialValue } : { defaultValue: initialValue }),
         disabled: flags.value.disabled,
         readonly: flags.value.readonly,
         required: flags.value.required,
@@ -433,6 +451,7 @@ const TextFieldImplementation = defineComponent({
         autocomplete: props.autocomplete,
         onCompositionstart: () => setInputComposing(true),
         onCompositionend: () => setInputComposing(false),
+        onInput: multiline.value !== props.multiline ? requestReconnect : undefined,
         onChange: commitLazyValue,
         'data-scope': 'text',
         'data-part': 'input',

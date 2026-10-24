@@ -146,7 +146,7 @@ test('TextField lazy replacement observes callback-driven retirement before ackn
 for (const composing of [false, true]) test(`TextField reconnects a replaced native editor without a value proposal (${composing})`, async () => {
   const fixture = clearFixture({ defaultValue: '@Ad' });
   try {
-    const first = fixture.host.querySelector('input'); first.setSelectionRange(1, 2, 'backward');
+    const first = fixture.host.querySelector('input'); first.focus(); first.setSelectionRange(1, 2, 'backward');
     first.dispatchEvent(new Event('select', { bubbles: true })); await settleClear();
     const before = fixture.instance.getTextSnapshot(); assert.ok(before);
     if (composing) {
@@ -156,17 +156,35 @@ for (const composing of [false, true]) test(`TextField reconnects a replaced nat
       assert.equal(fixture.instance.getTextSnapshot(), null);
     }
     fixture.props.value = { ...fixture.props.value, multiline: true }; await settleClear();
+    if (composing) {
+      assert.equal(fixture.host.querySelector('input'), first); assert.equal(document.activeElement, first);
+      first.dispatchEvent(compositionEvent('compositionend', '임시'));
+      await new Promise(resolve => setTimeout(resolve, 0)); await settleClear();
+    }
     const current = fixture.host.querySelector('textarea'), snapshot = fixture.instance.getTextSnapshot();
-    assert.ok(current); assert.ok(snapshot); assert.equal(snapshot.text, '@Ad');
-    assert.deepEqual(snapshot.selection, before.selection); assert.deepEqual(fixture.updates, []);
+    assert.ok(current); assert.ok(snapshot); assert.equal(snapshot.text, composing ? '@임시d' : '@Ad');
+    assert.equal(document.activeElement, current);
+    if (!composing) assert.deepEqual(snapshot.selection, before.selection);
+    const accepted = composing ? ['@임시d'] : []; assert.deepEqual(fixture.updates, accepted);
     assert.equal((await fixture.instance.replaceText({ snapshot: before, startCodeUnitOffset: 0, endCodeUnitOffset: 3, text: '@Late' })).reason, 'stale');
     first.value = 'Detached'; first.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
-    await settleClear(); assert.deepEqual(fixture.updates, []);
-    replaceInputValue(current, '@Ada'); await settleClear(); assert.deepEqual(fixture.updates, ['@Ada']);
+    await settleClear(); assert.deepEqual(fixture.updates, accepted);
+    replaceInputValue(current, '@Ada'); await settleClear(); assert.deepEqual(fixture.updates, [...accepted, '@Ada']);
     fixture.props.value = { ...fixture.props.value, multiline: false }; await settleClear();
     assert.equal(fixture.host.querySelector('input').value, '@Ada'); assert.equal(fixture.instance.getTextSnapshot().text, '@Ada');
     assert.deepEqual(fixture.errors, []);
   } finally { fixture.dispose(); }
+});
+test('TextField retains multiline text until a single-line replacement is representable and preserves inactive focus', async () => {
+  const fixture = clearFixture({ defaultValue: 'alpha\nbeta', multiline: true });
+  const outside = document.createElement('button'); document.body.append(outside); outside.focus();
+  try {
+    const original = fixture.host.querySelector('textarea');
+    fixture.props.value = { ...fixture.props.value, multiline: false }; await settleClear();
+    assert.equal(fixture.host.querySelector('textarea'), original); assert.equal(original.value, 'alpha\nbeta');
+    replaceInputValue(original, 'alpha beta'); await settleClear();
+    assert.equal(fixture.host.querySelector('input').value, 'alpha beta'); assert.equal(document.activeElement, outside);
+  } finally { fixture.dispose(); outside.remove(); }
 });
 test('TextField query projection binds the current range to its issued replacement snapshot', async () => {
   const fixture = clearFixture({ modelValue: 'Hi @Ad' }, true);
@@ -608,6 +626,49 @@ test('controlled Vue TextField hydrates its initial value and syncs later values
     host.remove();
   }
 });
+
+test('NumberField explicit edits settle accepted values independently of preserved controlled drafts', async () => {
+  for(const accept of [false,true]) {
+    const model=ref('-0.2'), updates=[], host=document.createElement('div');let field;
+    document.body.append(host);
+    const app=createApp({render:()=>h(NumberField,{ref:value=>{field=value;},modelValue:model.value,
+      'onUpdate:modelValue':value=>{updates.push(value);if(accept)model.value=value;}})}); app.mount(host);
+    try {
+      const input=host.querySelector('input');input.focus();replaceInputValue(input,'0.2');await settleClear();
+      assert.equal(field.modelValue,'-0.2');
+      const result=await field.stepBy('0.1'); assert.equal(result.status,accept?'accepted':'rejected');
+      assert.equal(input.value,accept?'0.3':'-0.2');assert.equal(model.value,accept?'0.3':'-0.2');assert.deepEqual(updates,['0.3']);
+      const clear=field.clear;const cleared=await clear();assert.equal(cleared.status,accept?'accepted':'rejected');
+      assert.equal(input.value,accept?'':'-0.2');assert.equal(document.activeElement,input);
+      input.dispatchEvent(compositionEvent('compositionstart',''));assert.equal((await field.commitValue('1')).reason,'composing');
+      app.unmount();assert.equal((await clear()).reason,'unavailable');
+    }finally{if(host.firstChild)app.unmount();host.remove();}
+  }
+});
+test('NumberField explicit commands enforce flags, validation and one pending edit', async () => {
+  const props=shallowRef({}), host=document.createElement('div');let field;document.body.append(host);
+  const app=createApp({render:()=>h(NumberField,{...props.value,defaultValue:'1',ref:value=>{field=value;}})});app.mount(host);
+  try {
+    const first=field.stepBy('1');assert.equal((await field.stepBy('1')).reason,'busy');assert.equal((await first).value,'2');
+    assert.equal((await field.commitValue('invalid')).reason,'invalid');assert.equal(field.getText(),'2');
+    for(const [flag,reason] of [['disabled','disabled'],['readonly','readonly']]){
+      props.value={[flag]:true};await nextTick();assert.equal((await field.clear()).reason,reason);assert.equal(field.getText(),'2');
+    }
+    props.value={required:true};await nextTick();assert.equal((await field.clear()).reason,'invalid');assert.equal(field.getText(),'2');
+  }finally{app.unmount();host.remove();}
+});
+test('NumberField saved numeric commands release the unmounted native and caller graphs', {skip:typeof global.gc!=='function'},async()=>{
+  const saved=await retiredNumberField();
+  for(let turn=0;turn<25;turn++){await new Promise(resolve=>setImmediate(resolve));global.gc();}
+  assert.equal(saved.root.deref(),undefined);assert.equal(saved.payload.deref(),undefined);
+  assert.equal(saved.read(),null);assert.equal((await saved.clear()).reason,'unavailable');
+});
+async function retiredNumberField(){
+  const payload={marker:'numeric owner'},host=document.createElement('div');let field;document.body.append(host);
+  const app=createApp({render:()=>h(NumberField,{defaultValue:'1',ref:value=>{field=value;},'onUpdate:modelValue':()=>payload.marker})});app.mount(host);
+  const result={root:new WeakRef(host.querySelector('input')),payload:new WeakRef(payload),clear:field.clear,read:field.getText};
+  app.unmount();host.remove();await nextTick();return result;
+}
 
 test('domain-parsed value controls do not advertise text model modifiers', () => {
   assert.equal(Object.hasOwn(NumberField.props, 'modelModifiers'), false);

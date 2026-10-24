@@ -1,6 +1,6 @@
 import {
   computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted,
-  provide, shallowRef, watch, type ComputedRef, type SetupContext,
+  provide, shallowRef, ssrContextKey, watch, type ComputedRef, type SetupContext,
   type ShallowRef, type SlotsType, type VNodeChild,
 } from 'vue';
 import type { TextEditingState } from '@sectile/core/text';
@@ -276,12 +276,11 @@ export function createNativeRangeFieldInput(
     setup(_props, { attrs }) {
       const context = inject<RangeFieldContext<unknown>>(contextKey);
       if (context === undefined) throw new TypeError(`${name} must be used inside ${rootName}.`);
+      const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
       return (): VNodeChild => h('input', mergeProps(context.submissionProps[endpoint].value, attrs, {
         ref: (element: unknown) => { context[endpoint === 'start' ? 'startInput' : 'endInput'].value = element as HTMLInputElement | null; },
         type: 'text', inputmode: context.inputMode.value, placeholder: context.placeholder.value ?? placeholder,
-        value: context.isInputComposing(endpoint)
-          ? context[endpoint === 'start' ? 'startInput' : 'endInput'].value?.value
-          : endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText,
+        ...(renderServerValue ? { value: endpoint === 'start' ? context.slotProps.value.startText : context.slotProps.value.endText } : {}),
         onCompositionstart: () => context.setInputComposing(endpoint, true),
         onCompositionend: () => context.setInputComposing(endpoint, false),
         'aria-disabled': String(context.slotProps.value.disabled),

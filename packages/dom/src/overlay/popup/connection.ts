@@ -90,7 +90,7 @@ export interface PopupBehaviorOptions {
 }
 
 export interface PopupFocusHoverHooks { readOpen(): boolean; request(open: boolean, inputMethod: PopupInputMethod): void }
-export interface PopupFocusHoverBinding { cancelPending(): void; disconnect(): void }
+export interface PopupFocusHoverBinding { cancelPending(): void; syncOpen?(open: boolean): void; disconnect(): void }
 export interface DOMPopupOptions<State, Event, Command extends object> {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement | undefined;
@@ -629,6 +629,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     if (previous !== undefined && this.#publishedRevision === revision) return;
     this.#publishedRevision = revision;
     const open = this.#isOpen();
+    this.#focusHover?.syncOpen?.(open);
     if (open) this.#isolation.set(false);
     if (!open) this.#focusHover?.cancelPending();
     try {

@@ -10,6 +10,19 @@ import { createPopover } from '@sectile/dom/popover';
 import { createCarousel } from '@sectile/dom/carousel';
 import { connectMediaGesture } from '@sectile/dom/media-gesture';
 import { SequenceReorderRoot, SequenceReorderItem } from '../../.verification-dist/reorder.js';
+import { TagsInputRoot, TagsInputInput } from '../../.verification-dist/tags-input.js';
+import { PinInputRoot, PinInputInput } from '../../.verification-dist/pin-input.js';
+import { EditableRoot, EditableInput, EditablePreview, EditableEditTrigger } from '../../.verification-dist/editable.js';
+import { ColorPickerRoot, ColorPickerTextInput } from '../../.verification-dist/color-picker.js';
+import { QuantityFieldRoot, QuantityFieldInput, createStandardQuantityPolicies } from '../../.verification-dist/quantity-field.js';
+import { DateField } from '../../.verification-dist/temporal/date-field.js';
+import { TimeField } from '../../.verification-dist/temporal/time-field.js';
+import { DateTimeField } from '../../.verification-dist/temporal/date-time-field.js';
+import { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } from '../../.verification-dist/temporal/date-range-field.js';
+import { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } from '../../.verification-dist/temporal/time-range-field.js';
+import { DatePickerRoot, DatePickerInput } from '../../.verification-dist/temporal/date-picker.js';
+import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '../../.verification-dist/tree-grid.js';
+import { useDataGrid, createDataGridComponents } from '../../.verification-dist/tabular/data-grid.js';
 
 const host = document.querySelector('#probe');
 const style = document.createElement('style');
@@ -17,8 +30,8 @@ style.textContent = '[data-probe-panel]{opacity:1;transition:opacity 600ms linea
 document.head.append(style);
 let app, media;
 const settle = async () => { await nextTick(); await nextTick(); };
-const reset = () => { media?.disconnect(); media = undefined; app?.unmount(); app = undefined; host.replaceChildren(); };
-const events = [], writes = [];
+const reset = () => { media?.disconnect(); media = undefined; app?.unmount(); app = undefined; host.replaceChildren(); composing.clear(); };
+const events = [], writes = [], valueWrites = [];
 const composing = new Set();
 for (const type of ['compositionstart', 'compositionupdate', 'compositionend', 'input', 'keydown', 'keyup']) document.addEventListener(type, event => {
   if (type === 'compositionstart') composing.add(event.target);
@@ -31,14 +44,75 @@ for (const type of ['compositionstart', 'compositionupdate', 'compositionend', '
     queueMicrotask(() => { record.prevented = event.defaultPrevented; });
   }
 }, true);
-const value = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-Object.defineProperty(HTMLInputElement.prototype, 'value', { ...value, set(next) {
+for (const prototype of [HTMLInputElement.prototype, HTMLTextAreaElement.prototype]) {
+const value = Object.getOwnPropertyDescriptor(prototype, 'value');
+const selection=prototype.setSelectionRange;
+prototype.setSelectionRange=function(...args){if(valueWrites.length<1000)valueWrites.push({id:this.id,selection:args});return selection.apply(this,args);};
+Object.defineProperty(prototype, 'value', { ...value, set(next) {
+  if(valueWrites.length<1000)valueWrites.push({id:this.id,before:value.get.call(this),value:next,composing:composing.has(this)});
   if (composing.has(this)) writes.push({ id: this.id, value: next });
   value.set.call(this, next);
 } });
+}
 
 window.sectileProbe = {
-  events, writes,
+  events, writes, valueWrites,
+  inputFamilies: ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled','number','quantity',
+    'date','time','datetime','date-start','date-end','time-start','time-end','picker','tags','spin','editable','pin','color','treegrid','tabular-editor','tabular-filter'],
+  async reference(id) {
+    await this.field(id);
+    const source=document.getElementById(id),reference=source.cloneNode(false);reference.id='native-reference';
+    reset();document.body.append(reference);
+  },
+  async field(id) {
+    if (['native','text','combo'].includes(id)) { await this.native(); this.reconfigure=this.changeItems; return; }
+    reset();events.length=0;writes.length=0;
+    const value=ref(''), config=ref({label:'Input'}), multiline=ref(false), tags=ref([]);let render, grid;
+    const update=next=>{value.value=next;}, input=part=>h(part,{id});
+    const compound=(Root,Input,props={})=>()=>h(Root,{...props,...config.value},{default:()=>input(Input)});
+    if(id==='native-textarea')render=()=>h('textarea',{id});
+    else if(id.startsWith('text')||id==='textarea') render=()=>h(TextField,{id,...config.value,
+      ...(id==='text-uncontrolled'?{defaultValue:''}:{modelValue:value.value,'onUpdate:modelValue':update}),
+      multiline:id==='textarea'||multiline.value});
+    else if(id==='combo-uncontrolled') render=compound(ComboboxRoot,ComboboxInput,{items:[]});
+    else if(id==='number') render=()=>h(NumberField,{id,...config.value,modelValue:value.value||null,'onUpdate:modelValue':update});
+    else if(id==='quantity') render=compound(QuantityFieldRoot,QuantityFieldInput,{policies:createStandardQuantityPolicies('metre')});
+    else if(['date','time','datetime'].includes(id)) render=()=>h({date:DateField,time:TimeField,datetime:DateTimeField}[id],{id,...config.value});
+    else if(id.startsWith('date-')) render=compound(DateRangeFieldRoot,id==='date-start'?DateRangeFieldStartInput:DateRangeFieldEndInput);
+    else if(id.startsWith('time-')) render=compound(TimeRangeFieldRoot,id==='time-start'?TimeRangeFieldStartInput:TimeRangeFieldEndInput);
+    else if(id==='picker') render=compound(DatePickerRoot,DatePickerInput,{position:false});
+    else if(id==='tags') render=()=>h(TagsInputRoot,{...config.value,inputValue:value.value,'onUpdate:inputValue':update,
+      modelValue:tags.value,'onUpdate:modelValue':next=>{tags.value=next;}},{default:()=>input(TagsInputInput)});
+    else if(id==='spin') render=compound(SpinButtonRoot,SpinButtonInput,{min:'-1000',max:'1000',defaultValue:'0',defaultDraft:''});
+    else if(id==='color') render=compound(ColorPickerRoot,ColorPickerTextInput,{defaultDraft:''});
+    else if(id==='pin') render=()=>h(PinInputRoot,{length:4,...config.value,modelValue:value.value,'onUpdate:modelValue':update},
+      {default:()=>Array.from({length:4},(_,index)=>h(PinInputInput,{index,id:index===0?id:`pin-${index}`}))});
+    else if(id==='editable') render=()=>h(EditableRoot,{...config.value,modelValue:value.value,'onUpdate:modelValue':update},
+      {default:()=>[h(EditablePreview),input(EditableInput),h(EditableEditTrigger,{id:'activate-editor'},()=> 'Edit')]});
+    else if(id==='treegrid') render=()=>h(TreeGridRoot,{...config.value,rows:[{id:'root',parentID:null,cells:['name']}],getCellValue:()=>value.value,
+      setCellValue:(_id,next)=>update(next),defaultHighlightedValue:'name',defaultEditMode:'editing'},
+      {default:()=>h(TreeGridRow,{value:'root',rowIndex:1},{default:()=>h(TreeGridCell,{value:'name',columnIndex:1},{default:()=>h(TreeGridEditor,{for:'name',id})})})});
+    else if(id.startsWith('tabular')) {
+      app=createApp({setup(){
+        const response=request=>({protocolVersion:1,requestID:request.requestID,sourceGeneration:request.sourceGeneration,queryRevision:request.queryRevision,
+          expansionRevision:request.expansionRevision,viewRevision:1,access:request.access,matchingLeafCount:{kind:'known',value:1},visibleRowCount:{kind:'known',value:1},
+          rows:[{kind:'leaf',id:'row',cells:{name:''}}],columnSchema:{revision:request.columnSchemaRevision,columns:[{id:'name',capabilities:['edit','filter']}],headers:[]},removedRowIDs:[]});
+        grid=useDataGrid({source:async request=>response(request)});const request=grid.requestState.value.pendingRequest;
+        const admitted=grid.synchronizeView(response(request));if(!admitted.ok)throw Error(admitted.error.message);
+        const parts=createDataGridComponents(grid);
+        return ()=>h(parts.Provider,{},()=>h(parts.Root,{},()=>id==='tabular-filter'
+          ?h(parts.FilterControl,{id,scope:'column',column:'name',predicate:'contains'})
+          :h(parts.Cell,{rowID:'row',column:'name'},{default:()=>h(parts.Editor,{id,rowID:'row',column:'name'})})));
+      }});
+    }
+    if(!app) { if(!render)throw Error(`Unknown native field ${id}`);app=createApp({render}); }
+    app.mount(host);await settle();
+    if(id==='editable') { host.querySelector('#activate-editor').click();await settle(); }
+    if(id==='tabular-editor') { const cell=host.querySelector('[data-part=cell]');cell.click();cell.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await settle(); }
+    const target=host.querySelector('input:not([type=hidden]),textarea');if(target)target.id=id;
+    this.reconfigure=()=>{config.value={label:'Changed label'};if(id==='text-representation')multiline.value=true;};
+    this.nativeState=()=>({value:value.value,tags:tags.value});
+  },
   async reorder() {
     reset(); const changes=[], lifecycle=[];let state;
     app=createApp({render:()=>h(SequenceReorderRoot,{items:['a','b','c'],keyboardMode:'preview',

@@ -129,3 +129,57 @@ two native Backspace keys. Undo/redo also passed, and the composing-value write
 probe stayed empty. These are headed Chromium/macOS 15 runner results; they do
 not imply physical-device or assistive-technology coverage. B6 still needs its
 own saved-snapshot hosted run.
+
+## Remaining-scope implementation checkpoint
+
+The maintainer subsequently authorized every remaining non-Editor/Content/Coverflow
+item. This supersedes the earlier P1/P2 scope omission. Source base:
+`07719293dc0e535cf43ab09df1c40d7b2c9a52f3`; policy remains the pinned revision above.
+
+P1 now transfers native text, selection and owned focus when representation
+changes. Active composition defers replacement; an input request also waits for
+line breaks to be removed rather than discarding them. Native history is tied
+to a browser element and is explicitly not claimed to transfer between elements.
+P2 uses existing Core decimal arithmetic and NumberField validation for explicit
+set-value/step events. Vue exposes revocable async commitValue/clear/stepBy ports
+through the existing native-field owner, with controlled settlement and rejection.
+No floating-point arithmetic, synthetic DOM edit, or new numeric editor is used.
+Focused GC-enabled Core/Vue checks passed 49 tests.
+
+Tooltip timing is adopted in the existing hover owner: two optional delays and
+an explicit caller-owned skip-delay group. A group retains only a count/deadline
+in a WeakMap; each native connection owns at most one pending timer. Keyboard
+focus remains immediate. The DOM popup suite including accepted/refused group
+timing and cleanup passed. Native HTMLDialog promotion is declined because it
+would overlap Sectile's modal focus/isolation owner; P5 already provides the
+required retained presentation. Link drill-down reuses NavigationMenu's existing
+branch and native-anchor contract, including close-submenu for a Back action.
+These are Sectile ownership decisions, not deferred external approvals.
+
+Issue 227 browser coverage now includes 26 plain/controlled/uncontrolled and
+compound input cases. A real Chromium failure exposed controlled textarea
+defaultValue updates splitting native history. A separate plain-input experiment
+also showed that assigning an unchanged placeholder on every input splits native
+undo grouping; Date/Time/DateTime now compare before writing. Client native field,
+range and quantity projections defer live values to their DOM owners while SSR
+retains initial values. All 26 Chromium history cases passed after these fixes;
+PinInput remains a specialized per-cell composition contract. Value/selection
+traces and the extended real macOS composition matrix are being verified.
+
+The existing macOS job is split into four bounded standard-runner shards; each
+uses plain native controls as IME witnesses. Additional published-artifact,
+full-suite, public declaration, bundle and hosted checks remain pending for this
+checkpoint. No release or issue-Done status is claimed.
+
+The numeric command implementation was moved into the existing NumberField module
+after bundle measurement showed that putting async command logic in the shared
+native-field factory charged Date/Time consumers for numeric-only behavior.
+The shared owner now supplies only an optional lifecycle/connection port. New
+named/root-equivalent NumberField and Tooltip fixtures cover both bundlers.
+All historical budgets remain except the measured esbuild DateField row:
+42,659/12,733/11,462 B became 44,454/13,377/12,057 B raw/gzip/brotli;
+Brotli exceeded its previous 5% + 16 B allowance by 5 B. The remaining shared
+lifecycle port, SSR/native ownership corrections and temporal placeholder guard
+justify this scoped replacement. A separate numeric editor was rejected because
+it would duplicate the current native owner. Full collection covered 496 fixtures
+and 992 bundles; this decision does not raise unrelated consumer ceilings.

@@ -871,7 +871,9 @@
       "optionalPeer": null,
       "rootEquivalentExport": "createNumberField",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {
@@ -1618,6 +1620,7 @@
       "runtimeExports": [
         "connectTooltipDescription",
         "createTooltip",
+        "createTooltipGroup",
         "getTooltipTriggerAttributes",
         "tryCreateTooltip"
       ],
@@ -1625,7 +1628,9 @@
       "optionalPeer": null,
       "rootEquivalentExport": "createTooltip",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {

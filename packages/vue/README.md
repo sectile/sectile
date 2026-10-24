@@ -89,3 +89,45 @@ Set `keyboardMode="preview"` to lift with Space, preview with direction/Home/End
 keys, commit with Enter or Space, and cancel with Escape. Alt+direction keys keep
 their immediate behavior. Host suspension and unmount retire the native owner
 and its preview; they leave no scrolling task running.
+
+Changing `TextField.multiline` transfers the current text and native selection
+to the replacement input/textarea. It restores focus only when the old editor
+owned it. An active composition finishes on the original element before the
+representation changes. A single-line request waits while the current text has
+line breaks, then proceeds when editing removes them. Native undo history belongs
+to each browser element and cannot be transferred to a different element.
+
+A `NumberField` component ref exposes `getText()`, `commitValue(string | null)`,
+`clear()` and `stepBy(decimalString)`. Edit methods return a Promise of
+`NumberFieldEditResult`: accepted with the final value, or rejected with a reason.
+They are deliberate edits, separate from model synchronization that preserves a
+live draft. `stepBy('0.1')` evaluates the current valid draft and adds an exact
+decimal amount; it does not require finite bounds or use JavaScript floating
+point. Stepping an empty nullable field starts from zero. Invalid drafts, bounds,
+required values, disabled/readonly state and active composition can reject an
+edit. A controlled owner may refuse or transform it; settlement then restores
+the owner's accepted value. Concurrent edits return `busy`; saved methods become
+unavailable after unmount. Core NumberField exposes the corresponding `set-value`
+and `step` events through the existing DOM `handleEvent` connection.
+
+`TooltipRoot` accepts `openDelay` and `closeDelay` in milliseconds, both defaulting
+to zero. Keyboard focus opens immediately. Share a `createTooltipGroup({ skipDelay:
+300 })` token through the `group` prop to skip the hover opening delay while a
+peer is open or shortly after an accepted close. Groups are explicit scopes and
+retain only timing/count facts. Pending hover work retires on leave, suspension,
+reconfiguration and unmount; controlled refusal does not warm the group.
+
+Link branches use the existing `NavigationMenuRoot`, `NavigationMenuTrigger` and
+`NavigationMenuContent`. Render leaf `NavigationMenuLink` as an anchor (or borrow
+an anchor with `asChild`) so href, modified clicks and browser link semantics stay
+native. Branch buttons enter child groups; Escape/logical back closes a submenu
+and restores its trigger. For a pointer Back action, the DOM
+`createNavigationMenu` connection already accepts `handleEvent('close-submenu')`.
+It is unnecessary to substitute a selection listbox or maintain another branch
+state machine.
+
+Sectile's modal popup remains the focus/isolation owner. Calling native
+`HTMLDialogElement.showModal()` on that same popup is not a supported promotion:
+the browser would acquire a second modal/focus owner. Retained inline/overlay
+content uses the documented Drawer composition instead. Layer-host placement
+and native browser top-layer promotion are separate capabilities.

@@ -10,13 +10,15 @@ import { PositionedPopup, snapshotPositionRect } from './overlay/positioned-popu
 export type { PopupPositionOptions } from './overlay/positioned-popup.js';
 import { createDOMPopup, readPopupOpen, type DOMPopupConnection, type PopupBehaviorOptions, type PopupBehaviorErrorCode } from './overlay/popup/connection.js';
 import { connectTooltipInteraction } from './overlay/tooltip-interaction.js';
+import type { TooltipTimingOptions } from './overlay/tooltip-interaction.js';
+export { createTooltipGroup, type TooltipGroup, type TooltipTimingOptions } from './overlay/tooltip-interaction.js';
 export { getTooltipTriggerAttributes, connectTooltipDescription, type TooltipTriggerAttributes, type TooltipTriggerAttributesOptions } from './overlay/tooltip-interaction.js';
 
 export type TooltipSide = PositionSide;
 export type { PopupDismissalOptions } from './overlay/popup/connection.js';
 export type { PopupBehaviorOptions, PopupBehaviorErrorCode } from './overlay/popup/connection.js';
 export type TooltipAlign = PositionAlign;
-export interface TooltipOptions extends PositionOptions {
+export interface TooltipOptions extends PositionOptions, TooltipTimingOptions {
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
   readonly anchor?: HTMLElement;
@@ -82,7 +84,9 @@ function tryCreateTooltipConnection(o: TooltipOptions): Result<TooltipConnection
     triggerMode: 'focus-hover',
     manageVisibility: o.manageVisibility,
     retainExit: o.retainExit, layerHost: o.layerHost,
-    bindFocusHover: hooks => connectTooltipInteraction({ root: o.root, trigger: o.trigger, id: o.id }, hooks),
+    bindFocusHover: hooks => connectTooltipInteraction({ root: o.root, trigger: o.trigger, id: o.id,
+      ...(o.openDelay === undefined ? {} : { openDelay: o.openDelay }), ...(o.closeDelay === undefined ? {} : { closeDelay: o.closeDelay }),
+      ...(o.group === undefined ? {} : { group: o.group }) }, hooks),
     onOpenChange: o.onOpenChange,
     onPresentationSuspend: () => { connection?.suspendResources(); },
     onPresentationResume: () => { connection?.resumeResources(); },

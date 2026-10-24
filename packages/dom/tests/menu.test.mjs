@@ -121,6 +121,9 @@ test('inline bars translate submenu arrows and return Core-admitted focus to the
       file.focus(); key(file, 'ArrowDown'); await settlePosition(window); assert.equal(window.document.activeElement === child, true);
       key(child, 'Enter'); assert.deepEqual(invoked, []);
       key(child, 'ArrowDown'); await settlePosition(window); assert.equal(window.document.activeElement === last, true);
+      assert.equal(menu.handleEvent('close-submenu'),true);assert.deepEqual(menu.getSnapshot().state.openPath,[]);
+      await settlePosition(window);assert.equal(window.document.activeElement,file);
+      key(file,'ArrowDown');await settlePosition(window);key(child,'ArrowDown');await settlePosition(window);
       key(last, 'Enter'); assert.deepEqual(invoked, ['last']); assert.equal(menu.getSnapshot().state.cursor.current, 'file');
       assert.equal(window.document.activeElement === file, true); assert.deepEqual(menu.getSnapshot().state.openPath, []);
       edit.focus(); key(edit, 'ArrowLeft'); assert.equal(menu.getSnapshot().state.cursor.current, 'file'); assert.equal(window.document.activeElement === file, true);

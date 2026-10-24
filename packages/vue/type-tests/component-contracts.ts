@@ -149,6 +149,14 @@ import {
 } from '@sectile/vue/meter-group';
 import { MeterRoot, type MeterRootProps, type MeterRootSlotProps } from '@sectile/vue/meter';
 import { NumberField, type NumberFieldProps } from '@sectile/vue/number-field';
+import type { NumberFieldExpose, NumberFieldEditResult } from '@sectile/vue/number-field';
+import { createTooltipGroup } from '@sectile/vue/tooltip';
+new TooltipRoot({openDelay:200,closeDelay:50,group:createTooltipGroup({skipDelay:300})});
+declare const numericCommands: NumberFieldExpose;
+const numericEdit: Promise<NumberFieldEditResult> = numericCommands.stepBy('0.1');
+numericCommands.commitValue(null); numericCommands.clear(); void numericEdit;
+// @ts-expect-error Exact numeric commands accept decimal strings rather than JS floating point.
+numericCommands.stepBy(0.1);
 import { PopoverRoot, type PopoverRootProps } from '@sectile/vue/popover';
 import type { DialogRootProps } from '@sectile/vue/dialog';
 import type { AlertDialogRootProps } from '@sectile/vue/alert-dialog';

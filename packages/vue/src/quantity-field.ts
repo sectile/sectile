@@ -1,6 +1,6 @@
 import {
   computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
-  shallowRef, triggerRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
+  shallowRef, ssrContextKey, triggerRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import {
   createQuantityField, type QuantityFieldConnection, type QuantityFieldPolicies, type QuantityValue,
@@ -191,6 +191,7 @@ export const QuantityFieldInput = defineComponent({
   },
   setup(props, { attrs }) {
     const root = useRoot('QuantityFieldInput');
+    const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
     const input = shallowRef<HTMLInputElement | null>(null);
     const participation = useNativeInputFormControl(input, { reset: root.reset });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
@@ -199,7 +200,7 @@ export const QuantityFieldInput = defineComponent({
         root.registerInput(input.value ?? undefined);
       },
       type: 'text', name: props.name, form: props.form, required: props.required,
-      value: root.state.value.text, 'aria-invalid': root.state.value.invalid ? 'true' : undefined,
+      ...(renderServerValue ? { value: root.state.value.text } : {}), 'aria-invalid': root.state.value.invalid ? 'true' : undefined,
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
       onCompositionstart: () => root.setInputComposing(true),
       onCompositionend: () => root.setInputComposing(false),

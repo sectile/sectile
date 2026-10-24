@@ -69,7 +69,7 @@ Findings: 520; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/editable.ts:213` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/feed.ts:68` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/grid.ts:178` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/input/native-field.ts:253` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/input/native-field.ts:268` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/input/native-range-field.ts:243` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/listbox.ts:341` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/multi-thumb-slider.ts:218` | controller-rebuild |
@@ -85,7 +85,7 @@ Findings: 520; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tabs.ts:144` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tags-input.ts:201` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/temporal/picker.ts:611` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/text.ts:321` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/text.ts:339` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:219` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toggle-button.ts:83` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toggle-group.ts:130` | controller-rebuild |

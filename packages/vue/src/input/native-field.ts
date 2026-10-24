@@ -1,5 +1,6 @@
 import {
   defineComponent,
+  getCurrentInstance,
   h,
   inject,
   mergeProps,
@@ -7,6 +8,7 @@ import {
   onMounted,
   provide,
   shallowRef,
+  ssrContextKey,
   watch,
   type DefineComponent,
   type ComputedRef,
@@ -35,6 +37,10 @@ export interface NativeFieldValueControl<Value> {
   commit(value: Value | null): boolean;
 }
 type NativeFieldValueBinding<Value> = (control: NativeFieldValueControl<Value>) => () => void;
+export interface NativeFieldCommandHost<Value> {
+  readonly connection: NativeFieldConnection<Value> | undefined;
+  readonly mounted: boolean; readonly composing: boolean; readonly disabled: boolean; readonly readOnly: boolean;
+}
 const nativeFieldValueBinding = Symbol('SectileNativeFieldValueBinding');
 
 /** Scope a composition command to its single native input, not the outer field. */
@@ -74,6 +80,7 @@ export interface NativeFieldComponentConfig<Value, Policies = Readonly<Record<st
   readonly presentationProps?: ComponentObjectPropsOptions<ExtraProps>;
   /** Explicit user selection differs from controlled-value synchronization. */
   commitValue?(connection: NativeFieldConnection<Value>, value: Value | null): boolean;
+  exposeValueCommands?(host: NativeFieldCommandHost<Value>, expose: (value: object) => void): void;
   usePresentation?(props: Readonly<NativeFieldPublicProps<Value, Policies> & ExtraProps>): ComputedRef<NativeFieldPresentation<Value, Policies, Format> | undefined>;
 }
 
@@ -127,6 +134,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           ? ''
           : presentation.value.formatValue(initialProjectedValue as Value),
       );
+      const renderServerValue = inject(ssrContextKey, undefined) !== undefined, defaultText = projectedText.value;
       const projectOptions = () => ({ native: props.native, ...flags.value });
       const projected = shallowRef(projectOptions());
       let inputComposing = false;
@@ -200,6 +208,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       const submission = participation.participating
         ? useFormSubmissionProps({ element: input, capabilities: hiddenInputSubmissionCapabilities }) : undefined;
       const requestConnect = (): void => {
+        if (!mounted) return;
         if (inputComposing) {
           reconnectPending = true;
           return;
@@ -218,8 +227,14 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           connect(capture());
         }, 0);
       };
+      config.exposeValueCommands?.({ get connection() { return connection; }, get mounted() { return mounted; },
+        get composing() { return inputComposing; }, get disabled() { return flags.value.disabled; }, get readOnly() { return flags.value.readonly; } }, commands => {
+        const instance = getCurrentInstance()!;
+        for (const [name, method] of Object.entries(commands)) Object.defineProperty(instance.proxy!, name, { configurable: true, value: method });
+      });
 
       onMounted(() => {
+        if (controlled) acceptedValue = props.modelValue as Value | null;
         mounted = true; connect(); resetValue = connection?.getValue() ?? null;
         if (valueBinding !== undefined && composingState !== undefined) detachValueControl = valueBinding({
           get element() { return input.value ?? null; },
@@ -278,7 +293,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         'aria-label': props.label,
         onCompositionstart: () => setInputComposing(true),
         onCompositionend: () => setInputComposing(false),
-        value: inputComposing ? input.value?.value ?? projectedText.value : projectedText.value,
+        ...(renderServerValue ? { value: projectedText.value } : { defaultValue: defaultText }),
       }, participation.controlProps.value));
     },
   }) as unknown as DefineComponent<NativeFieldPublicProps<Value, Policies> & ExtraProps>;

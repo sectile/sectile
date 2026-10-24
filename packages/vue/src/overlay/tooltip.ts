@@ -1,5 +1,7 @@
 import { createTooltip, getTooltipTriggerAttributes, type TooltipConnection, type TooltipOptions, type PopupCloseReason, type InteractOutsideEvent } from '@sectile/dom/tooltip';
 import type { DefineSetupFnComponent, EmitsToProps, PublicProps, SlotsType, VNodeChild } from 'vue';
+export { createTooltipGroup, type TooltipGroup } from '@sectile/dom/tooltip';
+import type { TooltipTimingOptions } from '@sectile/dom/tooltip';
 import {
   createPopupComponents,
   type PopupFactoryOptions,
@@ -38,7 +40,7 @@ export const TooltipTrigger = parts.Trigger;
 export const TooltipPortal = parts.Portal;
 export const TooltipContent = parts.Content;
 export const TooltipArrow = parts.Arrow;
-export interface TooltipRootProps {
+export interface TooltipRootProps extends TooltipTimingOptions {
   readonly open?: PopupRootProps['open']; readonly defaultOpen?: PopupRootProps['defaultOpen'];
   readonly disabled?: PopupRootProps['disabled']; readonly closeOnEscape?: PopupRootProps['closeOnEscape'];
   readonly position?: PopupRootProps['position']; readonly side?: PopupRootProps['side'];

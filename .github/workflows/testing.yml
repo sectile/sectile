@@ -137,6 +137,11 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.browser == 'true'
     runs-on: macos-15
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [1, 2, 3, 4]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -152,11 +157,11 @@ jobs:
         with:
           name: verification-prepared
       - run: pnpm exec playwright install chromium
-      - run: node scripts/browser-verification.mjs --macos-ime
+      - run: node scripts/browser-verification.mjs --macos-ime --shard=${{ matrix.shard }}/4
       - if: failure()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: macos-ime-failure
+          name: macos-ime-failure-${{ matrix.shard }}
           include-hidden-files: true
           path: .tasks/browser/
           retention-days: 1

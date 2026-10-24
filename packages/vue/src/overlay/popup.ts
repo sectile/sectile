@@ -18,6 +18,7 @@ import {
   type SlotsType,
   type VNodeChild,
 } from 'vue';
+import type { TooltipGroup } from '@sectile/dom/tooltip';
 import type {
   PositionBoundary,
   PositionOptions,
@@ -63,6 +64,9 @@ export interface PopupConnection {
 }
 
 export interface PopupFactoryOptions extends PositionOptions {
+  readonly openDelay?: number;
+  readonly closeDelay?: number;
+  readonly group?: TooltipGroup;
   readonly root: HTMLElement;
   readonly trigger?: HTMLElement;
   readonly anchor?: HTMLElement;
@@ -205,6 +209,9 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     name: `Sectile${pascal(config.scope)}Root`,
     inheritAttrs: false,
     props: {
+      openDelay: { type: Number, default: 0 },
+      closeDelay: { type: Number, default: 0 },
+      group: { type: Object as PropType<TooltipGroup>, default: undefined },
       open: { type: Boolean, default: undefined },
       defaultOpen: { type: Boolean, default: false },
       disabled: { type: Boolean, default: false },
@@ -417,6 +424,8 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           strategy: props.strategy,
           tracking: props.tracking,
           manageVisibility: false,
+          ...(config.triggerMode === 'focus-hover' ? { openDelay: props.openDelay, closeDelay: props.closeDelay,
+            ...(props.group === undefined ? {} : { group: props.group }) } : {}),
           retainExit: true,
           ...(host == null ? {} : { layerHost: host }),
           ...(reservation === undefined ? {} : { reservation }),
@@ -596,6 +605,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         const current = connection.value;
         if (current) unwrap(current.syncDismissal({ closeOnEscape: props.closeOnEscape, closeOnInteractOutside: props.closeOnInteractOutside }));
       });
+      watch([() => props.openDelay, () => props.closeDelay, () => props.group], () => { if (config.triggerMode === 'focus-hover') scheduleConnect(); });
       watch(localOpen, (next, previous) => {
         if (inlineReturn) {
           if (next) inlineReturn.armed = false;

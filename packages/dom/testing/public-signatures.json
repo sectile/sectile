@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "3409b4a3c08e3d5b09ab4843f28a2bd5c79b7f32c9543b37727c3f53ae0ae2ef",
+  "fingerprint": "5460f92f843ebf93176adee00371ea9a660235b427dc7b592b602e90efd615dc",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -599,7 +599,7 @@
     },
     {
       "path": "dist/overlay/popup/connection.d.ts",
-      "sha256": "f9eeb5085c290fea308be742b3352baf8d48cf89a72ed4c0c02aca24cb0b9d96"
+      "sha256": "15d37cd31f46c060b3d1f1648fc206124999aaaf5ebcfbd4bed518ec71a39b91"
     },
     {
       "path": "dist/overlay/position/connection.d.ts",
@@ -619,7 +619,7 @@
     },
     {
       "path": "dist/overlay/tooltip-interaction.d.ts",
-      "sha256": "c9a6e7ad22cb64611475c5298035429c119cb07e4265a097bdc9e609f0f18e64"
+      "sha256": "4fb8a511db660a46573cdbd131f25fe192581b20ebf35cb11bbc445fbfe95239"
     },
     {
       "path": "dist/pagination.d.ts",
@@ -831,7 +831,7 @@
     },
     {
       "path": "dist/tooltip.d.ts",
-      "sha256": "08dc9c15b0e3abc5e15a033c0a29b1c50e3ed0c87b093a21e07d99b68d5dffcc"
+      "sha256": "569e7abdcd070d4ec60b3dfb6b5d48a340d792aa529c4e4723f3bbf31245f573"
     },
     {
       "path": "dist/transfer.d.ts",

@@ -8,6 +8,19 @@ import {
 import { unwrap } from '../../.verification-dist/result.js';
 import { createTextEditingState } from '../../.verification-dist/text.js';
 
+test('number field explicit commands use exact values, current drafts and optional bounds', () => {
+  for (const [initial, delta, expected] of [['0.1','0.2','0.3'],['9007199254740993','1','9007199254740994'],[null,'-0.1','-0.1']]) {
+    const result = unwrap(applyNumberFieldEvent(createNumberFieldState(initial), { type:'step',delta }));
+    assert.equal(result.state.value,expected); assert.equal(result.commands.filter(command=>command.type==='value-committed').length,1);
+  }
+  const draft = createNumberFieldState('-0.2',createTextEditingState('0.2'));
+  assert.equal(unwrap(applyNumberFieldEvent(draft,{type:'step',delta:'0.1'})).state.value,'0.3');
+  assert.equal(applyNumberFieldEvent(createNumberFieldState('1'),{type:'step',delta:'no'}).ok,false);
+  assert.equal(applyNumberFieldEvent(createNumberFieldState('1'),{type:'set-value',value:'3'},{max:'2'}).ok,false);
+  assert.equal(applyNumberFieldEvent(draft,{type:'set-value',value:null},{required:true}).ok,false);
+  assert.equal(unwrap(applyNumberFieldEvent(draft,{type:'set-value',value:null})).state.value,null);
+});
+
 test('calculator expression evaluates precedence, calculator percentages, and integer powers', () => {
   const evaluator = createCalculatorExpression();
   assert.equal(unwrap(evaluator.evaluate('2 + 3 * 4')).value, '14');
@@ -77,6 +90,8 @@ test('number field rejects commit during active text composition', () => {
     },
   })).state;
   assert.equal(applyNumberFieldEvent(state, 'commit').ok, false);
+  assert.equal(applyNumberFieldEvent(state, {type:'set-value',value:'3'}).ok,false);
+  assert.equal(applyNumberFieldEvent(state, {type:'step',delta:'1'}).ok,false);
 });
 
 function editing(text) {
