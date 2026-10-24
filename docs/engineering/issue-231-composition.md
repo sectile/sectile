@@ -9,8 +9,9 @@
   `2026-10-24T19:46:56Z`; this record does not accept unrelated proposals.
 - Execution authority: the maintainer requested implementation directly on main,
   without a PR, and asked Sectile to choose necessary APIs from its own evidence.
-- State: source and packed-candidate close passed; registry-release acceptance
-  remains pending. This is not a separate code-review or release approval.
+- State: source, packed-candidate and published-registry acceptance passed;
+  see the [published verification](../../verification/releases/release-2026-10-24.1.md).
+  This record does not claim a separate independent code review.
 
 ## Ownership and decision
 
@@ -360,3 +361,21 @@ AC-12 still requires the maintainer's release decision and registry provenance
 for the resulting DOM/Vue versions. No package version, tag, registry or GitHub
 release was changed. No new PR was created. Existing untracked
 `docs/engineering/proposals/coverflow-presentation.md` remains outside this work.
+
+## Published close
+
+The maintainer subsequently authorized release. The existing release owner
+published DOM/Vue 0.20.0 and the seven other manifest packages from
+`3b1e581ce8c6fe93aa759682ff890168ab3c2b8b` as
+[release-2026-10-24.1](https://github.com/sectile/sectile/releases/tag/release-2026-10-24.1).
+The exact release source passed all 62 affected deterministic units, Linux
+Chromium and all four real macOS input shards. The preceding complete 85-unit
+source run remains evidence for unchanged executable inputs. The nine
+native-tested tarballs, sealed publication tarballs and registry downloads are
+byte-identical; all registry
+`latest` tags and SHA-512 values match. The existing browser journey also passed
+against those registry downloads. The immutable release contains all original
+tarballs and publication evidence. [The final verification record](../../verification/releases/release-2026-10-24.1.md)
+and its linked artifact identities supersede the earlier Awaiting Release
+checkpoints, including issue 227 AC-12. Excluded Editor/Content/Coverflow work
+and the documented browser/AT coverage limits are unchanged.

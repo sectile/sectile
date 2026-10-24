@@ -1,0 +1,1253 @@
+{
+  "source": {
+    "repository": "sectile/sectile",
+    "commit": "3b1e581ce8c6fe93aa759682ff890168ab3c2b8b"
+  },
+  "verificationRun": 40140866023,
+  "publicationRun": 40140866524,
+  "packages": [
+    {
+      "name": "@sectile/core",
+      "version": "0.16.0",
+      "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e",
+      "integrity": "sha512-nU7YlyB0UC4aZZZyn/+ioQ18x2vtK+jVm11b6OC4eIVMA5upRbz3Sdkx1PictnfkkzE1oj3qb9KFwW6f3TV3/A=="
+    },
+    {
+      "name": "@sectile/chart",
+      "version": "0.16.1",
+      "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911",
+      "integrity": "sha512-che+WTAFi7OREKkv1eQVhTJxl06NKU1nkkMK6ITuZajOJuruYW1eAZ1OOmyKihe9h3g1e5YT4gaSjJbLegfkXg=="
+    },
+    {
+      "name": "@sectile/form",
+      "version": "0.15.2",
+      "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b",
+      "integrity": "sha512-WL9oTPpEdR7q+ghouT42TKhBLMwaqPHmu2NEFyyJNoEYTIirl+fC3SAp25qQrOAInWtBMN8fnaB7OLbGZphUIA=="
+    },
+    {
+      "name": "@sectile/temporal",
+      "version": "0.15.1",
+      "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266",
+      "integrity": "sha512-KqM3S/LjTZfm/t/+ckzi6eW7gASkpsktXIkwAhbfHVRNZl2H/Vp2uA3eOfI4T5RENkxnSLJe/MNa9K1M+5iZRw=="
+    },
+    {
+      "name": "@sectile/virtual",
+      "version": "0.16.1",
+      "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069",
+      "integrity": "sha512-SZBfUk6lj1MVOJN+wXBHnKiBMw84spDgV6mU1tRVaoOiP5xXw955HglZqtievYEyChcOajsVB+aTZHMbY623Dw=="
+    },
+    {
+      "name": "@sectile/terminal",
+      "version": "0.15.1",
+      "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622",
+      "integrity": "sha512-yzdiRgtP7WlAbQRiMCZgGAhk781wYq6LpZjwSCm3nmyBZNh4dbvYPVBwkrbgCMnGYYXO573sSy6syGSWrFtE3Q=="
+    },
+    {
+      "name": "@sectile/tabular",
+      "version": "0.17.1",
+      "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6",
+      "integrity": "sha512-EOllUch6nZeAFb1OybA3uWQXGbDLWzaQCwrXfu4jZ7XtKvFlgrHTuVcXG7HrnJ4dK7IMEHw9CBYCHnz+/AUicg=="
+    },
+    {
+      "name": "@sectile/dom",
+      "version": "0.20.0",
+      "sha256": "3c93312cd88754e7ccf009cb2f376bfcca186dae772ac8603a5437e3df11167c",
+      "integrity": "sha512-dONKz9zlrzZ1BCnteeXjzc6NDmifMb8F/4PW9CdEvsee0tqg4l1q23Zyt82FhzFUIsIHG8uSyGI5lH+qgHQlmQ=="
+    },
+    {
+      "name": "@sectile/vue",
+      "version": "0.20.0",
+      "sha256": "319b76c8830710d7f7d3c14168fbc0ca8015be90cbfe32bb9915d8277915d969",
+      "integrity": "sha512-a+lQbj8MVVRygtseWJVA3z6e8xBAyLf9cVUALH3ci5hYWNF6DQrncDQd2KXSodnyvrbWCS67SaRmNbjSTZ7cog=="
+    }
+  ],
+  "result": "all nine complete tarballs are byte-identical",
+  "nativeShards": [
+    {
+      "job": 121012309498,
+      "shard": [
+        1,
+        4
+      ],
+      "status": "passed",
+      "nativeWitnesses": [
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text-uncontrolled",
+          "family": "text-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "number",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "number",
+          "family": "number",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime",
+          "family": "datetime",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time-end",
+          "family": "time-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "editable",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "editable",
+          "family": "editable",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tabular-editor",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tabular-editor",
+          "family": "tabular-editor",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime-start",
+          "family": "datetime-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "continuations": []
+    },
+    {
+      "job": 121012309519,
+      "shard": [
+        2,
+        4
+      ],
+      "status": "passed",
+      "nativeWitnesses": [
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "textarea",
+          "reference": true,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "textarea",
+          "family": "textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "quantity",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "quantity",
+          "family": "quantity",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date-start",
+          "family": "date-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "picker",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "picker",
+          "family": "picker",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "pin",
+          "reference": true,
+          "text": "한",
+          "compositionStarts": 1,
+          "compositionEnds": 1,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "pin",
+          "family": "pin",
+          "reference": false,
+          "text": "한",
+          "compositionStarts": 1,
+          "compositionEnds": 1,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tabular-filter",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tabular-filter",
+          "family": "tabular-filter",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime-end",
+          "family": "datetime-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "continuations": []
+    },
+    {
+      "job": 121012309490,
+      "shard": [
+        3,
+        4
+      ],
+      "status": "passed",
+      "nativeWitnesses": [
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text",
+          "family": "text",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text-representation",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text-representation",
+          "family": "text-representation",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date",
+          "family": "date",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date-end",
+          "family": "date-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tags",
+          "reference": true,
+          "text": "한글한",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tags",
+          "family": "tags",
+          "reference": false,
+          "text": "",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "color",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "color",
+          "family": "color",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tree-select",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tree-select",
+          "family": "tree-select",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "continuations": [
+        {
+          "family": "tags",
+          "reference": true,
+          "continuation": "native-output-preserved",
+          "requested": "한글한",
+          "observed": "한글한"
+        },
+        {
+          "family": "tags",
+          "reference": false,
+          "continuation": "native-output-preserved",
+          "requested": "한글한",
+          "observed": "한글한"
+        }
+      ]
+    },
+    {
+      "job": 121012309503,
+      "shard": [
+        4,
+        4
+      ],
+      "status": "passed",
+      "nativeWitnesses": [
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "combo",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "combo",
+          "family": "combo",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "combo-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "combo-uncontrolled",
+          "family": "combo-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time",
+          "family": "time",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time-start",
+          "family": "time-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "spin",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "spin",
+          "family": "spin",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "treegrid",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "treegrid",
+          "family": "treegrid",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tree-select-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tree-select-uncontrolled",
+          "family": "tree-select-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "continuations": []
+    }
+  ],
+  "verifiedAt": "2026-10-24T23:17:49Z",
+  "githubRelease": {
+    "assets": [
+      {
+        "digest": "sha256:ff7f52e0048a82d60d9ca7175b749138f7a367d13f26e0e51b691e5dea6ea940",
+        "name": "artifacts.json",
+        "size": 2265
+      },
+      {
+        "digest": "sha256:0bcf7d404c72a813aedd6d6bf9645d918ad4a40eaef29e1b7208e588534f777c",
+        "name": "npm-artifact-report.json",
+        "size": 5697
+      },
+      {
+        "digest": "sha256:012b5fc7da7ab31e06e8a20af16e1d2001d15433e2acbed5a76a636d3af32a69",
+        "name": "npm-diagnostics.json",
+        "size": 1672
+      },
+      {
+        "digest": "sha256:d58301f9b8e351b64f24c8c809d8d3a9bde7fac3182697f4ae19a2d1b33f8699",
+        "name": "npm-report.json",
+        "size": 3028
+      },
+      {
+        "digest": "sha256:d030e763e71ae0d0f9afa5927900a6cac2ea2c4afb3843faac893e49d9bcec30",
+        "name": "release-notes-report.json",
+        "size": 11076
+      },
+      {
+        "digest": "sha256:3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911",
+        "name": "sectile-chart-0.16.1.tgz",
+        "size": 99210
+      },
+      {
+        "digest": "sha256:6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e",
+        "name": "sectile-core-0.16.0.tgz",
+        "size": 224409
+      },
+      {
+        "digest": "sha256:3c93312cd88754e7ccf009cb2f376bfcca186dae772ac8603a5437e3df11167c",
+        "name": "sectile-dom-0.20.0.tgz",
+        "size": 499565
+      },
+      {
+        "digest": "sha256:bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b",
+        "name": "sectile-form-0.15.2.tgz",
+        "size": 41215
+      },
+      {
+        "digest": "sha256:d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6",
+        "name": "sectile-tabular-0.17.1.tgz",
+        "size": 71901
+      },
+      {
+        "digest": "sha256:31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266",
+        "name": "sectile-temporal-0.15.1.tgz",
+        "size": 57368
+      },
+      {
+        "digest": "sha256:23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622",
+        "name": "sectile-terminal-0.15.1.tgz",
+        "size": 113132
+      },
+      {
+        "digest": "sha256:5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069",
+        "name": "sectile-virtual-0.16.1.tgz",
+        "size": 69310
+      },
+      {
+        "digest": "sha256:319b76c8830710d7f7d3c14168fbc0ca8015be90cbfe32bb9915d8277915d969",
+        "name": "sectile-vue-0.20.0.tgz",
+        "size": 448754
+      }
+    ],
+    "draft": false,
+    "html_url": "https://github.com/sectile/sectile/releases/tag/release-2026-10-24.1",
+    "id": 423036608,
+    "immutable": true,
+    "published_at": "2026-10-24T23:17:24Z",
+    "target_commitish": "3b1e581ce8c6fe93aa759682ff890168ab3c2b8b"
+  },
+  "workflowArtifacts": [
+    {
+      "expired": false,
+      "id": 12579262129,
+      "name": "npm-evidence-release-2026-10-24.1-1"
+    },
+    {
+      "expired": false,
+      "id": 12578967507,
+      "name": "github-evidence-release-2026-10-24.1-1"
+    },
+    {
+      "expired": false,
+      "id": 12578387854,
+      "name": "npm-packages-release-2026-10-24.1-1"
+    }
+  ],
+  "registry": [
+    {
+      "name": "@sectile/core",
+      "version": "0.16.0",
+      "tarball": "https://registry.npmjs.org/@sectile/core/-/core-0.16.0.tgz",
+      "integrity": "sha512-nU7YlyB0UC4aZZZyn/+ioQ18x2vtK+jVm11b6OC4eIVMA5upRbz3Sdkx1PictnfkkzE1oj3qb9KFwW6f3TV3/A==",
+      "latestMatches": true,
+      "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e",
+      "registryIntegrity": "sha512-nU7YlyB0UC4aZZZyn/+ioQ18x2vtK+jVm11b6OC4eIVMA5upRbz3Sdkx1PictnfkkzE1oj3qb9KFwW6f3TV3/A==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/chart",
+      "version": "0.16.1",
+      "tarball": "https://registry.npmjs.org/@sectile/chart/-/chart-0.16.1.tgz",
+      "integrity": "sha512-che+WTAFi7OREKkv1eQVhTJxl06NKU1nkkMK6ITuZajOJuruYW1eAZ1OOmyKihe9h3g1e5YT4gaSjJbLegfkXg==",
+      "latestMatches": true,
+      "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911",
+      "registryIntegrity": "sha512-che+WTAFi7OREKkv1eQVhTJxl06NKU1nkkMK6ITuZajOJuruYW1eAZ1OOmyKihe9h3g1e5YT4gaSjJbLegfkXg==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/form",
+      "version": "0.15.2",
+      "tarball": "https://registry.npmjs.org/@sectile/form/-/form-0.15.2.tgz",
+      "integrity": "sha512-WL9oTPpEdR7q+ghouT42TKhBLMwaqPHmu2NEFyyJNoEYTIirl+fC3SAp25qQrOAInWtBMN8fnaB7OLbGZphUIA==",
+      "latestMatches": true,
+      "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b",
+      "registryIntegrity": "sha512-WL9oTPpEdR7q+ghouT42TKhBLMwaqPHmu2NEFyyJNoEYTIirl+fC3SAp25qQrOAInWtBMN8fnaB7OLbGZphUIA==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/temporal",
+      "version": "0.15.1",
+      "tarball": "https://registry.npmjs.org/@sectile/temporal/-/temporal-0.15.1.tgz",
+      "integrity": "sha512-KqM3S/LjTZfm/t/+ckzi6eW7gASkpsktXIkwAhbfHVRNZl2H/Vp2uA3eOfI4T5RENkxnSLJe/MNa9K1M+5iZRw==",
+      "latestMatches": true,
+      "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266",
+      "registryIntegrity": "sha512-KqM3S/LjTZfm/t/+ckzi6eW7gASkpsktXIkwAhbfHVRNZl2H/Vp2uA3eOfI4T5RENkxnSLJe/MNa9K1M+5iZRw==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/virtual",
+      "version": "0.16.1",
+      "tarball": "https://registry.npmjs.org/@sectile/virtual/-/virtual-0.16.1.tgz",
+      "integrity": "sha512-SZBfUk6lj1MVOJN+wXBHnKiBMw84spDgV6mU1tRVaoOiP5xXw955HglZqtievYEyChcOajsVB+aTZHMbY623Dw==",
+      "latestMatches": true,
+      "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069",
+      "registryIntegrity": "sha512-SZBfUk6lj1MVOJN+wXBHnKiBMw84spDgV6mU1tRVaoOiP5xXw955HglZqtievYEyChcOajsVB+aTZHMbY623Dw==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/terminal",
+      "version": "0.15.1",
+      "tarball": "https://registry.npmjs.org/@sectile/terminal/-/terminal-0.15.1.tgz",
+      "integrity": "sha512-yzdiRgtP7WlAbQRiMCZgGAhk781wYq6LpZjwSCm3nmyBZNh4dbvYPVBwkrbgCMnGYYXO573sSy6syGSWrFtE3Q==",
+      "latestMatches": true,
+      "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622",
+      "registryIntegrity": "sha512-yzdiRgtP7WlAbQRiMCZgGAhk781wYq6LpZjwSCm3nmyBZNh4dbvYPVBwkrbgCMnGYYXO573sSy6syGSWrFtE3Q==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/tabular",
+      "version": "0.17.1",
+      "tarball": "https://registry.npmjs.org/@sectile/tabular/-/tabular-0.17.1.tgz",
+      "integrity": "sha512-EOllUch6nZeAFb1OybA3uWQXGbDLWzaQCwrXfu4jZ7XtKvFlgrHTuVcXG7HrnJ4dK7IMEHw9CBYCHnz+/AUicg==",
+      "latestMatches": true,
+      "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6",
+      "registryIntegrity": "sha512-EOllUch6nZeAFb1OybA3uWQXGbDLWzaQCwrXfu4jZ7XtKvFlgrHTuVcXG7HrnJ4dK7IMEHw9CBYCHnz+/AUicg==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/dom",
+      "version": "0.20.0",
+      "tarball": "https://registry.npmjs.org/@sectile/dom/-/dom-0.20.0.tgz",
+      "integrity": "sha512-dONKz9zlrzZ1BCnteeXjzc6NDmifMb8F/4PW9CdEvsee0tqg4l1q23Zyt82FhzFUIsIHG8uSyGI5lH+qgHQlmQ==",
+      "latestMatches": true,
+      "sha256": "3c93312cd88754e7ccf009cb2f376bfcca186dae772ac8603a5437e3df11167c",
+      "registryIntegrity": "sha512-dONKz9zlrzZ1BCnteeXjzc6NDmifMb8F/4PW9CdEvsee0tqg4l1q23Zyt82FhzFUIsIHG8uSyGI5lH+qgHQlmQ==",
+      "registryMatchesRelease": true
+    },
+    {
+      "name": "@sectile/vue",
+      "version": "0.20.0",
+      "tarball": "https://registry.npmjs.org/@sectile/vue/-/vue-0.20.0.tgz",
+      "integrity": "sha512-a+lQbj8MVVRygtseWJVA3z6e8xBAyLf9cVUALH3ci5hYWNF6DQrncDQd2KXSodnyvrbWCS67SaRmNbjSTZ7cog==",
+      "latestMatches": true,
+      "sha256": "319b76c8830710d7f7d3c14168fbc0ca8015be90cbfe32bb9915d8277915d969",
+      "registryIntegrity": "sha512-a+lQbj8MVVRygtseWJVA3z6e8xBAyLf9cVUALH3ci5hYWNF6DQrncDQd2KXSodnyvrbWCS67SaRmNbjSTZ7cog==",
+      "registryMatchesRelease": true
+    }
+  ],
+  "registryBrowser": {
+    "sha": "3b1e581ce8c6fe93aa759682ff890168ab3c2b8b",
+    "nativeIME": false,
+    "status": "passed",
+    "results": [
+      {
+        "id": "native",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "native-textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-representation",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "number",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "quantity",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "picker",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tags",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "spin",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "editable",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "pin",
+        "history": "specialized per-cell admission; checked through native composition"
+      },
+      {
+        "id": "color",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "treegrid",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-editor",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-filter",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-end",
+        "undoRedo": "passed"
+      },
+      {
+        "initialFocus": "visible",
+        "placeholder": "Enter a number",
+        "spin": {
+          "errors": [],
+          "text": "0.16",
+          "focused": true
+        },
+        "rejected": {
+          "errors": [
+            "Spin button value must lie on the range lattice."
+          ],
+          "text": "0.16"
+        },
+        "keys": [
+          {
+            "scenario": "input",
+            "value": "a"
+          },
+          {
+            "scenario": "range",
+            "value": "a"
+          },
+          {
+            "scenario": "alt",
+            "value": "a"
+          },
+          {
+            "scenario": "prevented",
+            "value": "a"
+          },
+          {
+            "scenario": "root",
+            "value": "b"
+          }
+        ]
+      },
+      {
+        "portal": false,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": false,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": false,
+        "restored": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": true,
+        "restored": true
+      },
+      {
+        "media": {
+          "activations": 2,
+          "ordinary": 1,
+          "starts": 1,
+          "moves": 3,
+          "ends": [
+            "complete"
+          ]
+        }
+      },
+      {
+        "reorderPreview": "passed"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.20.0",
+        "sha256": "3c93312cd88754e7ccf009cb2f376bfcca186dae772ac8603a5437e3df11167c"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.20.0",
+        "sha256": "319b76c8830710d7f7d3c14168fbc0ca8015be90cbfe32bb9915d8277915d969"
+      }
+    ],
+    "shard": [
+      1,
+      1
+    ],
+    "families": [
+      "native",
+      "native-textarea",
+      "text",
+      "combo",
+      "text-uncontrolled",
+      "textarea",
+      "text-representation",
+      "combo-uncontrolled",
+      "number",
+      "quantity",
+      "date",
+      "time",
+      "datetime",
+      "date-start",
+      "date-end",
+      "time-start",
+      "time-end",
+      "picker",
+      "tags",
+      "spin",
+      "editable",
+      "pin",
+      "color",
+      "treegrid",
+      "tabular-editor",
+      "tabular-filter",
+      "tree-select",
+      "tree-select-uncontrolled",
+      "datetime-start",
+      "datetime-end"
+    ]
+  },
+  "verifiedUnits": 62,
+  "priorFullVerification": {
+    "source": "34440cc444490dadb1dc42dc86f51f37af753aee",
+    "run": 40138752921,
+    "verifiedUnits": 85
+  }
+}
