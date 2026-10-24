@@ -6,7 +6,7 @@ import { basename, resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
-import { inspectPackedPackage } from './lib/packed-package-contract.mjs';
+import { validateTarballEntries } from './lib/packed-package-contract.mjs';
 
 const nativeIME = process.argv.includes('--macos-ime');
 const shardArgument = process.argv.find(argument => argument.startsWith('--shard='));
@@ -24,7 +24,9 @@ report.artifacts = [];
 for (const name of publishedPackageDirectories) {
   const manifest = JSON.parse(readFileSync(`packages/${name}/package.json`, 'utf8'));
   const tarball = resolve('.tasks/verification/publication-packs', `sectile-${name}-${manifest.version}.tgz`);
-  await inspectPackedPackage(tarball);
+  // Preparation owns complete package admission. Recheck extraction safety,
+  // then load the bytes once instead of repeating its full verification.
+  validateTarballEntries(execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' }).trim().split('\n'));
   const directory = join(packedRoot, name); mkdirSync(directory, { recursive: true });
   execFileSync('tar', ['-xzf', tarball, '-C', directory]);
   const packed = JSON.parse(readFileSync(join(directory, 'package/package.json'), 'utf8'));
@@ -113,6 +115,13 @@ try {
     execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
     for (const family of fields) for (const reference of ['native','native-textarea'].includes(family) ? [false] : [true,false]) {
       report.current = { family, reference };
+      // Each IME witness gets a fresh native document, like an isolated browser
+      // test. Token commits/editor closure can clear or hide the previous input;
+      // removing it inside the same document leaked OS marked-text context into
+      // the next plain HTML peer. Finish focus before retiring that document.
+      await page.evaluate(() => document.activeElement?.blur());
+      await page.goto(`${url}/interactions`);
+      await page.waitForFunction(() => window.sectileProbe !== undefined);
       const id = reference ? 'native-reference' : family;
       await page.evaluate(({family,reference}) => reference ? window.sectileProbe.reference(family) : window.sectileProbe.field(family), {family,reference});
       await page.evaluate(() => { window.sectileProbe.nativeMutations.length = 0; });

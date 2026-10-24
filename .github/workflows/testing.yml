@@ -130,7 +130,9 @@ jobs:
         with:
           name: browser-failure
           include-hidden-files: true
-          path: .tasks/browser/
+          path: |
+            .tasks/browser/result.json
+            .tasks/browser/trace.zip
           retention-days: 1
 
   macos-ime:
@@ -163,7 +165,9 @@ jobs:
         with:
           name: macos-ime-failure-${{ matrix.shard }}
           include-hidden-files: true
-          path: .tasks/browser/
+          path: |
+            .tasks/browser/result.json
+            .tasks/browser/trace.zip
           retention-days: 1
 
   result:
