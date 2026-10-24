@@ -16,11 +16,11 @@ let browser, context, page, source, inputProcess;
 const swift = '.tasks/browser/input-source';
 const nativeKeys = codes => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
-  execFileSync('osascript', ['-e', `tell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.15`).join('\n')}\nend tell`], { timeout: 10000 });
+  execFileSync(swift, ['--type', ...codes.map(String)], { timeout: 10000 });
 };
 const typeNative = codes => new Promise((resolve, reject) => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
-  const child = inputProcess = spawn('osascript', ['-e', `delay 1\ntell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.25`).join('\n')}\nend tell`], { stdio: ['ignore', 'ignore', 'pipe'] });
+  const child = inputProcess = spawn(swift, ['--type', ...codes.map(String)], { stdio: ['ignore', 'ignore', 'pipe'] });
   let errors = '';
   child.stderr.on('data', data => { errors = (errors + data).slice(-4000); });
   const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('native typing timeout')); }, 10000);
@@ -107,7 +107,8 @@ try {
         await typeNative([5, 40, 1, 36]);
         await page.waitForFunction(() => window.sectileProbe.events.some(event => event.id === 'native' && event.type === 'compositionend'), null, { timeout: 5000 });
         report.imeWarmup = await page.locator('#native').inputValue();
-        execFileSync('osascript', ['-e', 'tell application "System Events"\nkeystroke "a" using command down\nkey code 51\nend tell'], { timeout: 10000 });
+        execFileSync(swift, ['--type', '--command', '0'], { timeout: 10000 });
+        nativeKeys([51]);
         await page.waitForFunction(() => document.querySelector('#native').value === '');
         await page.evaluate(() => { window.sectileProbe.events.length = 0; window.sectileProbe.writes.length = 0; });
       }

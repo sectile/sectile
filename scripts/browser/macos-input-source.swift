@@ -1,6 +1,7 @@
 // Native compiler boundary used only by browser-verification.mjs on macOS.
 import Carbon
 import Foundation
+import ApplicationServices
 
 func sourceID(_ source: TISInputSource) -> String {
     let pointer = TISGetInputSourceProperty(source, kTISPropertyInputSourceID)!
@@ -20,6 +21,28 @@ func flag(_ source: TISInputSource, _ key: CFString) -> Bool {
 let previous = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
 let sources = TISCreateInputSourceList(nil, true).takeRetainedValue() as! [TISInputSource]
 let requested = CommandLine.arguments.dropFirst().first
+if requested == "--type" {
+    let arguments = Array(CommandLine.arguments.dropFirst(2))
+    let command = arguments.first == "--command"
+    let keys = command ? Array(arguments.dropFirst()) : arguments
+    guard !keys.isEmpty, keys.allSatisfy({ UInt16($0).map { $0 < 128 } ?? false }),
+          let eventSource = CGEventSource(stateID: .hidSystemState) else {
+        fputs("Native typing requires bounded hardware key codes\n", stderr); exit(1)
+    }
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 1))
+    for key in keys {
+        for down in [true, false] {
+            guard let event = CGEvent(keyboardEventSource: eventSource, virtualKey: UInt16(key)!, keyDown: down) else {
+                fputs("Cannot create native keyboard event\n", stderr); exit(1)
+            }
+            event.flags = command ? .maskCommand : []
+            event.setIntegerValueField(.keyboardEventAutorepeat, value: 0)
+            event.post(tap: .cghidEventTap)
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: down ? 0.05 : 0.25))
+        }
+    }
+    exit(0)
+}
 if requested == "--inspect" {
     let result: [String: Any] = ["current": sourceID(previous), "enabled": sources.filter {
         flag($0, kTISPropertyInputSourceIsEnabled) && flag($0, kTISPropertyInputSourceIsSelectCapable)
