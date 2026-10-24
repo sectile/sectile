@@ -134,6 +134,19 @@ try {
       assert.notEqual(await page.evaluate(() => document.activeElement.id), 'child-close');
       report.results.push({ portal, controlled, closed: true });
     }
+    for (const compound of [false, true]) {
+      await page.evaluate(compound => window.sectileProbe.retainedDrawer(compound), compound);
+      const trigger = await page.locator('#retained-trigger').elementHandle();
+      await page.locator('#retained-trigger').click();
+      await page.locator('[data-retained-panel][role=dialog]').waitFor();
+      await page.locator('#retained-input').focus();
+      await page.keyboard.press('Escape');
+      await page.locator('[data-retained-panel][data-presentation=inline]').waitFor();
+      assert.equal(await page.locator('#retained-trigger').evaluate((element, original) => element === original, trigger), true);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'retained-trigger');
+      await trigger.dispose();
+      report.results.push({ retainedDrawer: true, compound, restored: true });
+    }
   }
   assert.deepEqual(warnings, []);
   assert.deepEqual(errors, []);

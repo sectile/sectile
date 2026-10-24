@@ -1,6 +1,7 @@
 // Browser-driven keyboard/IME witnesses. The runner supplies native input.
 import { createApp, h, nextTick, ref } from 'vue';
 import { DialogRoot, DialogTrigger, DialogContent, DialogClose, DialogPortal } from '../../.verification-dist/overlay/dialog.js';
+import { DrawerRoot, DrawerTrigger, DrawerContent, DrawerPortal } from '../../.verification-dist/overlay/drawer.js';
 import { TextField } from '../../.verification-dist/text.js';
 import { ComboboxRoot, ComboboxInput } from '../../.verification-dist/combobox.js';
 import { NumberField } from '../../.verification-dist/number-field.js';
@@ -17,10 +18,16 @@ const settle = async () => { await nextTick(); await nextTick(); };
 const reset = () => { app?.unmount(); app = undefined; host.replaceChildren(); };
 const events = [], writes = [];
 const composing = new Set();
-for (const type of ['compositionstart', 'compositionupdate', 'compositionend', 'input']) document.addEventListener(type, event => {
+for (const type of ['compositionstart', 'compositionupdate', 'compositionend', 'input', 'keydown', 'keyup']) document.addEventListener(type, event => {
   if (type === 'compositionstart') composing.add(event.target);
   if (type === 'compositionend') composing.delete(event.target);
-  if (events.length < 1000) events.push({ id: event.target.id, type, data: event.data, value: event.target.value });
+  if (events.length < 1000) {
+    const record = { id: event.target.id, type, data: event.data, value: event.target.value,
+      ...(type.startsWith('key') ? { key: event.key, code: event.code, composing: event.isComposing,
+        alt: event.altKey, ctrl: event.ctrlKey, meta: event.metaKey, shift: event.shiftKey } : {}) };
+    events.push(record);
+    queueMicrotask(() => { record.prevented = event.defaultPrevented; });
+  }
 }, true);
 const value = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
 Object.defineProperty(HTMLInputElement.prototype, 'value', { ...value, set(next) {
@@ -94,5 +101,23 @@ window.sectileProbe = {
       carousel.destroy(); root.remove();
     }
     return { initialFocus, placeholder, spin, rejected, keys };
+  },
+  async retainedDrawer(compound) {
+    reset();
+    const open = ref(false), target = ref();
+    const button = () => h('button', { id: 'retained-trigger', onClick: () => {
+      target.value = document.activeElement; open.value = true;
+    } }, 'Open retained drawer');
+    app = createApp({ render: () => h(DrawerRoot, {
+      presentation: open.value ? 'overlay' : 'inline', open: open.value, unmountOnExit: false,
+      ...(!compound && target.value ? { restoreFocusTarget: target.value } : {}),
+      'onUpdate:open': value => { open.value = value; },
+    }, { default: () => h(DrawerPortal, { disabled: !open.value }, {
+      default: () => h(DrawerContent, { 'data-retained-panel': '' }, { default: () => [
+        compound ? h(DrawerTrigger, { asChild: true }, { default: button }) : button(),
+        h('input', { id: 'retained-input' }),
+      ] }),
+    }) }) });
+    app.mount(host); await settle();
   },
 };

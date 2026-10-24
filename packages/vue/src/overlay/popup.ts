@@ -341,6 +341,33 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       let inactiveRefsChanged = false;
       const restoreFocusTarget = (): HTMLElement | undefined => props.restoreFocusTarget === undefined
         ? invocation?.restoreFocusTarget : props.restoreFocusTarget ?? undefined;
+      let inlineReturn: { readonly panel: HTMLElement; readonly target: HTMLElement; armed: boolean } | undefined;
+      const rememberInlineOrigin = (): void => {
+        const panel = content.value, focused = panel?.ownerDocument.activeElement;
+        inlineReturn = active.value && props.restoreFocus && panel && focused instanceof HTMLElement && panel.contains(focused)
+          ? { panel, target: focused, armed: false } : undefined;
+      };
+      watch(inline, async (next) => {
+        if (!next) return;
+        const pending = inlineReturn; inlineReturn = undefined;
+        if (!pending?.armed) return;
+        await nextTick();
+        if (destroyed || !inline.value || localOpen.value || !active.value || !props.restoreFocus || content.value !== pending.panel) return;
+        const panel = pending.panel, document = panel.ownerDocument;
+        const focused = (panel.getRootNode() as Document | ShadowRoot).activeElement;
+        if (focused && focused !== document.body && focused !== document.documentElement && !panel.contains(focused)) return;
+        for (const target of [restoreFocusTarget(), trigger.value, pending.target]) {
+          if (!target || !panel.contains(target) || !target.isConnected || target.closest('[hidden],[inert],[aria-hidden="true"],:disabled')) continue;
+          let visible = true;
+          for (let node: HTMLElement | null = target; node; node = node.parentElement) {
+            const style = document.defaultView?.getComputedStyle(node);
+            if (style?.display === 'none' || style?.visibility === 'hidden' || style?.visibility === 'collapse' || style?.contentVisibility === 'hidden') { visible = false; break; }
+          }
+          if (!visible) continue;
+          target.focus({ preventScroll: true });
+          break;
+        }
+      }, { flush: 'post' });
       const connect = (preserveOpenLifecycle = false): void => {
         if (!availability.value) return;
         if (inline.value) { disconnect(); return; }
@@ -455,6 +482,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       };
       const suspend = (): void => {
         if (destroyed) return;
+        inlineReturn = undefined;
         const current = connection.value;
         const exiting = presentation.value?.phase === 'exiting';
         try { current?.suspend(); }
@@ -524,6 +552,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         validatePlacement();
         // A simultaneous return to overlay precedes acceptance of its opening.
         if (inline.value && requestedPlacement() === 'overlay') {
+          rememberInlineOrigin();
           placement.value = 'overlay';
           scheduleConnect();
         }
@@ -567,7 +596,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         const current = connection.value;
         if (current) unwrap(current.syncDismissal({ closeOnEscape: props.closeOnEscape, closeOnInteractOutside: props.closeOnInteractOutside }));
       });
-      watch(localOpen, (next) => {
+      watch(localOpen, (next, previous) => {
+        if (inlineReturn) {
+          if (next) inlineReturn.armed = false;
+          else if (previous && requestedPlacement() === 'inline') inlineReturn.armed = true;
+          else inlineReturn = undefined;
+        }
         if (next) inactiveClosePending = false;
         if (!next && !active.value) inactiveClosePending = true;
         if (!next && restoreAutoFocusOnClose) scheduleConnect();
@@ -582,6 +616,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         // Controlled refusal and retained exit paint belong to the incumbent owner.
         if (requested === 'inline' && (localOpen.value || presentation.value?.phase === 'active' || presentation.value?.phase === 'exiting')) return;
         if (requested === 'inline') disconnect();
+        else if (inline.value) rememberInlineOrigin();
         placement.value = requested;
         if (requested === 'overlay') {
           // A rejected inline opening may leave the controlled prop unchanged.
@@ -592,6 +627,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       });
       onBeforeUnmount(() => {
         destroyed = true;
+        inlineReturn = undefined;
         try { disconnect(); }
         finally { invocation?.detach(); }
       });
