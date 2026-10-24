@@ -183,3 +183,39 @@ lifecycle port, SSR/native ownership corrections and temporal placeholder guard
 justify this scoped replacement. A separate numeric editor was rejected because
 it would duplicate the current native owner. Full collection covered 496 fixtures
 and 992 bundles; this decision does not raise unrelated consumer ceilings.
+
+## Close corrections and artifact boundary
+
+Commit `2a0d46d0a4ea54fe3413f68c2a17dad04609f308` passed consumer
+installation, both bundlers, DOM, lifecycle retention, documentation, public
+signatures and package structure in hosted verification. Its full close failed:
+Core's additive numeric events needed semantic API classification, the complexity
+aggregate was stale, and two Vue assertions retained superseded contracts. The
+Combobox regression now completes composition before expecting representation
+replacement; the Form regression keeps the initial native default and still
+asserts that reset restores the latest controlled model. Neither weakens the
+requested native ownership. Focused GC-enabled Core/DOM/Vue checks and both
+corrected Vue suites passed locally. Public declaration/SFC checks passed.
+
+The expanded macOS matrix observed `한ㅡㄹ` after the native textarea witness,
+with no composing-value writes. This remains a failed check, not a passed native
+IME result. Source activation is now scoped to the browser session rather than
+reset between every field, and failure reports include all value/selection
+writes. Hosted verification of that correction is pending.
+
+Browser execution now extracts the existing preparation owner's publication
+tarballs, validates their package contracts and resolves public entry points to
+those extracted bytes. Root owns cross-package composition; the Vue server only
+receives explicit alias inputs. The existing interaction fixture is reused,
+including all 26 input cases, nested popup AX/focus, retained Drawer, gesture and
+Reorder journeys. Chromium passed locally against those candidate artifacts;
+the report includes their versions and SHA-256 digests. This is packed-candidate
+evidence, not registry-release evidence.
+
+Registry inspection still reports DOM/Vue `0.19.0` at
+`aaa01f132db0ed1c1732d5f1749038c88cdd8a2d`, preceding these fixes.
+The existing read-only `pnpm release:plan --allow-dirty` selects Core `0.16.0`,
+DOM/Vue `0.20.0` and dependent patch releases for the full unreleased change set.
+No version mutation, tag, registry publication or release approval is inferred.
+Issue 227 AC-12 remains open until the maintainer's release decision and a check
+of the published bytes. The workflow's human-release boundary remains applicable.

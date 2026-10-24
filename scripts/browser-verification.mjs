@@ -1,9 +1,12 @@
 // Dedicated browser/OS process lifetime; fixtures remain Vue-package owned.
 import assert from 'node:assert/strict';
 import { spawn, execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { basename } from 'node:path';
+import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { basename, resolve, join } from 'node:path';
+import { createHash } from 'node:crypto';
 import { chromium } from 'playwright';
+import { publishedPackageDirectories } from './lib/published-packages.mjs';
+import { inspectPackedPackage } from './lib/packed-package-contract.mjs';
 
 const nativeIME = process.argv.includes('--macos-ime');
 const shardArgument = process.argv.find(argument => argument.startsWith('--shard='));
@@ -12,8 +15,30 @@ assert.ok(shard.length === 2 && shard.every(Number.isSafeInteger) && shard[0] >=
 if (nativeIME) assert.equal(process.platform, 'darwin', 'native macOS IME verification requires macOS');
 const output = '.tasks/browser'; mkdirSync(output, { recursive: true });
 const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), nativeIME, status: 'running', results: [] };
+// Root owns artifact composition. The package server receives explicit aliases;
+// it never reads sibling packages or reaches upwards for workspace policy.
+const packedRoot = resolve(output, 'packages');
+rmSync(packedRoot, { recursive: true, force: true });
+const aliases = [];
+report.artifacts = [];
+for (const name of publishedPackageDirectories) {
+  const manifest = JSON.parse(readFileSync(`packages/${name}/package.json`, 'utf8'));
+  const tarball = resolve('.tasks/verification/publication-packs', `sectile-${name}-${manifest.version}.tgz`);
+  await inspectPackedPackage(tarball);
+  const directory = join(packedRoot, name); mkdirSync(directory, { recursive: true });
+  execFileSync('tar', ['-xzf', tarball, '-C', directory]);
+  const packed = JSON.parse(readFileSync(join(directory, 'package/package.json'), 'utf8'));
+  assert.equal(packed.name, manifest.name); assert.equal(packed.version, manifest.version);
+  for (const [subpath, entry] of Object.entries(packed.exports)) {
+    const target = typeof entry === 'string' ? entry : entry.import ?? entry.default;
+    if (typeof target !== 'string' || !target.endsWith('.js')) continue;
+    aliases.push({ find: packed.name + (subpath === '.' ? '' : subpath.slice(1)), replacement: resolve(directory, 'package', target) });
+  }
+  report.artifacts.push({ name: packed.name, version: packed.version, sha256: createHash('sha256').update(readFileSync(tarball)).digest('hex') });
+}
+aliases.sort((a,b) => b.find.length - a.find.length);
 const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-verification.mjs'], {
-  env: { ...process.env, SECTILE_BROWSER_PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
+  env: { ...process.env, SECTILE_BROWSER_PORT: '0', SECTILE_BROWSER_ALIASES: JSON.stringify(aliases) }, stdio: ['ignore', 'pipe', 'pipe'],
 });
 let browser, context, page, source, inputProcess;
 const swift = '.tasks/browser/input-source';
@@ -134,7 +159,7 @@ try {
         await page.waitForFunction(() => document.querySelector('#native').value === '');
         await page.evaluate(() => { window.sectileProbe.events.length = 0; window.sectileProbe.writes.length = 0; });
       }
-      await page.keyboard.press('ControlOrMeta+a');
+      execFileSync(swift, ['--type', '--command', '0'], { timeout: 10000 });
       // Keep one native typing session; no source-query process interrupts IME.
       await Promise.all([
         typeNative(id === 'pin' ? [5,40,1] : [5,40,1,15,46,3]),

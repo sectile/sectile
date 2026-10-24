@@ -43,3 +43,11 @@ fixture. Run `pnpm --filter @sectile/vue serve:browser-verification`, open the
 reported local URL in each target browser, and require
 `data-sectile-verification="passed"` on the document element. This manual matrix
 does not add a pull-request or main-branch workflow trigger.
+
+The separate automated interaction journey uses `node scripts/browser-verification.mjs`
+after `pnpm verify:prepare` and the `publication-artifacts` verification unit.
+It resolves public imports to those prepared tarballs and reports their SHA-256
+digests. The existing deep-verification workflow runs Chromium on Linux and
+real Hangul input in headed Chromium across four standard macOS runner shards.
+Those checks cover candidate bytes; published-consumer acceptance additionally
+requires the released registry versions.

@@ -16,6 +16,7 @@ const vite = await createViteServer({
   root: fixtureRoot,
   appType: 'custom',
   logLevel: 'error',
+  resolve: { alias: JSON.parse(process.env['SECTILE_BROWSER_ALIASES'] ?? '[]'), dedupe: ['vue'] },
   define: {
     __VUE_OPTIONS_API__: 'true',
     __VUE_PROD_DEVTOOLS__: 'false',

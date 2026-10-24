@@ -1994,6 +1994,21 @@
       }
     },
     {
+      "id": "tooltip.timing",
+      "inherits": "constant-v1",
+      "source": "packages/dom/src/overlay/tooltip-interaction.ts",
+      "benchmarkIDs": ["dom:tooltip-timing-work"],
+      "specificationCeiling": "O(1)",
+      "contract": {
+        "time": { "bound": "O(1)", "kind": "expected", "runtimeState": "connected" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "one weak group record", "listeners": "six surface listeners plus at most one corridor listener", "observers": "0", "timers": "at most one per connection", "subscriptions": "0" },
+        "proof": "Timing admission reads one WeakMap group entry, an accepted-open count and a deadline. Scheduling cancels the preceding timer before creating another; keyboard focus requests immediately. Only accepted visibility changes adjust the count. Group records retain no elements, callbacks, member collection or timer. Disconnect invalidates callbacks, clears the timer/corridor listener and releases accepted membership. Native ancestry checks, popup projection and caller callbacks retain their separate existing bounds.",
+        "adversarialWitness": "Mock native timers exercise accepted and refused opens, peer skip windows, immediate keyboard focus and disconnect with pending work. Timer advancement after disconnect does not publish and every listener is released.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "Timing never enumerates peers or source items; the caller shares an opaque group token." }
+      }
+    },
+    {
       "id": "transfer.controller",
       "inherits": "linear-v1",
       "source": "packages/dom/src/transfer/controller.ts",

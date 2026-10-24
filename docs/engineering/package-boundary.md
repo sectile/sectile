@@ -1,5 +1,14 @@
 # Package boundary
 
+The October 25 input command addition raises Core's JavaScript package ceiling
+from 467,000 to 468,000 bytes. The complete production artifact measures 467,600
+JavaScript bytes. The added NumberField set-value and decimal-step transitions
+reuse Core's existing validation and exact decimal arithmetic; moving them into
+Vue would duplicate portable semantics and increase host cost. Named NumberField
+consumer fixtures and both bundlers pass, and all other package/install ceilings
+remain unchanged. This admits the required additive commands with 400 bytes of
+headroom rather than resetting the aggregate package budget.
+
 The October 2026 performance repair makes consumer-install the shared owner of delivered-payload admission. Performance comparisons continue to report the historical complete-dist totals and ratios, but take the admitted byte ceiling from the existing `verification/consumer-install/baseline.json` through the same collector as installation checks. Reports record that policy's path, SHA-256 and per-package ceilings. Neither the performance baseline nor the packaging baseline is replaced. The independent runtime, allocation, retained-heap, category, absolute-package and installed-payload checks remain active.
 
 The old performance totals predate the integrated features and disagreed with the already-recorded package surface. The five affected total-byte ceilings change ownership as follows; these replacement values were already enforced by the canonical packaging check:

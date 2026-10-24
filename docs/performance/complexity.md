@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 417 | 26 | 91 |
 | chart | 80 | 0 | 15 |
-| dom | 490 | 177 | 61 |
+| dom | 490 | 177 | 62 |
 | form | 26 | 0 | 9 |
 | tabular | 35 | 0 | 11 |
 | temporal | 129 | 14 | 4 |
@@ -188,6 +188,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:text.native-reconcile | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:text.native-selection | connected | `O(n)` worst-case | `O(n)` | `O(1)` | `O(n)` | allowed | packages/dom/tests/text.test.mjs, packages/vue/tests/text.dom.test.mjs |
 | dom:toast.project | connected | `O(1 + s + r + c)` expected | `O(1)` | `O(1)` | `O(1 + r + c)` | allowed | packages/dom/tests/toast.test.mjs, packages/dom/tests/toast-browser.test.mjs |
+| dom:tooltip.timing | connected | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/dom/tests/popup-controls.test.mjs |
 | dom:transfer.controller | all | `O(n + d + s * log(s + 1) + q + t + c)` expected | `O(n + d + s + h + t + c)` | `O(n + s)` | `O(n + d + s + t)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/type-tests/transfer.test.ts, packages/core/tests/runtime/transfer.test.mjs |
 | dom:transfer.presentation | connected | `O(1 + m + h)` expected | `O(m)` | `O(1)` | `O(n + m)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/type-tests/transfer.test.ts |
 | dom:transfer.typeahead | connected | `O(q + s + c)` expected | `O(q + c)` | `O(1)` | `O(q)` | allowed | packages/dom/tests/transfer.test.mjs, packages/dom/tests/listbox.test.mjs, packages/dom/type-tests/transfer.test.ts, packages/vue/tests/transfer.dom.test.mjs |
