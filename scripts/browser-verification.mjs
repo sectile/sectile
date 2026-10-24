@@ -111,8 +111,11 @@ try {
     const application = basename(chromium.executablePath());
     assert.match(application, /^[A-Za-z -]+$/u);
     execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
-    for (const id of fields) {
-      await page.evaluate(id => window.sectileProbe.field(id), id);
+    for (const family of fields) for (const reference of ['native','native-textarea'].includes(family) ? [false] : [true,false]) {
+      report.current = { family, reference };
+      const id = reference ? 'native-reference' : family;
+      await page.evaluate(({family,reference}) => reference ? window.sectileProbe.reference(family) : window.sectileProbe.field(family), {family,reference});
+      await page.evaluate(() => { window.sectileProbe.nativeMutations.length = 0; });
       await page.locator(`#${id}`).focus();
       const selected = source === undefined ? JSON.parse(execFileSync(swift, [], { encoding: 'utf8' })) : null;
       if (selected !== null) {
@@ -162,34 +165,39 @@ try {
       execFileSync(swift, ['--type', '--command', '0'], { timeout: 10000 });
       // Keep one native typing session; no source-query process interrupts IME.
       await Promise.all([
-        typeNative(id === 'pin' ? [5,40,1] : [5,40,1,15,46,3]),
+        typeNative(family === 'pin' ? [5,40,1] : [5,40,1,15,46,3]),
         page.waitForFunction(id => window.sectileProbe.events.some(event => event.id === id && event.type === 'compositionstart'), id, { timeout: 5000 })
-          .then(() => page.evaluate(() => window.sectileProbe.reconfigure())),
+          .then(() => reference ? undefined : page.evaluate(() => window.sectileProbe.reconfigure())),
       ]);
-      const expected = id === 'pin' ? '한' : '한글';
+      const expected = family === 'pin' ? '한' : '한글';
       assert.equal(await page.locator(`#${id}`).inputValue(), expected, `${id}: live composition value`);
       assert.equal(await page.evaluate(() => document.activeElement.id), id, `${id}: composition focus`);
       assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], `${id}: framework rewrote a live composition`);
+      const multiline = await page.locator(`#${id}`).evaluate(element => element.tagName === 'TEXTAREA');
       nativeKeys([36]);
       (report.sources ??= []).push(JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' })));
-      if (['native','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled'].includes(id))
-        await page.waitForFunction(({id,expected}) => document.querySelector(`#${id}`).value === expected, {id,expected});
+      // Return commits the IME and retains the native textarea newline action.
+      // The representation case is still an input when Return is delivered.
+      const committed = multiline ? `${expected}\n` : expected;
+      if (reference || ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled'].includes(id))
+        await page.waitForFunction(({id,committed}) => document.querySelector(`#${id}`).value === committed, {id,committed});
       if (id === 'text' || id === 'combo') await page.waitForFunction(id => window.sectileProbe.models()[id] === '한글', id);
       const events = await page.evaluate(id => window.sectileProbe.events.filter(event => event.id === id), id);
       assert.ok(events.some(event => event.type === 'compositionstart'), `${id}: input bypassed the OS IME`);
       assert.ok(events.some(event => event.type === 'compositionend'), `${id}: composition never committed`);
       if (id === 'pin') assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, '한');
       if (id === 'tags') assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글']);
-      report.results.push({ id, text: await page.locator(`#${id}`).inputValue(),
+      report.results.push({ id, family, reference, text: await page.locator(`#${id}`).inputValue(),
         compositionStarts: events.filter(event=>event.type==='compositionstart').length,
-        compositionEnds: events.filter(event=>event.type==='compositionend').length, frameworkWrites: 0, reconfigured: true });
-      // Native Backspace must remove both committed syllables.
-      if (await page.locator(`#${id}`).isVisible() && await page.locator(`#${id}`).inputValue() === '한글') {
-        nativeKeys([51, 51]);
+        compositionEnds: events.filter(event=>event.type==='compositionend').length, frameworkWrites: 0, reconfigured: !reference });
+      // Remove both committed syllables and the textarea's native newline.
+      if (await page.locator(`#${id}`).isVisible() && await page.locator(`#${id}`).inputValue() === committed && family !== 'pin') {
+        nativeKeys(Array.from(committed, () => 51));
         await page.waitForFunction(id => document.querySelector(`#${id}`).value === '', id);
         if (id === 'text' || id === 'combo') await page.waitForFunction(id => window.sectileProbe.models()[id] === '', id);
       }
       assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], `${id}: framework rewrote a live composition`);
+      if (reference) await page.locator('#native-reference').evaluate(element => element.remove());
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], 'framework rewrote a live composition');
   } else {
@@ -266,7 +274,7 @@ try {
   report.status = 'failed'; report.error = error.stack;
   report.observed = await page?.evaluate(() => ({ active: document.activeElement?.id,
     inputs: [...document.querySelectorAll('input')].map(input => ({ id: input.id, value: input.value })),
-    events: window.sectileProbe?.events, writes: window.sectileProbe?.writes, valueWrites: window.sectileProbe?.valueWrites,
+    events: window.sectileProbe?.events, writes: window.sectileProbe?.writes, valueWrites: window.sectileProbe?.valueWrites, nativeMutations: window.sectileProbe?.nativeMutations,
   })).catch(() => undefined);
   await context?.tracing.stop({ path: `${output}/trace.zip` }).catch(() => {});
   throw error;

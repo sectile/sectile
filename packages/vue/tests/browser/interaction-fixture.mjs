@@ -31,7 +31,18 @@ document.head.append(style);
 let app, media;
 const settle = async () => { await nextTick(); await nextTick(); };
 const reset = () => { media?.disconnect(); media = undefined; app?.unmount(); app = undefined; host.replaceChildren(); composing.clear(); };
-const events = [], writes = [], valueWrites = [];
+const events = [], writes = [], valueWrites = [], nativeMutations = [];
+const mutation = record => { if (nativeMutations.length === 100) nativeMutations.shift(); nativeMutations.push(record); };
+for (const prototype of [HTMLInputElement.prototype, HTMLTextAreaElement.prototype]) {
+  for (const key of ['defaultValue','placeholder','type','readOnly','disabled']) {
+    const property = Object.getOwnPropertyDescriptor(prototype,key); if (!property?.set) continue;
+    Object.defineProperty(prototype,key,{...property,set(next){mutation({id:this.id,key,value:next,composing:composing.has(this)});property.set.call(this,next);}});
+  }
+}
+for (const method of ['setAttribute','removeAttribute']) {
+  const original=Element.prototype[method];
+  Element.prototype[method]=function(...args){if(this instanceof HTMLInputElement||this instanceof HTMLTextAreaElement)mutation({id:this.id,method,args,composing:composing.has(this)});return original.apply(this,args);};
+}
 const composing = new Set();
 for (const type of ['compositionstart', 'compositionupdate', 'compositionend', 'input', 'keydown', 'keyup']) document.addEventListener(type, event => {
   if (type === 'compositionstart') composing.add(event.target);
@@ -56,7 +67,7 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
-  events, writes, valueWrites,
+  events, writes, valueWrites, nativeMutations,
   inputFamilies: ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled','number','quantity',
     'date','time','datetime','date-start','date-end','time-start','time-end','picker','tags','spin','editable','pin','color','treegrid','tabular-editor','tabular-filter'],
   async reference(id) {
