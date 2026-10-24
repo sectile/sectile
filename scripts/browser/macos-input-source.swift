@@ -41,5 +41,18 @@ guard enableStatus == noErr, selectStatus == noErr else {
     exit(1)
 }
 RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+// Establish the Korean mode as the previous source, then let the OS shortcut
+// activate its text input context. TIS selection alone can leave CJK modes ASCII.
+if requested == nil {
+    guard let ascii = sources.first(where: {
+        flag($0, kTISPropertyInputSourceIsASCIICapable) &&
+        flag($0, kTISPropertyInputSourceIsEnabled) &&
+        textProperty($0, kTISPropertyInputSourceType) == (kTISTypeKeyboardLayout as String)
+    }), TISSelectInputSource(ascii) == noErr else {
+        fputs("Cannot select the ASCII source before native input-source switching\n", stderr)
+        exit(1)
+    }
+    RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
+}
 let result = ["selected": sourceID(selected), "previous": sourceID(previous)]
 print(String(data: try JSONSerialization.data(withJSONObject: result), encoding: .utf8)!)

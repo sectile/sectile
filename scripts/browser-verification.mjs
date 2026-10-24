@@ -12,7 +12,7 @@ const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'ut
 const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-verification.mjs'], {
   env: { ...process.env, SECTILE_BROWSER_PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
 });
-let browser, context, source;
+let browser, context, page, source;
 const swift = '.tasks/browser/input-source';
 const nativeKeys = codes => execFileSync('osascript', ['-e', `tell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.08`).join('\n')}\nend tell`], { timeout: 10000 });
 try {
@@ -30,7 +30,7 @@ try {
   browser = await chromium.launch({ headless: !nativeIME, ...(process.env['SECTILE_CHROMIUM_PATH'] ? { executablePath: process.env['SECTILE_CHROMIUM_PATH'] } : {}) });
   context = await browser.newContext();
   await context.tracing.start({ screenshots: true, snapshots: true });
-  const page = await context.newPage();
+  page = await context.newPage();
   const warnings = [], errors = [];
   page.on('console', message => { if (/Blocked aria-hidden/u.test(message.text())) warnings.push(message.text()); });
   page.on('pageerror', error => errors.push(error.message));
@@ -56,6 +56,7 @@ try {
       await page.locator(`#${id}`).focus();
       const selected = JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
+      execFileSync('osascript', ['-e', 'tell application "System Events"\nkey code 49 using control down\ndelay 0.5\nend tell'], { timeout: 10000 });
       nativeKeys([5, 40, 1]); // g k s -> 한, through the OS two-set IME.
       if (id === 'combo') await page.evaluate(() => window.sectileProbe.changeItems());
       nativeKeys([15, 46, 3, 36]); // r m f, Return -> 글 and commit.
@@ -106,6 +107,10 @@ try {
   await context.tracing.stop();
 } catch (error) {
   report.status = 'failed'; report.error = error.stack;
+  report.observed = await page?.evaluate(() => ({ active: document.activeElement?.id,
+    inputs: [...document.querySelectorAll('input')].map(input => ({ id: input.id, value: input.value })),
+    events: window.sectileProbe?.events, writes: window.sectileProbe?.writes,
+  })).catch(() => undefined);
   await context?.tracing.stop({ path: `${output}/trace.zip` }).catch(() => {});
   throw error;
 } finally {
