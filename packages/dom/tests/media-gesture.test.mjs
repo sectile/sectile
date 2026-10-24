@@ -75,6 +75,52 @@ test('Media gesture rejects protected/declined/modified admission without captur
   other.surface.emit('pointerdown', 1, Infinity, 20); assert.equal(other.starts.length, 0); assert.equal(starts.length, 0);
   other.owner.disconnect(); clean(other.surface);
 });
+test('explicit interactive admission preserves clicks until a drag is claimed and suppresses only its pointer click', () => {
+  const f = fixture({ admitPointer: input => input.protectedOrigin });
+  f.surface.matches = () => true;
+  const click = detail => {
+    const event = new Event('click', { cancelable: true }); Object.assign(event, { detail, pointerId: 1 });
+    f.surface.dispatchEvent(event); return event;
+  };
+  assert.equal(f.surface.emit('pointerdown').defaultPrevented, false);
+  const nativeDrag = new Event('dragstart', { cancelable: true }); f.surface.dispatchEvent(nativeDrag);
+  assert.equal(nativeDrag.defaultPrevented, true, 'admitted image uses the pointer owner rather than native DataTransfer drag');
+  f.surface.emit('pointermove', 1, 12, 20);
+  assert.equal(f.starts.length, 0); assert.equal(f.surface.captures.size, 0);
+  f.surface.emit('pointerup', 1, 12, 20);
+  assert.equal(click(1).defaultPrevented, false);
+  f.surface.emit('pointerdown'); f.surface.emit('pointermove', 1, 16, 20);
+  assert.equal(f.starts.length, 1); assert.equal(f.surface.captures.size, 1);
+  assert.deepEqual(f.moves[0], { kind: 'drag', before: { x: 10, y: 20 }, after: { x: 16, y: 20 } });
+  f.surface.emit('pointerup', 1, 16, 20);
+  assert.equal(click(0).defaultPrevented, false, 'keyboard activation stays native');
+  assert.equal(click(1).defaultPrevented, true);
+  assert.equal(click(1).defaultPrevented, false, 'claim does not consume another click');
+  f.owner.disconnect(); clean(f.surface);
+});
+test('pending admission bounds contacts and releases outside observation on cancellation and failed acquisition', () => {
+  for (const reason of ['manual', 'disconnect', 'blur', 'hidden', 'pointercancel']) {
+    const f = fixture({ admitPointer: () => true }); f.surface.emit('pointerdown');
+    assert.equal(f.surface.ownerDocument.listeners.size, 4, 'one visibility listener plus three pending pointer listeners');
+    if (reason === 'manual') f.owner.cancel();
+    else if (reason === 'disconnect') f.owner.disconnect();
+    else if (reason === 'blur') f.surface.ownerDocument.defaultView.dispatchEvent(new Event('blur'));
+    else if (reason === 'hidden') { f.surface.ownerDocument.hidden = true; f.surface.ownerDocument.dispatchEvent(new Event('visibilitychange')); }
+    else f.surface.emit('pointercancel');
+    assert.deepEqual(f.starts, []); assert.deepEqual(f.ends, []);
+    f.owner.disconnect(); clean(f.surface);
+  }
+  const f = fixture({ admitPointer: () => true });
+  f.surface.emit('pointerdown'); f.surface.emit('pointerdown', 2, 40, 50);
+  assert.equal(f.starts.length, 2); assert.equal(f.surface.captures.size, 2);
+  assert.equal(f.surface.ownerDocument.listeners.size, 1);
+  f.surface.emit('pointercancel'); assert.deepEqual(f.ends, ['cancel']);
+  f.owner.disconnect(); clean(f.surface);
+  const broken = fixture({ admitPointer: () => true }); broken.surface.ownerDocument.failType = 'pointerup';
+  const down = new Event('pointerdown'); Object.assign(down, { pointerId: 1, pointerType: 'touch', button: 0, clientX: 10, clientY: 20 });
+  down.composedPath = () => [broken.surface];
+  assert.throws(() => broken.surface.listeners.get('pointerdown')(down), /listener install/); clean(broken.surface);
+});
 test('Media gesture interrupts all contacts once and can restart after each scoped cancellation', () => {
   for (const reason of ['cancel', 'capture-lost', 'blur', 'hidden', 'manual', 'disconnect', 'unavailable']) {
     const { surface, owner, ends } = fixture(); surface.emit('pointerdown'); surface.emit('pointerdown', 2);
@@ -116,18 +162,20 @@ test('Media gesture revokes callbacks before capture and retires on callback thr
   down.composedPath = () => [fourth.surface];
   assert.throws(() => fourth.surface.listeners.get('pointerdown')(down), /admission/); clean(fourth.surface);
 });
-test('Media gesture saved connection and handlers release their surface and subscriber', { skip: typeof global.gc !== 'function', timeout: 15000 }, async () => {
-  const held = retire();
-  for (let i = 0; i < 20; i++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
-  assert.equal(held.surface.deref() === undefined, true, 'surface retained');
-  assert.equal(held.document.deref() === undefined, true, 'document retained');
-  assert.equal(held.subscriber.deref() === undefined, true, 'subscriber retained');
-  for (const callback of held.saved) callback(new Event('pointermove'));
-  held.owner.cancel(); held.owner.disconnect();
+test('active and pending gesture handles release their surface, outside observation and subscriber', { skip: typeof global.gc !== 'function', timeout: 15000 }, async () => {
+  for (const pending of [false, true]) {
+    const held = retire(pending);
+    for (let i = 0; i < 20; i++) { await new Promise(resolve => setImmediate(resolve)); global.gc(); }
+    assert.equal(held.surface.deref() === undefined, true, 'surface retained');
+    assert.equal(held.document.deref() === undefined, true, 'document retained');
+    assert.equal(held.subscriber.deref() === undefined, true, 'subscriber retained');
+    for (const callback of held.saved) callback(new Event('pointermove'));
+    held.owner.cancel(); held.owner.disconnect();
+  }
 });
-function retire() {
-  const surface = new Surface(), subscriber = () => { void surface.isConnected; };
-  const { owner } = fixture({ onMove: subscriber, onWheel: subscriber }, surface); surface.emit('pointerdown');
+function retire(pending) {
+  const surface = new Surface(), subscriber = () => surface.isConnected;
+  const { owner } = fixture({ onMove: subscriber, onWheel: subscriber, ...(pending ? { admitPointer: subscriber } : {}) }, surface); surface.emit('pointerdown');
   const held = { owner, surface: new WeakRef(surface), document: new WeakRef(surface.ownerDocument), subscriber: new WeakRef(subscriber), saved: [...surface.saved, ...surface.ownerDocument.saved, ...surface.ownerDocument.defaultView.saved] };
   owner.disconnect(); return held;
 }

@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "5359bb87738eb4a872bb1b5d120c203fa4456fc0ac4ef0d50d8e9766a836d875",
+  "fingerprint": "0a7aad755f640384971f2cc952a1c49380cd22c14004449f68dc983db453bd49",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -551,7 +551,7 @@
     },
     {
       "path": "dist/media-gesture.d.ts",
-      "sha256": "20197074d5ec7936d7a5535b59b305ac79b80c718acb183063c92a3cfcccbbfb"
+      "sha256": "558301d6624ab5ad93d3d0e3e52d48e60d8b76be4935cec1d419ffe6a41e436d"
     },
     {
       "path": "dist/menu-button.d.ts",

@@ -8,14 +8,15 @@ import { NumberField } from '../../.verification-dist/number-field.js';
 import { SpinButtonRoot, SpinButtonInput } from '../../.verification-dist/spin-button.js';
 import { createPopover } from '@sectile/dom/popover';
 import { createCarousel } from '@sectile/dom/carousel';
+import { connectMediaGesture } from '@sectile/dom/media-gesture';
 
 const host = document.querySelector('#probe');
 const style = document.createElement('style');
 style.textContent = '[data-probe-panel]{opacity:1;transition:opacity 600ms linear}[data-probe-panel][data-state=closed]{opacity:0}';
 document.head.append(style);
-let app;
+let app, media;
 const settle = async () => { await nextTick(); await nextTick(); };
-const reset = () => { app?.unmount(); app = undefined; host.replaceChildren(); };
+const reset = () => { media?.disconnect(); media = undefined; app?.unmount(); app = undefined; host.replaceChildren(); };
 const events = [], writes = [];
 const composing = new Set();
 for (const type of ['compositionstart', 'compositionupdate', 'compositionend', 'input', 'keydown', 'keyup']) document.addEventListener(type, event => {
@@ -119,5 +120,20 @@ window.sectileProbe = {
       ] }),
     }) }) });
     app.mount(host); await settle();
+  },
+  mediaGesture() {
+    reset();
+    const root = document.createElement('div'); root.style.cssText = 'width:400px;height:160px;touch-action:none';
+    root.innerHTML = '<button id="media-button" type="button"><img id="media-image" alt="Open image" style="display:block;width:120px;height:80px" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"></button><button id="media-ordinary" type="button">Ordinary action</button>';
+    host.append(root);
+    const stats = this.mediaStats = { activations: 0, ordinary: 0, starts: 0, moves: 0, ends: [] };
+    root.querySelector('#media-button').onclick = () => { stats.activations++; };
+    root.querySelector('#media-ordinary').onclick = () => { stats.ordinary++; };
+    const result = connectMediaGesture({ element: root,
+      admitPointer: input => !input.protectedOrigin || input.origin.closest('#media-button') !== null,
+      onStart() { stats.starts++; return true; }, onMove() { stats.moves++; }, onEnd(reason) { stats.ends.push(reason); },
+    });
+    if (!result.ok) throw new Error(result.error.message);
+    media = result.value;
   },
 };

@@ -1,5 +1,10 @@
-import { connectMediaGesture, readMediaViewport, type MediaGestureInput, type MediaGestureConnection, type MediaWheelInput } from '@sectile/dom/media-gesture';
+import { connectMediaGesture, readMediaViewport, type MediaGestureInput, type MediaGestureConnection, type MediaWheelInput, type MediaPointerAdmission } from '@sectile/dom/media-gesture';
 const outcome = connectMediaGesture({ element: document.createElement('div'), onStart: () => true,
+  dragThreshold: 4,
+  admitPointer(input) {
+    const admission: MediaPointerAdmission = input;
+    return !admission.protectedOrigin || admission.origin.closest('button[data-media-drag]') !== null;
+  },
   onMove(input) {
     const fact: MediaGestureInput = input;
     if (fact.kind === 'pinch') {

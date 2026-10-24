@@ -6,7 +6,7 @@ import { createComponentHandle } from './component-handle.js';
 import { useHostActive } from './host-provider.js';
 import { useConnectionLifetime } from './internal/connection-lifetime.js';
 
-export type { MediaGestureInput, MediaGestureEnd, MediaGestureErrorCode, MediaWheelInput, MediaViewportMeasurement } from '@sectile/dom/media-gesture';
+export type { MediaGestureInput, MediaGestureEnd, MediaGestureErrorCode, MediaWheelInput, MediaViewportMeasurement, MediaPointerAdmission } from '@sectile/dom/media-gesture';
 export interface UseMediaGestureOptions extends Omit<MediaGestureOptions, 'element'> {
   readonly element: Readonly<Ref<HTMLElement | null>>;
   readonly active?: Readonly<Ref<boolean>>;
@@ -37,12 +37,16 @@ export function useMediaGesture(options: UseMediaGestureOptions): UseMediaGestur
   if (!getCurrentInstance()) throw Object.assign(new TypeError('useMediaGesture requires component setup'), { code: 'vue.media-gesture-scope-required' });
   if (!isRef(options.element) || options.active !== undefined && (!isRef(options.active) || typeof options.active.value !== 'boolean')
     || typeof options.onStart !== 'function' || typeof options.onMove !== 'function'
-    || options.onEnd !== undefined && typeof options.onEnd !== 'function' || options.onWheel !== undefined && typeof options.onWheel !== 'function') {
+    || options.onEnd !== undefined && typeof options.onEnd !== 'function' || options.onWheel !== undefined && typeof options.onWheel !== 'function'
+    || options.admitPointer !== undefined && typeof options.admitPointer !== 'function'
+    || options.dragThreshold !== undefined && (!Number.isFinite(options.dragThreshold) || options.dragThreshold < 0)) {
     throw Object.assign(new TypeError('useMediaGesture requires reactive participation and native input hooks'), { code: 'vue.media-gesture-invalid' });
   }
   let element: UseMediaGestureOptions['element'] | undefined = options.element, active = options.active;
   let start: MediaGestureOptions['onStart'] | undefined = options.onStart, move: MediaGestureOptions['onMove'] | undefined = options.onMove;
   let end = options.onEnd, wheel = options.onWheel, host: ReturnType<typeof useHostActive> | undefined = useHostActive();
+  let admit = options.admitPointer;
+  const threshold = options.dragThreshold;
   let alive = true, native: MediaGestureConnection | undefined, epoch: object | undefined, retiring: object | undefined;
   const error = shallowRef<MediaGestureErrorCode>(), handle = createComponentHandle<Context, MediaGestureMethods>(projectMethods);
   const release = (): void => {
@@ -59,6 +63,11 @@ export function useMediaGesture(options: UseMediaGestureOptions): UseMediaGestur
     if (!target || !enabled) return;
     const token = {}; epoch = token;
     const result = connectMediaGesture({ element: target,
+      ...(threshold === undefined ? {} : { dragThreshold: threshold }),
+      ...(admit === undefined ? {} : { admitPointer(input) {
+        if (!alive || epoch !== token) return false;
+        try { const accepted = admit?.(input) ?? false; return accepted && alive && epoch === token; } catch (failure) { return failed(failure); }
+      } } satisfies Pick<MediaGestureOptions, 'admitPointer'>),
       onStart(input) {
         if (!alive || epoch !== token) return false;
         try { const accepted = start?.(input) ?? false; return accepted && alive && epoch === token; } catch (failure) { return failed(failure); }
@@ -80,7 +89,7 @@ export function useMediaGesture(options: UseMediaGestureOptions): UseMediaGestur
     } else if (epoch === token) { epoch = undefined; error.value = result.error.code; }
   };
   useConnectionLifetime<Input>({ read, equal: (next, previous) => next[0] === previous[0] && next[1] === previous[1], connect: attach, disconnect: release, dispose() {
-    alive = false; element = undefined; active = undefined; host = undefined; start = undefined; move = undefined; end = undefined; wheel = undefined;
+    alive = false; element = undefined; active = undefined; host = undefined; start = undefined; move = undefined; end = undefined; wheel = undefined; admit = undefined;
   } });
   return Object.freeze({ ...handle.view, error: shallowReadonly(error) });
 }

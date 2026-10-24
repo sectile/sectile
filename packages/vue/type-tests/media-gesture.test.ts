@@ -1,7 +1,9 @@
 import { shallowRef, type ShallowRef } from 'vue';
-import { useMediaGesture, type MediaGestureErrorCode, type MediaGestureInput, type UseMediaGestureReturn } from '@sectile/vue/media-gesture';
+import { useMediaGesture, type MediaGestureErrorCode, type MediaGestureInput, type UseMediaGestureReturn, type MediaPointerAdmission } from '@sectile/vue/media-gesture';
 const element = shallowRef<HTMLElement | null>(null), active = shallowRef(true);
-const gesture: UseMediaGestureReturn = useMediaGesture({ element, active, onStart: () => true, onMove(input) { const value: MediaGestureInput = input; void value; }, onWheel: input => input.delta < 0 });
+const gesture: UseMediaGestureReturn = useMediaGesture({ element, active, dragThreshold: 4,
+  admitPointer(input) { const admission: MediaPointerAdmission = input; return !admission.protectedOrigin; },
+  onStart: () => true, onMove(input) { const value: MediaGestureInput = input; void value; }, onWheel: input => input.delta < 0 });
 const error: Readonly<ShallowRef<MediaGestureErrorCode | undefined>> = gesture.error; void error;
 const measure = gesture.measure, projected = measure([{ x: 0, y: 0 }, { x: 1, y: 1 }]);
 if (projected.ok) {

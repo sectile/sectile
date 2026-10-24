@@ -46,6 +46,20 @@ presentation belong to the composition. Optional `onWheel` receives a
 local anchor, measured viewport and normalized vertical displacement; return
 true to consume it. Modified wheel input, including browser zoom, is untouched.
 
+Buttons, links, editors and embedded controls decline pointer gestures by default.
+Optional `admitPointer` receives the origin, client point, pointer type and
+`protectedOrigin`, which reports that default exclusion. Return true to admit a
+specific authored media button, for example an origin inside
+`button[data-media-drag]`; other protected controls can continue to decline.
+With explicit admission, `dragThreshold` defaults to 4 client pixels. Before
+that distance, native focus and click activation remain available and `onStart`
+has not run. Crossing it asks `onStart` to claim the drag; a second admitted
+contact can claim a pinch. Pending admission prevents native image/link drag
+from replacing the pointer gesture. A claimed gesture suppresses its pointer
+click while preserving keyboard activation. Setting the threshold to 0 requests
+immediate capture. Cancellation and disconnect also remove pending observation.
+Pointer admission does not override the wheel protection rules.
+
 `readMediaViewport` measures a single non-scrolling HTML box with zero border
 and padding, projecting up to four client points while preserving tuple types.
 Positive axis-aligned scaling and translation are supported; unknown or rotated,

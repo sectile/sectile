@@ -12,12 +12,24 @@ const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'ut
 const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-verification.mjs'], {
   env: { ...process.env, SECTILE_BROWSER_PORT: '0' }, stdio: ['ignore', 'pipe', 'pipe'],
 });
-let browser, context, page, source;
+let browser, context, page, source, inputProcess;
 const swift = '.tasks/browser/input-source';
 const nativeKeys = codes => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
   execFileSync('osascript', ['-e', `tell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.15`).join('\n')}\nend tell`], { timeout: 10000 });
 };
+const typeNative = codes => new Promise((resolve, reject) => {
+  assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
+  const child = inputProcess = spawn('osascript', ['-e', `delay 1\ntell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.25`).join('\n')}\nend tell`], { stdio: ['ignore', 'ignore', 'pipe'] });
+  let errors = '';
+  child.stderr.on('data', data => { errors = (errors + data).slice(-4000); });
+  const timer = setTimeout(() => { child.kill('SIGTERM'); reject(new Error('native typing timeout')); }, 10000);
+  child.once('error', error => { clearTimeout(timer); reject(error); });
+  child.once('exit', code => {
+    clearTimeout(timer); if (inputProcess === child) inputProcess = undefined;
+    if (code === 0) resolve(); else reject(new Error(`native typing failed: ${code}: ${errors}`));
+  });
+});
 try {
   const url = await new Promise((resolve, reject) => {
     let log = '';
@@ -85,15 +97,17 @@ try {
         error "Native input menu item unavailable: " & targetName
       end run`;
       execFileSync('osascript', ['-e', menuScript, selected.name], { timeout: 20000, stdio: ['ignore', 'pipe', 'inherit'] });
-      const observedSource = JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' }));
-      (report.sources ??= []).push(observedSource);
       // The CLI's source query is diagnostic; the focused browser's actual
       // composition events and committed text are the authoritative witness.
       await page.bringToFront();
       await page.locator(`#${id}`).click();
-      nativeKeys([5, 40, 1]); // g k s -> 한, through the OS two-set IME.
-      if (id === 'combo') await page.evaluate(() => window.sectileProbe.changeItems());
-      nativeKeys([15, 46, 3, 36]); // r m f, Return -> 글 and commit.
+      // Keep one native typing session; no source-query process interrupts IME.
+      await Promise.all([
+        typeNative([5, 40, 1, 15, 46, 3, 36]), // g k s r m f, Return -> 한글.
+        id === 'combo' ? page.waitForFunction(() => window.sectileProbe.events.some(event => event.id === 'combo' && event.type === 'compositionstart'), null, { timeout: 5000 })
+          .then(() => page.evaluate(() => window.sectileProbe.changeItems())) : Promise.resolve(),
+      ]);
+      (report.sources ??= []).push(JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' })));
       await page.waitForFunction(id => document.querySelector(`#${id}`).value === '한글', id);
       if (id !== 'native') await page.waitForFunction(id => window.sectileProbe.models()[id] === '한글', id);
       const events = await page.evaluate(id => window.sectileProbe.events.filter(event => event.id === id), id);
@@ -147,6 +161,19 @@ try {
       await trigger.dispose();
       report.results.push({ retainedDrawer: true, compound, restored: true });
     }
+    await page.evaluate(() => window.sectileProbe.mediaGesture());
+    await page.locator('#media-image').click();
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'media-button');
+    await page.keyboard.press('Space');
+    assert.equal(await page.evaluate(() => window.sectileProbe.mediaStats.activations), 2);
+    const image = await page.locator('#media-image').boundingBox();
+    await page.mouse.move(image.x + 30, image.y + 30); await page.mouse.down();
+    await page.mouse.move(image.x + 65, image.y + 35, { steps: 3 }); await page.mouse.up();
+    await page.locator('#media-ordinary').click();
+    const media = await page.evaluate(() => window.sectileProbe.mediaStats);
+    assert.equal(media.activations, 2); assert.equal(media.ordinary, 1); assert.equal(media.starts, 1);
+    assert.ok(media.moves > 0); assert.deepEqual(media.ends, ['complete']);
+    report.results.push({ media });
   }
   assert.deepEqual(warnings, []);
   assert.deepEqual(errors, []);
@@ -161,6 +188,7 @@ try {
   await context?.tracing.stop({ path: `${output}/trace.zip` }).catch(() => {});
   throw error;
 } finally {
+  inputProcess?.kill('SIGTERM');
   try { if (source !== undefined) execFileSync(swift, [source], { timeout: 10000 }); }
   finally {
     await browser?.close();

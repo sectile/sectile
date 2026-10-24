@@ -12,8 +12,18 @@ export interface MediaViewportMeasurement<Points extends readonly Point[] = read
   readonly viewport: Size;
   readonly points: { readonly [Index in keyof Points]: Point };
 }
+export interface MediaPointerAdmission {
+  readonly origin: Element;
+  readonly pointerType: string;
+  readonly point: Point;
+  readonly protectedOrigin: boolean;
+}
 export interface MediaGestureOptions {
   readonly element: HTMLElement;
+  /** Explicit pointer admission, including protected native controls. Wheel protection is unchanged. */
+  readonly admitPointer?: (input: MediaPointerAdmission) => boolean;
+  /** Client-pixel claim distance. Defaults to 4 with explicit admission, otherwise 0. */
+  readonly dragThreshold?: number;
   readonly onStart: (input: { readonly pointerType: string; readonly point: Point }) => boolean;
   readonly onMove: (input: MediaGestureInput) => void;
   readonly onEnd?: (reason: MediaGestureEnd) => void;
@@ -72,13 +82,15 @@ export function connectMediaGesture(options: MediaGestureOptions): Result<MediaG
   const element = options?.element, document = element?.ownerDocument, window = document?.defaultView;
   if (!element || element.nodeType !== 1 || element.namespaceURI !== 'http://www.w3.org/1999/xhtml'
     || !document || !window || typeof options.onStart !== 'function' || typeof options.onMove !== 'function'
-    || (options.onEnd !== undefined && typeof options.onEnd !== 'function') || (options.onWheel !== undefined && typeof options.onWheel !== 'function')) {
+    || (options.onEnd !== undefined && typeof options.onEnd !== 'function') || (options.onWheel !== undefined && typeof options.onWheel !== 'function')
+    || (options.admitPointer !== undefined && typeof options.admitPointer !== 'function')
+    || (options.dragThreshold !== undefined && (!Number.isFinite(options.dragThreshold) || options.dragThreshold < 0))) {
     return failResult('construction', 'dom.media-gesture-invalid', 'Media gestures require an HTML surface and native input hooks');
   }
   if (!element.isConnected || typeof element.setPointerCapture !== 'function' || typeof element.releasePointerCapture !== 'function') {
     return failResult('resource-rejection', 'dom.media-gesture-unavailable', 'Native pointer capture is unavailable');
   }
-  return MediaGestureOwner.connect(element, document, window, options.onStart, options.onMove, options.onEnd, options.onWheel);
+  return MediaGestureOwner.connect(element, document, window, options);
 }
 
 class MediaGestureOwner implements MediaGestureConnection {
@@ -89,6 +101,13 @@ class MediaGestureOwner implements MediaGestureConnection {
   #move: MediaGestureOptions['onMove'] | undefined;
   #end: MediaGestureOptions['onEnd'];
   #wheelHook: MediaGestureOptions['onWheel'];
+  #admit: MediaGestureOptions['admitPointer'];
+  readonly #threshold: number;
+  #pending: { readonly contact: Contact; readonly pointerType: string } | undefined;
+  #pendingListeners = 0;
+  #clickListening = false;
+  #clickFirst: number | undefined;
+  #clickSecond: number | undefined;
   #first: Contact | undefined;
   #second: Contact | undefined;
   #listeners = 0;
@@ -103,6 +122,18 @@ class MediaGestureOwner implements MediaGestureConnection {
   };
   readonly #blur = (): void => { this.#finish('blur'); };
   readonly #visibility = (): void => { if (this.#document?.hidden) this.#finish('hidden'); };
+  readonly #dragstart = (event: Event): void => { if (this.#pending || this.#first) event.preventDefault(); };
+  readonly #outside = (event: Event): void => {
+    if (this.#pending) this.#pointer(event);
+  };
+  readonly #click = (native: Event): void => {
+    const event = native as PointerEvent;
+    if (!(event.detail > 0) || this.#clickFirst === undefined && this.#clickSecond === undefined) return;
+    if (event.pointerId !== undefined && event.pointerId !== this.#clickFirst && event.pointerId !== this.#clickSecond) return;
+    if (event.pointerId === undefined || event.pointerId === this.#clickFirst) this.#clickFirst = undefined;
+    if (event.pointerId === undefined || event.pointerId === this.#clickSecond) this.#clickSecond = undefined;
+    event.preventDefault(); event.stopImmediatePropagation();
+  };
   readonly #wheel = (native: Event): void => {
     const event = native as WheelEvent, element = this.#element;
     if (this.#handling || !element || !this.#wheelHook || this.#first || this.#document?.hidden || event.defaultPrevented || !event.cancelable
@@ -125,21 +156,24 @@ class MediaGestureOwner implements MediaGestureConnection {
     } catch (error) { this.#retire(); throw error; }
     finally { this.#handling = false; }
   };
-  private constructor(element: HTMLElement, document: Document, window: Window,
-    start: MediaGestureOptions['onStart'], move: MediaGestureOptions['onMove'], end: MediaGestureOptions['onEnd'], wheel: MediaGestureOptions['onWheel']) {
+  private constructor(element: HTMLElement, document: Document, window: Window, options: MediaGestureOptions) {
     this.#element = element; this.#document = document; this.#window = window;
-    this.#start = start; this.#move = move; this.#end = end; this.#wheelHook = wheel;
+    this.#start = options.onStart; this.#move = options.onMove; this.#end = options.onEnd; this.#wheelHook = options.onWheel;
+    this.#admit = options.admitPointer; this.#threshold = options.dragThreshold ?? (options.admitPointer ? 4 : 0);
   }
-  static connect(element: HTMLElement, document: Document, window: Window,
-    start: MediaGestureOptions['onStart'], move: MediaGestureOptions['onMove'], end: MediaGestureOptions['onEnd'], wheel: MediaGestureOptions['onWheel']): Result<MediaGestureConnection, MediaGestureErrorCode> {
-    const owner = new MediaGestureOwner(element, document, window, start, move, end, wheel);
+  static connect(element: HTMLElement, document: Document, window: Window, options: MediaGestureOptions): Result<MediaGestureConnection, MediaGestureErrorCode> {
+    const owner = new MediaGestureOwner(element, document, window, options);
     try {
       for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture']) {
         owner.#listeners++; element.addEventListener(type, owner.#pointer);
       }
       owner.#listeners++; document.addEventListener('visibilitychange', owner.#visibility);
       owner.#listeners++; window.addEventListener('blur', owner.#blur);
-      if (wheel) { owner.#listeners++; element.addEventListener('wheel', owner.#wheel, { passive: false }); }
+      if (options.onWheel) { owner.#listeners++; element.addEventListener('wheel', owner.#wheel, { passive: false }); }
+      if (options.admitPointer || owner.#threshold > 0) {
+        owner.#clickListening = true; element.addEventListener('click', owner.#click, true);
+        element.addEventListener('dragstart', owner.#dragstart);
+      }
     } catch {
       owner.#retire();
       return failResult('resource-rejection', 'dom.media-gesture-unavailable', 'Native gesture observation is unavailable');
@@ -155,19 +189,38 @@ class MediaGestureOwner implements MediaGestureConnection {
   #handle(event: PointerEvent): void {
     const element = this.#element!;
     if (!element.isConnected || element.ownerDocument !== this.#document) { this.#finish('unavailable'); this.#retire(); return; }
+    if (event.type === 'pointerdown' && !this.#first && !this.#pending) this.#clickFirst = this.#clickSecond = undefined;
+    const pending = this.#pending;
+    if (pending?.contact.id === event.pointerId) {
+      if (event.type === 'pointerup' || event.type === 'pointercancel' || event.type === 'lostpointercapture') { this.#clearPending(); return; }
+      if (event.type !== 'pointermove') return;
+      if (!validPoint(event)) { this.#clearPending(); return; }
+      if (Math.hypot(event.clientX - pending.contact.point.x, event.clientY - pending.contact.point.y) < this.#threshold) return;
+      this.#clearPending();
+      if (!this.#claim(pending.contact, pending.pointerType)) return;
+    }
     const contact = this.#first?.id === event.pointerId ? this.#first : this.#second?.id === event.pointerId ? this.#second : undefined;
     if (event.type === 'pointerdown') {
       if (event.defaultPrevented || contact || this.#second || !validPoint(event) || !Number.isSafeInteger(event.pointerId)
         || this.#document?.hidden || event.button !== 0 || (event.pointerType === 'mouse' && !event.isPrimary)) return;
       const origin = eventOrigin(event);
-      if (!origin || protectsNativeInteraction(origin, element)) return;
+      if (!origin) return;
+      const protectedOrigin = protectsNativeInteraction(origin, element);
+      if (!this.#admit && protectedOrigin) return;
       const generation = this.#generation, next: Contact = { id: event.pointerId, point: point(event) };
-      if (!this.#start?.(Object.freeze({ pointerType: event.pointerType, point: next.point }))
-        || this.#element !== element || generation !== this.#generation) return;
-      if (!this.#first) this.#first = next; else this.#second = next;
-      if (!element.isConnected || element.ownerDocument !== this.#document) { this.#finish('unavailable'); this.#retire(); return; }
-      try { element.setPointerCapture(event.pointerId); }
-      catch { this.#finish('unavailable'); return; }
+      if (this.#admit && !this.#admit(Object.freeze({ origin, point: next.point, pointerType: event.pointerType, protectedOrigin }))) return;
+      if (this.#element !== element || generation !== this.#generation) return;
+      if (pending) {
+        this.#clearPending();
+        if (!this.#claim(pending.contact, pending.pointerType)) return;
+      } else if (!this.#first && this.#threshold > 0) {
+        this.#pending = { contact: next, pointerType: event.pointerType };
+        for (const type of ['pointermove', 'pointerup', 'pointercancel']) {
+          this.#pendingListeners++; this.#document!.addEventListener(type, this.#outside);
+        }
+        return;
+      }
+      if (!this.#claim(next, event.pointerType)) return;
       if (this.#element === element && this.#first && event.cancelable) event.preventDefault();
       return;
     }
@@ -194,10 +247,33 @@ class MediaGestureOwner implements MediaGestureConnection {
       if (!this.#first) this.#finish('complete', true);
     }
   }
+  #claim(contact: Contact, pointerType: string): boolean {
+    const element = this.#element, generation = this.#generation;
+    if (!element || !this.#start?.(Object.freeze({ pointerType, point: contact.point }))
+      || this.#element !== element || generation !== this.#generation) return false;
+    if (!this.#first) this.#first = contact; else this.#second = contact;
+    if (!element.isConnected || element.ownerDocument !== this.#document) { this.#finish('unavailable'); this.#retire(); return false; }
+    try { element.setPointerCapture(contact.id); }
+    catch { this.#finish('unavailable'); return false; }
+    if (this.#element !== element || !this.#first) return false;
+    if (this.#clickListening) {
+      if (this.#clickFirst === undefined) this.#clickFirst = contact.id;
+      else this.#clickSecond = contact.id;
+    }
+    return true;
+  }
+  #clearPending(): void {
+    const listeners = this.#pendingListeners; this.#pendingListeners = 0; this.#pending = undefined;
+    if (listeners === 0) return;
+    const types = ['pointermove', 'pointerup', 'pointercancel'];
+    for (let index = 0; index < listeners; index++) this.#document?.removeEventListener(types[index]!, this.#outside);
+  }
   #release(element: HTMLElement, id: number): void {
     try { element.releasePointerCapture(id); } catch { /* Native implicit release may already have occurred. */ }
   }
-  #clear(): boolean {
+  #clear(preserveClicks = false): boolean {
+    this.#clearPending();
+    if (!preserveClicks) this.#clickFirst = this.#clickSecond = undefined;
     const first = this.#first, second = this.#second, element = this.#element;
     this.#first = undefined; this.#second = undefined; this.#generation = {};
     if (element) {
@@ -207,13 +283,13 @@ class MediaGestureOwner implements MediaGestureConnection {
     return first !== undefined;
   }
   #finish(reason: MediaGestureEnd, completed = false): void {
-    const active = this.#clear();
+    const active = this.#clear(true);
     if (!active && !completed) return;
     try { this.#end?.(reason); } catch (error) { this.#retire(); throw error; }
   }
   #retire(): void {
     const element = this.#element, document = this.#document, window = this.#window, listeners = this.#listeners;
-    this.#start = undefined; this.#move = undefined; this.#end = undefined; this.#wheelHook = undefined;
+    this.#start = undefined; this.#move = undefined; this.#end = undefined; this.#wheelHook = undefined; this.#admit = undefined;
     this.#clear();
     this.#element = undefined; this.#document = undefined; this.#window = undefined; this.#listeners = 0;
     const types = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture'];
@@ -221,5 +297,9 @@ class MediaGestureOwner implements MediaGestureConnection {
     if (listeners >= 6) document?.removeEventListener('visibilitychange', this.#visibility);
     if (listeners >= 7) window?.removeEventListener('blur', this.#blur);
     if (listeners >= 8) element?.removeEventListener('wheel', this.#wheel);
+    if (this.#clickListening) {
+      this.#clickListening = false; element?.removeEventListener('click', this.#click, true);
+      element?.removeEventListener('dragstart', this.#dragstart);
+    }
   }
 }

@@ -10,8 +10,8 @@ const { useMediaGesture } = await import('../.verification-dist/media-gesture.js
 const { provideHostActive } = await import('../.verification-dist/host-provider.js');
 const tracked = new Map(), saved = [], captures = new WeakMap();
 let failAdmission = false, peak = 0;
-const pointerTypes = new Set(['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture', 'wheel']);
-const relevant = (target, type) => target === document ? type === 'visibilitychange' : target === window ? type === 'blur' : pointerTypes.has(type);
+const pointerTypes = new Set(['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'lostpointercapture', 'wheel', 'click', 'dragstart']);
+const relevant = (target, type) => target === document ? type === 'visibilitychange' || ['pointermove', 'pointerup', 'pointercancel'].includes(type) : target === window ? type === 'blur' : pointerTypes.has(type);
 const count = () => [...tracked.values()].reduce((sum, types) => sum + [...types.values()].reduce((total, callbacks) => total + callbacks.size, 0), 0);
 for (const prototype of [window.HTMLElement.prototype, document, window]) {
   const add = prototype.addEventListener, remove = prototype.removeEventListener;
@@ -42,11 +42,13 @@ function basis(element) {
   Object.defineProperty(element, 'getClientRects', { configurable: true, value: () => [{ left: 100, top: 50, width: 800, height: 600 }] });
   Object.defineProperty(element, 'getBoundingClientRect', { configurable: true, value: () => ({ left: 100, top: 50, width: 800, height: 600 }) });
 }
-function fixture({ scoped = false, cached = false, inherited = false, onStart, onMove, onEnd, onWheel } = {}) {
+function fixture({ scoped = false, cached = false, inherited = false, onStart, onMove, onEnd, onWheel, admitPointer, dragThreshold } = {}) {
+  if (count() === 0) peak = 0;
   const active = shallowRef(true), hostActive = shallowRef(true), shown = shallowRef(true), key = shallowRef(0), starts = [], moves = [], ends = [], wheels = [];
   let gesture, scope;
   const Child = { setup() {
     const element = useTemplateRef('scene'), connect = () => useMediaGesture({ element, active,
+      ...(admitPointer === undefined ? {} : { admitPointer }), ...(dragThreshold === undefined ? {} : { dragThreshold }),
       onStart(input) { starts.push(input); return onStart?.(input) ?? true; },
       onMove(input) { moves.push(input); onMove?.(input); }, onEnd(reason) { ends.push(reason); onEnd?.(reason); },
       onWheel(input) { wheels.push(input); return onWheel?.(input) ?? true; },
@@ -58,6 +60,18 @@ function fixture({ scoped = false, cached = false, inherited = false, onStart, o
   const host = document.createElement('div'); document.body.append(host); const errors = []; app.config.errorHandler = failure => errors.push(failure); app.mount(host); basis(host.querySelector('section'));
   return { active, hostActive, shown, key, starts, moves, ends, wheels, errors, get gesture() { return gesture; }, get scope() { return scope; }, get element() { return host.querySelector('section'); }, close() { app.unmount(); host.remove(); } };
 }
+test('Vue media gesture forwards explicit interactive admission and retires pending native observation', () => {
+  const button = document.createElement('button'), image = document.createElement('img'); button.append(image);
+  const f = fixture({ admitPointer: input => input.origin === image }); f.element.append(button);
+  try {
+    pointer(image, 'pointerdown'); assert.equal(f.starts.length, 0); assert.equal(count(), 13);
+    pointer(image, 'pointermove', 506, 350); assert.equal(f.starts.length, 1); assert.equal(count(), 10);
+    f.active.value = false;
+    assert.deepEqual(f.ends, ['disconnect']); assert.equal(count(), 0);
+    assert.equal(captures.get(f.element)?.size ?? 0, 0);
+  } finally { f.close(); }
+  assert.equal(count(), 0);
+});
 test('Vue media gesture delegates native facts and projects current points through stable methods', () => {
   const f = fixture(), gesture = f.gesture, cancel = gesture.cancel, measure = gesture.measure;
   try {

@@ -57,3 +57,19 @@ Observation follows the `active` ref, inherited host activity and KeepAlive.
 Target/activity retirement reports an active gesture's disconnect; terminal
 scope disposal is silent. Media state, zoom policy and presentation remain with
 their owners.
+
+`admitPointer` can explicitly admit an authored media button using the event
+origin and `protectedOrigin`. Its default 4-client-pixel `dragThreshold` preserves
+native focus and click activation until a drag is claimed. `onStart` runs at
+that claim boundary; ordinary protected controls still decline unless the
+predicate admits them. Pending observation follows the same participation and
+component lifetime as active contacts.
+
+Retained `DrawerRoot` content can move between `presentation="inline"` and
+`"overlay"` with `:unmount-on-exit="false"`. When an action inside the inline
+content opens the overlay, accepting a close together with a return to inline
+restores that action after exit and rendering finish. A valid internal
+`restoreFocusTarget` or compound `DrawerTrigger` takes precedence over the
+original focused action. Unavailable targets are skipped, and a newer focus
+owner outside the content is preserved. Closing without requesting inline does
+not schedule a later focus transfer for an unrelated presentation change.
