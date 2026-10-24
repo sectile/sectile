@@ -14,20 +14,9 @@ const server = spawn(process.execPath, ['packages/vue/scripts/serve-browser-veri
 });
 let browser, context, page, source;
 const swift = '.tasks/browser/input-source';
-const nativeKeys = (codes, control = false) => {
+const nativeKeys = codes => {
   assert.ok(codes.every(code => Number.isInteger(code) && code >= 0 && code < 128));
-  // Quartz virtual-key events leave character translation to the active OS IME.
-  const program = `ObjC.import('Cocoa'); ObjC.import('CoreGraphics');
-    function post(code, down) {
-      const event = $.CGEventCreateKeyboardEvent(null, code, down);
-      $.CGEventSetFlags(event, ${control ? '(code !== 59 || down) ? $.kCGEventFlagMaskControl : 0' : '0'});
-      $.CGEventPost($.kCGHIDEventTap, event);
-    }
-    ${control ? 'post(59, true);' : ''}
-    for (const code of ${JSON.stringify(codes)}) { post(code, true); post(code, false); $.NSThread.sleepForTimeInterval(0.08); }
-    ${control ? 'post(59, false);' : ''}
-    $.NSThread.sleepForTimeInterval(0.3);`;
-  execFileSync('osascript', ['-l', 'JavaScript', '-e', program], { timeout: 10000 });
+  execFileSync('osascript', ['-e', `tell application "System Events"\n${codes.map(code => `key code ${code}\ndelay 0.15`).join('\n')}\nend tell`], { timeout: 10000 });
 };
 try {
   const url = await new Promise((resolve, reject) => {
@@ -100,6 +89,8 @@ try {
       (report.sources ??= []).push(observedSource);
       // The CLI's source query is diagnostic; the focused browser's actual
       // composition events and committed text are the authoritative witness.
+      await page.bringToFront();
+      await page.locator(`#${id}`).click();
       nativeKeys([5, 40, 1]); // g k s -> 한, through the OS two-set IME.
       if (id === 'combo') await page.evaluate(() => window.sectileProbe.changeItems());
       nativeKeys([15, 46, 3, 36]); // r m f, Return -> 글 and commit.
