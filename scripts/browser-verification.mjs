@@ -81,8 +81,11 @@ try {
   await context.tracing.start({ screenshots: true, snapshots: true });
   page = await context.newPage();
   const warnings = [], errors = [];
-  page.on('console', message => { if (/Blocked aria-hidden/u.test(message.text())) warnings.push(message.text()); });
-  page.on('pageerror', error => errors.push(error.message));
+  const observePage = target => {
+    target.on('console', message => { if (/Blocked aria-hidden/u.test(message.text())) warnings.push(message.text()); });
+    target.on('pageerror', error => errors.push(error.message));
+  };
+  observePage(page);
   await page.goto(`${url}/interactions`);
   await page.waitForFunction(() => window.sectileProbe !== undefined);
   const catalog = await page.evaluate(() => window.sectileProbe.inputFamilies);
@@ -103,6 +106,9 @@ try {
     await page.locator(`#${id}`).focus(); await page.keyboard.press('ControlOrMeta+a');
     await page.evaluate(() => { window.sectileProbe.valueWrites.length = 0; });
     await page.keyboard.type('abc');
+    if (/^(date|time|datetime)-(start|end)$/u.test(id))
+      assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).rangeDraft, 'abc', `${id}: native range owner did not observe the edit`);
+    if (id === 'picker') assert.equal(await page.locator('#picker').getAttribute('placeholder'), 'YYYY-MM-DD', 'picker field binding was not initialized');
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.valueWrites), [], `${id}: accepted native edit caused a value/selection projection`);
     await page.keyboard.press('ControlOrMeta+z');
     const undone = await page.locator(`#${id}`).inputValue();
@@ -119,8 +125,16 @@ try {
     execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
     for (const family of fields) for (const reference of ['native','native-textarea'].includes(family) ? [false] : [true,false]) {
       report.current = { family, reference };
-      // Finish the previous witness before selecting the next OS input context.
-      await page.evaluate(() => document.activeElement?.blur());
+      // Isolate each OS text-input client in its own browser process. Document
+      // replacement and source switching did not isolate the plain HTML peers.
+      // The continuation below stays in one input and process across its clear.
+      await context.tracing.stop(); await browser.close();
+      browser = await chromium.launch({ headless: false, ...(process.env['SECTILE_CHROMIUM_PATH'] ? { executablePath: process.env['SECTILE_CHROMIUM_PATH'] } : {}) });
+      context = await browser.newContext(); await context.tracing.start({ screenshots: true, snapshots: true });
+      page = await context.newPage(); observePage(page);
+      await page.goto(`${url}/interactions`); await page.waitForFunction(() => window.sectileProbe !== undefined);
+      await page.bringToFront();
+      execFileSync('osascript', ['-e', `tell application "System Events" to set frontmost of first process whose name is "${application}" to true`], { timeout: 10000 });
       const id = reference ? 'native-reference' : family;
       const selected = nativeSource ??= JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
@@ -188,7 +202,7 @@ try {
       // Return commits the IME and retains the native textarea newline action.
       // The representation case is still an input when Return is delivered.
       const committed = multiline ? `${expected}\n` : expected;
-      if (reference || ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled'].includes(id))
+      if (reference || ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled','tree-select','tree-select-uncontrolled'].includes(id))
         await page.waitForFunction(({id,committed}) => document.querySelector(`#${id}`).value === committed, {id,committed});
       if (id === 'text' || id === 'combo') await page.waitForFunction(id => window.sectileProbe.models()[id] === '한글', id);
       const events = await page.evaluate(id => window.sectileProbe.events.filter(event => event.id === id), id);
@@ -196,6 +210,7 @@ try {
       assert.ok(events.some(event => event.type === 'compositionend'), `${id}: composition never committed`);
       if (id === 'pin') assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, '한');
       if (id === 'tags') assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글']);
+      if (id.startsWith('tree-select')) assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, expected);
       if (family === 'tags') {
         // OS setup must not hide a same-input continuation defect. Match
         // the token's accepted clear with the same write on its plain HTML peer.

@@ -263,3 +263,52 @@ limit. Continuation therefore verifies actual native input-event text survives
 unchanged into the accepted token, and reports requested and observed strings;
 it does not fabricate a corrected IME result. Registry release acceptance and
 physical keyboard/assistive-technology claims remain separate.
+
+## Compound fixture correction and native process boundary
+
+Further close review found that the earlier range fixtures supplied only one
+endpoint, while their connection requires both. The picker fixture also omitted
+its trigger, content and grid. Earlier history passes for those cases exercised
+plain native elements and are insufficient evidence for their adapters. The
+fixtures now mount all required public parts, inspect the range's public draft,
+and require the picker's initialized field format. This corrected reproduction
+failed: typing `abc` in DateRange start and undoing produced `ab` instead of the
+matched plain control's empty value, without a value/selection write.
+
+The shared range adapter still assigned its unchanged placeholder on every
+refresh. It now compares before writing, matching the scalar correction. The
+corrected 30-case packed Chromium journey passed, including both endpoints of
+Date, Time and DateTime ranges and the fully connected picker.
+
+Native macOS peers also showed that ASCII/Korean menu cycling did not fully
+isolate reused browser clients after semantic clears. Independent witnesses now
+receive separate headed browser processes, with at most one live browser per
+shard. The same-input continuation retains its process and element through the
+clear, so process isolation does not substitute for native-output preservation.
+The source-menu setup, strict first `한글` phrase and live reconfiguration/write
+assertions remain. The hosted result for this process boundary is pending.
+
+The verification audit also removed recurring checks for hydration comment IDs,
+literal SSR helper names and literal emit expressions. Contract inventory/schema
+checks remain; their referenced behavior and SSR fixtures are executed by the
+existing Vue package unit. Prepared package admission is not repeated by every
+browser process, and only result/trace diagnostics are uploaded on failure.
+
+The existing release planner's concrete candidate set is:
+
+| Package | Current | Candidate |
+| --- | --- | --- |
+| Core | 0.15.0 | 0.16.0 |
+| Chart | 0.16.0 | 0.16.1 |
+| Form | 0.15.1 | 0.15.2 |
+| Temporal | 0.15.0 | 0.15.1 |
+| Virtual | 0.16.0 | 0.16.1 |
+| Terminal | 0.15.0 | 0.15.1 |
+| Tabular | 0.17.0 | 0.17.1 |
+| DOM | 0.19.0 | 0.20.0 |
+| Vue | 0.19.0 | 0.20.0 |
+
+This is a read-only plan for the full unreleased change set, not an executed
+version change or publication approval. Exact released bytes can be supplied to
+the same browser owner with `--tarball-directory`; its digest report must be tied
+to the registry publication evidence before issue 227 AC-12 is marked complete.

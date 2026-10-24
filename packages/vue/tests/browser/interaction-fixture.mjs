@@ -20,7 +20,7 @@ import { TimeField } from '@sectile/vue/temporal/time-field';
 import { DateTimeField } from '@sectile/vue/temporal/date-time-field';
 import { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } from '@sectile/vue/temporal/date-range-field';
 import { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } from '@sectile/vue/temporal/time-range-field';
-import { DatePickerRoot, DatePickerInput } from '@sectile/vue/temporal/date-picker';
+import { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerGrid } from '@sectile/vue/temporal/date-picker';
 import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '@sectile/vue/tree-grid';
 import { useDataGrid, createDataGridComponents } from '@sectile/vue/data-grid';
 import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue/tree-select';
@@ -82,9 +82,13 @@ window.sectileProbe = {
   async field(id) {
     if (['native','text','combo'].includes(id)) { await this.native(); this.reconfigure=this.changeItems; return; }
     reset();events.length=0;writes.length=0;
-    const value=ref(''), config=ref({label:'Input'}), multiline=ref(false), tags=ref([]), treeNodes=ref([{id:'root',parentID:null}]);let render, grid;
+    const value=ref(''), config=ref({label:'Input'}), multiline=ref(false), tags=ref([]), treeNodes=ref([{id:'root',parentID:null}]);let render, grid, rangeDraft;
     const update=next=>{value.value=next;}, input=part=>h(part,{id});
     const compound=(Root,Input,props={})=>()=>h(Root,{...props,...config.value},{default:()=>input(Input)});
+    const range=(Root,Start,End)=>()=>h(Root,config.value,{default:state=>{
+      const start=id.endsWith('start');rangeDraft=start?state.startText:state.endText;
+      return [h(Start,{id:start?id:`${id}-start`}),h(End,{id:start?`${id}-end`:id})];
+    }});
     if(id==='native-textarea')render=()=>h('textarea',{id});
     else if(id.startsWith('text')||id==='textarea') render=()=>h(TextField,{id,...config.value,
       ...(id==='text-uncontrolled'?{defaultValue:''}:{modelValue:value.value,'onUpdate:modelValue':update}),
@@ -93,10 +97,12 @@ window.sectileProbe = {
     else if(id==='number') render=()=>h(NumberField,{id,...config.value,modelValue:value.value||null,'onUpdate:modelValue':update});
     else if(id==='quantity') render=compound(QuantityFieldRoot,QuantityFieldInput,{policies:createStandardQuantityPolicies('metre')});
     else if(['date','time','datetime'].includes(id)) render=()=>h({date:DateField,time:TimeField,datetime:DateTimeField}[id],{id,...config.value});
-    else if(id.startsWith('datetime-')) render=compound(DateTimeRangeFieldRoot,id==='datetime-start'?DateTimeRangeFieldStartInput:DateTimeRangeFieldEndInput);
-    else if(id.startsWith('date-')) render=compound(DateRangeFieldRoot,id==='date-start'?DateRangeFieldStartInput:DateRangeFieldEndInput);
-    else if(id.startsWith('time-')) render=compound(TimeRangeFieldRoot,id==='time-start'?TimeRangeFieldStartInput:TimeRangeFieldEndInput);
-    else if(id==='picker') render=compound(DatePickerRoot,DatePickerInput,{position:false});
+    else if(id.startsWith('datetime-')) render=range(DateTimeRangeFieldRoot,DateTimeRangeFieldStartInput,DateTimeRangeFieldEndInput);
+    else if(id.startsWith('date-')) render=range(DateRangeFieldRoot,DateRangeFieldStartInput,DateRangeFieldEndInput);
+    else if(id.startsWith('time-')) render=range(TimeRangeFieldRoot,TimeRangeFieldStartInput,TimeRangeFieldEndInput);
+    else if(id==='picker') render=()=>h(DatePickerRoot,{position:false,referenceDate:{year:2026,month:10,day:25},...config.value},()=>[
+      input(DatePickerInput),h(DatePickerTrigger),h(DatePickerContent,{},()=>h(DatePickerGrid)),
+    ]);
     else if(id==='tags') render=()=>h(TagsInputRoot,{...config.value,inputValue:value.value,'onUpdate:inputValue':update,
       modelValue:tags.value,'onUpdate:modelValue':next=>{tags.value=next;}},{default:()=>input(TagsInputInput)});
     else if(id==='spin') render=compound(SpinButtonRoot,SpinButtonInput,{min:'-1000',max:'1000',defaultValue:'0',defaultDraft:''});
@@ -127,10 +133,10 @@ window.sectileProbe = {
     app.mount(host);await settle();
     if(id==='editable') { host.querySelector('#activate-editor').click();await settle(); }
     if(id==='tabular-editor') { const cell=host.querySelector('[data-part=cell]');cell.click();cell.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await settle(); }
-    const target=host.querySelector('input:not([type=hidden]),textarea');if(target)target.id=id;
+    const target=host.querySelector(`#${id}`)??host.querySelector('input:not([type=hidden]),textarea');if(target)target.id=id;
     this.reconfigure=()=>{config.value={label:'Changed label'};if(id==='text-representation')multiline.value=true;
       if(id.startsWith('tree-select'))treeNodes.value=[...treeNodes.value,{id:'extra',parentID:null}];};
-    this.nativeState=()=>({value:value.value,tags:tags.value});
+    this.nativeState=()=>({value:value.value,tags:tags.value,rangeDraft});
   },
   async reorder() {
     reset(); const changes=[], lifecycle=[];let state;

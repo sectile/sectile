@@ -39,14 +39,6 @@ for (const entry of entries) {
   assert.match(entry.id, /^[a-z]+(?:-[a-z]+)*$/, `${entry.id}: invalid component ID.`);
   assert.ok(Array.isArray(entry.models) && entry.models.length > 0, `${entry.id}: model list is required.`);
   assert.equal(new Set(entry.models).size, entry.models.length, `${entry.id}: model list must be unique.`);
-  const source = await readFile(entry.source, 'utf8');
-  for (const model of [...entry.models, ...(entry.dependentResets ?? [])]) {
-    assert.equal(
-      source.includes(`emit('update:${model}'`),
-      true,
-      `${entry.id}: reconciled ${model} must notify its controlled owner.`,
-    );
-  }
 }
 
 for (const evidence of contract.evidence) {

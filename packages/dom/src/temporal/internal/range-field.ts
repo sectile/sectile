@@ -202,7 +202,8 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
     for (const endpoint of ['start', 'end'] as const) {
       const input = this.#input(endpoint), format = state[endpoint].format;
       input.type = 'text'; input.inputMode = this.#adapter.inputMode(format);
-      input.placeholder = this.#adapter.placeholder(format);
+      const placeholder = this.#adapter.placeholder(format);
+      if (input.placeholder !== placeholder) input.placeholder = placeholder;
       input.required = this.#options.required ?? this.#options.policies?.required ?? false;
       setInteractionAttributes(input, this.#options, true, true);
       const label = endpoint === 'start' ? this.#options.startLabel : this.#options.endLabel;
