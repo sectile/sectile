@@ -70,8 +70,35 @@ try {
       await page.locator(`#${id}`).focus();
       const selected = JSON.parse(execFileSync(swift, [], { encoding: 'utf8' }));
       source ??= selected.previous;
-      nativeKeys([49], true);
-      (report.sources ??= []).push(JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' })));
+      const menuScript = `on run argv
+        set targetName to item 1 of argv
+        tell application "System Events"
+          repeat with processName in {"TextInputMenuAgent", "SystemUIServer", "ControlCenter"}
+            if exists process (processName as text) then
+              tell process (processName as text)
+                repeat with bar in menu bars
+                  repeat with entry in menu bar items of bar
+                    try
+                      click entry
+                      delay 0.2
+                      if exists menu item targetName of menu 1 of entry then
+                        click menu item targetName of menu 1 of entry
+                        return processName as text
+                      end if
+                    end try
+                    key code 53
+                  end repeat
+                end repeat
+              end tell
+            end if
+          end repeat
+        end tell
+        error "Native input menu item unavailable: " & targetName
+      end run`;
+      execFileSync('osascript', ['-e', menuScript, selected.name], { timeout: 20000, stdio: ['ignore', 'pipe', 'inherit'] });
+      const observedSource = JSON.parse(execFileSync(swift, ['--inspect'], { encoding: 'utf8' }));
+      (report.sources ??= []).push(observedSource);
+      assert.equal(observedSource.current, selected.selected, 'native input menu did not select Korean');
       nativeKeys([5, 40, 1]); // g k s -> 한, through the OS two-set IME.
       if (id === 'combo') await page.evaluate(() => window.sectileProbe.changeItems());
       nativeKeys([15, 46, 3, 36]); // r m f, Return -> 글 and commit.

@@ -61,5 +61,6 @@ if requested == nil {
     }
     RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
 }
-let result = ["selected": sourceID(selected), "previous": sourceID(previous)]
+let result = ["selected": sourceID(selected), "previous": sourceID(previous),
+              "name": textProperty(selected, kTISPropertyLocalizedName) ?? sourceID(selected)]
 print(String(data: try JSONSerialization.data(withJSONObject: result), encoding: .utf8)!)
