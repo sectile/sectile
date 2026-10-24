@@ -29,7 +29,7 @@ if textProperty(selected, kTISPropertyInputSourceType) == (kTISTypeKeyboardInput
    let bundle = textProperty(selected, kTISPropertyBundleID),
    let method = sources.first(where: {
        textProperty($0, kTISPropertyBundleID) == bundle &&
-       textProperty($0, kTISPropertyInputSourceType) == (kTISTypeKeyboardInputMethod as String)
+       textProperty($0, kTISPropertyInputSourceType) == (kTISTypeKeyboardInputMethodModeEnabled as String)
    }) {
     let status = TISEnableInputSource(method)
     fputs("Parent input method \(sourceID(method)): enable=\(status)\n", stderr)
