@@ -201,10 +201,15 @@ try {
         // the token's accepted clear with the same write on its plain HTML peer.
         if (reference) await page.locator(`#${id}`).evaluate(element => { element.value = ''; });
         await typeNative([5,40,1,15,46,3,5,40,1]);
-        assert.equal(await page.locator(`#${id}`).inputValue(), '한글한', `${id}: continued composition after clear`);
+        // After a programmatic clear the OS may produce different text even on
+        // the plain peer. Preserve its native output rather than correcting IME.
+        const observed = await page.locator(`#${id}`).inputValue();
+        const continued = await page.evaluate(id => window.sectileProbe.events.filter(event => event.id === id), id);
+        assert.ok(continued.slice(events.length).some(event => event.type === 'compositionstart'), `${id}: continuation bypassed IME`);
+        assert.equal(observed, continued.filter(event => event.type === 'input').at(-1).value, `${id}: continued native output was rewritten`);
         nativeKeys([36]);
-        if (!reference) assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글','한글한']);
-        report.results.push({ family, reference, continuation: 'passed' });
+        if (!reference) assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글',observed]);
+        report.results.push({ family, reference, continuation: 'native-output-preserved', requested: '한글한', observed });
       }
       report.results.push({ id, family, reference, text: await page.locator(`#${id}`).inputValue(),
         compositionStarts: events.filter(event=>event.type==='compositionstart').length,

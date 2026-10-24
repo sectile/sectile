@@ -3338,7 +3338,7 @@
       "detector": "linear-membership",
       "category": "raw-full-domain-scan",
       "path": "packages/dom/src/tree-select/connection.ts",
-      "line": 179,
+      "line": 196,
       "evidence": ".includes(",
       "rule": "dom-host-authority",
       "classification": "reuse",

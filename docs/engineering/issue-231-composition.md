@@ -219,3 +219,47 @@ DOM/Vue `0.20.0` and dependent patch releases for the full unreleased change set
 No version mutation, tag, registry publication or release approval is inferred.
 Issue 227 AC-12 remains open until the maintainer's release decision and a check
 of the published bytes. The workflow's human-release boundary remains applicable.
+
+## Final input-owner coverage extension
+
+The public-input inventory also found TreeSelect's newer query input, which was
+not named in issue 227's original baseline. Its controlled native edit reproduced
+the same `abc → empty → abc` stale projection. The regression failed against
+`16a1a652daaf3e8b515bc009f0bf088af1dd5539` before the correction.
+The DOM query owner now delays only final native value correction until the
+controlled owner settles. It retains one pending query and one coalesced,
+generation-guarded microtask; settlement performs O(q) native comparison and
+does not revisit mounted rows or repeat layout. No Core tree/query representation,
+algorithm or public API changes. Unbind invalidates pending work; held-handle GC
+now includes an outstanding native observation.
+
+Vue no longer binds a live query value after SSR. Source/controller replacement
+waits for native composition to finish on the same input. One scoped timer
+notifies the existing source watcher, preserving Vue error handling and the old
+valid owner if the replacement source is invalid. Native identity changes and
+unmount retire composition ownership. A deferred source holds the old canonical
+owner alongside the caller's replacement until composition settles, within the
+existing source cardinality ceilings. Tests cover accepted/refused/transformed
+queries, committed source replacement, invalid deferred source recovery, owned
+focus, pending timer cancellation and zero row reprojection during settlement.
+The focused GC-enabled DOM/Vue run passed 26 tests.
+
+The browser catalog now contains 30 cases, including controlled/uncontrolled
+TreeSelect and both DateTimeRange endpoints. Other Temporal picker variants
+inherit the tested picker/native-range/native-field owners; their semantic and
+format distinctions remain covered by package tests. File, hidden submission,
+checkbox/radio, range and native-color inputs have no free-form text contract.
+Each macOS shard has seven non-plain cases, their seven plain peers and the two
+shared native witnesses, giving 16 native composition scenarios per shard.
+
+Matched plain peers demonstrated that document replacement alone does not reset
+the macOS application's input-method context. Independent witnesses now explicitly
+select ASCII then Korean through the focused application's real OS menu. The
+first `한글` phrase, active composition focus, configuration update and zero
+composing-value/selection rewrite requirements remain. In an additional same-input
+continuation, even plain HTML after `value = ''` produced `한ㅡㄹ한` for the
+requested `한글한` hardware keys. That is retained as an observed runner/browser
+limit. Continuation therefore verifies actual native input-event text survives
+unchanged into the accepted token, and reports requested and observed strings;
+it does not fabricate a corrected IME result. Registry release acceptance and
+physical keyboard/assistive-technology claims remain separate.

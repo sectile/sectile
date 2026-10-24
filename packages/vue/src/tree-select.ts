@@ -1,4 +1,4 @@
-import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, shallowRef, useId, watch,
+import { computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide, shallowRef, ssrContextKey, useId, watch,
   type ComputedRef, type DefineSetupFnComponent, type EmitsToProps, type PropType, type PublicProps, type ShallowRef, type SlotsType, type VNodeChild } from 'vue';
 import { createTree, type TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
@@ -64,6 +64,7 @@ interface Context {
   readonly active: Readonly<ShallowRef<boolean>>; readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   registerPresence(present: ShallowRef<boolean>): () => void;
   registerInput(element: unknown): void; registerPopup(element: unknown): void;
+  setInputComposing(composing: boolean): void;
   elementID(id: string): string;
 }
 const key = /* @__PURE__ */ Symbol('SectileTreeSelect');
@@ -100,6 +101,9 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     const elementID = (id: string): string => `${popupID}-${stableIDElementToken(id)}`;
     const items = new Map<HTMLElement, string>(), disclosures = new Map<HTMLElement, string>();
     let alive = true, mounted = false, generation = 0;
+    let inputComposing = false, buildPending = false, attachPending = false;
+    let compositionTimer: ReturnType<typeof setTimeout> | undefined;
+    const compositionRevision = shallowRef(0);
     const controlled = {
       value: useControlledStateInvariant('TreeSelectRoot', 'modelValue', () => props.modelValue),
       expansion: useControlledStateInvariant('TreeSelectRoot', 'expandedValues', () => props.expandedValues),
@@ -118,6 +122,7 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     const refresh = (): void => { publish(); refreshParts(); connection.value?.render(); };
     const disconnect = (): void => { try { lifecycle.release(); } finally { try { connection.value?.disconnect(); } finally { connection.value = undefined; } } };
     const attach = (): void => {
+      if (inputComposing) { attachPending = true; return; }
       disconnect();
       if (!alive || !mounted || !input.value || !popup.value || !controller.value) return;
       connection.value = connectTreeSelect({ controller: controller.value, input: input.value, popup: popup.value, position: props.position, manageVisibility: false,
@@ -138,6 +143,8 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     });
     const build = (reset = false): void => {
       if (!alive) return;
+      if (inputComposing && !reset) { buildPending = true; return; }
+      buildPending = false; attachPending = false;
       const prior = controller.value?.getSnapshot().state, previous = reset ? undefined : prior, tree = createTree(props.nodes);
       const requested = controlled.value ? props.modelValue as readonly string[] : previous?.selection.selected ?? initial.value;
       const value = prior ? reconcileCollectionState(tree.preorder().ids, requested, null, empty, props.selectionMode, { preserveNullCurrent: true }).selected : requested;
@@ -184,6 +191,15 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     provideFormControlOwner();
     provide<Context>(key, { state, snapshot, inputID, popupID, elementID, position: computed(() => props.position), label: computed(() => props.label), controlProps: participation.controlProps,
       connection, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+      setInputComposing: composing => {
+        if (!alive) return;
+        inputComposing = composing;
+        if (composing || (!buildPending && !attachPending) || compositionTimer !== undefined) return;
+        compositionTimer = setTimeout(() => {
+          compositionTimer = undefined; if (!alive || inputComposing) return;
+          if (buildPending) compositionRevision.value++; else if (attachPending) { attachPending = false; scheduleAttach(); }
+        }, 0);
+      },
       registerInput: node => { const next = typeof HTMLInputElement !== 'undefined' && node instanceof HTMLInputElement ? node : undefined; if (input.value !== next) { input.value = next; scheduleAttach(); } },
       registerPopup: node => { const next = typeof HTMLElement !== 'undefined' && node instanceof HTMLElement ? node : undefined; if (popup.value !== next) { popup.value = next; scheduleAttach(); } },
     });
@@ -202,9 +218,11 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     onMounted(() => { mounted = true; lifecycle.reconnect(); });
     onBeforeUnmount(() => {
       alive = false; mounted = false; generation++; attachmentTask.cancel(); resetTask.cancel();
+      if (compositionTimer !== undefined) clearTimeout(compositionTimer);
+      compositionTimer = undefined; buildPending = false; attachPending = false;
       try { disconnect(); } finally { try { controller.value?.dispose(); } finally { controller.value = undefined; items.clear(); disclosures.clear(); } }
     });
-    watch([() => props.nodes, () => props.disabledItems, () => props.selectionMode, () => props.policies, () => props.matches], () => build());
+    watch([() => props.nodes, () => props.disabledItems, () => props.selectionMode, () => props.policies, () => props.matches, compositionRevision], () => build());
     watch([disabled, readonly], () => { if (controller.value) unwrap(controller.value.syncInteraction({ disabled: disabled.value, readOnly: readonly.value })); });
     watch([() => props.modelValue, () => props.expandedValues, () => props.highlightedValue, () => props.query, () => props.open, () => props.results], () => {
       if (!alive || !controller.value) return; lifecycle.prepareModelUpdate();
@@ -231,10 +249,14 @@ export const TreeSelectRoot: new <const ID extends string = string>(props: RootP
 
 export const TreeSelectInput = /* @__PURE__ */ defineComponent({
   name: 'SectileTreeSelectInput', inheritAttrs: false, props: { asChild: { type: Boolean, default: false } },
-  setup(props, { attrs, slots }) { const root = useRoot('TreeSelectInput'), composing = shallowRef(false), element = shallowRef<HTMLInputElement>(); return (): VNodeChild => h(Primitive, mergeProps(attrs, root.controlProps.value, {
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeSelectInput'), server = inject(ssrContextKey, undefined) !== undefined, element = shallowRef<HTMLInputElement>();
+    watch(element, () => root.setInputComposing(false));
+    onBeforeUnmount(() => root.setInputComposing(false));
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, root.controlProps.value, {
     as: 'input', asChild: props.asChild, elementRef: (node: unknown) => { element.value = typeof HTMLInputElement !== 'undefined' && node instanceof HTMLInputElement ? node : undefined; root.registerInput(node); },
-    id: attrs['id'] ?? root.controlProps.value['id'] ?? root.inputID, name: undefined, required: false, type: 'text', value: composing.value ? element.value?.value : root.state.value.query,
-    onCompositionstart: () => { composing.value = true; }, onCompositionend: () => { composing.value = false; },
+    id: attrs['id'] ?? root.controlProps.value['id'] ?? root.inputID, name: undefined, required: false, type: 'text', ...(server ? { value: root.state.value.query } : {}),
+    onCompositionstart: () => root.setInputComposing(true), onCompositionend: () => root.setInputComposing(false),
     role: 'combobox', 'aria-haspopup': 'tree', 'aria-autocomplete': 'list', 'aria-controls': root.popupID, 'aria-expanded': root.active.value && root.state.value.open,
     'aria-activedescendant': element.value ? element.value.getAttribute('aria-activedescendant') ?? undefined
       : root.active.value && root.state.value.open && !root.state.value.pending && root.state.value.highlightedValue !== null ? root.elementID(root.state.value.highlightedValue) : undefined,

@@ -23,6 +23,8 @@ import { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } 
 import { DatePickerRoot, DatePickerInput } from '@sectile/vue/temporal/date-picker';
 import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '@sectile/vue/tree-grid';
 import { useDataGrid, createDataGridComponents } from '@sectile/vue/data-grid';
+import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue/tree-select';
+import { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } from '@sectile/vue/temporal/date-time-range-field';
 
 const host = document.querySelector('#probe');
 const style = document.createElement('style');
@@ -58,7 +60,8 @@ for (const type of ['compositionstart', 'compositionupdate', 'compositionend', '
 for (const prototype of [HTMLInputElement.prototype, HTMLTextAreaElement.prototype]) {
 const value = Object.getOwnPropertyDescriptor(prototype, 'value');
 const selection=prototype.setSelectionRange;
-prototype.setSelectionRange=function(...args){if(valueWrites.length<1000)valueWrites.push({id:this.id,selection:args});return selection.apply(this,args);};
+prototype.setSelectionRange=function(...args){const record={id:this.id,selection:args,composing:composing.has(this)};
+  if(valueWrites.length<1000)valueWrites.push(record);if(record.composing)writes.push(record);return selection.apply(this,args);};
 Object.defineProperty(prototype, 'value', { ...value, set(next) {
   if(valueWrites.length<1000)valueWrites.push({id:this.id,before:value.get.call(this),value:next,composing:composing.has(this)});
   if (composing.has(this)) writes.push({ id: this.id, value: next });
@@ -69,7 +72,8 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 window.sectileProbe = {
   events, writes, valueWrites, nativeMutations,
   inputFamilies: ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled','number','quantity',
-    'date','time','datetime','date-start','date-end','time-start','time-end','picker','tags','spin','editable','pin','color','treegrid','tabular-editor','tabular-filter'],
+    'date','time','datetime','date-start','date-end','time-start','time-end','picker','tags','spin','editable','pin','color','treegrid','tabular-editor','tabular-filter',
+    'tree-select','tree-select-uncontrolled','datetime-start','datetime-end'],
   async reference(id) {
     await this.field(id);
     const source=document.getElementById(id),reference=source.cloneNode(false);reference.id='native-reference';
@@ -78,7 +82,7 @@ window.sectileProbe = {
   async field(id) {
     if (['native','text','combo'].includes(id)) { await this.native(); this.reconfigure=this.changeItems; return; }
     reset();events.length=0;writes.length=0;
-    const value=ref(''), config=ref({label:'Input'}), multiline=ref(false), tags=ref([]);let render, grid;
+    const value=ref(''), config=ref({label:'Input'}), multiline=ref(false), tags=ref([]), treeNodes=ref([{id:'root',parentID:null}]);let render, grid;
     const update=next=>{value.value=next;}, input=part=>h(part,{id});
     const compound=(Root,Input,props={})=>()=>h(Root,{...props,...config.value},{default:()=>input(Input)});
     if(id==='native-textarea')render=()=>h('textarea',{id});
@@ -89,6 +93,7 @@ window.sectileProbe = {
     else if(id==='number') render=()=>h(NumberField,{id,...config.value,modelValue:value.value||null,'onUpdate:modelValue':update});
     else if(id==='quantity') render=compound(QuantityFieldRoot,QuantityFieldInput,{policies:createStandardQuantityPolicies('metre')});
     else if(['date','time','datetime'].includes(id)) render=()=>h({date:DateField,time:TimeField,datetime:DateTimeField}[id],{id,...config.value});
+    else if(id.startsWith('datetime-')) render=compound(DateTimeRangeFieldRoot,id==='datetime-start'?DateTimeRangeFieldStartInput:DateTimeRangeFieldEndInput);
     else if(id.startsWith('date-')) render=compound(DateRangeFieldRoot,id==='date-start'?DateRangeFieldStartInput:DateRangeFieldEndInput);
     else if(id.startsWith('time-')) render=compound(TimeRangeFieldRoot,id==='time-start'?TimeRangeFieldStartInput:TimeRangeFieldEndInput);
     else if(id==='picker') render=compound(DatePickerRoot,DatePickerInput,{position:false});
@@ -103,6 +108,8 @@ window.sectileProbe = {
     else if(id==='treegrid') render=()=>h(TreeGridRoot,{...config.value,rows:[{id:'root',parentID:null,cells:['name']}],getCellValue:()=>value.value,
       setCellValue:(_id,next)=>update(next),defaultHighlightedValue:'name',defaultEditMode:'editing'},
       {default:()=>h(TreeGridRow,{value:'root',rowIndex:1},{default:()=>h(TreeGridCell,{value:'name',columnIndex:1},{default:()=>h(TreeGridEditor,{for:'name',id})})})});
+    else if(id.startsWith('tree-select')) render=()=>h(TreeSelectRoot,{nodes:treeNodes.value,position:false,...config.value,
+      ...(id==='tree-select'?{query:value.value}:{}),'onUpdate:query':update},()=>[input(TreeSelectInput),h(TreeSelectContent)]);
     else if(id.startsWith('tabular')) {
       app=createApp({setup(){
         const response=request=>({protocolVersion:1,requestID:request.requestID,sourceGeneration:request.sourceGeneration,queryRevision:request.queryRevision,
@@ -121,7 +128,8 @@ window.sectileProbe = {
     if(id==='editable') { host.querySelector('#activate-editor').click();await settle(); }
     if(id==='tabular-editor') { const cell=host.querySelector('[data-part=cell]');cell.click();cell.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));await settle(); }
     const target=host.querySelector('input:not([type=hidden]),textarea');if(target)target.id=id;
-    this.reconfigure=()=>{config.value={label:'Changed label'};if(id==='text-representation')multiline.value=true;};
+    this.reconfigure=()=>{config.value={label:'Changed label'};if(id==='text-representation')multiline.value=true;
+      if(id.startsWith('tree-select'))treeNodes.value=[...treeNodes.value,{id:'extra',parentID:null}];};
     this.nativeState=()=>({value:value.value,tags:tags.value});
   },
   async reorder() {

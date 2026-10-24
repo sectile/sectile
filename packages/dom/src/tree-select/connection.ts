@@ -99,15 +99,32 @@ interface Presentation<ID extends StableID> {
   readonly position: PositionConnection; readonly layer: DOMLayerBinding;
   readonly onUpdate: (() => void) | undefined;
   readonly generatedPopupID: string | undefined;
-  active: boolean; composing: boolean;
+  active: boolean; composing: boolean; nativeQuery: string | undefined;
 }
 let nextPopupID = 0;
 class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnection<ID> {
   public readonly tree: Tree<ID>;
   #scope: Presentation<ID> | undefined;
   #snapshot: RevisionSnapshot<TreeSelectState<ID>>;
+  #nativeGeneration = 0;
   readonly #keydown = (event: Event): void => { if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault(); };
-  readonly #input = (): void => { const scope = this.#scope; if (scope && this.getActive() && !scope.composing) this.handleEvent({ type: 'query', query: scope.input.value }); };
+  readonly #input = (): void => {
+    const scope = this.#scope; if (!scope || !this.getActive() || scope.composing) return;
+    const query = scope.input.value;
+    if (scope.nativeQuery === query) return;
+    const pending = scope.nativeQuery !== undefined; scope.nativeQuery = query;
+    try { this.handleEvent({ type: 'query', query }); }
+    finally {
+      if (!pending && this.#scope === scope && scope.nativeQuery !== undefined) {
+        const generation = ++this.#nativeGeneration;
+        queueMicrotask(() => {
+          if (generation !== this.#nativeGeneration || !this.#scope) return;
+          const current = this.#scope; current.nativeQuery = undefined;
+          this.#projectQuery(current, current.controller.getSnapshot().state.request.query);
+        });
+      }
+    }
+  };
   readonly #compositionStart = (): void => { if (this.#scope) this.#scope.composing = true; };
   readonly #compositionEnd = (): void => { if (this.#scope) this.#scope.composing = false; this.#input(); };
   readonly #click = (event: Event): void => {
@@ -138,7 +155,7 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
       const prefix = options.popup.id;
       this.#scope = { controller: options.controller, owned, input: options.input, popup: options.popup, rows: new Map(), owners: new WeakMap(),
         elementID: options.getItemElementID ?? (id => `${prefix}-${stableIDElementToken(id)}`),
-        visibility, position, layer, onUpdate: options.onUpdate, generatedPopupID, active: true, composing: false };
+        visibility, position, layer, onUpdate: options.onUpdate, generatedPopupID, active: true, composing: false, nativeQuery: undefined };
       this.#bind(); this.render();
     } catch (error) {
       if (this.#scope) { try { this.disconnect(); } catch { /* Preserve construction error. */ } }
@@ -224,10 +241,13 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
     if (this.tree.isLeaf(id) === false) element.setAttribute('aria-expanded', String(state.view.expansion.has(id))); else element.removeAttribute('aria-expanded');
     setInteractionAttributes(element, { disabled: scope.controller.isDisabled(id) !== false || state.pending });
   }
+  #projectQuery(scope: Presentation<ID>, query: string): void {
+    if (!scope.composing && scope.nativeQuery === undefined && scope.input.value !== query) scope.input.value = query;
+  }
   public render(): void {
     const scope = this.#scope; if (!scope) return;
     const state = scope.controller.getSnapshot().state;
-    if (!scope.composing && scope.input.value !== state.request.query) scope.input.value = state.request.query;
+    this.#projectQuery(scope, state.request.query);
     this.setInputAttributes(); this.setPopupAttributes();
     for (const [id, element] of scope.rows) { if (this.#scope !== scope) return; this.#projectRow(scope, element, id); }
     if (this.#scope !== scope) return;
@@ -250,6 +270,7 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
   }
   #resume(): void { const scope = this.#scope; if (!scope) return; scope.active = true; this.#bind(); this.render(); scope.controller.activateSearch(); }
   #unbind(scope: Presentation<ID>): void {
+    this.#nativeGeneration++; scope.nativeQuery = undefined;
     scope.input.removeEventListener('keydown', this.#keydown); scope.input.removeEventListener('input', this.#input);
     scope.input.removeEventListener('compositionstart', this.#compositionStart); scope.input.removeEventListener('compositionend', this.#compositionEnd);
     scope.popup.removeEventListener('keydown', this.#keydown); scope.popup.removeEventListener('click', this.#click); scope.popup.removeEventListener('pointerdown', this.#pointerdown);

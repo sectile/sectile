@@ -16,7 +16,7 @@ const parts = () => [h(Input), h(Content, null, { default: rows })];
 const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
 const row = (host, id) => host.querySelector(`[data-sectile-tree-select-item="${id}"]`);
 const click = node => node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-function mount(render) { const host = document.createElement('div'); document.body.append(host); const app = createApp({ render }); app.mount(host); return { host, close() { app.unmount(); host.remove(); } }; }
+function mount(render) { const host = document.createElement('div'); document.body.append(host); const app = createApp({ render }); app.mount(host); return { host, app, close() { app.unmount(); host.remove(); } }; }
 
 test('TreeSelect SSR projects initial hierarchy and selected form IDs without running search transport', async () => {
   let searched = 0;
@@ -59,6 +59,24 @@ test('TreeSelect controlled queries only search on acceptance and stale response
     assert.equal(document.activeElement, input, 'async results never focus a popup row');
   } finally { mounted.close(); }
 });
+test('TreeSelect settles native controlled query proposals with only the final accepted correction', async () => {
+  for (const accept of ['accept','refuse','transform']) {
+    const query=shallowRef(''), proposals=[];
+    const mounted=mount(()=>h(Root,{nodes,query:query.value,position:false,'onUpdate:query':next=>{
+      proposals.push(next); if(accept!=='refuse') query.value=accept==='transform'?next.toUpperCase():next;
+    }},{default:parts}));
+    try {
+      await drain(); const input=mounted.host.querySelector('input'), writes=[];
+      const property=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+      Object.defineProperty(input,'value',{get(){return property.get.call(this);},set(value){writes.push(value);property.set.call(this,value);}});
+      input.value='abc';writes.length=0;input.dispatchEvent(new Event('input',{bubbles:true}));
+      assert.deepEqual(writes,[]);await drain();
+      assert.deepEqual(proposals,['abc']);assert.deepEqual(writes,accept==='accept'?[]:[accept==='refuse'?'':'ABC']);
+      assert.equal(input.value,query.value);
+    } finally {mounted.close();}
+  }
+});
+
 test('TreeSelect keeps a live IME composition through unrelated Vue updates and emits one committed query', async () => {
   const title = shallowRef('first'), searches = [];
   const mounted = mount(() => h(Root, { nodes, title: title.value, position: false, onSearch: request => searches.push(request) }, { default: parts }));
@@ -68,6 +86,35 @@ test('TreeSelect keeps a live IME composition through unrelated Vue updates and 
     input.dispatchEvent(new Event('compositionend', { bubbles: true })); input.dispatchEvent(new Event('input', { bubbles: true })); await drain();
     assert.equal(searches.length, 1); assert.equal(searches[0].query, '가');
   } finally { mounted.close(); }
+});
+test('TreeSelect defers source replacement until native composition commits on the same input', async () => {
+  const domain=shallowRef(nodes), query=shallowRef(''), proposals=[];
+  const mounted=mount(()=>h(Root,{nodes:domain.value,query:query.value,position:false,'onUpdate:query':next=>{proposals.push(next);query.value=next;}},{default:parts}));
+  const errors=[];mounted.app.config.errorHandler=error=>errors.push(error);
+  try {
+    await drain();const input=mounted.host.querySelector('input'),writes=[];
+    const property=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value');
+    Object.defineProperty(input,'value',{get(){return property.get.call(this);},set(value){writes.push(value);property.set.call(this,value);}});
+    input.focus();input.dispatchEvent(new Event('compositionstart',{bubbles:true}));input.value='한글';writes.length=0;
+    input.dispatchEvent(new Event('input',{bubbles:true}));domain.value=[...nodes,{id:'extra',parentID:null}];await drain();
+    assert.equal(mounted.host.querySelector('input'),input);assert.equal(input.value,'한글');assert.deepEqual(writes,[]);assert.deepEqual(proposals,[]);
+    input.dispatchEvent(new Event('compositionend',{bubbles:true}));input.dispatchEvent(new Event('input',{bubbles:true}));
+    await drain();await new Promise(resolve=>setTimeout(resolve,0));await drain();
+    assert.equal(mounted.host.querySelector('input'),input);assert.equal(document.activeElement,input);assert.equal(query.value,'한글');assert.deepEqual(proposals,['한글']);assert.deepEqual(writes,[]);
+    input.dispatchEvent(new Event('compositionstart',{bubbles:true}));input.value='한글다';writes.length=0;
+    input.dispatchEvent(new Event('input',{bubbles:true}));domain.value=[{id:'orphan',parentID:'missing'}];await drain();assert.deepEqual(errors,[]);
+    input.dispatchEvent(new Event('compositionend',{bubbles:true}));await drain();await new Promise(resolve=>setTimeout(resolve,0));await drain();
+    assert.equal(errors.length,1);assert.equal(input.value,'한글다');assert.equal(query.value,'한글다');assert.deepEqual(writes,[]);
+    domain.value=nodes;await drain();assert.equal(mounted.host.querySelector('input'),input);assert.equal(input.value,'한글다');
+    input.dispatchEvent(new Event('compositionstart',{bubbles:true}));domain.value=[...nodes];await drain();
+    const originalSet=globalThis.setTimeout,originalClear=globalThis.clearTimeout,timers=new Set();
+    globalThis.setTimeout=(...args)=>{const timer=originalSet(...args);timers.add(timer);return timer;};
+    globalThis.clearTimeout=timer=>{timers.delete(timer);originalClear(timer);};
+    try {
+      input.dispatchEvent(new Event('compositionend',{bubbles:true}));assert.equal(timers.size,1);
+      mounted.app.unmount();assert.equal(timers.size,0);await Promise.resolve();assert.deepEqual(writes,[]);
+    } finally {globalThis.setTimeout=originalSet;globalThis.clearTimeout=originalClear;}
+  } finally {if(mounted.host.hasChildNodes())mounted.app.unmount();mounted.host.remove();}
 });
 test('TreeSelect source replacement invalidates old requests without rebuilding on query results or Host suspension', async () => {
   const domain = shallowRef(nodes), active = shallowRef(true), contentKey = shallowRef(0), root = shallowRef(), requests = [];

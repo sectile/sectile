@@ -133,15 +133,17 @@ test('TreeSelect DOM facade projects a hierarchical editable popup and accepts s
   assert.equal(connection.getActive(), false); connection.disconnect();
   assert.equal(tryCreateTreeSelect({ nodes: [{ id: 'a', parentID: 'missing' }], input, popup }).ok, false);
 });
-test('TreeSelect input commits IME queries once and stale responses cannot change active descendants', () => {
+test('TreeSelect input commits IME queries once and stale responses cannot change active descendants', async () => {
   const input = new Element(), popup = new Element(), searches = []; popup.id = 'search';
   const connection = createTreeSelect({ nodes: [{ id: 'root', parentID: null }, { id: 'a', parentID: 'root' }], input, popup,
     position: false, onSearch: request => searches.push(request) });
-  const a = new Element(); connection.setItemAttributes(a, { id: 'a' });
+  const a = new Element(); let projections = 0; const project = a.setAttribute.bind(a);
+  a.setAttribute = (...args) => { projections++; project(...args); }; connection.setItemAttributes(a, { id: 'a' });
   input.emit('compositionstart'); input.value = '가'; input.emit('input'); assert.equal(searches.length, 0);
   input.emit('compositionend'); input.emit('input'); assert.equal(searches.length, 1);
   assert.equal(popup.getAttribute('aria-busy'), 'true'); assert.equal(input.getAttribute('aria-activedescendant'), null);
   input.value = '나'; input.emit('input'); assert.equal(searches.length, 2);
+  const projected = projections; await Promise.resolve(); assert.equal(projections, projected, 'native query settlement does not revisit mounted rows');
   assert.equal(connection.resolveSearch(searches[0], ['a']), false); assert.equal(input.getAttribute('aria-activedescendant'), null);
   assert.equal(connection.resolveSearch(searches[1], ['a']), true); assert.equal(popup.getAttribute('aria-busy'), 'false');
   assert.equal(connection.handleEvent({ type: 'focus', id: 'a' }), true); assert.equal(input.getAttribute('aria-activedescendant'), a.id);
@@ -178,11 +180,13 @@ test('held destroyed facades and detached borrowed connections release their pla
 function detachedDOM() {
   const input = new Element(), popup = new Element(), payload = { updates: 0 };
   const connection = createTreeSelect({ nodes: [{ id: 'a', parentID: null }], input, popup, position: false, onUpdate() { payload.updates++; } });
+  input.value = 'query'; input.emit('input');
   return { connection, retire: connection.destroy, input: new WeakRef(input), popup: new WeakRef(popup), payload: new WeakRef(payload), listener: [...input.listeners.get('input')][0], render: connection.render };
 }
 function detachedBorrowedDOM() {
   const input = new Element(), popup = new Element(), payload = { updates: 0 };
   const connection = connectTreeSelect({ controller: controller(), input, popup, position: false, onUpdate() { payload.updates++; } });
+  input.value = 'query'; input.emit('input');
   return { connection, retire: connection.disconnect.bind(connection), input: new WeakRef(input), popup: new WeakRef(popup), payload: new WeakRef(payload), listener: [...input.listeners.get('input')][0], render: connection.render.bind(connection) };
 }
 class Element {

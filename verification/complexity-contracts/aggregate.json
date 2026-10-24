@@ -33766,7 +33766,7 @@
           "retained": "O(n + r + s + q + m)"
         },
         "resources": {
-          "allocations": "O(m)",
+          "allocations": "O(m + q)",
           "cacheEntries": "O(m)",
           "listeners": "7 native plus 2 existing layer document listeners",
           "observers": "delegated to existing position owner",
@@ -33788,7 +33788,7 @@
           "emitted and retained entries do not exceed the declared output cardinality"
         ],
         "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
-        "proof": "One map retains at most one mounted row per source identity. Registration/release has expected constant index work and projects one row. Explicit render visits exactly registered rows and projects canonical Core depth/selection/expansion; no source traversal or portable reducer exists here. Layer, visibility and position resources reuse their existing owners. Disconnect clears the scope before draining all cleanup; only portable source/last snapshot survive. Native hooks and platform references are collectible with facade and saved methods held. Facade destroy separately retires its shared subscriber/application-update scope.",
+        "proof": "One map retains at most one mounted row per source identity. Registration/release has expected constant index work and projects one row. Explicit render visits exactly registered rows and projects canonical Core depth/selection/expansion; no source traversal or portable reducer exists here. Layer, visibility and position resources reuse their existing owners. Disconnect clears the scope before draining all cleanup; only portable source/last snapshot survive. Native hooks and platform references are collectible with facade and saved methods held. Facade destroy separately retires its shared subscriber/application-update scope. Native observation defers only value correction through one coalesced generation-guarded microtask and one pending query string. Settlement compares the accepted query in O(q), without revisiting mounted rows or repeating layout work; unbind invalidates the pending correction. Native string materialization is conservatively included in allocation cost.",
         "adversarialWitness": "Initial request activates once over detach/reattach and suspension. IME query commits, stale responses, source-branch refusal, mounted active descendant release, failed initial transport cleanup and held-handle GC.",
         "evidence": [
           "packages/dom/tests/tree-select.test.mjs",
