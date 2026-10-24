@@ -7,6 +7,16 @@ func sourceID(_ source: TISInputSource) -> String {
     return Unmanaged<CFString>.fromOpaque(pointer).takeUnretainedValue() as String
 }
 
+func textProperty(_ source: TISInputSource, _ key: CFString) -> String? {
+    guard let pointer = TISGetInputSourceProperty(source, key) else { return nil }
+    return Unmanaged<CFString>.fromOpaque(pointer).takeUnretainedValue() as String
+}
+
+func flag(_ source: TISInputSource, _ key: CFString) -> Bool {
+    guard let pointer = TISGetInputSourceProperty(source, key) else { return false }
+    return CFBooleanGetValue(Unmanaged<CFBoolean>.fromOpaque(pointer).takeUnretainedValue())
+}
+
 let previous = TISCopyCurrentKeyboardInputSource().takeRetainedValue()
 let sources = TISCreateInputSourceList(nil, true).takeRetainedValue() as! [TISInputSource]
 let requested = CommandLine.arguments.dropFirst().first
@@ -14,9 +24,22 @@ guard let selected = sources.first(where: { requested == nil ? sourceID($0).cont
     fputs("Required input source unavailable: \(requested ?? "Korean two-set"). Installed: \(sources.map(sourceID))\n", stderr)
     exit(1)
 }
-guard TISEnableInputSource(selected) == noErr, TISSelectInputSource(selected) == noErr else {
-    fputs("Cannot enable/select the native keyboard input source\n", stderr)
+// Input modes depend on their parent input method being enabled first.
+if textProperty(selected, kTISPropertyInputSourceType) == (kTISTypeKeyboardInputMode as String),
+   let bundle = textProperty(selected, kTISPropertyBundleID),
+   let method = sources.first(where: {
+       textProperty($0, kTISPropertyBundleID) == bundle &&
+       textProperty($0, kTISPropertyInputSourceType) == (kTISTypeKeyboardInputMethod as String)
+   }) {
+    let status = TISEnableInputSource(method)
+    fputs("Parent input method \(sourceID(method)): enable=\(status)\n", stderr)
+}
+let enableStatus = flag(selected, kTISPropertyInputSourceIsEnableCapable) ? TISEnableInputSource(selected) : noErr
+let selectStatus = TISSelectInputSource(selected)
+guard enableStatus == noErr, selectStatus == noErr else {
+    fputs("Cannot enable/select \(sourceID(selected)): enable=\(enableStatus), select=\(selectStatus), enabled=\(flag(selected, kTISPropertyInputSourceIsEnabled)), selectable=\(flag(selected, kTISPropertyInputSourceIsSelectCapable))\n", stderr)
     exit(1)
 }
+RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.3))
 let result = ["selected": sourceID(selected), "previous": sourceID(previous)]
 print(String(data: try JSONSerialization.data(withJSONObject: result), encoding: .utf8)!)
