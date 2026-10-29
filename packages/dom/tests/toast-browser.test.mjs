@@ -37,6 +37,70 @@ test('toast supports localized controls, viewport hotkey, window pause, and Esca
   toast.disconnect();
 });
 
+test('toast ignores non-string keys outside its viewport and accepts the next shortcut', () => {
+  for (const initialToasts of [[], [{ id: 'saved', title: 'Saved', durationMs: null }]]) {
+    const window = new Window(), document = window.document;
+    const input = document.createElement('input'), viewport = document.createElement('ol');
+    document.body.append(input, viewport);
+    const errors = [];
+    window.addEventListener('error', event => { errors.push(event.message); event.preventDefault(); });
+    const toast = createToast({ root: viewport, initialToasts, autoDismiss: false });
+    try {
+      input.focus();
+      const before = toast.getSnapshot();
+      const ignored = event => {
+        input.dispatchEvent(event);
+        assert.deepEqual(errors, []);
+        assert.equal(event.defaultPrevented, false);
+        assert.equal(document.activeElement, input);
+        assert.equal(toast.getSnapshot(), before);
+      };
+      for (const key of [undefined, null, 42]) {
+        const event = new window.KeyboardEvent('keydown', { bubbles: true, cancelable: true });
+        Object.defineProperty(event, 'key', { value: key });
+        ignored(event);
+      }
+      ignored(new window.KeyboardEvent('keydown', { bubbles: true, cancelable: true }));
+      const shortcut = new window.KeyboardEvent('keydown', { key: 'F8', bubbles: true, cancelable: true });
+      input.dispatchEvent(shortcut);
+      assert.equal(shortcut.defaultPrevented, true);
+      assert.equal(document.activeElement, viewport);
+    } finally { toast.disconnect(); }
+  }
+});
+
+test('toast preserves exact shortcut modifiers and independent Escape configuration', () => {
+  const window = new Window(), document = window.document;
+  const input = document.createElement('input'), viewport = document.createElement('ol');
+  document.body.append(input, viewport);
+  const toast = createToast({ root: viewport, autoDismiss: false, hotkey: ['Control', 'Shift', 'K'],
+    dismissOnEscape: false, initialToasts: [{ id: 'saved', title: 'Saved', durationMs: null }] });
+  const send = (target, key, modifiers = {}) => {
+    const event = new window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...modifiers });
+    target.dispatchEvent(event); return event;
+  };
+  try {
+    input.focus();
+    assert.equal(send(input, 'k', { ctrlKey: true }).defaultPrevented, false);
+    assert.equal(send(input, 'k', { ctrlKey: true, shiftKey: true, altKey: true }).defaultPrevented, false);
+    assert.equal(document.activeElement, input);
+    assert.equal(send(input, 'k', { ctrlKey: true, shiftKey: true }).defaultPrevented, true);
+    assert.equal(document.activeElement, viewport);
+    assert.equal(send(viewport, 'Escape').defaultPrevented, false);
+    assert.equal(toast.getSnapshot().state.items.length, 1);
+    for (const hotkey of [false, []]) {
+      assert.equal(toast.syncConfiguration({ hotkey }).ok, true);
+      input.focus();
+      assert.equal(send(input, 'F8').defaultPrevented, false);
+      assert.equal(document.activeElement, input);
+    }
+    assert.equal(toast.syncConfiguration({ hotkey: false, dismissOnEscape: true }).ok, true);
+    viewport.focus();
+    assert.equal(send(viewport, 'Escape').defaultPrevented, true);
+    assert.equal(toast.getSnapshot().state.items.length, 0);
+  } finally { toast.disconnect(); }
+});
+
 test('toast visibility ownership restores exact item baseline and opt-out leaves consumer state alone', () => {
   const window = new Window();
   const document = window.document;
