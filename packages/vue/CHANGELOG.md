@@ -1,5 +1,11 @@
 # @sectile/vue
 
+## 0.20.1
+
+### Changes
+
+- test(vue): cover keyless toast events in packed browser verification (2b4093cd3)
+
 ## 0.20.0
 
 ### Changes

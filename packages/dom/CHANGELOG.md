@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.20.1
+
+### Changes
+
+- fix(dom): ignore non-string keys in toast shortcuts (162c4a8ed)
+
 ## 0.20.0
 
 ### Changes
