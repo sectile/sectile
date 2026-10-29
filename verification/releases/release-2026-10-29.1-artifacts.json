@@ -1,0 +1,2980 @@
+{
+  "verifiedAt": "2026-10-29T03:45:06.470Z",
+  "source": {
+    "repository": "sectile/sectile",
+    "commit": "c2e852206eabca7263c9e5edf325a2b15256704c"
+  },
+  "packages": [
+    {
+      "name": "@sectile/core",
+      "version": "0.16.0",
+      "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e",
+      "integrity": "sha512-nU7YlyB0UC4aZZZyn/+ioQ18x2vtK+jVm11b6OC4eIVMA5upRbz3Sdkx1PictnfkkzE1oj3qb9KFwW6f3TV3/A==",
+      "registry": "https://registry.npmjs.org/@sectile/core/-/core-0.16.0.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/chart",
+      "version": "0.16.1",
+      "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911",
+      "integrity": "sha512-che+WTAFi7OREKkv1eQVhTJxl06NKU1nkkMK6ITuZajOJuruYW1eAZ1OOmyKihe9h3g1e5YT4gaSjJbLegfkXg==",
+      "registry": "https://registry.npmjs.org/@sectile/chart/-/chart-0.16.1.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/form",
+      "version": "0.15.2",
+      "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b",
+      "integrity": "sha512-WL9oTPpEdR7q+ghouT42TKhBLMwaqPHmu2NEFyyJNoEYTIirl+fC3SAp25qQrOAInWtBMN8fnaB7OLbGZphUIA==",
+      "registry": "https://registry.npmjs.org/@sectile/form/-/form-0.15.2.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/tabular",
+      "version": "0.17.1",
+      "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6",
+      "integrity": "sha512-EOllUch6nZeAFb1OybA3uWQXGbDLWzaQCwrXfu4jZ7XtKvFlgrHTuVcXG7HrnJ4dK7IMEHw9CBYCHnz+/AUicg==",
+      "registry": "https://registry.npmjs.org/@sectile/tabular/-/tabular-0.17.1.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/temporal",
+      "version": "0.15.1",
+      "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266",
+      "integrity": "sha512-KqM3S/LjTZfm/t/+ckzi6eW7gASkpsktXIkwAhbfHVRNZl2H/Vp2uA3eOfI4T5RENkxnSLJe/MNa9K1M+5iZRw==",
+      "registry": "https://registry.npmjs.org/@sectile/temporal/-/temporal-0.15.1.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/virtual",
+      "version": "0.16.1",
+      "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069",
+      "integrity": "sha512-SZBfUk6lj1MVOJN+wXBHnKiBMw84spDgV6mU1tRVaoOiP5xXw955HglZqtievYEyChcOajsVB+aTZHMbY623Dw==",
+      "registry": "https://registry.npmjs.org/@sectile/virtual/-/virtual-0.16.1.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/dom",
+      "version": "0.20.1",
+      "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699",
+      "integrity": "sha512-Fa6MrgLMnd4cg1DXkM1cLhwkYJeSFqttYSXr9W/7k5vCSkrtp0eYH986r+K8AJ+NMAb8hY0s0FsLnqxITmlTzQ==",
+      "registry": "https://registry.npmjs.org/@sectile/dom/-/dom-0.20.1.tgz",
+      "latest": "0.20.1",
+      "sealed": true
+    },
+    {
+      "name": "@sectile/terminal",
+      "version": "0.15.1",
+      "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622",
+      "integrity": "sha512-yzdiRgtP7WlAbQRiMCZgGAhk781wYq6LpZjwSCm3nmyBZNh4dbvYPVBwkrbgCMnGYYXO573sSy6syGSWrFtE3Q==",
+      "registry": "https://registry.npmjs.org/@sectile/terminal/-/terminal-0.15.1.tgz",
+      "latest": null,
+      "sealed": false
+    },
+    {
+      "name": "@sectile/vue",
+      "version": "0.20.1",
+      "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0",
+      "integrity": "sha512-yeXF/mN8f1NE3kJ5JC5qCKj3SSuU0Wt4gy6btU+N5na6EcoG3/4U56Qe4jYkPbeUE266PdpmEApvLSNp3BZbWA==",
+      "registry": "https://registry.npmjs.org/@sectile/vue/-/vue-0.20.1.tgz",
+      "latest": "0.20.1",
+      "sealed": true
+    }
+  ],
+  "release": {
+    "id": 427440506,
+    "url": "https://github.com/sectile/sectile/releases/tag/release-2026-10-29.1",
+    "immutable": true,
+    "publishedAt": "2026-10-29T03:44:07Z",
+    "assets": [
+      {
+        "name": "artifacts.json",
+        "id": 687254212,
+        "digest": "sha256:1f3e18d9ecc291772e08bb12ee04679c3c87880510031d97ee701120a9224610",
+        "size": 611
+      },
+      {
+        "name": "npm-artifact-report.json",
+        "id": 687254384,
+        "digest": "sha256:e740fbd9ca507dcbbc20eae8db52faa1bf250f23cbab5d4dc8966007028a74c0",
+        "size": 3891
+      },
+      {
+        "name": "npm-diagnostics.json",
+        "id": 687254419,
+        "digest": "sha256:ab269948298a96a3db67e830a34e730d410efa5c0affddd853af6cd8a34c8f5d",
+        "size": 1726
+      },
+      {
+        "name": "npm-report.json",
+        "id": 687254468,
+        "digest": "sha256:52ee9f025071a9ff4ebe0b6b9aada4a6b79972b9c0d2b97a6f51ac24b94b9f00",
+        "size": 1585
+      },
+      {
+        "name": "release-notes-report.json",
+        "id": 687254257,
+        "digest": "sha256:d5786b5e1ff740c4af6655ee03767814a3d3319173dd407e2f6406e5d060f3cd",
+        "size": 4792
+      },
+      {
+        "name": "sectile-dom-0.20.1.tgz",
+        "id": 687254090,
+        "digest": "sha256:d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699",
+        "size": 499589
+      },
+      {
+        "name": "sectile-vue-0.20.1.tgz",
+        "id": 687254153,
+        "digest": "sha256:108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0",
+        "size": 448752
+      }
+    ]
+  },
+  "npm": {
+    "schema": 1,
+    "source": {
+      "repository": "sectile/sectile",
+      "commit": "c2e852206eabca7263c9e5edf325a2b15256704c"
+    },
+    "status": "success",
+    "stage": "complete",
+    "plan": [
+      {
+        "name": "@sectile/dom",
+        "version": "0.20.1",
+        "mode": "direct",
+        "integrity": "sha512-Fa6MrgLMnd4cg1DXkM1cLhwkYJeSFqttYSXr9W/7k5vCSkrtp0eYH986r+K8AJ+NMAb8hY0s0FsLnqxITmlTzQ=="
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.20.1",
+        "mode": "direct",
+        "integrity": "sha512-yeXF/mN8f1NE3kJ5JC5qCKj3SSuU0Wt4gy6btU+N5na6EcoG3/4U56Qe4jYkPbeUE266PdpmEApvLSNp3BZbWA=="
+      }
+    ],
+    "results": [
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.20.1",
+        "state": "published"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.20.1",
+        "state": "published"
+      }
+    ]
+  },
+  "registryBrowser": {
+    "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+    "nativeIME": false,
+    "status": "passed",
+    "results": [
+      {
+        "id": "native",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "native-textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-representation",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "number",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "quantity",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "picker",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tags",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "spin",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "editable",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "pin",
+        "history": "specialized per-cell admission; checked through native composition"
+      },
+      {
+        "id": "color",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "treegrid",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-editor",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-filter",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "toast-keyless",
+        "prevented": false,
+        "focused": "toast-input",
+        "queueUnchanged": true,
+        "count": 0,
+        "shortcut": "passed"
+      },
+      {
+        "initialFocus": "visible",
+        "placeholder": "Enter a number",
+        "spin": {
+          "errors": [],
+          "text": "0.16",
+          "focused": true
+        },
+        "rejected": {
+          "errors": [
+            "Spin button value must lie on the range lattice."
+          ],
+          "text": "0.16"
+        },
+        "keys": [
+          {
+            "scenario": "input",
+            "value": "a"
+          },
+          {
+            "scenario": "range",
+            "value": "a"
+          },
+          {
+            "scenario": "alt",
+            "value": "a"
+          },
+          {
+            "scenario": "prevented",
+            "value": "a"
+          },
+          {
+            "scenario": "root",
+            "value": "b"
+          }
+        ]
+      },
+      {
+        "portal": false,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": false,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": false,
+        "restored": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": true,
+        "restored": true
+      },
+      {
+        "media": {
+          "activations": 2,
+          "ordinary": 1,
+          "starts": 1,
+          "moves": 3,
+          "ends": [
+            "complete"
+          ]
+        }
+      },
+      {
+        "reorderPreview": "passed"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.20.1",
+        "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.20.1",
+        "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+      }
+    ],
+    "shard": [
+      1,
+      1
+    ],
+    "families": [
+      "native",
+      "native-textarea",
+      "text",
+      "combo",
+      "text-uncontrolled",
+      "textarea",
+      "text-representation",
+      "combo-uncontrolled",
+      "number",
+      "quantity",
+      "date",
+      "time",
+      "datetime",
+      "date-start",
+      "date-end",
+      "time-start",
+      "time-end",
+      "picker",
+      "tags",
+      "spin",
+      "editable",
+      "pin",
+      "color",
+      "treegrid",
+      "tabular-editor",
+      "tabular-filter",
+      "tree-select",
+      "tree-select-uncontrolled",
+      "datetime-start",
+      "datetime-end"
+    ]
+  },
+  "ciBrowser": {
+    "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+    "nativeIME": false,
+    "status": "passed",
+    "results": [
+      {
+        "id": "native",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "native-textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-representation",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "number",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "quantity",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "picker",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tags",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "spin",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "editable",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "pin",
+        "history": "specialized per-cell admission; checked through native composition"
+      },
+      {
+        "id": "color",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "treegrid",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-editor",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-filter",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "toast-keyless",
+        "prevented": false,
+        "focused": "toast-input",
+        "queueUnchanged": true,
+        "count": 0,
+        "shortcut": "passed"
+      },
+      {
+        "initialFocus": "visible",
+        "placeholder": "Enter a number",
+        "spin": {
+          "errors": [],
+          "text": "0.16",
+          "focused": true
+        },
+        "rejected": {
+          "errors": [
+            "Spin button value must lie on the range lattice."
+          ],
+          "text": "0.16"
+        },
+        "keys": [
+          {
+            "scenario": "input",
+            "value": "a"
+          },
+          {
+            "scenario": "range",
+            "value": "a"
+          },
+          {
+            "scenario": "alt",
+            "value": "a"
+          },
+          {
+            "scenario": "prevented",
+            "value": "a"
+          },
+          {
+            "scenario": "root",
+            "value": "b"
+          }
+        ]
+      },
+      {
+        "portal": false,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": false,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": false,
+        "restored": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": true,
+        "restored": true
+      },
+      {
+        "media": {
+          "activations": 2,
+          "ordinary": 1,
+          "starts": 1,
+          "moves": 3,
+          "ends": [
+            "complete"
+          ]
+        }
+      },
+      {
+        "reorderPreview": "passed"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.20.1",
+        "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.20.1",
+        "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+      }
+    ],
+    "shard": [
+      1,
+      1
+    ],
+    "families": [
+      "native",
+      "native-textarea",
+      "text",
+      "combo",
+      "text-uncontrolled",
+      "textarea",
+      "text-representation",
+      "combo-uncontrolled",
+      "number",
+      "quantity",
+      "date",
+      "time",
+      "datetime",
+      "date-start",
+      "date-end",
+      "time-start",
+      "time-end",
+      "picker",
+      "tags",
+      "spin",
+      "editable",
+      "pin",
+      "color",
+      "treegrid",
+      "tabular-editor",
+      "tabular-filter",
+      "tree-select",
+      "tree-select-uncontrolled",
+      "datetime-start",
+      "datetime-end"
+    ]
+  },
+  "environment": {
+    "node": "v24.22.0",
+    "chromium": "153.0.8010.12",
+    "os": "linux",
+    "arch": "x64"
+  },
+  "qualification": {
+    "source": "2b4093cd369dd995a03853fa47efda9bc4cf167c",
+    "policy": "2b4093cd369dd995a03853fa47efda9bc4cf167c",
+    "performanceComparison": "../performance/release-2026-10-29-comparison.json",
+    "baselineUnchanged": true,
+    "regressions": 0
+  },
+  "sourceCI": {
+    "run": 40813196545,
+    "url": "https://github.com/sectile/sectile/actions/runs/40813196545",
+    "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+    "lanes": [
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "1",
+        "results": [
+          {
+            "id": "package:vue",
+            "status": "passed",
+            "seconds": 33.708312985
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "2",
+        "results": [
+          {
+            "id": "tooling:scripts/package-structure.test.mjs",
+            "status": "passed",
+            "seconds": 34.642147436
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "3",
+        "results": [
+          {
+            "id": "package-structure",
+            "status": "passed",
+            "seconds": 10.349838787000001
+          },
+          {
+            "id": "tooling:scripts/release-worktree.test.mjs",
+            "status": "passed",
+            "seconds": 0.5050797149999998
+          },
+          {
+            "id": "tooling:scripts/virtual-benchmark/merge-shards.test.mjs",
+            "status": "passed",
+            "seconds": 0.14631372199999895
+          },
+          {
+            "id": "tooling:scripts/public-change-wiring.test.mjs",
+            "status": "passed",
+            "seconds": 0.12551237199999923
+          },
+          {
+            "id": "tooling:scripts/release-artifacts.test.mjs",
+            "status": "passed",
+            "seconds": 0.08502621299999918
+          },
+          {
+            "id": "tooling:scripts/portable-process.test.mjs",
+            "status": "passed",
+            "seconds": 0.07600500500000089
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "4",
+        "results": [
+          {
+            "id": "package:dom",
+            "status": "passed",
+            "seconds": 10.37214376
+          },
+          {
+            "id": "public-signatures",
+            "status": "passed",
+            "seconds": 0.4583605640000005
+          },
+          {
+            "id": "tooling:scripts/consumer-install.test.mjs",
+            "status": "passed",
+            "seconds": 0.16852424600000085
+          },
+          {
+            "id": "tooling:scripts/release.test.mjs",
+            "status": "passed",
+            "seconds": 0.08617800700000043
+          },
+          {
+            "id": "tooling:scripts/verification-runner.test.mjs",
+            "status": "passed",
+            "seconds": 0.07586510799999996
+          },
+          {
+            "id": "tooling:scripts/entrypoint-migrations.test.mjs",
+            "status": "passed",
+            "seconds": 0.06951235400000041
+          },
+          {
+            "id": "tooling:scripts/virtual-benchmark/source-metadata.test.mjs",
+            "status": "passed",
+            "seconds": 0.07473047600000063
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "5",
+        "results": [
+          {
+            "id": "reproducible-builds",
+            "status": "passed",
+            "seconds": 5.589355274000001
+          },
+          {
+            "id": "tooling:scripts/packed-package-contract.test.mjs",
+            "status": "passed",
+            "seconds": 0.9624420180000006
+          },
+          {
+            "id": "consumer-bundles:vue",
+            "status": "passed",
+            "seconds": 23.450218515
+          },
+          {
+            "id": "workspace-boundaries",
+            "status": "passed",
+            "seconds": 0.8411317960000015
+          },
+          {
+            "id": "tooling:scripts/verification-plan.test.mjs",
+            "status": "passed",
+            "seconds": 0.7456075369999998
+          },
+          {
+            "id": "tooling:scripts/complexity-witnesses.test.mjs",
+            "status": "passed",
+            "seconds": 0.8682301290000032
+          },
+          {
+            "id": "tooling:scripts/virtual-benchmark/committed-results.test.mjs",
+            "status": "passed",
+            "seconds": 0.2709311510000043
+          },
+          {
+            "id": "tooling:scripts/representation-crossovers.test.mjs",
+            "status": "passed",
+            "seconds": 0.12982333700000162
+          },
+          {
+            "id": "tooling:scripts/public-change-gates.test.mjs",
+            "status": "passed",
+            "seconds": 0.09562941699999647
+          },
+          {
+            "id": "tooling:scripts/compact-process.test.mjs",
+            "status": "passed",
+            "seconds": 0.08939434800000162
+          },
+          {
+            "id": "tooling:scripts/virtual-benchmark/result-normalization.test.mjs",
+            "status": "passed",
+            "seconds": 0.09003834899999492
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "lane": "6",
+        "results": [
+          {
+            "id": "tooling:scripts/artifact-contract.test.mjs",
+            "status": "passed",
+            "seconds": 2.834075187
+          },
+          {
+            "id": "tooling:scripts/performance-gates.test.mjs",
+            "status": "passed",
+            "seconds": 1.7991462350000003
+          },
+          {
+            "id": "tooling:scripts/artifact-session.test.mjs",
+            "status": "passed",
+            "seconds": 1.6137949829999998
+          },
+          {
+            "id": "tooling:scripts/release-plan.test.mjs",
+            "status": "passed",
+            "seconds": 1.2935785029999998
+          },
+          {
+            "id": "tooling:scripts/consumer-bundles.test.mjs",
+            "status": "passed",
+            "seconds": 1.1328334920000007
+          },
+          {
+            "id": "tooling:scripts/performance.test.mjs",
+            "status": "passed",
+            "seconds": 0.8826628819999988
+          },
+          {
+            "id": "consumer-bundles:dom",
+            "status": "passed",
+            "seconds": 13.34761282
+          },
+          {
+            "id": "tooling:scripts/core-module-dag.test.mjs",
+            "status": "passed",
+            "seconds": 0.6384520800000028
+          },
+          {
+            "id": "entrypoint-migrations",
+            "status": "passed",
+            "seconds": 0.6625374169999996
+          },
+          {
+            "id": "tooling:scripts/source-map-policy.test.mjs",
+            "status": "passed",
+            "seconds": 0.15611605699999928
+          },
+          {
+            "id": "tooling:scripts/algorithm-reuse.test.mjs",
+            "status": "passed",
+            "seconds": 0.3835598229999996
+          },
+          {
+            "id": "tooling:scripts/check-component-completeness.test.mjs",
+            "status": "passed",
+            "seconds": 0.13111427499999992
+          },
+          {
+            "id": "tooling:scripts/complexity-contracts.test.mjs",
+            "status": "passed",
+            "seconds": 0.09337288099999932
+          },
+          {
+            "id": "tooling:scripts/npm-publish-auth.test.mjs",
+            "status": "passed",
+            "seconds": 0.10900150700000086
+          },
+          {
+            "id": "tooling:scripts/component-public-api.test.mjs",
+            "status": "passed",
+            "seconds": 0.09160218800000075
+          }
+        ]
+      }
+    ],
+    "native": [
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "nativeIME": true,
+        "status": "passed",
+        "results": [
+          {
+            "id": "native",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native-textarea",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "text-uncontrolled",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "number",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "datetime",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "time-end",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "editable",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "tabular-editor",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "datetime-start",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native",
+            "family": "native",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-textarea",
+            "family": "native-textarea",
+            "reference": false,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "text-uncontrolled",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "text-uncontrolled",
+            "family": "text-uncontrolled",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "number",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "number",
+            "family": "number",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "datetime",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "datetime",
+            "family": "datetime",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "time-end",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "time-end",
+            "family": "time-end",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "editable",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "editable",
+            "family": "editable",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "tabular-editor",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "tabular-editor",
+            "family": "tabular-editor",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "datetime-start",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "datetime-start",
+            "family": "datetime-start",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          }
+        ],
+        "artifacts": [
+          {
+            "name": "@sectile/core",
+            "version": "0.16.0",
+            "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+          },
+          {
+            "name": "@sectile/chart",
+            "version": "0.16.1",
+            "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+          },
+          {
+            "name": "@sectile/form",
+            "version": "0.15.2",
+            "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+          },
+          {
+            "name": "@sectile/tabular",
+            "version": "0.17.1",
+            "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+          },
+          {
+            "name": "@sectile/temporal",
+            "version": "0.15.1",
+            "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+          },
+          {
+            "name": "@sectile/virtual",
+            "version": "0.16.1",
+            "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+          },
+          {
+            "name": "@sectile/dom",
+            "version": "0.20.1",
+            "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+          },
+          {
+            "name": "@sectile/terminal",
+            "version": "0.15.1",
+            "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+          },
+          {
+            "name": "@sectile/vue",
+            "version": "0.20.1",
+            "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+          }
+        ],
+        "shard": [
+          1,
+          4
+        ],
+        "families": [
+          "native",
+          "text-uncontrolled",
+          "number",
+          "datetime",
+          "time-end",
+          "editable",
+          "tabular-editor",
+          "datetime-start"
+        ],
+        "current": {
+          "family": "datetime-start",
+          "reference": false
+        },
+        "imeWarmup": "하ㄴ",
+        "sources": [
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "nativeIME": true,
+        "status": "passed",
+        "results": [
+          {
+            "id": "native",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native-textarea",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "textarea",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "quantity",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "date-start",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "picker",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "pin",
+            "history": "specialized per-cell admission; checked through native composition"
+          },
+          {
+            "id": "tabular-filter",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "datetime-end",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native",
+            "family": "native",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-textarea",
+            "family": "native-textarea",
+            "reference": false,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "textarea",
+            "reference": true,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "textarea",
+            "family": "textarea",
+            "reference": false,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "quantity",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "quantity",
+            "family": "quantity",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "date-start",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "date-start",
+            "family": "date-start",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "picker",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "picker",
+            "family": "picker",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "pin",
+            "reference": true,
+            "text": "한",
+            "compositionStarts": 1,
+            "compositionEnds": 1,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "pin",
+            "family": "pin",
+            "reference": false,
+            "text": "한",
+            "compositionStarts": 1,
+            "compositionEnds": 1,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "tabular-filter",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "tabular-filter",
+            "family": "tabular-filter",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "datetime-end",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "datetime-end",
+            "family": "datetime-end",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          }
+        ],
+        "artifacts": [
+          {
+            "name": "@sectile/core",
+            "version": "0.16.0",
+            "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+          },
+          {
+            "name": "@sectile/chart",
+            "version": "0.16.1",
+            "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+          },
+          {
+            "name": "@sectile/form",
+            "version": "0.15.2",
+            "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+          },
+          {
+            "name": "@sectile/tabular",
+            "version": "0.17.1",
+            "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+          },
+          {
+            "name": "@sectile/temporal",
+            "version": "0.15.1",
+            "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+          },
+          {
+            "name": "@sectile/virtual",
+            "version": "0.16.1",
+            "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+          },
+          {
+            "name": "@sectile/dom",
+            "version": "0.20.1",
+            "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+          },
+          {
+            "name": "@sectile/terminal",
+            "version": "0.15.1",
+            "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+          },
+          {
+            "name": "@sectile/vue",
+            "version": "0.20.1",
+            "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+          }
+        ],
+        "shard": [
+          2,
+          4
+        ],
+        "families": [
+          "native-textarea",
+          "textarea",
+          "quantity",
+          "date-start",
+          "picker",
+          "pin",
+          "tabular-filter",
+          "datetime-end"
+        ],
+        "current": {
+          "family": "datetime-end",
+          "reference": false
+        },
+        "imeWarmup": "하ㄴ",
+        "sources": [
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "nativeIME": true,
+        "status": "passed",
+        "results": [
+          {
+            "id": "native",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native-textarea",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "text",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "text-representation",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "date",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "date-end",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "tags",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "color",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "tree-select",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native",
+            "family": "native",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-textarea",
+            "family": "native-textarea",
+            "reference": false,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "text",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "text",
+            "family": "text",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "text-representation",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "text-representation",
+            "family": "text-representation",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "date",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "date",
+            "family": "date",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "date-end",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "date-end",
+            "family": "date-end",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "family": "tags",
+            "reference": true,
+            "continuation": "native-output-preserved",
+            "requested": "한글한",
+            "observed": "한글한"
+          },
+          {
+            "id": "native-reference",
+            "family": "tags",
+            "reference": true,
+            "text": "한글한",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "family": "tags",
+            "reference": false,
+            "continuation": "native-output-preserved",
+            "requested": "한글한",
+            "observed": "한글한"
+          },
+          {
+            "id": "tags",
+            "family": "tags",
+            "reference": false,
+            "text": "",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "color",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "color",
+            "family": "color",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "tree-select",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "tree-select",
+            "family": "tree-select",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          }
+        ],
+        "artifacts": [
+          {
+            "name": "@sectile/core",
+            "version": "0.16.0",
+            "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+          },
+          {
+            "name": "@sectile/chart",
+            "version": "0.16.1",
+            "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+          },
+          {
+            "name": "@sectile/form",
+            "version": "0.15.2",
+            "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+          },
+          {
+            "name": "@sectile/tabular",
+            "version": "0.17.1",
+            "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+          },
+          {
+            "name": "@sectile/temporal",
+            "version": "0.15.1",
+            "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+          },
+          {
+            "name": "@sectile/virtual",
+            "version": "0.16.1",
+            "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+          },
+          {
+            "name": "@sectile/dom",
+            "version": "0.20.1",
+            "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+          },
+          {
+            "name": "@sectile/terminal",
+            "version": "0.15.1",
+            "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+          },
+          {
+            "name": "@sectile/vue",
+            "version": "0.20.1",
+            "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+          }
+        ],
+        "shard": [
+          3,
+          4
+        ],
+        "families": [
+          "text",
+          "text-representation",
+          "date",
+          "date-end",
+          "tags",
+          "color",
+          "tree-select"
+        ],
+        "current": {
+          "family": "tree-select",
+          "reference": false
+        },
+        "imeWarmup": "하ㄴ",
+        "sources": [
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          }
+        ]
+      },
+      {
+        "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+        "nativeIME": true,
+        "status": "passed",
+        "results": [
+          {
+            "id": "native",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native-textarea",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "combo",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "combo-uncontrolled",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "time",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "time-start",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "spin",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "treegrid",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "tree-select-uncontrolled",
+            "undoRedo": "passed"
+          },
+          {
+            "id": "native",
+            "family": "native",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-textarea",
+            "family": "native-textarea",
+            "reference": false,
+            "text": "한글\n",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "combo",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "combo",
+            "family": "combo",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "combo-uncontrolled",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "combo-uncontrolled",
+            "family": "combo-uncontrolled",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "time",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "time",
+            "family": "time",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "time-start",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "time-start",
+            "family": "time-start",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "spin",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "spin",
+            "family": "spin",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "treegrid",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "treegrid",
+            "family": "treegrid",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          },
+          {
+            "id": "native-reference",
+            "family": "tree-select-uncontrolled",
+            "reference": true,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": false
+          },
+          {
+            "id": "tree-select-uncontrolled",
+            "family": "tree-select-uncontrolled",
+            "reference": false,
+            "text": "한글",
+            "compositionStarts": 2,
+            "compositionEnds": 2,
+            "frameworkWrites": 0,
+            "reconfigured": true
+          }
+        ],
+        "artifacts": [
+          {
+            "name": "@sectile/core",
+            "version": "0.16.0",
+            "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+          },
+          {
+            "name": "@sectile/chart",
+            "version": "0.16.1",
+            "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+          },
+          {
+            "name": "@sectile/form",
+            "version": "0.15.2",
+            "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+          },
+          {
+            "name": "@sectile/tabular",
+            "version": "0.17.1",
+            "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+          },
+          {
+            "name": "@sectile/temporal",
+            "version": "0.15.1",
+            "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+          },
+          {
+            "name": "@sectile/virtual",
+            "version": "0.16.1",
+            "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+          },
+          {
+            "name": "@sectile/dom",
+            "version": "0.20.1",
+            "sha256": "d6413e51329598b2940e11a3524a026eac53addece758174a8c97a9f05239699"
+          },
+          {
+            "name": "@sectile/terminal",
+            "version": "0.15.1",
+            "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+          },
+          {
+            "name": "@sectile/vue",
+            "version": "0.20.1",
+            "sha256": "108b3ba8fb65383452b1d07e4311b9d3d45d7734a6b1b6dd622ace322cf9ffe0"
+          }
+        ],
+        "shard": [
+          4,
+          4
+        ],
+        "families": [
+          "combo",
+          "combo-uncontrolled",
+          "time",
+          "time-start",
+          "spin",
+          "treegrid",
+          "tree-select-uncontrolled"
+        ],
+        "current": {
+          "family": "tree-select-uncontrolled",
+          "reference": false
+        },
+        "imeWarmup": "하ㄴ",
+        "sources": [
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ],
+            "current": "com.apple.inputmethod.Korean.2SetKorean"
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          },
+          {
+            "current": "com.apple.inputmethod.Korean.2SetKorean",
+            "enabled": [
+              "com.apple.keylayout.US",
+              "com.apple.CharacterPaletteIM",
+              "com.apple.inputmethod.Korean.2SetKorean",
+              "com.apple.inputmethod.AinuIM.Ainu",
+              "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+              "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+            ]
+          }
+        ]
+      }
+    ],
+    "interrupted": {
+      "attempt": 1,
+      "job": 123248339487,
+      "name": "macos-ime (2)",
+      "conclusion": "cancelled",
+      "startedAt": "2026-10-29T03:38:25Z",
+      "completedAt": "2026-10-29T03:48:43Z",
+      "limitMinutes": 10,
+      "rootCause": "Unconfirmed; last log reached Korean input-method setup, no product assertion and no completed report.",
+      "retry": "Only affected job and dependent result, unchanged source.",
+      "retryResult": "Attempt 2 passed on unchanged source and registry-identical artifacts; no assertion defect was established."
+    },
+    "currentAttempt": 2,
+    "status": "success",
+    "result": {
+      "status": "passed",
+      "sha": "c2e852206eabca7263c9e5edf325a2b15256704c",
+      "verifiedUnits": 41
+    },
+    "jobs": [
+      {
+        "id": 123251839484,
+        "name": "macos-ime (2)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251840544,
+        "name": "browser",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251840791,
+        "name": "verify (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251841070,
+        "name": "macos-ime (3)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251841304,
+        "name": "verify (5)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251873936,
+        "name": "verify (3)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251874068,
+        "name": "macos-ime (1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251874435,
+        "name": "verify (1)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251875468,
+        "name": "verify (2)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251876756,
+        "name": "prepare",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251877932,
+        "name": "verify (6)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123251885782,
+        "name": "macos-ime (4)",
+        "status": "completed",
+        "conclusion": "success"
+      },
+      {
+        "id": 123253526390,
+        "name": "result",
+        "status": "completed",
+        "conclusion": "success"
+      }
+    ]
+  },
+  "publication": {
+    "run": 40813195464,
+    "url": "https://github.com/sectile/sectile/actions/runs/40813195464",
+    "attempt": 1,
+    "status": "success",
+    "preparationArtifact": 12870993316,
+    "npmEvidenceArtifact": 12870819655,
+    "githubEvidenceArtifact": 12871232430
+  },
+  "finalVerifiedAt": "2026-10-29 03:56:42 UTC"
+}
