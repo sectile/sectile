@@ -240,6 +240,11 @@ try {
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], 'framework rewrote a live composition');
   } else {
+    const toast = await page.evaluate(() => window.sectileProbe.toast());
+    assert.deepEqual(toast, { prevented: false, focused: 'toast-input', queueUnchanged: true, count: 0 });
+    await page.keyboard.press('F8');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'toast-viewport');
+    report.results.push({ id: 'toast-keyless', ...toast, shortcut: 'passed' });
     const defects = await page.evaluate(() => window.sectileProbe.defects());
     assert.equal(defects.initialFocus, 'visible');
     assert.equal(defects.placeholder, 'Enter a number');

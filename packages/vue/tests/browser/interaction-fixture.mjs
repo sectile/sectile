@@ -12,6 +12,7 @@ import { connectMediaGesture } from '@sectile/dom/media-gesture';
 import { SequenceReorderRoot, SequenceReorderItem } from '@sectile/vue/reorder';
 import { TagsInputRoot, TagsInputInput } from '@sectile/vue/tags-input';
 import { PinInputRoot, PinInputInput } from '@sectile/vue/pin-input';
+import { ToastProvider, ToastViewport } from '@sectile/vue/toast';
 import { EditableRoot, EditableInput, EditablePreview, EditableEditTrigger } from '@sectile/vue/editable';
 import { ColorPickerRoot, ColorPickerTextInput } from '@sectile/vue/color-picker';
 import { QuantityFieldRoot, QuantityFieldInput, createStandardQuantityPolicies } from '@sectile/vue/quantity-field';
@@ -176,6 +177,26 @@ window.sectileProbe = {
       ]),
     ] }) });
     app.mount(host); await settle();
+  },
+  async toast() {
+    reset();
+    let state;
+    app = createApp({ render: () => h('div', [
+      h('input', { id: 'toast-input', autocomplete: 'name' }),
+      h(ToastProvider, null, { default: current => {
+        state = current;
+        return h(ToastViewport, { id: 'toast-viewport' });
+      } }),
+    ]) });
+    app.mount(host); await settle();
+    const input = document.getElementById('toast-input');
+    input.focus(); await settle();
+    const before = state.toasts;
+    const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'key', { value: undefined });
+    input.dispatchEvent(event); await settle();
+    return { prevented: event.defaultPrevented, focused: document.activeElement.id,
+      queueUnchanged: state.toasts === before, count: state.toasts.length };
   },
   async defects() {
     reset();
