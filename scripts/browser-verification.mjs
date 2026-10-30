@@ -250,18 +250,20 @@ try {
     assert.equal(positioning.size.route, 'css-anchor');
     assert.ok(Math.abs(positioning.size.height - positioning.size.expected) <= 0.5, JSON.stringify(positioning.size));
     assert.equal(positioning.scroll.route, 'css-anchor');
+    assert.equal(positioning.scroll.delta, 80);
     assert.ok(Math.abs(positioning.scroll.anchorX - positioning.scroll.popupX) <= 0.5, JSON.stringify(positioning.scroll));
     report.results.push({ id: 'positioning', ...positioning });
     for (const kind of ['popover', 'menu']) {
       await page.evaluate(kind => window.sectileProbe.composedTrigger(kind), kind);
-      const button = page.locator('#composed-native'), original = await button.elementHandle();
+      const button = page.locator('[data-composed-native]'), original = await button.elementHandle();
       assert.equal(await button.count(), 1);
       await button.focus(); await page.getByRole('tooltip').waitFor({ state: 'visible' });
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => window.sectileProbe.composed.open);
       await page.evaluate(() => window.sectileProbe.moveComposed());
       assert.equal(await button.evaluate((element, saved) => element === saved, original), true);
-      await button.focus(); await page.keyboard.press('Escape');
+      await page.getByRole(kind === 'menu' ? 'menu' : 'dialog').focus();
+      await page.keyboard.press('Escape');
       await page.waitForFunction(() => !window.sectileProbe.composed.open);
       await page.evaluate(() => window.sectileProbe.disableComposed());
       assert.equal(await button.isDisabled(), true);

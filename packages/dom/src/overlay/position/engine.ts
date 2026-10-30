@@ -146,6 +146,8 @@ export function detectPositionEngineCapabilities(view: Window): PositionEngineCa
       && supports('max-height', 'max(0px, calc(100% - 8px))')
       && supports('left', 'anchor(left)') && supports('left', 'anchor(center)') && supports('left', 'anchor(right)')
       && supports('top', 'anchor(top)') && supports('top', 'anchor(center)') && supports('top', 'anchor(bottom)')
+      && supports('justify-self', 'unsafe left') && supports('justify-self', 'unsafe right')
+      && supports('align-self', 'unsafe start') && supports('align-self', 'unsafe end')
       && supports('translate', '-100% -50%'),
   });
 }
@@ -191,7 +193,8 @@ function viewportPositionArea(options: PositionEngineOptions, view: Window): boo
   const fixed = options.strategy === 'fixed';
   for (let current = parentElement(options.root); current !== null; current = parentElement(current)) {
     const style = view.getComputedStyle(current);
-    if (clipsOrScrolls(style) || !initialContainingBlockStyle(style, fixed)) return false;
+    if (clipsOrScrolls(style) || !initialContainingBlockStyle(style, fixed)
+      || (style.writingMode && style.writingMode !== 'horizontal-tb')) return false;
   }
   return true;
 }
@@ -650,8 +653,9 @@ function projectCSS(
   writeStyle(styles, options.root, 'position-anchor', anchorName, diagnostics);
   writeStyle(styles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
   writeStyle(styles, options.root, 'position-area', side, diagnostics);
-  writeStyle(styles, options.root, 'justify-self', 'normal', diagnostics);
-  writeStyle(styles, options.root, 'align-self', 'normal', diagnostics);
+  // Disable the browser's implicit overflow alignment: shift=false owns this.
+  writeStyle(styles, options.root, 'justify-self', side === 'left' ? 'unsafe right' : 'unsafe left', diagnostics);
+  writeStyle(styles, options.root, 'align-self', side === 'top' ? 'unsafe end' : 'unsafe start', diagnostics);
   for (const inset of ['top', 'right', 'bottom', 'left'] as const) writeStyle(styles, options.root, inset, 'auto', diagnostics);
   const vertical = side === 'top' || side === 'bottom';
   const crossEdge = align === 'center' ? 'center' : vertical

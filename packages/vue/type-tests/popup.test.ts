@@ -28,13 +28,12 @@ const actualOpenInlineProps: typeof drawerInstance.$props = { presentation: 'inl
 void [actualInlineProps, actualOpenInlineProps];
 import type { PopoverRootSlotProps, PopoverRootExpose } from '@sectile/vue/popover';
 import type { PopoverRootProps } from '@sectile/vue/popover';
-import type { TooltipRootProps } from '@sectile/vue/tooltip';
 import type { SelectRootProps } from '@sectile/vue/select';
 import type { ComboboxRootProps } from '@sectile/vue/combobox';
 import type { CascadeSelectRootProps } from '@sectile/vue/cascade-select';
 import type { MenuButtonRootProps } from '@sectile/vue/menu-button';
 import type { DatePickerRootProps } from '@sectile/vue/temporal/date-picker';
-const independentPosition: PopoverRootProps & TooltipRootProps = { side: 'bottom', flip: false, shift: true };
+const independentPosition = { side: 'bottom', flip: false, shift: true } as const satisfies PopoverRootProps & TooltipRootProps;
 const selectPosition: SelectRootProps = { items: ['a'], ...independentPosition };
 const comboboxPosition: ComboboxRootProps = { items: [{ id: 'a', label: 'Alpha' }], ...independentPosition };
 const cascadePosition: CascadeSelectRootProps = { nodes: [{ id: 'a', parentID: null }], ...independentPosition };

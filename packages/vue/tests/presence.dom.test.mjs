@@ -67,7 +67,7 @@ test('Tooltip shares the real Fragment trigger with controlled Popover and MenuB
       button.click(); await nextTick(); await nextTick();
       assert.deepEqual(requests, [true]); assert.equal(open.value, false);
       accept = true; button.click(); await nextTick(); await nextTick();
-      assert.equal(open.value, true); assert.equal(host.querySelector('#composed-button'), button);
+      assert.equal(open.value, true); assert.ok(host.querySelector('button') === button);
       disabled.value = true; await nextTick(); await nextTick();
       const count = requests.length; button.click(); await nextTick(); assert.equal(requests.length, count);
       assert.equal(button.disabled, true); assert.deepEqual(errors, []);
@@ -432,7 +432,8 @@ test('positioning roots forward independent policies and retain omitted Boolean 
   Object.defineProperties(document.documentElement, { clientWidth: { configurable: true, value: 300 }, clientHeight: { configurable: true, value: 300 } });
   prototype.getBoundingClientRect = function () {
     const content = this.dataset.part === 'content';
-    const rect = content ? { x: 0, y: 0, width: 100, height: 80 } : { x: 270, y: 250, width: 20, height: 20 };
+    const rect = this === document.documentElement ? { x: 0, y: 0, width: 300, height: 300 }
+      : content ? { x: 0, y: 0, width: 100, height: 80 } : { x: 270, y: 250, width: 20, height: 20 };
     return { ...rect, left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height };
   };
   const families = [
@@ -449,7 +450,8 @@ test('positioning roots forward independent policies and retain omitted Boolean 
       const host = document.createElement('div'); document.body.append(host);
       const flip = shallowRef(), shift = shallowRef(), avoid = shallowRef(true);
       const app = createApp({ render: () => h(Root, { ...extra, open: true, label: 'Choices', autoFocus: false,
-        strategy: 'fixed', side: 'bottom', align: 'start', flip: flip.value, shift: shift.value, avoidCollisions: avoid.value },
+        strategy: 'fixed', side: 'bottom', align: 'start', collisionBoundary: document.documentElement,
+        flip: flip.value, shift: shift.value, avoidCollisions: avoid.value },
       { default: () => [h(Trigger), h(Content, null, { default: () => Root === DatePickerRoot ? h(DatePickerGrid) : null })] }) });
       try {
         app.mount(host); await settle();

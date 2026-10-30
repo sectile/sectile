@@ -87,9 +87,9 @@ window.sectileProbe = {
       'onUpdate:open': value => { requests.push(value); open.value = value; } }, { default: () => [
       h(TooltipRoot, { position: false, disabled: disabled.value }, { default: () => [
         h(Teleport, { to: document.body, disabled: !moved.value }, [h(TooltipTrigger, { asChild: true }, {
-          default: () => h(Trigger, { asChild: true }, { default: () => h(Fragment, null, [h('button', { id: 'composed-native' }, 'Open actions')]) }),
+          default: () => h(Trigger, { asChild: true }, { default: () => h(Fragment, null, [h('button', { 'data-composed-native': '' }, 'Open actions')]) }),
         })]), h(TooltipContent, null, { default: () => 'Action help' }),
-      ] }), h(Content),
+      ] }), h(Content, { tabindex: -1 }),
     ] }) });
     app.config.errorHandler = error => errors.push(String(error));
     app.mount(host); await settle();
@@ -130,6 +130,7 @@ window.sectileProbe = {
       try { await frames(); size = { route: root.dataset.positionRoute, height: root.getBoundingClientRect().height,
         expected: Math.max(0, innerHeight - anchor.getBoundingClientRect().bottom - 16) }; }
       finally { popup.disconnect(); anchor.remove(); root.remove(); }
+      document.documentElement.dir = 'ltr';
       const scroller = document.createElement('div'), track = document.createElement('div'), button = document.createElement('button');
       const panel = document.createElement('div');
       scroller.style.cssText = 'position:absolute;left:100px;top:100px;width:300px;overflow:auto;';
@@ -138,7 +139,9 @@ window.sectileProbe = {
       const portaled = createPopover({ root: panel, anchor: button, side: 'bottom', align: 'start', strategy: 'fixed', avoidCollisions: false,
         defaultOpen: true, autoFocus: false, label: 'Scroll probe' });
       let scroll;
-      try { await frames(); scroller.scrollLeft = 80; await frames(); scroll = { anchorX: button.getBoundingClientRect().x, popupX: panel.getBoundingClientRect().x, route: panel.dataset.positionRoute }; }
+      try { await frames(); const before = button.getBoundingClientRect().x;
+        scroller.scrollLeft = 80; await frames(); scroll = { delta: before - button.getBoundingClientRect().x,
+          anchorX: button.getBoundingClientRect().x, popupX: panel.getBoundingClientRect().x, route: panel.dataset.positionRoute }; }
       finally { portaled.disconnect(); scroller.remove(); panel.remove(); }
       return { rows, size, scroll };
     } finally { document.documentElement.dir = previousDirection; }

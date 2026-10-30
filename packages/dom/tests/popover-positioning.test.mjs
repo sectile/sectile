@@ -418,6 +418,8 @@ test('native area sizing admits a viewport containing block and not a clipped or
     assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'javascript');
     container.style.transform = ''; container.style.overflow = 'hidden';
     assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'javascript');
+    container.style.overflow = ''; container.style.writingMode = 'vertical-rl';
+    assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'javascript');
   } finally { fixture.close(); }
 });
 
@@ -449,7 +451,7 @@ test('CSS route admits its exact geometry expressions and owns no measured layou
   Object.defineProperty(window, 'CSS', { configurable: true, value: { supports(property, value) { queried.push([property, value]); return true; } } });
   const capability = detectPositionEngineCapabilities(window);
   assert.equal(capability.anchorGeometry, true);
-  const geometry = queried.filter(([, value]) => value.includes('anchor(') || value.includes('anchor-size('));
+  const geometry = queried.filter(([, value]) => value.includes('anchor(') || value.includes('anchor-size(') || value.startsWith('unsafe '));
   assert.ok(geometry.some(([property, value]) => property === 'left' && value === 'anchor(left)'));
   assert.ok(geometry.some(([property, value]) => property === 'top' && value === 'anchor(center)'));
   for (const missing of geometry) {
