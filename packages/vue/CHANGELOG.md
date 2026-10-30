@@ -1,5 +1,17 @@
 # @sectile/vue
 
+## 0.21.0
+
+### Changes
+
+- test(vue): distinguish public channel retirement from payload retention (b9baca0b7)
+- chore(verification): qualify overlay ownership and consumer contracts (725544111)
+- fix(overlays): preserve explicit native geometry across browser versions (a57b291ff)
+- fix(vue): preserve adopted element ownership through component roots (031542dd1)
+- fix(vue): derive resolved picker types from shared props (f3b5020f6)
+- feat(vue): share the anchored positioning option bridge (1c13f7860)
+- fix(dom): project canonical anchor geometry through native CSS (bdef3181b)
+
 ## 0.20.1
 
 ### Changes

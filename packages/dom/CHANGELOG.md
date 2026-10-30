@@ -1,5 +1,14 @@
 # @sectile/dom
 
+## 0.21.0
+
+### Changes
+
+- chore(verification): qualify overlay ownership and consumer contracts (725544111)
+- fix(overlays): preserve explicit native geometry across browser versions (a57b291ff)
+- fix(dom): project canonical anchor geometry through native CSS (bdef3181b)
+- feat(dom): separate anchored flip and shift policies (868388119)
+
 ## 0.20.1
 
 ### Changes
