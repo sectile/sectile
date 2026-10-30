@@ -48,10 +48,12 @@ Primitive follows one rendered component-root chain, preferring an exposed
 `Element | null`, without searching DOM descendants or replaying slots. Work is
 O(d) for delegation depth d. Each mounted Primitive owns one shallow Element
 reference and at most one explicit watch; native children need no watch.
-Replacement stops the old watch, and unmount clears the reference. A saved
-public exposure captures only that reference, not the setup scope. A 32-level
-counter witness, exposed/native replacement, null availability and retained
-exposure GC exercise this contract.
+Replacement stops the old watch, and unmount clears the reference. The raw
+exposed payload captures only that reference, not the setup scope. A saved Vue
+public proxy separately retains its framework instance; this is outside the
+payload GC claim. A 32-level counter witness, exposed/native replacement, null
+availability and a saved public proxy exercise channel retirement. The GC
+witness retains raw exposed payloads to isolate Sectile-owned retention.
 
 Per-family policy copies would perpetuate transport drift. Descendant DOM
 search would introduce ambiguous ownership and subtree-sized work. Forcing all

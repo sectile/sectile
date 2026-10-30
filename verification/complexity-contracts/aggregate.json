@@ -39656,8 +39656,8 @@
           "Native children have no watch; adopted component replacement owns at most one watch and retired exposure changes trigger no resolver reads."
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "Resolution iteratively follows one component root at each level and stops at an exposed Element channel or native root. Each Primitive retains one shallow Element ref and at most one explicit watch; replacement stops the prior watch, and unmount clears it and the ref. Native children allocate no watch. Public exposure is projected outside setup and retains only the cleared ref.",
-        "adversarialWitness": "A 32-component delegation chain counts linear production subTree reads. Exposed/native root replacement, null availability, unmount and saved public exposure GC exercise retirement, including nested Fragment adoption.",
+        "proof": "Resolution iteratively follows one component root at each level and stops at an exposed Element channel or native root. Each Primitive retains one shallow Element ref and at most one explicit watch; replacement stops the prior watch, and unmount clears it and the ref. Native children allocate no watch. The raw exposed payload is projected outside setup and retains only the cleared ref; a consumer-held Vue public proxy separately retains its framework instance.",
+        "adversarialWitness": "A 32-component delegation chain counts linear production subTree reads. Exposed/native root replacement, null availability and a saved public proxy verify channel retirement. Raw exposed payload GC exercises only Sectile-owned retention, including nested Fragment adoption.",
         "evidence": [
           "packages/vue/tests/primitive.dom.test.mjs",
           "packages/vue/tests/presence.dom.test.mjs"

@@ -128,12 +128,12 @@ test('Primitive follows a live exposed Element through component roots and retir
     assert.equal(primitive.value.element, null); assert.equal(delivered, null);
     visible.value = true; await nextTick(); await nextTick();
     assert.equal(delivered, host.querySelector('a'));
-    const read = Object.getOwnPropertyDescriptor(primitive.value.$.exposed, 'element').get;
+    const publicView = primitive.value;
     app.unmount();
-    assert.equal(read(), null); assert.equal(delivered, null);
+    assert.equal(publicView.element, null); assert.equal(delivered, null);
     const retired = reads;
     native.value = document.createElement('button'); await nextTick();
-    assert.equal(reads, retired); assert.equal(read(), null);
+    assert.equal(reads, retired); assert.equal(publicView.element, null);
   } finally { if (host.__vue_app__) app.unmount(); host.remove(); }
 });
 
@@ -174,11 +174,11 @@ test('Primitive element resolution visits only its component-root chain', async 
   } finally { app.unmount(); host.remove(); }
 });
 
-test('Primitive saved exposure releases disconnected nodes after nested adoption', async () => {
+test('Primitive exposed payload releases disconnected nodes after nested adoption', async () => {
   if (typeof globalThis.gc !== 'function') {
     const { spawnSync } = await import('node:child_process');
     const { fileURLToPath } = await import('node:url');
-    const result = spawnSync(process.execPath, ['--expose-gc', '--test', '--test-name-pattern=Primitive saved exposure releases', fileURLToPath(import.meta.url)],
+    const result = spawnSync(process.execPath, ['--expose-gc', '--test', '--test-name-pattern=Primitive exposed payload releases', fileURLToPath(import.meta.url)],
       { encoding: 'utf8', timeout: 20000 });
     assert.equal(result.status, 0, result.stdout + result.stderr);
     return;
