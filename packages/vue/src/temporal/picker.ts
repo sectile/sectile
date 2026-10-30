@@ -25,7 +25,7 @@ import {
 } from '../form/control.js';
 import { visuallyHiddenInputStyle } from '../input/native-input.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
-import { positionProps, positionSources, readPositionOptions } from '../internal/position-options.js';
+import { positionProps, positionSources, readPositionOptions, type ResolvedPositionProps } from '../internal/position-options.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
 import { usePresence } from '../presence/presence.js';
@@ -91,7 +91,7 @@ export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue,
   readonly asChild?: boolean;
 }
 
-interface ResolvedPickerRootProps<Kind extends PickerKind> extends PickerPositionProps {
+interface ResolvedPickerRootProps<Kind extends PickerKind> extends ResolvedPositionProps {
   readonly modelValue?: PickerValueFor<Kind>;
   readonly defaultValue: PickerValueFor<Kind>;
   readonly open?: boolean;
@@ -105,16 +105,6 @@ interface ResolvedPickerRootProps<Kind extends PickerKind> extends PickerPositio
   readonly required: boolean;
   readonly label?: string;
   readonly policies?: PickerPoliciesFor<Kind>;
-  readonly position: boolean;
-  readonly side: NonNullable<PickerPositionOptions['side']>;
-  readonly align: NonNullable<PickerPositionOptions['align']>;
-  readonly sideOffset: number;
-  readonly collisionPadding: PickerPositionOptions['collisionPadding'];
-  readonly collisionBoundary: PickerPositionOptions['collisionBoundary'];
-  readonly avoidCollisions: boolean;
-  readonly hideWhenDetached: boolean;
-  readonly strategy: NonNullable<PickerPositionOptions['strategy']>;
-  readonly tracking: NonNullable<PickerPositionOptions['tracking']>;
   readonly as: PrimitiveAs;
   readonly asChild: boolean;
 }

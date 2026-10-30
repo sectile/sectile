@@ -12,11 +12,8 @@ import { stableIDElementToken } from '@sectile/dom/identity';
 import { createMenuModel, type MenuModel } from '@sectile/core/menu';
 import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
-  PositionBoundary,
   PositionOptions,
-  PositionPadding,
   PositionStrategy,
-  PositionTracking,
   PositionRect,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';

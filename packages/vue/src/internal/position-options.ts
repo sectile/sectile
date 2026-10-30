@@ -1,4 +1,4 @@
-import type { PropType, WatchSource } from 'vue';
+import type { ExtractPropTypes, PropType, WatchSource } from 'vue';
 import type { PositionOptions, PositionSide, PositionAlign, PositionPadding, PositionBoundary, PositionStrategy, PositionTracking } from '@sectile/dom/position';
 
 // Framework declarations and transport only. DOM resolves collision policies.
@@ -17,6 +17,8 @@ export const positionProps = {
   strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
   tracking: { type: String as PropType<PositionTracking>, default: 'events' },
 } as const;
+
+export type ResolvedPositionProps = Readonly<ExtractPropTypes<typeof positionProps>>;
 
 type PositionInput = { readonly [K in keyof Omit<PositionOptions, 'arrowPadding'>]?: PositionOptions[K] | undefined }
   & { readonly position?: boolean | undefined };
