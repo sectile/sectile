@@ -57,7 +57,7 @@ jobs:
           fi
       - if: steps.plan.outputs.count != '0'
         run: node scripts/ci.mjs prepare
-      - uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: verification-prepared
           include-hidden-files: true
@@ -97,9 +97,10 @@ jobs:
           name: verification-prepared
       - run: node scripts/ci.mjs run '${{ matrix.lane }}'
       - if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: verification-lane-${{ matrix.lane }}
+          overwrite: true
           include-hidden-files: true
           path: .tasks/ci/lane-*.json
           retention-days: 1
@@ -126,7 +127,7 @@ jobs:
       - run: pnpm exec playwright install --with-deps chromium
       - run: node scripts/browser-verification.mjs
       - if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: browser-failure
           include-hidden-files: true
@@ -161,7 +162,7 @@ jobs:
       - run: pnpm exec playwright install chromium
       - run: node scripts/browser-verification.mjs --macos-ime --shard=${{ matrix.shard }}/4
       - if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: macos-ime-failure-${{ matrix.shard }}
           include-hidden-files: true

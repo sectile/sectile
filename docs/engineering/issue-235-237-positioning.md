@@ -122,3 +122,25 @@ and pnpm installation checks passed without changing their install baseline.
   and does not constitute successful integration evidence.
 - Source versus release: package versions remain unchanged. Registry artifacts
   have not been published or qualified; issue closure is not implied.
+
+## CI report ownership follow-up
+
+Full run [41014804492](https://github.com/sectile/sectile/actions/runs/41014804492)
+on `b9baca0b78ed535e06783cac0a6217cc47857a17` passed all six lanes after one
+bounded retry, the packed Chromium browser probe and four native macOS IME
+shards. Attempt 1 failed the unchanged Chart allocation fixture; the identical
+test file passed locally with both Node 24.22.0 and 24.22.1. All 1,857 downloaded
+production files matched local bytes. That first failure's cause remains
+Unknown; the passing retry is not a claim that its cause was fixed.
+
+The retry then exposed a separate, confirmed aggregation defect. The service
+retained two `verification-lane-3` artifacts, IDs `12959111688` (failed report)
+and `12958808419` (passing report). The final download selected the former and
+rejected the already-passing retry. The existing lane upload now uses the
+pinned action's `overwrite` input, so each lane owns one current report across
+attempts. The upload action is pinned consistently to the verified latest stable
+v7.0.2 commit `cf430e030ddbb5b0abf93d22962f4752f3646cd9`; its Node 24 runtime and
+overwrite input match the existing supported runner. Triggers, permissions,
+checks and runner images stay the same. Historical failure logs remain in the run and the devtools validation
+record. The aggregate failure remains Failed until this correction is qualified
+on a new clean main SHA.
