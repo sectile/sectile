@@ -203,8 +203,8 @@
 | WI-036 | @sectile/vue | `./menu` | `MenuButtonRoot positioning props`, `automatic trigger-relative positioning` | @sectile/vue/menu |
 | WI-036 | @sectile/vue | `./menubar` | `shared menu declaration closure` | @sectile/vue/menubar |
 | WI-036 | @sectile/vue | `./navigation-menu` | `shared menu declaration closure`, `NavigationMenuIndicator.forcePresent` | @sectile/vue/navigation-menu |
-| WI-036 | @sectile/vue | `./popover` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `PopoverRootProps.position` | @sectile/dom/position |
-| WI-036 | @sectile/dom | `./popover` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `PopoverOptions.position` | @sectile/dom/position |
+| WI-036 | @sectile/vue | `./popover` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `PopoverRootProps.position`, `PopoverRootProps.flip`, `PopoverRootProps.shift` | @sectile/dom/position |
+| WI-036 | @sectile/dom | `./popover` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI type re-exports`, `PopoverOptions.position`, `PositionOptions.flip`, `PositionOptions.shift` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./select` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `SelectItemIndicator.forcePresent` | @sectile/dom/position |
 | WI-036 | @sectile/dom | `./select` | `middleware`, `autoUpdate`, `onPositionChange`, `Floating UI declaration closure`, `SelectOptions.layerHost` | @sectile/dom/position |
 | WI-036 | @sectile/vue | `./tooltip` | `middleware`, `autoUpdate`, `positionChange`, `Floating UI-derived props`, `TooltipRootProps.position` | @sectile/dom/position |
@@ -224,7 +224,7 @@
 | WI-040 | @sectile/vue | `./multi-thumb-slider` | `Primitive declaration closure` | @sectile/vue/multi-thumb-slider |
 | WI-040 | @sectile/vue | `./pagination` | `Primitive declaration closure` | @sectile/vue/pagination |
 | WI-040 | @sectile/vue | `./pin-input` | `Primitive declaration closure` | @sectile/vue/pin-input |
-| WI-040 | @sectile/vue | `./primitive` | `Anchor`, `AnchorProps`, `AnchorSlots`, `AnchorExpose`, `renderPrimitive` | @sectile/vue/primitive |
+| WI-040 | @sectile/vue | `./primitive` | `Anchor`, `AnchorProps`, `AnchorSlots`, `AnchorExpose`, `renderPrimitive`, `Primitive`, `PrimitiveElementExpose` | @sectile/vue/primitive |
 | WI-040 | @sectile/vue | `./progress` | `Primitive declaration closure` | @sectile/vue/progress |
 | WI-040 | @sectile/vue | `./quantity-field` | `Primitive declaration closure` | @sectile/vue/quantity-field |
 | WI-040 | @sectile/vue | `./reorder` | `SequenceReorderRoot`, `TreeReorderRoot`, `TreeReorderExpose`, `TreeReorderDropTarget`, `SequenceReorderHandle`, `TreeReorderHandle` | @sectile/vue/reorder |

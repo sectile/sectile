@@ -32012,7 +32012,7 @@
           "disconnect leaves every resource counter at zero"
         ],
         "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
-        "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
+        "proof": "Native admission inspects each root ancestor style once without geometry reads or retained resources, accepting only a viewport position area. JS connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source. Completion callbacks share the engine owner so route admission is not repeated by the connection wrapper.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
         "evidence": [
           "scripts/complexity-contracts.test.mjs",
@@ -39602,6 +39602,69 @@
         "fullScan": {
           "allowed": true,
           "rationale": "Construction, domain replacement, and genuinely global item-state changes may touch r mounted cells. Ordinary cursor/selection publication does not take that branch and may not execute unrelated GridCell consumer slots."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "primitive.element",
+      "source": "packages/vue/src/primitive.ts",
+      "benchmarkIDs": [
+        "VAL-237:primitive-element-chain"
+      ],
+      "specificationCeiling": "O(d)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "d",
+            "meaning": "sole rendered component-root chain depth",
+            "ceiling": "mounted Vue component tree depth"
+          }
+        ],
+        "time": {
+          "bound": "O(d)",
+          "kind": "worst-case",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(1)",
+          "output": "O(1)",
+          "retained": "O(1)"
+        },
+        "resources": {
+          "allocations": "O(1)",
+          "cacheEntries": "0",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "at most one Vue watch per adopted component"
+        },
+        "assumptions": [
+          "resources are connection-owned",
+          "disconnect is idempotent"
+        ],
+        "ceilings": [
+          "ancestor, observer, timer, listener, and subscription ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:lifecycle-work"
+        ],
+        "deterministicWork": [
+          "Component-root reads stay within twice the mounted chain depth plus fixed overhead.",
+          "Native children have no watch; adopted component replacement owns at most one watch and retired exposure changes trigger no resolver reads."
+        ],
+        "resourceRationale": "Only connection-owned ancestors, affected targets, and one bounded scheduler/observer set may be retained.",
+        "proof": "Resolution iteratively follows one component root at each level and stops at an exposed Element channel or native root. Each Primitive retains one shallow Element ref and at most one explicit watch; replacement stops the prior watch, and unmount clears it and the ref. Native children allocate no watch. Public exposure is projected outside setup and retains only the cleared ref.",
+        "adversarialWitness": "A 32-component delegation chain counts linear production subTree reads. Exposed/native root replacement, null availability, unmount and saved public exposure GC exercise retirement, including nested Fragment adoption.",
+        "evidence": [
+          "packages/vue/tests/primitive.dom.test.mjs",
+          "packages/vue/tests/presence.dom.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": false,
+          "rationale": "No DOM descendant search, sibling scan or slot re-execution is used to resolve an adopted component."
         }
       }
     },

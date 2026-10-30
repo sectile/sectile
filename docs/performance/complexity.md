@@ -16,7 +16,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | temporal | 129 | 14 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 839 | 351 | 16 |
+| vue | 839 | 351 | 17 |
 
 ## Variables
 
@@ -274,6 +274,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | vue:collection.item-slot-invalidation | mounted | `O(j + h + s)` expected | `O(h + s)` | `O(j)` | `O(r)` | forbidden | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/listbox.test.mjs |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:grid.cell-projection | mounted | `O(j)` expected | `O(r)` | `O(r)` | `O(r)` | allowed | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/structural-controls.test.mjs |
+| vue:primitive.element | mounted | `O(d)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/vue/tests/primitive.dom.test.mjs, packages/vue/tests/presence.dom.test.mjs |
 | vue:text.edit-capability | mounted | `O(n + j)` worst-case | `O(n + j)` | `O(n + j)` | `O(n + j)` | allowed | packages/vue/tests/text.dom.test.mjs, packages/vue/type-tests/component-contracts.ts, packages/vue/type-tests/fixtures/text-actions.vue |
 | vue:text.query-capability | mounted | `O(n + p*(q + p))` expected | `O(p + q)` | `O(p + q)` | `O(n + p + q)` | allowed | packages/vue/tests/text.dom.test.mjs, packages/core/tests/editing/text.reference-law.test.mjs |
 | vue:toast.publication | mounted | `O(1 + n + e)` expected | `O(1 + n + e)` | `O(1 + n + e)` | `O(1 + n + e)` | allowed | packages/vue/tests/toast.dom.test.mjs, packages/vue/tests/toast.test.mjs |

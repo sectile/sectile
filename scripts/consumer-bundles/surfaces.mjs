@@ -33,10 +33,12 @@ export async function deriveSurfaceFragment(repoRoot, packageName) {
     const peer = optionalPeer(packageName, subpath);
     if (shouldMeasureNamed(packageName, subpath, classification)) fixtureModes.push('named');
     if (subpath === '.') fixtureModes.push('namespace');
-    const reorderOwner = subpath === './reorder' ? packageName === 'vue' ? 'TreeReorderRoot' : 'createReorder'
-      : subpath === './tooltip' ? packageName === 'vue' ? 'TooltipRoot' : 'createTooltip' : undefined;
+    const rootOwner = subpath === './reorder' ? packageName === 'vue' ? 'TreeReorderRoot' : 'createReorder'
+      : subpath === './tooltip' ? packageName === 'vue' ? 'TooltipRoot' : 'createTooltip'
+      : subpath === './popover' ? packageName === 'vue' ? 'PopoverRoot' : 'createPopover'
+      : packageName === 'vue' && subpath === './primitive' ? 'Primitive' : undefined;
     const rootEquivalentExport = subpath === '.' ? null
-      : exports.find((name) => name === reorderOwner && rootRuntime.includes(name)) ?? exports.find((name) => rootRuntime.includes(name)) ?? null;
+      : exports.find((name) => name === rootOwner && rootRuntime.includes(name)) ?? exports.find((name) => rootRuntime.includes(name)) ?? null;
     if (rootEquivalentExport !== null && shouldMeasureRootEquivalent(packageName, subpath, classification)) {
       fixtureModes.push('root-named');
     }
@@ -163,6 +165,8 @@ function shouldMeasureNamed(packageName, subpath, classification) {
     'vue:./reorder',
     'vue:./number-field',
     'vue:./tooltip',
+    'vue:./popover',
+    'vue:./primitive',
     'vue:./checkbox-tree',
   ]);
   return representatives.has(`${packageName}:${subpath}`);

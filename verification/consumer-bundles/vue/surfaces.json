@@ -1129,9 +1129,11 @@
       ],
       "typeBearing": true,
       "optionalPeer": null,
-      "rootEquivalentExport": "PopoverAnchor",
+      "rootEquivalentExport": "PopoverRoot",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {
@@ -1147,7 +1149,9 @@
       "optionalPeer": null,
       "rootEquivalentExport": "Primitive",
       "fixtureModes": [
-        "side-effect"
+        "side-effect",
+        "named",
+        "root-named"
       ]
     },
     {

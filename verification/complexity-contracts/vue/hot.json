@@ -5,24 +5,6 @@
   "kind": "internal-operations",
   "operations": [
     {
-      "id": "primitive.element",
-      "inherits": "lifecycle-v1",
-      "source": "packages/vue/src/primitive.ts",
-      "benchmarkIDs": ["VAL-237:primitive-element-chain"],
-      "specificationCeiling": "O(d)",
-      "contract": {
-        "variables": [{ "name": "d", "meaning": "sole rendered component-root chain depth", "ceiling": "mounted Vue component tree depth" }],
-        "time": { "bound": "O(d)", "kind": "worst-case", "runtimeState": "mounted" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
-        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "at most one Vue watch per adopted component" },
-        "proof": "Resolution iteratively follows one component root at each level and stops at an exposed Element channel or native root. Each Primitive retains one shallow Element ref and at most one explicit watch; replacement stops the prior watch, and unmount clears it and the ref. Native children allocate no watch. Public exposure is projected outside setup and retains only the cleared ref.",
-        "adversarialWitness": "A 32-component delegation chain counts linear production subTree reads. Exposed/native root replacement, null availability, unmount and saved public exposure GC exercise retirement, including nested Fragment adoption.",
-        "deterministicWork": ["Component-root reads stay within twice the mounted chain depth plus fixed overhead.", "Native children have no watch; adopted component replacement owns at most one watch and retired exposure changes trigger no resolver reads."],
-        "evidence": ["packages/vue/tests/primitive.dom.test.mjs", "packages/vue/tests/presence.dom.test.mjs"],
-        "fullScan": { "allowed": false, "rationale": "No DOM descendant search, sibling scan or slot re-execution is used to resolve an adopted component." }
-      }
-    },
-    {
       "id": "chart.declaration-reconcile",
       "inherits": "linear-v1",
       "source": "packages/vue/src/chart.ts",
@@ -301,6 +283,24 @@
         "adversarialWitness": "Mount 4000 cells, move the cursor by one cell, and count consumer slot executions separately from DOM writes. Exactly the old/new cell slots execute while part discovery remains zero. Then exercise controlled-state combinations, disabled changes, reused IDs, removal/remount, read-only and disabled gates, edit callbacks and unmount cleanup.",
         "evidence": ["packages/vue/tests/dynamic-collections.dom.test.mjs", "packages/vue/tests/structural-controls.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Construction, domain replacement, and genuinely global item-state changes may touch r mounted cells. Ordinary cursor/selection publication does not take that branch and may not execute unrelated GridCell consumer slots." }
+      }
+    },
+    {
+      "id": "primitive.element",
+      "inherits": "lifecycle-v1",
+      "source": "packages/vue/src/primitive.ts",
+      "benchmarkIDs": ["VAL-237:primitive-element-chain"],
+      "specificationCeiling": "O(d)",
+      "contract": {
+        "variables": [{ "name": "d", "meaning": "sole rendered component-root chain depth", "ceiling": "mounted Vue component tree depth" }],
+        "time": { "bound": "O(d)", "kind": "worst-case", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1)" },
+        "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "at most one Vue watch per adopted component" },
+        "proof": "Resolution iteratively follows one component root at each level and stops at an exposed Element channel or native root. Each Primitive retains one shallow Element ref and at most one explicit watch; replacement stops the prior watch, and unmount clears it and the ref. Native children allocate no watch. Public exposure is projected outside setup and retains only the cleared ref.",
+        "adversarialWitness": "A 32-component delegation chain counts linear production subTree reads. Exposed/native root replacement, null availability, unmount and saved public exposure GC exercise retirement, including nested Fragment adoption.",
+        "deterministicWork": ["Component-root reads stay within twice the mounted chain depth plus fixed overhead.", "Native children have no watch; adopted component replacement owns at most one watch and retired exposure changes trigger no resolver reads."],
+        "evidence": ["packages/vue/tests/primitive.dom.test.mjs", "packages/vue/tests/presence.dom.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "No DOM descendant search, sibling scan or slot re-execution is used to resolve an adopted component." }
       }
     },
     {

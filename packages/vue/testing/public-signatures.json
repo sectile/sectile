@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "1d1ba4ddefc6f74b82825251d079f2f2660938207e574106a1bbe8709a35c830",
+  "fingerprint": "69b5906c5087d7615c02e459e9a0cca8d59b98bbcc2af808ba2c40176aab8a61",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -387,7 +387,7 @@
     },
     {
       "path": "dist/cascade-select.d.ts",
-      "sha256": "949d23d73d2876561c73d12c2aa517f4c3a0e1eddf886e89067bb3cda69a99e8"
+      "sha256": "7b907fb362721425557477546c0863350fb941880f65d04d878634eac1aaa6eb"
     },
     {
       "path": "dist/chart.d.ts",
@@ -411,7 +411,7 @@
     },
     {
       "path": "dist/combobox.d.ts",
-      "sha256": "2de58a5e99fa9a0519831d1de6e612d1cdb7b8c8a30dfb0dc57124e8986e7c67"
+      "sha256": "107a5eeb034b20741942c0c82be1ceea8d7d5307403c0ab54ac277f42d46038e"
     },
     {
       "path": "dist/component-handle.d.ts",
@@ -527,7 +527,7 @@
     },
     {
       "path": "dist/menu.d.ts",
-      "sha256": "ce57abe4be83fb9a8ba6ec7f7faa20ae3691d43b10abd79a8bad0fee826eb5c3"
+      "sha256": "52469dc8715e75890a5f3c96a7f92278e8a52c275513831e52310e435836ef84"
     },
     {
       "path": "dist/menubar.d.ts",
@@ -563,7 +563,7 @@
     },
     {
       "path": "dist/overlay/drawer.d.ts",
-      "sha256": "151d9c97d3c77cd545c0a822ddefe2f77d3b43d249df1df733dcc09bd1044950"
+      "sha256": "b53e0cc3e72dc9823cb96770393bd79292482266879f86fef153b578b0d8630b"
     },
     {
       "path": "dist/overlay/popover.d.ts",
@@ -575,7 +575,7 @@
     },
     {
       "path": "dist/overlay/tooltip.d.ts",
-      "sha256": "2d1db0d21b925c104a2282b26a46c5db66964954cddfeda616032b7f775b74ec"
+      "sha256": "7191454f3dee4ed6440993353663b08c08337c60e3edcf164848f8ddf97ae4c8"
     },
     {
       "path": "dist/pagination.d.ts",
@@ -591,7 +591,7 @@
     },
     {
       "path": "dist/primitive.d.ts",
-      "sha256": "92576c1dad944c03c6ae4a3f709dfcc498a6f5113c8a041d193b6bc337cbb700"
+      "sha256": "38e7cb47e0605ecb46cc0b80659c876dafabe828512f93ab8c8cf0c4a97526b0"
     },
     {
       "path": "dist/progress.d.ts",
@@ -615,7 +615,7 @@
     },
     {
       "path": "dist/select.d.ts",
-      "sha256": "b6cfd0fd9d05a3dfb30ec50f5b4aa39a962011cb0c56f6dae7db34a73485a64b"
+      "sha256": "0b0e4b13b99bc6ffb567b7f8eee43e54eec9f6fb14ac25ecd0847b83ff95dcd4"
     },
     {
       "path": "dist/slider.d.ts",
@@ -727,7 +727,7 @@
     },
     {
       "path": "dist/temporal/picker.d.ts",
-      "sha256": "4c9e52613a34713be320d14a88be54e509b406746510b36eb9ae38db612301e0"
+      "sha256": "2cc80ba554c634cda0e3c520b4a8e0bc3964d73393ac82d7848d1323fccadbb0"
     },
     {
       "path": "dist/temporal/range-calendar.d.ts",

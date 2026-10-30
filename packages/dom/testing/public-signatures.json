@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "5460f92f843ebf93176adee00371ea9a660235b427dc7b592b602e90efd615dc",
+  "fingerprint": "e4d1d8c207ccf15f933dbf21f80cae1c5e25a0afbc6427623e746623111bd2b6",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -603,11 +603,11 @@
     },
     {
       "path": "dist/overlay/position/connection.d.ts",
-      "sha256": "75c2e35a2b702fb6ab9be9c7d80a29a306bd2a11174a83dc10776e7bda9aff06"
+      "sha256": "532660d9446c1375efa4a0d34b9292405152329c09c72c97791e3cdc997572da"
     },
     {
       "path": "dist/overlay/position/engine.d.ts",
-      "sha256": "fa5a11ac91a5360a976880a8d278ec3825e2a4c44ad4ae309b4b55ca55523c18"
+      "sha256": "09ebac0c090660a47aba1365504e1010e1673f366a24c6547b87ff4c917983e7"
     },
     {
       "path": "dist/overlay/position/picker.d.ts",
@@ -635,7 +635,7 @@
     },
     {
       "path": "dist/position.d.ts",
-      "sha256": "84551bfb6a77a28a78355a159d9bd5a8c88f4825f8fac6b3e3a496e4f883988b"
+      "sha256": "9dc1c182dd6cdee1f91a035a64147d1ea74dc54f39b1b623ebef69d29fe746e8"
     },
     {
       "path": "dist/presence.d.ts",

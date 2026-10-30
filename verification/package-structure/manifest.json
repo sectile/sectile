@@ -4240,6 +4240,10 @@
           "role": "foundation",
           "kind": "owner"
         },
+        "src/internal/position-options.ts": {
+          "role": "foundation",
+          "kind": "owner"
+        },
         "src/internal/portal-move.ts": {
           "role": "foundation",
           "kind": "owner"

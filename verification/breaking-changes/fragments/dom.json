@@ -3,14 +3,6 @@
   "package": "@sectile/dom",
   "entries": [
     {
-      "id": "ISSUE-235:dom-position-policy",
-      "change": "signature-changed",
-      "before": { "subpath": "./position" },
-      "symbols": ["PositionOptions"],
-      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
-      "removalReason": "Adds independent optional flip and cross-axis shift overrides. Omitted policies inherit avoidCollisions, preserving existing defaults and callers."
-    },
-    {
       "id": "WI-008:dom-cascade-list-direction",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-list" },
@@ -163,9 +155,9 @@
       "id": "WI-036:popover-positioning-surface",
       "change": "signature-changed",
       "before": { "subpath": "./popover" },
-      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports", "PopoverOptions.position"],
+      "symbols": ["middleware", "autoUpdate", "onPositionChange", "Floating UI type re-exports", "PopoverOptions.position", "PositionOptions.flip", "PositionOptions.shift"],
       "replacement": { "package": "@sectile/dom", "subpath": "./position" },
-      "removalReason": "Use position=false when popup layout remains consumer-owned."
+      "removalReason": "Use position=false when popup layout remains consumer-owned. Issue #235 adds independent optional flip and cross-axis shift overrides; omitted policies inherit avoidCollisions, preserving existing defaults."
     },
     {
       "id": "WI-036:select-positioning-surface",

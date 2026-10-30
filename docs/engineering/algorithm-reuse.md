@@ -62,8 +62,8 @@ Findings: 520; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/cascade-list.ts:231` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/checkbox.ts:151` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/color-picker.ts:227` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:336` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:339` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:325` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/combobox.ts:328` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/disclosure.ts:115` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/editable.ts:206` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/editable.ts:213` | controller-rebuild |
@@ -84,7 +84,7 @@ Findings: 520; migration owners: WI-020, WI-027, WI-040.
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/switch.ts:133` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tabs.ts:144` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/tags-input.ts:201` | controller-rebuild |
-| WI-040 | vue-controller-reconfiguration | `packages/vue/src/temporal/picker.ts:611` | controller-rebuild |
+| WI-040 | vue-controller-reconfiguration | `packages/vue/src/temporal/picker.ts:579` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/text.ts:339` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toast.ts:219` | controller-rebuild |
 | WI-040 | vue-controller-reconfiguration | `packages/vue/src/toggle-button.ts:83` | controller-rebuild |
