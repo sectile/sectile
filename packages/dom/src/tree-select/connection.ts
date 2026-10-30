@@ -150,7 +150,7 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
         presentation: { suspend: () => this.#suspend(), resume: () => this.#resume() } });
       position = options.position === false ? manualPositionConnection : createPosition({ root: options.popup, reference: options.input,
         side: options.side, align: options.align, sideOffset: options.sideOffset, collisionPadding: options.collisionPadding,
-        collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, arrowPadding: options.arrowPadding,
+        collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, flip: options.flip, shift: options.shift, arrowPadding: options.arrowPadding,
         hideWhenDetached: options.hideWhenDetached, strategy: options.strategy, tracking: options.tracking });
       const prefix = options.popup.id;
       this.#scope = { controller: options.controller, owned, input: options.input, popup: options.popup, rows: new Map(), owners: new WeakMap(),

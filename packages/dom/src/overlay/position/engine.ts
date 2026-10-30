@@ -37,6 +37,8 @@ export interface PositionEngineOptions {
   readonly collisionPadding?: number | Partial<Insets> | undefined;
   readonly collisionBoundary?: 'viewport' | Element | undefined;
   readonly avoidCollisions?: boolean | undefined;
+  readonly flip?: boolean | undefined;
+  readonly shift?: boolean | undefined;
   readonly arrowPadding?: number | undefined;
   readonly hideWhenDetached?: boolean | undefined;
   readonly strategy?: PositionStrategy | undefined;
@@ -149,7 +151,21 @@ export function detectPositionEngineCapabilities(view: Window): PositionEngineCa
   });
 }
 
+interface ResolvedPositionEngineOptions extends PositionEngineOptions {
+  readonly flip: boolean;
+  readonly shift: boolean;
+}
+
+function resolvePositionOptions(options: PositionEngineOptions): ResolvedPositionEngineOptions {
+  return { ...options, flip: options.flip ?? options.avoidCollisions ?? true,
+    shift: options.shift ?? options.avoidCollisions ?? true };
+}
+
 export function selectPositionRoute(options: PositionEngineOptions): PositionRoute {
+  return selectResolvedPositionRoute(resolvePositionOptions(options));
+}
+
+function selectResolvedPositionRoute(options: ResolvedPositionEngineOptions): PositionRoute {
   if (options.anchorRect !== undefined || options.measureAnchorRect !== undefined) return 'javascript';
   const view = options.root.ownerDocument.defaultView;
   if (view === null || options.reference.ownerDocument !== options.root.ownerDocument) return 'javascript';
@@ -159,11 +175,11 @@ export function selectPositionRoute(options: PositionEngineOptions): PositionRou
     && capabilities.positionAnchor
     && capabilities.positionArea
     && ((options.align ?? 'center') !== 'center' || capabilities.anchorCenter)
-    && (!(options.avoidCollisions ?? true) || capabilities.positionTryFallbacks)
+    && (!options.flip || capabilities.positionTryFallbacks)
     && (!(options.hideWhenDetached ?? false) || capabilities.positionVisibility);
   const semantic = (options.collisionBoundary === undefined || options.collisionBoundary === 'viewport')
     && options.arrow === undefined
-    && options.avoidCollisions === false
+    && !options.flip && !options.shift
     && options.tracking !== 'animation-frame'
     && options.requiresLayoutObservables !== true
     && options.onLayout === undefined;
@@ -176,8 +192,10 @@ export function readPositionSourceRegistryDiagnostics(): PositionSourceRegistryD
 
 export function createPositionEngine(options: PositionEngineOptions): PositionEngineConnection {
   assertOptions(options);
+  const request = resolvePositionOptions(options);
+  options = request;
   if (options.anchorRect !== undefined) options = { ...options, anchorRect: snapshotPositionRect(options.anchorRect) };
-  const route = selectPositionRoute(options);
+  const route = selectResolvedPositionRoute(request);
   const view = options.root.ownerDocument.defaultView!;
   const diagnostics: MutableDiagnostics = {
     discoveryRuns: 0,
@@ -259,8 +277,8 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       ...(options.align === undefined ? {} : { align: options.align }),
       offset: options.sideOffset ?? 8,
       padding: options.collisionPadding ?? 8,
-      flip: options.avoidCollisions ?? true,
-      shift: options.avoidCollisions ?? true,
+      flip: request.flip,
+      shift: request.shift,
       arrow: measurement.arrow,
       arrowPadding: options.arrowPadding ?? 8,
     });
@@ -399,6 +417,9 @@ export function snapshotPositionRect(value: Rect | null | undefined): Rect | und
 }
 
 export function assertPositionOptions(options: Omit<PositionEngineOptions, 'root' | 'reference' | 'anchorRect'>): void {
+  for (const key of ['avoidCollisions', 'flip', 'shift'] as const) {
+    if (options[key] !== undefined && typeof options[key] !== 'boolean') throw new TypeError(`Position ${key} must be boolean.`);
+  }
   if (!Number.isFinite(options.sideOffset ?? 8)) throw new TypeError('Position sideOffset must be finite.');
   if (!Number.isFinite(options.arrowPadding ?? 8) || (options.arrowPadding ?? 8) < 0) throw new TypeError('Position arrowPadding must be a non-negative finite number.');
   assertPadding(options.collisionPadding);
@@ -617,7 +638,7 @@ function projectCSS(
   writeStyle(styles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
   writeStyle(styles, options.root, 'position-area', side, diagnostics);
   writeStyle(styles, options.root, 'justify-self', align === 'center' ? 'anchor-center' : align, diagnostics);
-  writeStyle(styles, options.root, 'position-try-fallbacks', (options.avoidCollisions ?? true) ? 'flip-block, flip-inline' : '', diagnostics);
+  writeStyle(styles, options.root, 'position-try-fallbacks', '', diagnostics);
   writeStyle(styles, options.root, 'position-visibility', (options.hideWhenDetached ?? false) ? 'anchors-visible' : '', diagnostics);
   writeStyle(styles, options.root, sideMargin(side), `${options.sideOffset ?? 8}px`, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-anchor-width', 'anchor-size(width)', diagnostics);

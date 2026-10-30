@@ -21,6 +21,50 @@ const completeCapabilities = Object.freeze({
   anchorGeometry: true,
 });
 
+test('position policies inherit legacy defaults and independently preserve side, shift and available space', () => {
+  for (const [policy, side, x, y] of [
+    [{}, 'left', 162, 212],
+    [{ avoidCollisions: false }, 'bottom', 270, 278],
+    [{ flip: false }, 'bottom', 192, 278],
+    [{ shift: false }, 'left', 162, 250],
+    [{ avoidCollisions: false, shift: true }, 'bottom', 192, 278],
+    [{ avoidCollisions: false, flip: true }, 'left', 162, 250],
+    [{ avoidCollisions: true, flip: false, shift: false }, 'bottom', 270, 278],
+  ]) {
+    const fixture = createPositionFixture(), before = readPositionSourceRegistryDiagnostics();
+    setRect(fixture.reference, { x: 270, y: 250, width: 20, height: 20 });
+    setRect(fixture.root, { x: 0, y: 0, width: 100, height: 80 });
+    setRect(fixture.boundary, { x: 0, y: 0, width: 300, height: 300 });
+    const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference,
+      collisionBoundary: fixture.boundary, side: 'bottom', align: 'start', strategy: 'fixed', ...policy });
+    try {
+      engine.connect(); fixture.frames.flush();
+      assert.equal(fixture.root.dataset.side, side);
+      assert.equal(fixture.root.style.left, `${x}px`);
+      assert.equal(fixture.root.style.top, `${y}px`);
+      if (side === 'bottom') assert.equal(fixture.root.style.getPropertyValue('--sectile-position-available-height'), '14px');
+      assert.equal(engine.diagnostics().candidateCount, side === 'bottom' ? 1 : 4);
+    } finally { engine.disconnect(); }
+    assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+    fixture.close();
+  }
+});
+
+test('position route admission uses resolved policies and rejects malformed policies before acquiring resources', () => {
+  const fixture = createPositionFixture(), before = readPositionSourceRegistryDiagnostics();
+  const options = { root: fixture.root, reference: fixture.reference, capabilities: completeCapabilities };
+  try {
+    assert.equal(selectPositionRoute({ ...options, flip: false, shift: false }), 'css-anchor');
+    assert.equal(selectPositionRoute({ ...options, avoidCollisions: false, flip: true }), 'javascript');
+    assert.equal(selectPositionRoute({ ...options, avoidCollisions: false, shift: true }), 'javascript');
+    for (const key of ['flip', 'shift', 'avoidCollisions']) {
+      assert.throws(() => createPositionEngine({ ...options, [key]: 'false' }), /must be boolean/);
+    }
+    assert.equal(fixture.root.style.position, '');
+    assert.deepEqual(readPositionSourceRegistryDiagnostics(), before);
+  } finally { fixture.close(); }
+});
+
 test('live reference geometry shares one positioning frame and retires native invalidation sources', () => {
   const fixture = createPositionFixture(), before = readPositionSourceRegistryDiagnostics(); let current, reads = 0;
   const options = { root: fixture.root, reference: fixture.reference, measureAnchorRect: () => { reads++; return current; },

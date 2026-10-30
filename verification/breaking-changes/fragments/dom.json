@@ -3,6 +3,14 @@
   "package": "@sectile/dom",
   "entries": [
     {
+      "id": "ISSUE-235:dom-position-policy",
+      "change": "signature-changed",
+      "before": { "subpath": "./position" },
+      "symbols": ["PositionOptions"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./position" },
+      "removalReason": "Adds independent optional flip and cross-axis shift overrides. Omitted policies inherit avoidCollisions, preserving existing defaults and callers."
+    },
+    {
       "id": "WI-008:dom-cascade-list-direction",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-list" },

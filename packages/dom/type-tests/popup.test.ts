@@ -70,6 +70,10 @@ rectPopup.prepareMove(); rectPopup.completeMove(); rectPopup.completeMove(false)
 rectPopup.completeMove('body');
 rectPopup.syncPosition({ anchorRect: contextPoint });
 rectPopup.syncPosition({ anchorRect: null });
+rectPopup.syncPosition({ side: 'bottom', flip: false, shift: true });
+rectPopup.syncPosition({ avoidCollisions: false, flip: true });
+// @ts-expect-error Collision policies are independent booleans, not middleware names.
+rectPopup.syncPosition({ shift: 'cross-axis' });
 // @ts-expect-error A rectangle requires both dimensions, even for a point.
 rectPopup.syncPosition({ anchorRect: { x: 10, y: 20 } });
 // @ts-expect-error Geometry snapshots cannot replace the HTMLElement context anchor.

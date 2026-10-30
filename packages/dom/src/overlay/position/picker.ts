@@ -25,6 +25,8 @@ export function createPickerPosition(
     collisionPadding: options.collisionPadding,
     collisionBoundary: options.collisionBoundary,
     avoidCollisions: options.avoidCollisions,
+    flip: options.flip,
+    shift: options.shift,
     hideWhenDetached: options.hideWhenDetached,
     strategy: options.strategy,
     tracking: options.tracking,

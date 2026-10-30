@@ -375,6 +375,8 @@ class DOMComboboxConnection<ID extends StableID> implements ComboboxConnection<I
           collisionPadding: options.collisionPadding,
           collisionBoundary: options.collisionBoundary,
           avoidCollisions: options.avoidCollisions,
+          flip: options.flip,
+          shift: options.shift,
           arrowPadding: options.arrowPadding,
           hideWhenDetached: options.hideWhenDetached,
           strategy: options.strategy,

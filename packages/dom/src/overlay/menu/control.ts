@@ -162,6 +162,8 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
           ...(options.collisionPadding === undefined ? {} : { collisionPadding: options.collisionPadding }),
           ...(options.collisionBoundary === undefined ? {} : { collisionBoundary: options.collisionBoundary }),
           ...(options.avoidCollisions === undefined ? {} : { avoidCollisions: options.avoidCollisions }),
+          ...(options.flip === undefined ? {} : { flip: options.flip }),
+          ...(options.shift === undefined ? {} : { shift: options.shift }),
           ...(options.hideWhenDetached === undefined ? {} : { hideWhenDetached: options.hideWhenDetached }),
           ...(options.strategy === undefined ? {} : { strategy: options.strategy }),
           ...(options.tracking === undefined ? {} : { tracking: options.tracking }),

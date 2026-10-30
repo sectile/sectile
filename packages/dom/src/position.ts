@@ -16,6 +16,10 @@ export interface PositionOptions {
   readonly collisionPadding?: PositionPadding;
   readonly collisionBoundary?: PositionBoundary;
   readonly avoidCollisions?: boolean;
+  /** Overrides the flip policy inherited from avoidCollisions. */
+  readonly flip?: boolean;
+  /** Overrides cross-axis shifting inherited from avoidCollisions. */
+  readonly shift?: boolean;
   readonly arrowPadding?: number;
   readonly hideWhenDetached?: boolean;
   readonly strategy?: PositionStrategy;

@@ -22,6 +22,8 @@ export interface DOMPositionOptions {
   readonly collisionPadding?: PositionOptions['collisionPadding'] | undefined;
   readonly collisionBoundary?: PositionOptions['collisionBoundary'] | undefined;
   readonly avoidCollisions?: PositionOptions['avoidCollisions'] | undefined;
+  readonly flip?: PositionOptions['flip'] | undefined;
+  readonly shift?: PositionOptions['shift'] | undefined;
   readonly arrowPadding?: PositionOptions['arrowPadding'] | undefined;
   readonly hideWhenDetached?: PositionOptions['hideWhenDetached'] | undefined;
   readonly strategy?: PositionOptions['strategy'] | undefined;
@@ -67,6 +69,8 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
         collisionPadding: options.collisionPadding,
         collisionBoundary: options.collisionBoundary,
         avoidCollisions: options.avoidCollisions,
+        flip: options.flip,
+        shift: options.shift,
         arrowPadding: options.arrowPadding,
         hideWhenDetached: options.hideWhenDetached,
         strategy: options.strategy,

@@ -79,7 +79,7 @@ class DOMSelectConnection<ID extends StableID> implements SelectConnection<ID> {
     });
     this.#position = options.position === false ? manualPositionConnection : createPosition({ root: options.popup, reference: options.trigger,
       side: options.side, align: options.align, sideOffset: options.sideOffset, collisionPadding: options.collisionPadding,
-      collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, arrowPadding: options.arrowPadding,
+      collisionBoundary: options.collisionBoundary, avoidCollisions: options.avoidCollisions, flip: options.flip, shift: options.shift, arrowPadding: options.arrowPadding,
       hideWhenDetached: options.hideWhenDetached, strategy: options.strategy, tracking: options.tracking });
     setInteractionAttributes(options.root, options, false, true); options.trigger.disabled = options.disabled === true;
     options.trigger.setAttribute('aria-haspopup', 'listbox'); options.popup.setAttribute('role', 'listbox');
