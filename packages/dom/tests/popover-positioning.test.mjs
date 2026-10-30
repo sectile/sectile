@@ -15,9 +15,7 @@ const completeCapabilities = Object.freeze({
   anchorName: true,
   positionAnchor: true,
   positionArea: true,
-  positionTryFallbacks: true,
   positionVisibility: true,
-  anchorCenter: true,
   anchorGeometry: true,
 });
 
@@ -408,6 +406,40 @@ test('DOM positioning selects CSS only for the fully supported narrow route', ()
   window.close();
 });
 
+test('native area sizing admits a viewport containing block and not a clipped or transformed owner', () => {
+  const fixture = createPositionFixture(), container = fixture.window.document.createElement('section');
+  fixture.window.document.body.append(container); container.append(fixture.root);
+  const options = { root: fixture.root, reference: fixture.reference, avoidCollisions: false, capabilities: completeCapabilities };
+  try {
+    container.style.position = 'relative';
+    assert.equal(selectPositionRoute(options), 'javascript');
+    assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'css-anchor');
+    container.style.transform = 'translateX(0px)';
+    assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'javascript');
+    container.style.transform = ''; container.style.overflow = 'hidden';
+    assert.equal(selectPositionRoute({ ...options, strategy: 'fixed' }), 'javascript');
+  } finally { fixture.close(); }
+});
+
+test('native admission reads each root ancestor once and completion needs no measured layout', () => {
+  const fixture = createPositionFixture(), container = fixture.window.document.createElement('section');
+  fixture.window.document.body.append(container); container.append(fixture.root);
+  const readStyle = fixture.window.getComputedStyle.bind(fixture.window);
+  let styles = 0, notifications = 0;
+  fixture.window.getComputedStyle = element => { styles++; return readStyle(element); };
+  fixture.root.getBoundingClientRect = fixture.reference.getBoundingClientRect = () => { throw Error('native geometry must stay in CSS'); };
+  const engine = createPositionEngine({ root: fixture.root, reference: fixture.reference, avoidCollisions: false,
+    capabilities: completeCapabilities, onPositioned() { notifications++; } });
+  try {
+    assert.equal(styles, 3);
+    engine.connect(); engine.connect(); engine.update();
+    assert.equal(notifications, 2);
+    assert.equal(styles, 3);
+    assert.equal(engine.diagnostics().measurementReads, 0);
+    assert.equal(fixture.frames.pending, 0);
+  } finally { engine.disconnect(); fixture.close(); }
+});
+
 test('CSS route admits its exact geometry expressions and owns no measured layout resources', () => {
   const window = new Window({ url: 'https://sectile.dev/' }), document = window.document;
   const root = document.createElement('div'), reference = document.createElement('button');
@@ -418,11 +450,15 @@ test('CSS route admits its exact geometry expressions and owns no measured layou
   const capability = detectPositionEngineCapabilities(window);
   assert.equal(capability.anchorGeometry, true);
   const geometry = queried.filter(([, value]) => value.includes('anchor(') || value.includes('anchor-size('));
-  assert.equal(geometry.length, 6);
+  assert.ok(geometry.some(([property, value]) => property === 'left' && value === 'anchor(left)'));
+  assert.ok(geometry.some(([property, value]) => property === 'top' && value === 'anchor(center)'));
   for (const missing of geometry) {
     window.CSS.supports = (property, value) => property !== missing[0] || value !== missing[1];
     assert.equal(selectPositionRoute({ root, reference, avoidCollisions: false }), 'javascript');
   }
+  window.CSS.supports = () => true;
+  window.CSS.supports = (property) => property !== 'translate';
+  assert.equal(selectPositionRoute({ root, reference, avoidCollisions: false }), 'javascript');
   window.CSS.supports = () => true;
   reference.style.setProperty('anchor-name', '--application-anchor'); root.style.position = 'relative';
   root.dataset.positionRoute = 'application';

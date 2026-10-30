@@ -1220,7 +1220,7 @@
           "timers": "O(1)",
           "subscriptions": "O(1)"
         },
-        "proof": "Connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source.",
+        "proof": "Native admission inspects each root ancestor style once without geometry reads or retained resources, accepting only a viewport position area. JS connection discovers the owned ancestor chain once; source-owned WeakMap registries retain one physical listener and only callbacks for connections affected by that source. Completion callbacks share the engine owner so route admission is not repeated by the connection wrapper.",
         "adversarialWitness": "Deep nested scrolling ancestors with every target connected.",
         "fullScan": {
           "allowed": false,

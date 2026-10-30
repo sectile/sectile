@@ -240,6 +240,18 @@ try {
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], 'framework rewrote a live composition');
   } else {
+    const positioning = await page.evaluate(() => window.sectileProbe.positioning());
+    assert.equal(positioning.rows.length, 96);
+    for (const row of positioning.rows) {
+      assert.equal(row.nativeRoute, 'css-anchor', JSON.stringify(row));
+      assert.equal(row.jsRoute, 'javascript', JSON.stringify(row));
+      assert.ok(Math.abs(row.native.x - row.js.x) <= 0.5 && Math.abs(row.native.y - row.js.y) <= 0.5, JSON.stringify(row));
+    }
+    assert.equal(positioning.size.route, 'css-anchor');
+    assert.ok(Math.abs(positioning.size.height - positioning.size.expected) <= 0.5, JSON.stringify(positioning.size));
+    assert.equal(positioning.scroll.route, 'css-anchor');
+    assert.ok(Math.abs(positioning.scroll.anchorX - positioning.scroll.popupX) <= 0.5, JSON.stringify(positioning.scroll));
+    report.results.push({ id: 'positioning', ...positioning });
     const toast = await page.evaluate(() => window.sectileProbe.toast());
     assert.deepEqual(toast, { prevented: false, focused: 'toast-input', queueUnchanged: true, count: 0 });
     await page.keyboard.press('F8');

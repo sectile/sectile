@@ -19,9 +19,7 @@ export interface PositionEngineCapabilities {
   readonly anchorName: boolean;
   readonly positionAnchor: boolean;
   readonly positionArea: boolean;
-  readonly positionTryFallbacks: boolean;
   readonly positionVisibility: boolean;
-  readonly anchorCenter: boolean;
   readonly anchorGeometry: boolean;
 }
 
@@ -47,6 +45,8 @@ export interface PositionEngineOptions {
   readonly requiresLayoutObservables?: boolean;
   readonly capabilities?: PositionEngineCapabilities;
   readonly onLayout?: (layout: AnchoredLayout) => void;
+  /** Completion notification without requesting measured layout observables. */
+  readonly onPositioned?: (() => void) | undefined;
 }
 
 export interface PositionEngineDiagnostics {
@@ -139,15 +139,14 @@ export function detectPositionEngineCapabilities(view: Window): PositionEngineCa
     anchorName: supports('anchor-name', '--sectile-probe'),
     positionAnchor: supports('position-anchor', '--sectile-probe'),
     positionArea: supports('position-area', 'bottom'),
-    positionTryFallbacks: supports('position-try-fallbacks', 'flip-block'),
     positionVisibility: supports('position-visibility', 'anchors-visible'),
-    anchorCenter: supports('justify-self', 'anchor-center'),
     anchorGeometry: supports('width', 'anchor-size(width)')
       && supports('height', 'anchor-size(height)')
-      && supports('left', 'max(0px, calc(anchor(left) - 8px))')
-      && supports('left', 'max(0px, calc(100vw - anchor(right) - 8px))')
-      && supports('top', 'max(0px, calc(anchor(top) - 8px))')
-      && supports('top', 'max(0px, calc(100vh - anchor(bottom) - 8px))'),
+      && supports('max-width', 'max(0px, calc(100% - 8px))')
+      && supports('max-height', 'max(0px, calc(100% - 8px))')
+      && supports('left', 'anchor(left)') && supports('left', 'anchor(center)') && supports('left', 'anchor(right)')
+      && supports('top', 'anchor(top)') && supports('top', 'anchor(center)') && supports('top', 'anchor(bottom)')
+      && supports('translate', '-100% -50%'),
   });
 }
 
@@ -174,8 +173,6 @@ function selectResolvedPositionRoute(options: ResolvedPositionEngineOptions): Po
     && capabilities.anchorGeometry
     && capabilities.positionAnchor
     && capabilities.positionArea
-    && ((options.align ?? 'center') !== 'center' || capabilities.anchorCenter)
-    && (!options.flip || capabilities.positionTryFallbacks)
     && (!(options.hideWhenDetached ?? false) || capabilities.positionVisibility);
   const semantic = (options.collisionBoundary === undefined || options.collisionBoundary === 'viewport')
     && options.arrow === undefined
@@ -183,7 +180,20 @@ function selectResolvedPositionRoute(options: ResolvedPositionEngineOptions): Po
     && options.tracking !== 'animation-frame'
     && options.requiresLayoutObservables !== true
     && options.onLayout === undefined;
-  return complete && semantic ? 'css-anchor' : 'javascript';
+  return complete && semantic && viewportPositionArea(options, view) ? 'css-anchor' : 'javascript';
+}
+
+// Percentage size limits in a position area must describe the same viewport
+// boundary as Core. A clipped or independently containing ancestor needs JS.
+function viewportPositionArea(options: PositionEngineOptions, view: Window): boolean {
+  const viewport = view.visualViewport;
+  if (viewport != null && (viewport.scale !== 1 || viewport.offsetLeft !== 0 || viewport.offsetTop !== 0)) return false;
+  const fixed = options.strategy === 'fixed';
+  for (let current = parentElement(options.root); current !== null; current = parentElement(current)) {
+    const style = view.getComputedStyle(current);
+    if (clipsOrScrolls(style) || !initialContainingBlockStyle(style, fixed)) return false;
+  }
+  return true;
 }
 
 export function readPositionSourceRegistryDiagnostics(): PositionSourceRegistryDiagnostics {
@@ -286,6 +296,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
     projectJavaScript(options, layout, measurement, ownedStyles, ownedData, diagnostics);
     diagnostics.completedUpdates += 1;
     options.onLayout?.(layout);
+    options.onPositioned?.();
   };
 
   const reconcileAncestors = (ancestors: DiscoveredAncestors): void => {
@@ -321,6 +332,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       anchorName = `--sectile-anchor-${++anchorSequence}`;
       projectCSS(options, anchorName, ownedStyles, ownedData, diagnostics);
       diagnostics.completedUpdates += 1;
+      options.onPositioned?.();
       return;
     }
     diagnostics.discoveryRuns += 1;
@@ -391,6 +403,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       if (!connected) return;
       if (route === 'css-anchor') {
         if (anchorName !== undefined) projectCSS(options, anchorName, ownedStyles, ownedData, diagnostics);
+        options.onPositioned?.();
       } else {
         diagnostics.discoveryRuns += 1;
         reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view));
@@ -516,10 +529,10 @@ function initialStyle(value: string | undefined, initial: string): boolean {
   return value === undefined || value === '' || value === initial;
 }
 
-// A plain static BODY can be the native offsetParent sentinel without being
-// the absolute containing block. Keep effect/containment bodies on their native path.
-function plainStaticBody(style: CSSStyleDeclaration): boolean {
-  return initialStyle(style.position, 'static') && initialStyle(style.transform, 'none')
+// Initial ancestor styles preserve the viewport containing block. A plain BODY
+// can also be the native absolute offsetParent sentinel without owning that block.
+function initialContainingBlockStyle(style: CSSStyleDeclaration, allowPositioned = false): boolean {
+  return (allowPositioned || initialStyle(style.position, 'static')) && initialStyle(style.transform, 'none')
     && initialStyle(style.translate, 'none') && initialStyle(style.rotate, 'none') && initialStyle(style.scale, 'none')
     && initialStyle(style.perspective, 'none') && initialStyle(style.filter, 'none') && initialStyle(style.backdropFilter, 'none')
     && initialStyle(style.contain, 'none') && initialStyle(style.willChange, 'auto')
@@ -556,7 +569,7 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     if (parent != null) {
       let initial = false;
       if (parent === options.root.ownerDocument.body) {
-        initial = plainStaticBody(view.getComputedStyle(parent));
+        initial = initialContainingBlockStyle(view.getComputedStyle(parent));
         diagnostics.measurementReads += 1;
       }
       if (initial) {
@@ -637,7 +650,17 @@ function projectCSS(
   writeStyle(styles, options.root, 'position-anchor', anchorName, diagnostics);
   writeStyle(styles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
   writeStyle(styles, options.root, 'position-area', side, diagnostics);
-  writeStyle(styles, options.root, 'justify-self', align === 'center' ? 'anchor-center' : align, diagnostics);
+  writeStyle(styles, options.root, 'justify-self', 'normal', diagnostics);
+  writeStyle(styles, options.root, 'align-self', 'normal', diagnostics);
+  for (const inset of ['top', 'right', 'bottom', 'left'] as const) writeStyle(styles, options.root, inset, 'auto', diagnostics);
+  const vertical = side === 'top' || side === 'bottom';
+  const crossEdge = align === 'center' ? 'center' : vertical
+    ? align === 'start' ? 'left' : 'right'
+    : align === 'start' ? 'top' : 'bottom';
+  writeStyle(styles, options.root, vertical ? 'left' : 'top', `anchor(${crossEdge})`, diagnostics);
+  writeStyle(styles, options.root, side === 'top' ? 'bottom' : side === 'bottom' ? 'top' : side === 'left' ? 'right' : 'left', '0px', diagnostics);
+  const crossTranslate = align === 'start' ? '0%' : align === 'center' ? '-50%' : '-100%';
+  writeStyle(styles, options.root, 'translate', vertical ? `${crossTranslate} 0%` : `0% ${crossTranslate}`, diagnostics);
   writeStyle(styles, options.root, 'position-try-fallbacks', '', diagnostics);
   writeStyle(styles, options.root, 'position-visibility', (options.hideWhenDetached ?? false) ? 'anchors-visible' : '', diagnostics);
   writeStyle(styles, options.root, sideMargin(side), `${options.sideOffset ?? 8}px`, diagnostics);
@@ -645,16 +668,12 @@ function projectCSS(
   writeStyle(styles, options.root, '--sectile-position-anchor-height', 'anchor-size(height)', diagnostics);
   const padding = cssPadding(options.collisionPadding);
   const offset = options.sideOffset ?? 8;
-  const availableWidth = side === 'left'
-    ? `max(0px, calc(anchor(left) - ${padding.left + offset}px))`
-    : side === 'right'
-      ? `max(0px, calc(100vw - anchor(right) - ${padding.right + offset}px))`
-      : `max(0px, calc(100vw - ${padding.left + padding.right}px))`;
-  const availableHeight = side === 'top'
-    ? `max(0px, calc(anchor(top) - ${padding.top + offset}px))`
-    : side === 'bottom'
-      ? `max(0px, calc(100vh - anchor(bottom) - ${padding.bottom + offset}px))`
-      : `max(0px, calc(100vh - ${padding.top + padding.bottom}px))`;
+  // Percentages resolve against the selected position area. anchor() itself is
+  // invalid in max-width/max-height, including when substituted through var().
+  const availableWidth = `max(0px, calc(100% - ${side === 'left' ? padding.left + offset
+    : side === 'right' ? padding.right + offset : padding.left + padding.right}px))`;
+  const availableHeight = `max(0px, calc(100% - ${side === 'top' ? padding.top + offset
+    : side === 'bottom' ? padding.bottom + offset : padding.top + padding.bottom}px))`;
   writeStyle(styles, options.root, '--sectile-position-available-width', availableWidth, diagnostics);
   writeStyle(styles, options.root, '--sectile-position-available-height', availableHeight, diagnostics);
   writeData(data, options.root, 'positionRoute', 'css-anchor', diagnostics);

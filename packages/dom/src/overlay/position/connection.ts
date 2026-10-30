@@ -2,7 +2,6 @@ import type { PositionOptions, PositionRect } from '../../position.js';
 export { assertPositionOptions, snapshotPositionRect } from './engine.js';
 import {
   createPositionEngine,
-  selectPositionRoute,
   snapshotPositionRect,
   type PositionEngineConnection,
   type PositionEngineOptions,
@@ -75,18 +74,13 @@ export function createPosition(options: DOMPositionOptions): PositionConnection 
         hideWhenDetached: options.hideWhenDetached,
         strategy: options.strategy,
         tracking: options.tracking,
+        onPositioned: options.onPositioned,
       };
-      // Keep CSS anchoring eligible: it has no asynchronous layout to await.
-      engine = createPositionEngine(options.onPositioned !== undefined
-        && selectPositionRoute(engineOptions) === 'javascript'
-        ? { ...engineOptions, onLayout: options.onPositioned }
-        : engineOptions);
+      engine = createPositionEngine(engineOptions);
       engine.connect();
-      if (engine.route === 'css-anchor') options.onPositioned?.();
       return;
     }
     engine.update();
-    if (engine.route === 'css-anchor') options.onPositioned?.();
   };
 
   return Object.freeze({ update, disconnect, syncAnchorRect(rect: PositionRect | undefined): void {

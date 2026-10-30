@@ -71,6 +71,55 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
+  async positioning() {
+    reset();
+    const rows = [];
+    const previousDirection = document.documentElement.dir;
+    const frames = async () => { for (let index = 0; index < 3; index++) await new Promise(requestAnimationFrame); };
+    try {
+      for (const direction of ['ltr', 'rtl']) for (const strategy of ['fixed', 'absolute']) {
+        document.documentElement.dir = direction;
+        for (const edge of [false, true]) for (const side of ['top', 'right', 'bottom', 'left']) for (const align of ['start', 'center', 'end']) {
+          const anchor = document.createElement('button');
+          anchor.style.cssText = `position:absolute;left:${edge ? innerWidth - 40 : 350}px;top:280px;width:60px;height:40px;padding:0;border:0;`;
+          const roots = [document.createElement('div'), document.createElement('div')];
+          for (const root of roots) root.style.cssText = 'width:180px;height:100px;';
+          document.body.append(anchor, ...roots);
+          const a = anchor.getBoundingClientRect();
+          const options = { anchor, side, align, strategy, sideOffset: 8, flip: false, shift: false, defaultOpen: true, autoFocus: false, label: 'Placement probe' };
+          const native = createPopover({ ...options, root: roots[0] });
+          const javascript = createPopover({ ...options, root: roots[1], anchorRect: { x: a.x, y: a.y, width: a.width, height: a.height } });
+          try {
+            await frames();
+            const n = roots[0].getBoundingClientRect(), j = roots[1].getBoundingClientRect();
+            rows.push({ direction, strategy, edge, side, align, nativeRoute: roots[0].dataset.positionRoute,
+              jsRoute: roots[1].dataset.positionRoute, native: { x: n.x, y: n.y }, js: { x: j.x, y: j.y } });
+          } finally { native.disconnect(); javascript.disconnect(); anchor.remove(); for (const root of roots) root.remove(); }
+        }
+      }
+      const anchor = document.createElement('button'), root = document.createElement('div');
+      anchor.style.cssText = `position:absolute;left:250px;top:${innerHeight - 90}px;width:60px;height:40px;border:0;padding:0;`;
+      root.style.cssText = 'width:180px;height:500px;max-height:var(--sectile-position-available-height);overflow:auto;';
+      document.body.append(anchor, root);
+      const popup = createPopover({ root, anchor, side: 'bottom', align: 'start', strategy: 'fixed', avoidCollisions: false,
+        defaultOpen: true, autoFocus: false, label: 'Size probe' });
+      let size;
+      try { await frames(); size = { route: root.dataset.positionRoute, height: root.getBoundingClientRect().height,
+        expected: Math.max(0, innerHeight - anchor.getBoundingClientRect().bottom - 16) }; }
+      finally { popup.disconnect(); anchor.remove(); root.remove(); }
+      const scroller = document.createElement('div'), track = document.createElement('div'), button = document.createElement('button');
+      const panel = document.createElement('div');
+      scroller.style.cssText = 'position:absolute;left:100px;top:100px;width:300px;overflow:auto;';
+      track.style.cssText = 'width:800px;height:60px;'; button.style.cssText = 'margin-left:200px;width:60px;height:40px;';
+      panel.style.cssText = 'width:180px;height:100px;'; track.append(button); scroller.append(track); document.body.append(scroller, panel);
+      const portaled = createPopover({ root: panel, anchor: button, side: 'bottom', align: 'start', strategy: 'fixed', avoidCollisions: false,
+        defaultOpen: true, autoFocus: false, label: 'Scroll probe' });
+      let scroll;
+      try { await frames(); scroller.scrollLeft = 80; await frames(); scroll = { anchorX: button.getBoundingClientRect().x, popupX: panel.getBoundingClientRect().x, route: panel.dataset.positionRoute }; }
+      finally { portaled.disconnect(); scroller.remove(); panel.remove(); }
+      return { rows, size, scroll };
+    } finally { document.documentElement.dir = previousDirection; }
+  },
   events, writes, valueWrites, nativeMutations,
   inputFamilies: ['native','native-textarea','text','combo','text-uncontrolled','textarea','text-representation','combo-uncontrolled','number','quantity',
     'date','time','datetime','date-start','date-end','time-start','time-end','picker','tags','spin','editable','pin','color','treegrid','tabular-editor','tabular-filter',
