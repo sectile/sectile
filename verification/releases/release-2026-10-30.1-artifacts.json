@@ -1,0 +1,4347 @@
+{
+  "schemaVersion": 1,
+  "releaseTag": "release-2026-10-30.1",
+  "sourceCommit": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+  "policyCommit": "ecefc6026a7dd3b7c5e1e7375ef429d26d039744",
+  "qualificationComparison": "verification/performance/release-2026-10-30-comparison.json",
+  "release": {
+    "id": 428762214,
+    "url": "https://github.com/sectile/sectile/releases/tag/release-2026-10-30.1",
+    "publishedAt": "2026-10-30T07:42:37Z",
+    "immutable": true,
+    "draft": false,
+    "notesMatch": true,
+    "assets": [
+      {
+        "id": 691345719,
+        "name": "artifacts.json",
+        "digest": "sha256:138c1017ac45aa982fa0aa0c60b076789566f7cd0575550b3f441f94d7d1f732",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/artifacts.json",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345828,
+        "name": "npm-artifact-report.json",
+        "digest": "sha256:6086a42ec606d40cdc6104b7947b036cc889a8fb917797ac5b3ae62fdbc62061",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/npm-artifact-report.json",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345891,
+        "name": "npm-diagnostics.json",
+        "digest": "sha256:2305eeb4cd96f1b3250b4d7d4bafd7eda321e127d2b2ffce84bda63fda2aacd3",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/npm-diagnostics.json",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345942,
+        "name": "npm-report.json",
+        "digest": "sha256:80010177bf662fbe5acfc2c4e348729ab80c930f098026a9385b02d8332edda2",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/npm-report.json",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345771,
+        "name": "release-notes-report.json",
+        "digest": "sha256:cdd25bd506d98ab5e6bc2ce73c97ba6868ecf609c8aa044e9180a710c7cb2bd6",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/release-notes-report.json",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345571,
+        "name": "sectile-dom-0.21.0.tgz",
+        "digest": "sha256:eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/sectile-dom-0.21.0.tgz",
+        "originalBytesMatch": true
+      },
+      {
+        "id": 691345649,
+        "name": "sectile-vue-0.21.0.tgz",
+        "digest": "sha256:88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8",
+        "url": "https://github.com/sectile/sectile/releases/download/release-2026-10-30.1/sectile-vue-0.21.0.tgz",
+        "originalBytesMatch": true
+      }
+    ]
+  },
+  "workflows": {
+    "publication": {
+      "id": 41020799846,
+      "url": "https://github.com/sectile/sectile/actions/runs/41020799846",
+      "attempt": 1,
+      "jobs": [
+        {
+          "id": 123947426243,
+          "name": "prepare",
+          "conclusion": "success"
+        },
+        {
+          "id": 123947649359,
+          "name": "publish",
+          "conclusion": "success"
+        },
+        {
+          "id": 123950281514,
+          "name": "github-release",
+          "conclusion": "success"
+        }
+      ],
+      "artifacts": {
+        "prepared": 12960554752,
+        "npmEvidence": 12961808174,
+        "githubEvidence": 12961268665
+      }
+    },
+    "sourceVerification": {
+      "id": 41020799878,
+      "url": "https://github.com/sectile/sectile/actions/runs/41020799878",
+      "attempt": 1,
+      "verifiedUnits": 41,
+      "allJobsPassed": true,
+      "lanes": [
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "1",
+          "results": [
+            {
+              "id": "tooling:scripts/package-structure.test.mjs",
+              "status": "passed",
+              "seconds": 19.031838783999998
+            }
+          ]
+        },
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "2",
+          "results": [
+            {
+              "id": "package:vue",
+              "status": "passed",
+              "seconds": 18.889700299
+            },
+            {
+              "id": "tooling:scripts/public-change-wiring.test.mjs",
+              "status": "passed",
+              "seconds": 0.10486508799999865
+            },
+            {
+              "id": "tooling:scripts/representation-crossovers.test.mjs",
+              "status": "passed",
+              "seconds": 0.09013798300000053
+            },
+            {
+              "id": "tooling:scripts/virtual-benchmark/merge-shards.test.mjs",
+              "status": "passed",
+              "seconds": 0.1290676179999973
+            }
+          ]
+        },
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "3",
+          "results": [
+            {
+              "id": "package-structure",
+              "status": "passed",
+              "seconds": 14.934942285000002
+            },
+            {
+              "id": "tooling:scripts/entrypoint-migrations.test.mjs",
+              "status": "passed",
+              "seconds": 0.09127736600000026
+            },
+            {
+              "id": "tooling:scripts/performance.test.mjs",
+              "status": "passed",
+              "seconds": 0.978831349
+            },
+            {
+              "id": "tooling:scripts/release-plan.test.mjs",
+              "status": "passed",
+              "seconds": 1.3194186710000013
+            },
+            {
+              "id": "tooling:scripts/verification-plan.test.mjs",
+              "status": "passed",
+              "seconds": 0.7104013129999985
+            },
+            {
+              "id": "tooling:scripts/virtual-benchmark/source-metadata.test.mjs",
+              "status": "passed",
+              "seconds": 0.09545897700000205
+            }
+          ]
+        },
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "4",
+          "results": [
+            {
+              "id": "package:dom",
+              "status": "passed",
+              "seconds": 13.713656439000001
+            },
+            {
+              "id": "tooling:scripts/compact-process.test.mjs",
+              "status": "passed",
+              "seconds": 0.09852471100000003
+            },
+            {
+              "id": "tooling:scripts/component-public-api.test.mjs",
+              "status": "passed",
+              "seconds": 0.10352878200000123
+            },
+            {
+              "id": "tooling:scripts/core-module-dag.test.mjs",
+              "status": "passed",
+              "seconds": 0.9500363539999999
+            },
+            {
+              "id": "tooling:scripts/performance-gates.test.mjs",
+              "status": "passed",
+              "seconds": 2.290700309
+            },
+            {
+              "id": "tooling:scripts/release-artifacts.test.mjs",
+              "status": "passed",
+              "seconds": 0.1228047370000022
+            },
+            {
+              "id": "tooling:scripts/source-map-policy.test.mjs",
+              "status": "passed",
+              "seconds": 0.19008053100000324
+            },
+            {
+              "id": "tooling:scripts/virtual-benchmark/result-normalization.test.mjs",
+              "status": "passed",
+              "seconds": 0.11043992399999843
+            }
+          ]
+        },
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "5",
+          "results": [
+            {
+              "id": "reproducible-builds",
+              "status": "passed",
+              "seconds": 4.387811155
+            },
+            {
+              "id": "tooling:scripts/check-component-completeness.test.mjs",
+              "status": "passed",
+              "seconds": 0.11993444600000021
+            },
+            {
+              "id": "tooling:scripts/complexity-witnesses.test.mjs",
+              "status": "passed",
+              "seconds": 0.6842420860000002
+            },
+            {
+              "id": "tooling:scripts/consumer-install.test.mjs",
+              "status": "passed",
+              "seconds": 0.17298080800000026
+            },
+            {
+              "id": "tooling:scripts/packed-package-contract.test.mjs",
+              "status": "passed",
+              "seconds": 0.7341409860000003
+            },
+            {
+              "id": "tooling:scripts/public-change-gates.test.mjs",
+              "status": "passed",
+              "seconds": 0.07995424399999956
+            },
+            {
+              "id": "tooling:scripts/release.test.mjs",
+              "status": "passed",
+              "seconds": 0.0891224400000001
+            },
+            {
+              "id": "tooling:scripts/virtual-benchmark/committed-results.test.mjs",
+              "status": "passed",
+              "seconds": 0.2193091459999996
+            }
+          ]
+        },
+        {
+          "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+          "lane": "6",
+          "results": [
+            {
+              "id": "consumer-bundles:dom",
+              "status": "passed",
+              "seconds": 16.515055511
+            },
+            {
+              "id": "consumer-bundles:vue",
+              "status": "passed",
+              "seconds": 26.757573061999995
+            },
+            {
+              "id": "entrypoint-migrations",
+              "status": "passed",
+              "seconds": 0.8396708220000001
+            },
+            {
+              "id": "public-signatures",
+              "status": "passed",
+              "seconds": 0.740435040999997
+            },
+            {
+              "id": "tooling:scripts/algorithm-reuse.test.mjs",
+              "status": "passed",
+              "seconds": 0.5086574519999995
+            },
+            {
+              "id": "tooling:scripts/artifact-contract.test.mjs",
+              "status": "passed",
+              "seconds": 3.533298275000001
+            },
+            {
+              "id": "tooling:scripts/artifact-session.test.mjs",
+              "status": "passed",
+              "seconds": 1.701957233000001
+            },
+            {
+              "id": "tooling:scripts/complexity-contracts.test.mjs",
+              "status": "passed",
+              "seconds": 0.11886594399999739
+            },
+            {
+              "id": "tooling:scripts/consumer-bundles.test.mjs",
+              "status": "passed",
+              "seconds": 1.471816432000007
+            },
+            {
+              "id": "tooling:scripts/npm-publish-auth.test.mjs",
+              "status": "passed",
+              "seconds": 0.14020762700000342
+            },
+            {
+              "id": "tooling:scripts/portable-process.test.mjs",
+              "status": "passed",
+              "seconds": 0.10685522100000526
+            },
+            {
+              "id": "tooling:scripts/release-worktree.test.mjs",
+              "status": "passed",
+              "seconds": 0.457647493000004
+            },
+            {
+              "id": "tooling:scripts/verification-runner.test.mjs",
+              "status": "passed",
+              "seconds": 0.10602897700000176
+            },
+            {
+              "id": "workspace-boundaries",
+              "status": "passed",
+              "seconds": 0.9339213990000063
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "sealedManifest": {
+    "schema": 1,
+    "source": {
+      "repository": "sectile/sectile",
+      "commit": "92825a46da758bcfe20f04e3ea1799bc6d56329a"
+    },
+    "packages": [
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "tarball": "sectile-dom-0.21.0.tgz",
+        "integrity": "sha512-KQv9ELksT6v0gwGzZOvZ40x6PTSkF3JIGJFy3goPXtDWlDeWR60J5i42o5USjKIyt2Wk13U2I4Tjm00Vgvm4BA=="
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "tarball": "sectile-vue-0.21.0.tgz",
+        "integrity": "sha512-gXp5JSVbuLDBDEBdShj34eJ7bsdwHbfATvnvJ0dDXUv52pAXzw1n7dfiMceG6W8itUY6pSM4joaEcJIE84ACgg=="
+      }
+    ]
+  },
+  "npmReport": {
+    "schema": 1,
+    "source": {
+      "repository": "sectile/sectile",
+      "commit": "92825a46da758bcfe20f04e3ea1799bc6d56329a"
+    },
+    "status": "success",
+    "stage": "complete",
+    "plan": [
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "mode": "direct",
+        "integrity": "sha512-KQv9ELksT6v0gwGzZOvZ40x6PTSkF3JIGJFy3goPXtDWlDeWR60J5i42o5USjKIyt2Wk13U2I4Tjm00Vgvm4BA=="
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "mode": "direct",
+        "integrity": "sha512-gXp5JSVbuLDBDEBdShj34eJ7bsdwHbfATvnvJ0dDXUv52pAXzw1n7dfiMceG6W8itUY6pSM4joaEcJIE84ACgg=="
+      }
+    ],
+    "results": [
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "state": "already-published"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "state": "published"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "state": "published"
+      }
+    ]
+  },
+  "registry": {
+    "packages": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "tarball": "https://registry.npmjs.org/@sectile/core/-/core-0.16.0.tgz",
+        "filename": "sectile-core-0.16.0.tgz",
+        "integrity": "sha512-nU7YlyB0UC4aZZZyn/+ioQ18x2vtK+jVm11b6OC4eIVMA5upRbz3Sdkx1PictnfkkzE1oj3qb9KFwW6f3TV3/A==",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "tarball": "https://registry.npmjs.org/@sectile/chart/-/chart-0.16.1.tgz",
+        "filename": "sectile-chart-0.16.1.tgz",
+        "integrity": "sha512-che+WTAFi7OREKkv1eQVhTJxl06NKU1nkkMK6ITuZajOJuruYW1eAZ1OOmyKihe9h3g1e5YT4gaSjJbLegfkXg==",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "tarball": "https://registry.npmjs.org/@sectile/form/-/form-0.15.2.tgz",
+        "filename": "sectile-form-0.15.2.tgz",
+        "integrity": "sha512-WL9oTPpEdR7q+ghouT42TKhBLMwaqPHmu2NEFyyJNoEYTIirl+fC3SAp25qQrOAInWtBMN8fnaB7OLbGZphUIA==",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "tarball": "https://registry.npmjs.org/@sectile/tabular/-/tabular-0.17.1.tgz",
+        "filename": "sectile-tabular-0.17.1.tgz",
+        "integrity": "sha512-EOllUch6nZeAFb1OybA3uWQXGbDLWzaQCwrXfu4jZ7XtKvFlgrHTuVcXG7HrnJ4dK7IMEHw9CBYCHnz+/AUicg==",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "tarball": "https://registry.npmjs.org/@sectile/temporal/-/temporal-0.15.1.tgz",
+        "filename": "sectile-temporal-0.15.1.tgz",
+        "integrity": "sha512-KqM3S/LjTZfm/t/+ckzi6eW7gASkpsktXIkwAhbfHVRNZl2H/Vp2uA3eOfI4T5RENkxnSLJe/MNa9K1M+5iZRw==",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "tarball": "https://registry.npmjs.org/@sectile/virtual/-/virtual-0.16.1.tgz",
+        "filename": "sectile-virtual-0.16.1.tgz",
+        "integrity": "sha512-SZBfUk6lj1MVOJN+wXBHnKiBMw84spDgV6mU1tRVaoOiP5xXw955HglZqtievYEyChcOajsVB+aTZHMbY623Dw==",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "tarball": "https://registry.npmjs.org/@sectile/dom/-/dom-0.21.0.tgz",
+        "filename": "sectile-dom-0.21.0.tgz",
+        "integrity": "sha512-KQv9ELksT6v0gwGzZOvZ40x6PTSkF3JIGJFy3goPXtDWlDeWR60J5i42o5USjKIyt2Wk13U2I4Tjm00Vgvm4BA==",
+        "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867",
+        "sealedMatch": true
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "tarball": "https://registry.npmjs.org/@sectile/terminal/-/terminal-0.15.1.tgz",
+        "filename": "sectile-terminal-0.15.1.tgz",
+        "integrity": "sha512-yzdiRgtP7WlAbQRiMCZgGAhk781wYq6LpZjwSCm3nmyBZNh4dbvYPVBwkrbgCMnGYYXO573sSy6syGSWrFtE3Q==",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "tarball": "https://registry.npmjs.org/@sectile/vue/-/vue-0.21.0.tgz",
+        "filename": "sectile-vue-0.21.0.tgz",
+        "integrity": "sha512-gXp5JSVbuLDBDEBdShj34eJ7bsdwHbfATvnvJ0dDXUv52pAXzw1n7dfiMceG6W8itUY6pSM4joaEcJIE84ACgg==",
+        "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8",
+        "sealedMatch": true
+      }
+    ],
+    "latest": [
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "integrity": "sha512-KQv9ELksT6v0gwGzZOvZ40x6PTSkF3JIGJFy3goPXtDWlDeWR60J5i42o5USjKIyt2Wk13U2I4Tjm00Vgvm4BA=="
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "integrity": "sha512-gXp5JSVbuLDBDEBdShj34eJ7bsdwHbfATvnvJ0dDXUv52pAXzw1n7dfiMceG6W8itUY6pSM4joaEcJIE84ACgg=="
+      }
+    ]
+  },
+  "identity": {
+    "sealedRegistryBytesMatch": true,
+    "allNineSourceBrowserAndNativeArtifactsMatch": true,
+    "allSevenImmutableAssetsMatch": true
+  },
+  "sourceBrowser": {
+    "jobID": 123947716728,
+    "status": "passed",
+    "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+    "artifacts": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+      }
+    ],
+    "positioningCases": 96
+  },
+  "nativeReports": [
+    {
+      "jobID": 123947716566,
+      "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+      "nativeIME": true,
+      "status": "passed",
+      "results": [
+        {
+          "id": "native",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native-textarea",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "text-uncontrolled",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "number",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "datetime",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "time-end",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "editable",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "tabular-editor",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "datetime-start",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text-uncontrolled",
+          "family": "text-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "number",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "number",
+          "family": "number",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime",
+          "family": "datetime",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time-end",
+          "family": "time-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "editable",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "editable",
+          "family": "editable",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tabular-editor",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tabular-editor",
+          "family": "tabular-editor",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime-start",
+          "family": "datetime-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "artifacts": [
+        {
+          "name": "@sectile/core",
+          "version": "0.16.0",
+          "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+        },
+        {
+          "name": "@sectile/chart",
+          "version": "0.16.1",
+          "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+        },
+        {
+          "name": "@sectile/form",
+          "version": "0.15.2",
+          "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+        },
+        {
+          "name": "@sectile/tabular",
+          "version": "0.17.1",
+          "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+        },
+        {
+          "name": "@sectile/temporal",
+          "version": "0.15.1",
+          "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+        },
+        {
+          "name": "@sectile/virtual",
+          "version": "0.16.1",
+          "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.21.0",
+          "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+        },
+        {
+          "name": "@sectile/terminal",
+          "version": "0.15.1",
+          "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.21.0",
+          "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+        }
+      ],
+      "shard": [
+        1,
+        4
+      ],
+      "families": [
+        "native",
+        "text-uncontrolled",
+        "number",
+        "datetime",
+        "time-end",
+        "editable",
+        "tabular-editor",
+        "datetime-start"
+      ],
+      "current": {
+        "family": "datetime-start",
+        "reference": false
+      },
+      "imeWarmup": "하ㄴ",
+      "sources": [
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        }
+      ]
+    },
+    {
+      "jobID": 123947716623,
+      "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+      "nativeIME": true,
+      "status": "passed",
+      "results": [
+        {
+          "id": "native",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native-textarea",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "textarea",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "quantity",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "date-start",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "picker",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "pin",
+          "history": "specialized per-cell admission; checked through native composition"
+        },
+        {
+          "id": "tabular-filter",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "datetime-end",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "textarea",
+          "reference": true,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "textarea",
+          "family": "textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "quantity",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "quantity",
+          "family": "quantity",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date-start",
+          "family": "date-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "picker",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "picker",
+          "family": "picker",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "pin",
+          "reference": true,
+          "text": "한",
+          "compositionStarts": 1,
+          "compositionEnds": 1,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "pin",
+          "family": "pin",
+          "reference": false,
+          "text": "한",
+          "compositionStarts": 1,
+          "compositionEnds": 1,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tabular-filter",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tabular-filter",
+          "family": "tabular-filter",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "datetime-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "datetime-end",
+          "family": "datetime-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "artifacts": [
+        {
+          "name": "@sectile/core",
+          "version": "0.16.0",
+          "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+        },
+        {
+          "name": "@sectile/chart",
+          "version": "0.16.1",
+          "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+        },
+        {
+          "name": "@sectile/form",
+          "version": "0.15.2",
+          "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+        },
+        {
+          "name": "@sectile/tabular",
+          "version": "0.17.1",
+          "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+        },
+        {
+          "name": "@sectile/temporal",
+          "version": "0.15.1",
+          "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+        },
+        {
+          "name": "@sectile/virtual",
+          "version": "0.16.1",
+          "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.21.0",
+          "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+        },
+        {
+          "name": "@sectile/terminal",
+          "version": "0.15.1",
+          "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.21.0",
+          "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+        }
+      ],
+      "shard": [
+        2,
+        4
+      ],
+      "families": [
+        "native-textarea",
+        "textarea",
+        "quantity",
+        "date-start",
+        "picker",
+        "pin",
+        "tabular-filter",
+        "datetime-end"
+      ],
+      "current": {
+        "family": "datetime-end",
+        "reference": false
+      },
+      "imeWarmup": "하ㄴ",
+      "sources": [
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        }
+      ]
+    },
+    {
+      "jobID": 123947716547,
+      "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+      "nativeIME": true,
+      "status": "passed",
+      "results": [
+        {
+          "id": "native",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native-textarea",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "text",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "text-representation",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "date",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "date-end",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "tags",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "color",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "tree-select",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text",
+          "family": "text",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "text-representation",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "text-representation",
+          "family": "text-representation",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date",
+          "family": "date",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "date-end",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "date-end",
+          "family": "date-end",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "family": "tags",
+          "reference": true,
+          "continuation": "native-output-preserved",
+          "requested": "한글한",
+          "observed": "한글한"
+        },
+        {
+          "id": "native-reference",
+          "family": "tags",
+          "reference": true,
+          "text": "한글한",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "family": "tags",
+          "reference": false,
+          "continuation": "native-output-preserved",
+          "requested": "한글한",
+          "observed": "한글한"
+        },
+        {
+          "id": "tags",
+          "family": "tags",
+          "reference": false,
+          "text": "",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "color",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "color",
+          "family": "color",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tree-select",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tree-select",
+          "family": "tree-select",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "artifacts": [
+        {
+          "name": "@sectile/core",
+          "version": "0.16.0",
+          "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+        },
+        {
+          "name": "@sectile/chart",
+          "version": "0.16.1",
+          "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+        },
+        {
+          "name": "@sectile/form",
+          "version": "0.15.2",
+          "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+        },
+        {
+          "name": "@sectile/tabular",
+          "version": "0.17.1",
+          "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+        },
+        {
+          "name": "@sectile/temporal",
+          "version": "0.15.1",
+          "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+        },
+        {
+          "name": "@sectile/virtual",
+          "version": "0.16.1",
+          "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.21.0",
+          "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+        },
+        {
+          "name": "@sectile/terminal",
+          "version": "0.15.1",
+          "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.21.0",
+          "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+        }
+      ],
+      "shard": [
+        3,
+        4
+      ],
+      "families": [
+        "text",
+        "text-representation",
+        "date",
+        "date-end",
+        "tags",
+        "color",
+        "tree-select"
+      ],
+      "current": {
+        "family": "tree-select",
+        "reference": false
+      },
+      "imeWarmup": "하ㄴ",
+      "sources": [
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        }
+      ]
+    },
+    {
+      "jobID": 123947716539,
+      "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+      "nativeIME": true,
+      "status": "passed",
+      "results": [
+        {
+          "id": "native",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native-textarea",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "combo",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "combo-uncontrolled",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "time",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "time-start",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "spin",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "treegrid",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "tree-select-uncontrolled",
+          "undoRedo": "passed"
+        },
+        {
+          "id": "native",
+          "family": "native",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-textarea",
+          "family": "native-textarea",
+          "reference": false,
+          "text": "한글\n",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "combo",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "combo",
+          "family": "combo",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "combo-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "combo-uncontrolled",
+          "family": "combo-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time",
+          "family": "time",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "time-start",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "time-start",
+          "family": "time-start",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "spin",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "spin",
+          "family": "spin",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "treegrid",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "treegrid",
+          "family": "treegrid",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        },
+        {
+          "id": "native-reference",
+          "family": "tree-select-uncontrolled",
+          "reference": true,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": false
+        },
+        {
+          "id": "tree-select-uncontrolled",
+          "family": "tree-select-uncontrolled",
+          "reference": false,
+          "text": "한글",
+          "compositionStarts": 2,
+          "compositionEnds": 2,
+          "frameworkWrites": 0,
+          "reconfigured": true
+        }
+      ],
+      "artifacts": [
+        {
+          "name": "@sectile/core",
+          "version": "0.16.0",
+          "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+        },
+        {
+          "name": "@sectile/chart",
+          "version": "0.16.1",
+          "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+        },
+        {
+          "name": "@sectile/form",
+          "version": "0.15.2",
+          "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+        },
+        {
+          "name": "@sectile/tabular",
+          "version": "0.17.1",
+          "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+        },
+        {
+          "name": "@sectile/temporal",
+          "version": "0.15.1",
+          "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+        },
+        {
+          "name": "@sectile/virtual",
+          "version": "0.16.1",
+          "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+        },
+        {
+          "name": "@sectile/dom",
+          "version": "0.21.0",
+          "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+        },
+        {
+          "name": "@sectile/terminal",
+          "version": "0.15.1",
+          "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+        },
+        {
+          "name": "@sectile/vue",
+          "version": "0.21.0",
+          "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+        }
+      ],
+      "shard": [
+        4,
+        4
+      ],
+      "families": [
+        "combo",
+        "combo-uncontrolled",
+        "time",
+        "time-start",
+        "spin",
+        "treegrid",
+        "tree-select-uncontrolled"
+      ],
+      "current": {
+        "family": "tree-select-uncontrolled",
+        "reference": false
+      },
+      "imeWarmup": "하ㄴ",
+      "sources": [
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "current": "com.apple.inputmethod.Korean.2SetKorean",
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ]
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        },
+        {
+          "enabled": [
+            "com.apple.keylayout.US",
+            "com.apple.CharacterPaletteIM",
+            "com.apple.inputmethod.Korean.2SetKorean",
+            "com.apple.inputmethod.AinuIM.Ainu",
+            "com.apple.inputmethod.Kotoeri.KanaTyping.Japanese",
+            "com.apple.inputmethod.Kotoeri.RomajiTyping.Japanese"
+          ],
+          "current": "com.apple.inputmethod.Korean.2SetKorean"
+        }
+      ]
+    }
+  ],
+  "publishedBrowser": {
+    "sha": "92825a46da758bcfe20f04e3ea1799bc6d56329a",
+    "nativeIME": false,
+    "status": "passed",
+    "results": [
+      {
+        "id": "native",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "native-textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "textarea",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "text-representation",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "combo-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "number",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "quantity",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "date-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "time-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "picker",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tags",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "spin",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "editable",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "pin",
+        "history": "specialized per-cell admission; checked through native composition"
+      },
+      {
+        "id": "color",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "treegrid",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-editor",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tabular-filter",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "tree-select-uncontrolled",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-start",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "datetime-end",
+        "undoRedo": "passed"
+      },
+      {
+        "id": "positioning",
+        "rows": [
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 172
+            },
+            "js": {
+              "x": 350,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 172
+            },
+            "js": {
+              "x": 290,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 172
+            },
+            "js": {
+              "x": 230,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 280
+            },
+            "js": {
+              "x": 418,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 250
+            },
+            "js": {
+              "x": 418,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 220
+            },
+            "js": {
+              "x": 418,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 328
+            },
+            "js": {
+              "x": 350,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 328
+            },
+            "js": {
+              "x": 290,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 328
+            },
+            "js": {
+              "x": 230,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 280
+            },
+            "js": {
+              "x": 162,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 250
+            },
+            "js": {
+              "x": 162,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 220
+            },
+            "js": {
+              "x": 162,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 172
+            },
+            "js": {
+              "x": 1240,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 172
+            },
+            "js": {
+              "x": 1180,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 172
+            },
+            "js": {
+              "x": 1120,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 280
+            },
+            "js": {
+              "x": 1308,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 250
+            },
+            "js": {
+              "x": 1308,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 220
+            },
+            "js": {
+              "x": 1308,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 328
+            },
+            "js": {
+              "x": 1240,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 328
+            },
+            "js": {
+              "x": 1180,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 328
+            },
+            "js": {
+              "x": 1120,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 280
+            },
+            "js": {
+              "x": 1052,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 250
+            },
+            "js": {
+              "x": 1052,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 220
+            },
+            "js": {
+              "x": 1052,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 172
+            },
+            "js": {
+              "x": 350,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 172
+            },
+            "js": {
+              "x": 290,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 172
+            },
+            "js": {
+              "x": 230,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 280
+            },
+            "js": {
+              "x": 418,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 250
+            },
+            "js": {
+              "x": 418,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 220
+            },
+            "js": {
+              "x": 418,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 328
+            },
+            "js": {
+              "x": 350,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 328
+            },
+            "js": {
+              "x": 290,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 328
+            },
+            "js": {
+              "x": 230,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 280
+            },
+            "js": {
+              "x": 162,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 250
+            },
+            "js": {
+              "x": 162,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 220
+            },
+            "js": {
+              "x": 162,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 172
+            },
+            "js": {
+              "x": 1240,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 172
+            },
+            "js": {
+              "x": 1180,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 172
+            },
+            "js": {
+              "x": 1120,
+              "y": 172
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 280
+            },
+            "js": {
+              "x": 1308,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 250
+            },
+            "js": {
+              "x": 1308,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 220
+            },
+            "js": {
+              "x": 1308,
+              "y": 220
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 328
+            },
+            "js": {
+              "x": 1240,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 328
+            },
+            "js": {
+              "x": 1180,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 328
+            },
+            "js": {
+              "x": 1120,
+              "y": 328
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 280
+            },
+            "js": {
+              "x": 1052,
+              "y": 280
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 250
+            },
+            "js": {
+              "x": 1052,
+              "y": 250
+            }
+          },
+          {
+            "direction": "ltr",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 220
+            },
+            "js": {
+              "x": 1052,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 172
+            },
+            "js": {
+              "x": 350,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 172
+            },
+            "js": {
+              "x": 290,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 172
+            },
+            "js": {
+              "x": 230,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 280
+            },
+            "js": {
+              "x": 418,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 250
+            },
+            "js": {
+              "x": 418,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 220
+            },
+            "js": {
+              "x": 418,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 328
+            },
+            "js": {
+              "x": 350,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 328
+            },
+            "js": {
+              "x": 290,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 328
+            },
+            "js": {
+              "x": 230,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 280
+            },
+            "js": {
+              "x": 162,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 250
+            },
+            "js": {
+              "x": 162,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": false,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 220
+            },
+            "js": {
+              "x": 162,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 172
+            },
+            "js": {
+              "x": 1240,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 172
+            },
+            "js": {
+              "x": 1180,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 172
+            },
+            "js": {
+              "x": 1120,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 280
+            },
+            "js": {
+              "x": 1308,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 250
+            },
+            "js": {
+              "x": 1308,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 220
+            },
+            "js": {
+              "x": 1308,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 328
+            },
+            "js": {
+              "x": 1240,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 328
+            },
+            "js": {
+              "x": 1180,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 328
+            },
+            "js": {
+              "x": 1120,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 280
+            },
+            "js": {
+              "x": 1052,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 250
+            },
+            "js": {
+              "x": 1052,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "fixed",
+            "edge": true,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 220
+            },
+            "js": {
+              "x": 1052,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 172
+            },
+            "js": {
+              "x": 350,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 172
+            },
+            "js": {
+              "x": 290,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 172
+            },
+            "js": {
+              "x": 230,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 280
+            },
+            "js": {
+              "x": 418,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 250
+            },
+            "js": {
+              "x": 418,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 418,
+              "y": 220
+            },
+            "js": {
+              "x": 418,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 350,
+              "y": 328
+            },
+            "js": {
+              "x": 350,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 290,
+              "y": 328
+            },
+            "js": {
+              "x": 290,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 230,
+              "y": 328
+            },
+            "js": {
+              "x": 230,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 280
+            },
+            "js": {
+              "x": 162,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 250
+            },
+            "js": {
+              "x": 162,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": false,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 162,
+              "y": 220
+            },
+            "js": {
+              "x": 162,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 172
+            },
+            "js": {
+              "x": 1240,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 172
+            },
+            "js": {
+              "x": 1180,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "top",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 172
+            },
+            "js": {
+              "x": 1120,
+              "y": 172
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 280
+            },
+            "js": {
+              "x": 1308,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 250
+            },
+            "js": {
+              "x": 1308,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "right",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1308,
+              "y": 220
+            },
+            "js": {
+              "x": 1308,
+              "y": 220
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1240,
+              "y": 328
+            },
+            "js": {
+              "x": 1240,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1180,
+              "y": 328
+            },
+            "js": {
+              "x": 1180,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "bottom",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1120,
+              "y": 328
+            },
+            "js": {
+              "x": 1120,
+              "y": 328
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "start",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 280
+            },
+            "js": {
+              "x": 1052,
+              "y": 280
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "center",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 250
+            },
+            "js": {
+              "x": 1052,
+              "y": 250
+            }
+          },
+          {
+            "direction": "rtl",
+            "strategy": "absolute",
+            "edge": true,
+            "side": "left",
+            "align": "end",
+            "nativeRoute": "css-anchor",
+            "jsRoute": "javascript",
+            "native": {
+              "x": 1052,
+              "y": 220
+            },
+            "js": {
+              "x": 1052,
+              "y": 220
+            }
+          }
+        ],
+        "size": {
+          "route": "css-anchor",
+          "height": 34,
+          "expected": 34
+        },
+        "scroll": {
+          "delta": 80,
+          "anchorX": 220,
+          "popupX": 220,
+          "route": "css-anchor"
+        }
+      },
+      {
+        "id": "composed-trigger",
+        "kind": "popover",
+        "passed": true
+      },
+      {
+        "id": "composed-trigger",
+        "kind": "menu",
+        "passed": true
+      },
+      {
+        "id": "toast-keyless",
+        "prevented": false,
+        "focused": "toast-input",
+        "queueUnchanged": true,
+        "count": 0,
+        "shortcut": "passed"
+      },
+      {
+        "initialFocus": "visible",
+        "placeholder": "Enter a number",
+        "spin": {
+          "errors": [],
+          "text": "0.16",
+          "focused": true
+        },
+        "rejected": {
+          "errors": [
+            "Spin button value must lie on the range lattice."
+          ],
+          "text": "0.16"
+        },
+        "keys": [
+          {
+            "scenario": "input",
+            "value": "a"
+          },
+          {
+            "scenario": "range",
+            "value": "a"
+          },
+          {
+            "scenario": "alt",
+            "value": "a"
+          },
+          {
+            "scenario": "prevented",
+            "value": "a"
+          },
+          {
+            "scenario": "root",
+            "value": "b"
+          }
+        ]
+      },
+      {
+        "portal": false,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": false,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": false,
+        "closed": true
+      },
+      {
+        "portal": true,
+        "controlled": true,
+        "closed": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": false,
+        "restored": true
+      },
+      {
+        "retainedDrawer": true,
+        "compound": true,
+        "restored": true
+      },
+      {
+        "media": {
+          "activations": 2,
+          "ordinary": 1,
+          "starts": 1,
+          "moves": 3,
+          "ends": [
+            "complete"
+          ]
+        }
+      },
+      {
+        "reorderPreview": "passed"
+      }
+    ],
+    "artifacts": [
+      {
+        "name": "@sectile/core",
+        "version": "0.16.0",
+        "sha256": "6014ad526059860075c9ed64874e86806980143cd589fbd38e7a0061b7f3322e"
+      },
+      {
+        "name": "@sectile/chart",
+        "version": "0.16.1",
+        "sha256": "3354b6fa53ccecc92d500da279bb467373dd51b251c8998f590d174bfd2d9911"
+      },
+      {
+        "name": "@sectile/form",
+        "version": "0.15.2",
+        "sha256": "bad91553178ee2ed51098a69292b73a810d7aea3d7141f8871b9244995cb295b"
+      },
+      {
+        "name": "@sectile/tabular",
+        "version": "0.17.1",
+        "sha256": "d953efe75df2e79efbefd76982e2158306e8b86c9121642a1d8fd20b66ff2cc6"
+      },
+      {
+        "name": "@sectile/temporal",
+        "version": "0.15.1",
+        "sha256": "31808fa83cd6515458d0f36861b492878a93372df1b4462a5a64e22573f17266"
+      },
+      {
+        "name": "@sectile/virtual",
+        "version": "0.16.1",
+        "sha256": "5e872b3f119e90b861ce7a76bacf64a6db0a455599a283707a5a7d4e6f19e069"
+      },
+      {
+        "name": "@sectile/dom",
+        "version": "0.21.0",
+        "sha256": "eb8c7299e884077ddd774b87ba8ad46e6ae5e5ef60c0bc2f8d6d3c952eb31867"
+      },
+      {
+        "name": "@sectile/terminal",
+        "version": "0.15.1",
+        "sha256": "23a9a59e1d6bb7a71ef3de9d947d407ecb3ee75e7400f5db6da058d9c6495622"
+      },
+      {
+        "name": "@sectile/vue",
+        "version": "0.21.0",
+        "sha256": "88a2b3365a554c72e07e868313ef2ea35260686f524e8af767da934fae90f6d8"
+      }
+    ],
+    "shard": [
+      1,
+      1
+    ],
+    "families": [
+      "native",
+      "native-textarea",
+      "text",
+      "combo",
+      "text-uncontrolled",
+      "textarea",
+      "text-representation",
+      "combo-uncontrolled",
+      "number",
+      "quantity",
+      "date",
+      "time",
+      "datetime",
+      "date-start",
+      "date-end",
+      "time-start",
+      "time-end",
+      "picker",
+      "tags",
+      "spin",
+      "editable",
+      "pin",
+      "color",
+      "treegrid",
+      "tabular-editor",
+      "tabular-filter",
+      "tree-select",
+      "tree-select-uncontrolled",
+      "datetime-start",
+      "datetime-end"
+    ]
+  }
+}
