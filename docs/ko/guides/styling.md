@@ -33,6 +33,26 @@ Sectile 컴포넌트의 모양은 제품이 정합니다. Sectile은 각 부분�
 
 Vue 컴포넌트에는 일반 속성과 클래스를 그대로 전달할 수 있습니다. `asChild`를 지원하는 요소는 하나뿐인 자식 요소에 동작을 직접 합칩니다.
 
+자식은 하나의 Element로 연결되어야 합니다. 요소 하나와 주석·공백만 들어 있는 슬롯 Fragment를 지원하며, Sectile 실행 요소를 중첩해도 같은 요소에 연결됩니다. 네이티브 요소 하나를 루트로 렌더링하는 컴포넌트는 그 요소를 바로 사용할 수 있습니다.
+
+사용자 컴포넌트가 Fragment를 렌더링하거나 루트 요소를 바꾼다면 현재 요소를 노출하고, 그 요소에 속성을 전달합니다.
+
+```vue
+<script setup lang="ts">
+import { useTemplateRef } from 'vue';
+
+defineOptions({ inheritAttrs: false });
+const element = useTemplateRef<HTMLButtonElement>('element');
+defineExpose({ element });
+</script>
+
+<template>
+  <button ref="element" v-bind="$attrs"><slot /></button>
+</template>
+```
+
+노출하는 값은 Element이며, 아직 사용할 수 없을 때는 `null`입니다. 참조가 바뀌면 Sectile도 새 요소에 연결됩니다. `Primitive` 역시 채택한 요소를 읽기 전용 `element`로 노출하며, 마운트를 해제하면 값을 비웁니다. 후보가 여러 개인 Fragment나 명시적인 요소 참조 없이 루트를 구분할 수 없는 컴포넌트는 거부합니다.
+
 ## 모션
 
 공개 state 속성에 transition과 keyframe을 연결합니다. 팝업 콘텐츠는 exit animation이 끝날 때까지 유지할 수 있고, Drawer는 swipe 진행도를 제공하며, checked나 expanded part는 안정적인 상태 hook을 노출합니다.

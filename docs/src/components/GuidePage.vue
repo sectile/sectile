@@ -60,6 +60,19 @@ const uncontrolled = `<CheckboxRoot :default-value="false">\n  <CheckboxIndicato
       <h2>Style portaled content</h2>
       <p>A dialog portal moves content outside the trigger's DOM ancestry. Apply a class directly to <code>DialogOverlay</code> and <code>DialogContent</code>; a selector that depends on the trigger's parent will not reach them.</p>
     </DocsSection>
+    <DocsSection id="anchored-content">
+      <h2>Position and size anchored content</h2>
+      <p>Anchored roots such as <code>PopoverRoot</code> accept independent <code>flip</code> and <code>shift</code> options. Set <code>side="bottom"</code>, <code>:flip="false"</code>, and <code>:shift="true"</code> to keep a popup below its anchor while allowing horizontal movement within its boundary.</p>
+      <p>Omitted policies inherit <code>avoidCollisions</code>, which defaults to <code>true</code>. An explicit policy overrides only its own default. Shifting preserves the gap from the anchor and does not resize the content.</p>
+      <p>Alignment uses physical edges: <code>start</code> means left for top/bottom placement and top for left/right placement; <code>end</code> means the opposite edge. <code>center</code> aligns the centers. These meanings stay the same in RTL layouts.</p>
+      <p>Apply <code>max-width: var(--sectile-position-available-width)</code> and <code>max-height: var(--sectile-position-available-height)</code> to the positioned Content part. Your application owns its scrolling and the layout used when a locked side has insufficient space.</p>
+    </DocsSection>
+    <DocsSection id="child-composition">
+      <h2>Share one child element</h2>
+      <p>Parts that support <code>asChild</code> merge behavior into one child Element. A slot Fragment with one element, comments and whitespace works through nested Sectile triggers. A component with one native element root can use that root directly.</p>
+      <p>A custom component that renders a Fragment or replaces its root should forward attributes to its actual element and expose its current reference with <code>defineExpose({ element })</code>. Use <code>useTemplateRef</code> for a named template ref. The value is an Element or <code>null</code> while unavailable.</p>
+      <p><code>Primitive</code> exposes its adopted element through a readonly <code>element</code> property and clears it on unmount. Multiple child candidates and ambiguous component roots without an explicit element are rejected.</p>
+    </DocsSection>
   </template>
   <AccessibilityGuide v-else-if="guide === 'accessibility'" />
   <template v-else>
