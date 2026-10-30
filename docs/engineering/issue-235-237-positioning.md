@@ -144,3 +144,53 @@ overwrite input match the existing supported runner. Triggers, permissions,
 checks and runner images stay the same. Historical failure logs remain in the run and the devtools validation
 record. The aggregate failure remains Failed until this correction is qualified
 on a new clean main SHA.
+
+## Final qualification and follow-up review
+
+- Record ID / Work ID / Run ID: `overlay-contracts-final-review-2` /
+  `issues-235-237` / `overlay-contracts-follow-up-2026-10-30`.
+- Actor / role: Codex / Implementer performing the requested self-review loop.
+- Reviewed at: `2026-10-30T07:15:15Z`.
+- Reviewed source and tested target:
+  `a3b541d1dcf3d61523ee4131d5f7dae4524e01d9`, clean `main`.
+- Reviewed base / approved policy and template revision:
+  `59fc65de1829c5eb69792195a733bbde382b88d0`.
+- Scope snapshot: the accepted scope and ownership sections above, unchanged.
+  The maintainer requested another review and confirmation that every required
+  verification passes, retaining main-only execution and no pull request.
+
+| Reviewed area | Contract and evidence | Review state |
+| --- | --- | --- |
+| DOM policy and callers | Independent normalization, every changed popup/choice/menu/picker caller, rejection before resource acquisition, and live reconfiguration; DOM policy cases and public type fixtures | Reviewed; no remaining eligible findings |
+| Native projection and fallback | Physical edges and offsets, viewport admission, exact capabilities, available-size ownership, style restoration and resource retirement; 96 packed browser comparisons, size/scroll probes and DOM lifecycle cases | Reviewed; no remaining eligible findings |
+| Vue options | Shared declarations, omitted Boolean inheritance, family defaults and narrow update sources; seven-family live forwarding and public SFC/type fixtures | Reviewed; no remaining eligible findings |
+| Element ownership | Sole component-root traversal, exposed null/reference changes, replacement, stopped watches and unmount; 32-level work counter, raw payload GC, saved public proxy retirement, hydration and composed keyboard/Teleport probes | Reviewed; no remaining eligible findings |
+| Public guidance and verification owners | Live guide plus retained English/Korean guidance, signature/breaking mappings, complexity and package ownership, measured bundle fixtures, and CI lane artifact replacement | Reviewed; no remaining eligible findings |
+
+The existing [deep-verification run 41016095884](https://github.com/sectile/sectile/actions/runs/41016095884)
+passed on the exact source SHA above. Both its initial attempt and the bounded
+retry qualification passed. The latest attempt has all 13 jobs successful:
+preparation, six deterministic lanes, packed Chromium verification, four native
+macOS IME shards and final aggregation. The
+[final aggregation job](https://github.com/sectile/sectile/actions/runs/41016095884/job/123935710330)
+reported `status: passed` and `verifiedUnits: 85` at
+`2026-10-30T06:57:03Z`. The retry replaced lane 3 artifact `12959691687` with
+`12960251091`; one current lane report remained and aggregation passed. This
+qualifies the report ownership correction rather than merely rerunning its test.
+
+The tested source-built packages are `@sectile/dom@0.20.1`, SHA-256
+`fe3f22203c18e45ec886747a074d82c2b8d2164d680197a538037954b69a616b`,
+and `@sectile/vue@0.20.1`, SHA-256
+`3eab3e69c70c62b4f6e0e123ac1e3e447d87a6608e138ba0c57ca4645ff41bcb`.
+The full run includes public declarations, bundles, isolated installs, maps,
+documentation, generated contracts and lifecycle evidence. No required check is
+pending or failed for this tested source. The earlier Pending/Failed checkpoints
+are historical and are superseded by this qualification; their original logs
+and records are preserved. The earlier Chart failure's cause remains Unknown,
+and no Chart implementation, assertion or budget was weakened to obtain a pass.
+
+Conclusion: the accepted source implementation and requested self-review loop
+are complete. This is not a separate independent code-review approval. Registry
+publication and release certification remain outside the accepted source-only
+scope. This follow-up record changes documentation only; runtime and consumer
+evidence above remains applicable while its inputs are unchanged.
