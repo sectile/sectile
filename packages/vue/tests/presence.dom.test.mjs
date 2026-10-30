@@ -12,7 +12,7 @@ Object.assign(globalThis, {
   getComputedStyle: browserWindow.getComputedStyle.bind(browserWindow),
 });
 
-const { KeepAlive, Teleport, createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
+const { Fragment, KeepAlive, Teleport, createApp, createSSRApp, defineComponent, h, nextTick, ref, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { DialogClose, DialogContent, DialogOverlay, DialogPortal, DialogRoot, DialogTrigger } = await import('../.verification-dist/overlay/dialog.js');
 const { AlertDialogContent, AlertDialogOverlay, AlertDialogPortal, AlertDialogRoot } = await import('../.verification-dist/overlay/alert-dialog.js');
@@ -41,6 +41,39 @@ const { TreeGridCell, TreeGridEditor, TreeGridRoot, TreeGridRow } = await import
 const { TreeViewGroup, TreeViewItem, TreeViewRoot } = await import('../.verification-dist/tree-view.js');
 const { createPopover } = await import('@sectile/dom/popover');
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
+
+test('Tooltip shares the real Fragment trigger with controlled Popover and MenuButton roots', async () => {
+  for (const [Root, Trigger, Content, extra] of [
+    [PopoverRoot, PopoverTrigger, PopoverContent, {}],
+    [MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, { items: [{ id: 'a', parentID: null }] }],
+  ]) {
+    const host = document.createElement('div'); document.body.append(host);
+    const open = ref(false), disabled = ref(false), errors = [], requests = [];
+    let accept = false;
+    const app = createApp({ render: () => h(Root, { ...extra, label: 'Actions', position: false, autoFocus: false,
+      open: open.value, disabled: disabled.value, 'onUpdate:open': value => { requests.push(value); if (accept) open.value = value; } }, {
+      default: () => [h(TooltipRoot, { position: false, disabled: disabled.value }, { default: () => [
+        h(TooltipTrigger, { asChild: true }, { default: () => h(Trigger, { asChild: true }, {
+          default: () => h(Fragment, null, [h('button', { id: 'composed-button' }, 'Open')]),
+        }) }), h(TooltipContent, null, { default: () => 'Help' }),
+      ] }), h(Content)],
+    }) });
+    app.config.errorHandler = error => errors.push(String(error));
+    try {
+      app.mount(host); await nextTick(); await nextTick();
+      const button = host.querySelector('button'); assert.equal(host.querySelectorAll('button').length, 1);
+      button.focus(); await nextTick(); await nextTick();
+      assert.equal(host.querySelector('[role="tooltip"]').dataset.state, 'open');
+      button.click(); await nextTick(); await nextTick();
+      assert.deepEqual(requests, [true]); assert.equal(open.value, false);
+      accept = true; button.click(); await nextTick(); await nextTick();
+      assert.equal(open.value, true); assert.equal(host.querySelector('#composed-button'), button);
+      disabled.value = true; await nextTick(); await nextTick();
+      const count = requests.length; button.click(); await nextTick(); assert.equal(requests.length, count);
+      assert.equal(button.disabled, true); assert.deepEqual(errors, []);
+    } finally { app.unmount(); host.remove(); }
+  }
+});
 
 test('Tooltip keeps pre-connection focus and content hover while maintaining caller description references', async () => {
   const host = document.createElement('div'); document.body.append(host);

@@ -64,7 +64,12 @@ if (behaviorDefaults) {
   // @ts-expect-error Published defaults are immutable values, not a writer port.
   snapshot.required = false;
 }
-import { Anchor, type AnchorProps, type AnchorExpose, type AnchorSlots } from '@sectile/vue/primitive';
+import { Primitive, Anchor, type AnchorProps, type AnchorExpose, type AnchorSlots } from '@sectile/vue/primitive';
+const primitive = useTemplateRef<InstanceType<typeof Primitive>>('primitive');
+const primitiveElement: Element | null = primitive.value?.element ?? null;
+// @ts-expect-error The adopted element exposure has one framework owner.
+if (primitive.value) primitive.value.element = null;
+void primitiveElement;
 const anchorSlots: AnchorSlots = {
   leading: state => { const disabled: boolean = state.disabled; return disabled ? 'Unavailable' : state.current; },
   trailing: state => state.current === 'page' ? 'Current page' : null,

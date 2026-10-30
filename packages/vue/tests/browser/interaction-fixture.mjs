@@ -1,5 +1,5 @@
 // Browser-driven keyboard/IME witnesses. The runner supplies native input.
-import { createApp, h, nextTick, ref } from 'vue';
+import { Fragment, Teleport, createApp, h, nextTick, ref } from 'vue';
 import { DialogRoot, DialogTrigger, DialogContent, DialogClose, DialogPortal } from '@sectile/vue/dialog';
 import { DrawerRoot, DrawerTrigger, DrawerContent, DrawerPortal } from '@sectile/vue/drawer';
 import { TextField } from '@sectile/vue/text';
@@ -7,6 +7,9 @@ import { ComboboxRoot, ComboboxInput } from '@sectile/vue/combobox';
 import { NumberField } from '@sectile/vue/number-field';
 import { SpinButtonRoot, SpinButtonInput } from '@sectile/vue/spin-button';
 import { createPopover } from '@sectile/dom/popover';
+import { PopoverRoot, PopoverTrigger, PopoverContent } from '@sectile/vue/popover';
+import { TooltipRoot, TooltipTrigger, TooltipContent } from '@sectile/vue/tooltip';
+import { MenuButtonRoot, MenuButtonTrigger, MenuButtonContent } from '@sectile/vue/menu-button';
 import { createCarousel } from '@sectile/dom/carousel';
 import { connectMediaGesture } from '@sectile/dom/media-gesture';
 import { SequenceReorderRoot, SequenceReorderItem } from '@sectile/vue/reorder';
@@ -71,6 +74,26 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
+  async composedTrigger(kind) {
+    reset();
+    const open = ref(false), disabled = ref(false), moved = ref(false), errors = [], requests = [];
+    const [Root, Trigger, Content] = kind === 'menu'
+      ? [MenuButtonRoot, MenuButtonTrigger, MenuButtonContent] : [PopoverRoot, PopoverTrigger, PopoverContent];
+    this.composed = { get open() { return open.value; }, errors, requests };
+    this.moveComposed = async () => { moved.value = true; await settle(); };
+    this.disableComposed = async () => { disabled.value = true; await settle(); };
+    app = createApp({ render: () => h(Root, { ...(kind === 'menu' ? { items: [{ id: 'a', parentID: null }] } : {}),
+      label: 'Actions', position: false, autoFocus: false, open: open.value, disabled: disabled.value,
+      'onUpdate:open': value => { requests.push(value); open.value = value; } }, { default: () => [
+      h(TooltipRoot, { position: false, disabled: disabled.value }, { default: () => [
+        h(Teleport, { to: document.body, disabled: !moved.value }, [h(TooltipTrigger, { asChild: true }, {
+          default: () => h(Trigger, { asChild: true }, { default: () => h(Fragment, null, [h('button', { id: 'composed-native' }, 'Open actions')]) }),
+        })]), h(TooltipContent, null, { default: () => 'Action help' }),
+      ] }), h(Content),
+    ] }) });
+    app.config.errorHandler = error => errors.push(String(error));
+    app.mount(host); await settle();
+  },
   async positioning() {
     reset();
     const rows = [];

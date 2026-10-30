@@ -11,9 +11,9 @@ import {
   isRef,
   isVNode,
   mergeProps,
-  onMounted,
-  onUpdated,
   onBeforeUnmount,
+  shallowRef,
+  watch,
   unref,
   type Component,
   type ComponentInternalInstance,
@@ -23,6 +23,8 @@ import {
   type PropType,
   type Slots,
   type SlotsType,
+  type ShallowRef,
+  type WatchStopHandle,
   type VNode,
   type VNodeArrayChildren,
   type VNodeChild,
@@ -43,7 +45,7 @@ export interface PrimitiveElementExpose {
 
 export type PrimitiveElementRefHandler = NonNullable<PrimitiveProps['elementRef']>;
 
-export const Primitive = /* @__PURE__ */ defineComponent({
+const primitiveComponent = /* @__PURE__ */ defineComponent({
   name: 'SectilePrimitive',
   inheritAttrs: false,
   props: {
@@ -51,25 +53,48 @@ export const Primitive = /* @__PURE__ */ defineComponent({
     asChild: { type: Boolean, default: false },
     elementRef: { type: Function as PropType<PrimitiveElementRefHandler>, default: undefined },
   },
-  setup(props, { attrs, slots }) {
+  setup(props, { attrs, slots, expose }) {
+    const element = shallowRef<Element | null>(null);
+    expose(primitiveElementExpose(element));
     let adoptedComponent: ComponentElementInstance | undefined;
+    let stopElementWatch: WatchStopHandle | undefined;
+    const publishElement = (value: unknown): void => {
+      const current = value ?? null;
+      element.value = current as Element | null;
+      props.elementRef?.(current);
+    };
     const setElement = (value: unknown): void => {
-      adoptedComponent = componentElementInstance(value);
-      if (adoptedComponent === undefined) props.elementRef?.(value ?? null);
+      const component = componentElementInstance(value);
+      if (component !== undefined && component === adoptedComponent) return;
+      stopElementWatch?.(); stopElementWatch = undefined;
+      adoptedComponent = component;
+      if (component === undefined) publishElement(value ?? null);
+      else stopElementWatch = watch(() => resolvePrimitiveElement(component), publishElement, { immediate: true, flush: 'post' });
     };
     const deliverComponentElement = (): void => {
       if (adoptedComponent !== undefined) {
-        props.elementRef?.(resolvePrimitiveElement(adoptedComponent));
+        publishElement(resolvePrimitiveElement(adoptedComponent));
       }
     };
-    onMounted(deliverComponentElement);
-    onUpdated(deliverComponentElement);
+    onBeforeUnmount(() => {
+      stopElementWatch?.(); stopElementWatch = undefined;
+      adoptedComponent = undefined; element.value = null;
+    });
     return (): VNodeChild => renderPrimitive(props, mergeProps(
       attrs,
-      props.elementRef === undefined ? {} : { ref: setElement },
+      { ref: setElement, onVnodeUpdated: deliverComponentElement },
     ), slots);
   },
 });
+
+export const Primitive = primitiveComponent as typeof primitiveComponent & {
+  new(): InstanceType<typeof primitiveComponent> & PrimitiveElementExpose;
+};
+
+// A saved exposure retains only this reference, never a component setup scope.
+function primitiveElementExpose(element: ShallowRef<Element | null>): PrimitiveElementExpose {
+  return { get element() { return element.value; } };
+}
 
 export function renderPrimitive(
   props: Pick<Required<PrimitiveProps>, 'as' | 'asChild'>,
@@ -233,7 +258,6 @@ interface ComponentElementInstance {
     readonly exposed?: Record<string, unknown> | null;
     readonly subTree?: VNode;
   };
-  readonly $el?: unknown;
 }
 
 function resolvePrimitiveElement(value: unknown): unknown {
@@ -241,20 +265,25 @@ function resolvePrimitiveElement(value: unknown): unknown {
   const instance = componentElementInstance(value);
   if (instance === undefined) return value;
 
-  const exposed = instance.$?.exposed;
-  if (exposed !== undefined && exposed !== null
-    && Object.prototype.hasOwnProperty.call(exposed, 'element')) {
-    const element = isRef(exposed['element']) ? unref(exposed['element']) : exposed['element'];
-    return requireRendererElement(element, 'exposed `element`');
+  let renderer = instance.$;
+  while (renderer !== undefined) {
+    const exposed = renderer.exposed;
+    if (exposed !== undefined && exposed !== null
+      && Object.prototype.hasOwnProperty.call(exposed, 'element')) {
+      const published = exposed['element'];
+      const element = isRef(published) ? unref(published) : published;
+      return element == null ? null : requireRendererElement(element, 'exposed `element`');
+    }
+    const subTree = renderer.subTree;
+    if (subTree === undefined || !isElementCandidate(subTree)) {
+      throw new TypeError(
+        'A component adopted by a Sectile primitive must expose `element` or render one element root.',
+      );
+    }
+    if (subTree.component === null) return requireRendererElement(subTree.el, 'single root');
+    renderer = subTree.component;
   }
-
-  const subTree = instance.$?.subTree;
-  if (subTree === undefined || !isElementCandidate(subTree)) {
-    throw new TypeError(
-      'A component adopted by a Sectile primitive must expose `element` or render one element root.',
-    );
-  }
-  return requireRendererElement(instance.$el, 'single root');
+  return null;
 }
 
 function componentElementInstance(value: unknown): ComponentElementInstance | undefined {

@@ -19,10 +19,12 @@ const {
   createApp,
   createSSRApp,
   defineComponent,
+  getCurrentInstance,
   h,
   mergeProps,
   nextTick,
   ref,
+  shallowRef,
   renderSlot,
 } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
@@ -100,6 +102,107 @@ test('Primitive rejects a component with no exposed or single element root', () 
     if (mounted) app.unmount();
     host.remove();
   }
+});
+
+test('Primitive follows a live exposed Element through component roots and retires it on unmount', async () => {
+  const tag = ref('button'), visible = ref(true), primitive = shallowRef();
+  let delivered, native, reads = 0;
+  const Leaf = defineComponent({ inheritAttrs: false, setup(_props, { attrs, expose }) {
+    native = shallowRef(null);
+    expose({ get element() { reads++; return native.value; } });
+    return () => h(Fragment, null, [h(Comment), visible.value ? h(tag.value, mergeProps(attrs, { ref: native }), 'Live') : h(Comment)]);
+  } });
+  const Delegate = defineComponent({ inheritAttrs: false, setup(_props, { attrs }) { return () => h(Leaf, attrs); } });
+  const app = createApp({ render: () => h(Primitive, { asChild: true, ref: primitive, elementRef: value => { delivered = value; } },
+    { default: () => h(Delegate) }) });
+  const host = document.createElement('div'); document.body.append(host);
+  try {
+    app.mount(host); await nextTick(); await nextTick();
+    assert.equal(primitive.value.element, host.querySelector('button'));
+    assert.equal(delivered, primitive.value.element);
+    const first = delivered;
+    tag.value = 'a'; await nextTick(); await nextTick();
+    assert.equal(primitive.value.element, host.querySelector('a'));
+    assert.notEqual(delivered, first);
+    visible.value = false; await nextTick(); await nextTick();
+    assert.equal(primitive.value.element, null); assert.equal(delivered, null);
+    visible.value = true; await nextTick(); await nextTick();
+    assert.equal(delivered, host.querySelector('a'));
+    const read = Object.getOwnPropertyDescriptor(primitive.value.$.exposed, 'element').get;
+    app.unmount();
+    assert.equal(read(), null); assert.equal(delivered, null);
+    const retired = reads;
+    native.value = document.createElement('button'); await nextTick();
+    assert.equal(reads, retired); assert.equal(read(), null);
+  } finally { if (host.__vue_app__) app.unmount(); host.remove(); }
+});
+
+test('Primitive refreshes a directly adopted native-root component after its own local update', async () => {
+  const tag = ref('button'); let element;
+  const Child = defineComponent({ setup() { return () => h(tag.value, null, 'Root'); } });
+  const app = createApp({ render: () => h(Primitive, { asChild: true, elementRef: value => { element = value; } }, { default: () => h(Child) }) });
+  const host = document.createElement('div'); document.body.append(host);
+  try {
+    app.mount(host); await nextTick(); assert.equal(element, host.querySelector('button'));
+    tag.value = 'a'; await nextTick(); await nextTick(); assert.equal(element, host.querySelector('a'));
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('Primitive element resolution visits only its component-root chain', async () => {
+  const depth = 32, instances = [], published = shallowRef(null);
+  let Child = defineComponent({ setup(_props, { expose }) {
+    expose({ element: published }); return () => h('button', { ref: published }, 'Leaf');
+  } });
+  for (let index = 0; index < depth; index++) {
+    const Next = Child;
+    Child = defineComponent({ setup() { instances.push(getCurrentInstance()); return () => h(Next); } });
+  }
+  const primitive = shallowRef();
+  const app = createApp({ render: () => h(Primitive, { ref: primitive, asChild: true }, { default: () => h(Child) }) });
+  const host = document.createElement('div'); document.body.append(host);
+  try {
+    app.mount(host); await nextTick();
+    let reads = 0;
+    for (const instance of instances) {
+      let tree = instance.subTree;
+      Object.defineProperty(instance, 'subTree', { configurable: true, get() { reads++; return tree; }, set(next) { tree = next; } });
+    }
+    const replacement = document.createElement('button');
+    published.value = replacement; await nextTick(); await nextTick();
+    assert.equal(primitive.value.element, replacement);
+    assert.ok(reads >= depth && reads <= depth * 2 + 4, `${reads} component-root reads for depth ${depth}`);
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('Primitive saved exposure releases disconnected nodes after nested adoption', async () => {
+  if (typeof globalThis.gc !== 'function') {
+    const { spawnSync } = await import('node:child_process');
+    const { fileURLToPath } = await import('node:url');
+    const result = spawnSync(process.execPath, ['--expose-gc', '--test', '--test-name-pattern=Primitive saved exposure releases', fileURLToPath(import.meta.url)],
+      { encoding: 'utf8', timeout: 20000 });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    return;
+  }
+  async function cycle() {
+    const primitive = shallowRef(), host = document.createElement('div'); document.body.append(host);
+    const app = createApp({ render: () => h(Primitive, { asChild: true, ref: primitive }, {
+      default: () => h(Primitive, { asChild: true }, { default: () => h(Fragment, null, [h('button', 'Collect')]) }),
+    }) });
+    app.mount(host); await nextTick(); await nextTick();
+    const weak = new WeakRef(host.querySelector('button')), view = primitive.value.$.exposed;
+    app.unmount(); host.remove();
+    assert.equal(view.element, null);
+    return { weak, view };
+  }
+  const saved = [];
+  for (let index = 0; index < 16; index++) saved.push(await cycle());
+  await browserWindow.happyDOM.waitUntilComplete();
+  const { setImmediate } = await import('node:timers/promises');
+  for (let attempt = 0; attempt < 30; attempt++) {
+    await setImmediate(); globalThis.gc(); await setImmediate();
+    if (saved.every(({ weak }) => weak.deref() === undefined)) break;
+  }
+  assert.ok(saved.every(({ weak, view }) => weak.deref() === undefined && view.element === null));
 });
 
 test('Primitive preserves scoped slotted projection through nested fragments', async () => {

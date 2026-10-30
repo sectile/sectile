@@ -252,6 +252,25 @@ try {
     assert.equal(positioning.scroll.route, 'css-anchor');
     assert.ok(Math.abs(positioning.scroll.anchorX - positioning.scroll.popupX) <= 0.5, JSON.stringify(positioning.scroll));
     report.results.push({ id: 'positioning', ...positioning });
+    for (const kind of ['popover', 'menu']) {
+      await page.evaluate(kind => window.sectileProbe.composedTrigger(kind), kind);
+      const button = page.locator('#composed-native'), original = await button.elementHandle();
+      assert.equal(await button.count(), 1);
+      await button.focus(); await page.getByRole('tooltip').waitFor({ state: 'visible' });
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => window.sectileProbe.composed.open);
+      await page.evaluate(() => window.sectileProbe.moveComposed());
+      assert.equal(await button.evaluate((element, saved) => element === saved, original), true);
+      await button.focus(); await page.keyboard.press('Escape');
+      await page.waitForFunction(() => !window.sectileProbe.composed.open);
+      await page.evaluate(() => window.sectileProbe.disableComposed());
+      assert.equal(await button.isDisabled(), true);
+      const count = await page.evaluate(() => window.sectileProbe.composed.requests.length);
+      await button.evaluate(element => element.click());
+      assert.equal(await page.evaluate(() => window.sectileProbe.composed.requests.length), count);
+      assert.deepEqual(await page.evaluate(() => window.sectileProbe.composed.errors), []);
+      await original.dispose(); report.results.push({ id: 'composed-trigger', kind, passed: true });
+    }
     const toast = await page.evaluate(() => window.sectileProbe.toast());
     assert.deepEqual(toast, { prevented: false, focused: 'toast-input', queueUnchanged: true, count: 0 });
     await page.keyboard.press('F8');
