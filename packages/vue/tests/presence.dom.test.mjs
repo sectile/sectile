@@ -381,6 +381,64 @@ test('reactive dialog behavior updates preserve current paint and focus and conf
   } finally { app.unmount(); host.remove(); }
 });
 
+test('positioning roots forward independent policies and retain omitted Boolean inheritance on updates', async () => {
+  const prototype = browserWindow.HTMLElement.prototype;
+  const readRect = prototype.getBoundingClientRect;
+  const width = Object.getOwnPropertyDescriptor(document.documentElement, 'clientWidth');
+  const height = Object.getOwnPropertyDescriptor(document.documentElement, 'clientHeight');
+  const requestFrame = browserWindow.requestAnimationFrame, cancelFrame = browserWindow.cancelAnimationFrame;
+  const callbacks = new Map(); let sequence = 0;
+  browserWindow.requestAnimationFrame = callback => { callbacks.set(++sequence, callback); return sequence; };
+  browserWindow.cancelAnimationFrame = id => { callbacks.delete(id); };
+  const settle = async () => {
+    for (let turn = 0; turn < 5; turn++) {
+      await nextTick(); const pending = [...callbacks.values()]; callbacks.clear();
+      for (const callback of pending) callback(0);
+    }
+  };
+  Object.defineProperties(document.documentElement, { clientWidth: { configurable: true, value: 300 }, clientHeight: { configurable: true, value: 300 } });
+  prototype.getBoundingClientRect = function () {
+    const content = this.dataset.part === 'content';
+    const rect = content ? { x: 0, y: 0, width: 100, height: 80 } : { x: 270, y: 250, width: 20, height: 20 };
+    return { ...rect, left: rect.x, top: rect.y, right: rect.x + rect.width, bottom: rect.y + rect.height };
+  };
+  const families = [
+    [PopoverRoot, PopoverTrigger, PopoverContent, {}],
+    [TooltipRoot, TooltipTrigger, TooltipContent, {}],
+    [SelectRoot, SelectTrigger, SelectContent, { items: ['a'] }],
+    [ComboboxRoot, ComboboxInput, ComboboxContent, { items: [{ id: 'a', label: 'Alpha' }] }],
+    [CascadeSelectRoot, CascadeSelectTrigger, CascadeSelectContent, { nodes: [{ id: 'a', parentID: null }] }],
+    [MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, { items: [{ id: 'a', parentID: null }] }],
+    [DatePickerRoot, DatePickerTrigger, DatePickerContent, { referenceDate: { year: 2026, month: 10, day: 30 } }],
+  ];
+  try {
+    for (const [Root, Trigger, Content, extra] of families) {
+      const host = document.createElement('div'); document.body.append(host);
+      const flip = shallowRef(), shift = shallowRef(), avoid = shallowRef(true);
+      const app = createApp({ render: () => h(Root, { ...extra, open: true, label: 'Choices', autoFocus: false,
+        strategy: 'fixed', side: 'bottom', align: 'start', flip: flip.value, shift: shift.value, avoidCollisions: avoid.value },
+      { default: () => [h(Trigger), h(Content, null, { default: () => Root === DatePickerRoot ? h(DatePickerGrid) : null })] }) });
+      try {
+        app.mount(host); await settle();
+        const content = host.querySelector('[data-part="content"]');
+        assert.equal(content.dataset.side, 'left', Root.name);
+        flip.value = false; shift.value = true; await settle();
+        assert.equal(content.dataset.side, 'bottom', Root.name);
+        assert.equal(content.style.left, '192px', Root.name);
+        assert.equal(content.style.top, '278px', Root.name);
+        avoid.value = false; flip.value = undefined; shift.value = undefined; await settle();
+        assert.equal(content.dataset.side, 'bottom', Root.name);
+        assert.equal(content.style.left, '270px', Root.name);
+      } finally { app.unmount(); host.remove(); callbacks.clear(); }
+    }
+  } finally {
+    prototype.getBoundingClientRect = readRect;
+    browserWindow.requestAnimationFrame = requestFrame; browserWindow.cancelAnimationFrame = cancelFrame;
+    if (width) Object.defineProperty(document.documentElement, 'clientWidth', width); else delete document.documentElement.clientWidth;
+    if (height) Object.defineProperty(document.documentElement, 'clientHeight', height); else delete document.documentElement.clientHeight;
+  }
+});
+
 test('reactive popup position updates keep active and retained generations, content and focus', async () => {
   for (const [Root, Content, Trigger] of [[PopoverRoot, PopoverContent, PopoverTrigger], [TooltipRoot, TooltipContent, TooltipTrigger]]) {
     const host = document.createElement('div'); document.body.append(host);

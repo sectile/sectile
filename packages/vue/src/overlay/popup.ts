@@ -19,12 +19,10 @@ import {
   type VNodeChild,
 } from 'vue';
 import type { TooltipGroup } from '@sectile/dom/tooltip';
+import { positionProps, positionSources, readPositionOptions } from '../internal/position-options.js';
 import type {
-  PositionBoundary,
   PositionOptions,
-  PositionPadding,
   PositionStrategy,
-  PositionTracking,
 } from '@sectile/dom/position';
 import type { InteractOutsideEvent, InteractOutsideHandler } from '@sectile/dom';
 import type { DOMLayerPresentationSnapshot, DOMLayerPresentationListener, DOMLayerPresentationSubscription, DOMLayerReparentErrorCode } from '@sectile/dom/dialog';
@@ -227,20 +225,12 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       closeOnEscape: { type: Boolean, default: config.closeOnEscape ?? true },
       closeOnInteractOutside: { type: Boolean, default: config.closeOnInteractOutside ?? false },
       interactOutsideExclusions: { type: Array as PropType<readonly HTMLElement[]>, default: undefined },
-      side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: config.defaultSide ?? 'bottom' },
-      position: { type: Boolean, default: true },
+      ...positionProps,
+      side: { ...positionProps.side, default: config.defaultSide ?? 'bottom' },
       swipeToDismiss: { type: Boolean, default: true },
       swipeThreshold: { type: Number, default: 80 },
       swipeVelocityThreshold: { type: Number, default: 0.5 },
-      align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'center' },
-      sideOffset: { type: Number, default: 8 },
-      collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
-      collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined },
-      avoidCollisions: { type: Boolean, default: true },
       arrowPadding: { type: Number, default: 8 },
-      hideWhenDetached: { type: Boolean, default: false },
-      strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
-      tracking: { type: String as PropType<PositionTracking>, default: 'events' },
       unmountOnExit: { type: Boolean, default: false },
       presentation: { type: String as PropType<'overlay' | 'inline'>, default: 'overlay' },
     },
@@ -410,19 +400,11 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
           closeOnInteractOutside: props.closeOnInteractOutside,
           ...(props.interactOutsideExclusions === undefined ? {} : { interactOutsideExclusions: props.interactOutsideExclusions }),
           side: props.side,
-          ...(config.positioned === true ? { position: props.position } : {}),
+          ...(config.positioned === true ? readPositionOptions(props) : {}),
           swipeToDismiss: props.swipeToDismiss,
           swipeThreshold: props.swipeThreshold,
           swipeVelocityThreshold: props.swipeVelocityThreshold,
-          align: props.align,
-          sideOffset: props.sideOffset,
-          collisionPadding: props.collisionPadding,
-          ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
-          avoidCollisions: props.avoidCollisions,
           arrowPadding: props.arrowPadding,
-          hideWhenDetached: props.hideWhenDetached,
-          strategy: props.strategy,
-          tracking: props.tracking,
           manageVisibility: false,
           ...(config.triggerMode === 'focus-hover' ? { openDelay: props.openDelay, closeDelay: props.closeDelay,
             ...(props.group === undefined ? {} : { group: props.group }) } : {}),
@@ -470,11 +452,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
         if (config.positioned !== true || !current?.syncPosition) return false;
         current.syncPosition({
           anchor: props.anchor ?? anchor.value ?? null,
-          side: props.side, position: props.position, align: props.align, sideOffset: props.sideOffset,
-          collisionPadding: props.collisionPadding,
-          ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
-          avoidCollisions: props.avoidCollisions, arrowPadding: props.arrowPadding,
-          hideWhenDetached: props.hideWhenDetached, strategy: props.strategy, tracking: props.tracking,
+          ...readPositionOptions(props), arrowPadding: props.arrowPadding,
         });
         return true;
       };
@@ -597,9 +575,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
       });
       watch([
         () => props.anchor,
-        () => props.side, () => props.position, () => props.align, () => props.sideOffset,
-        () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions,
-        () => props.arrowPadding, () => props.hideWhenDetached, () => props.strategy, () => props.tracking,
+        ...positionSources(props), () => props.arrowPadding,
       ], syncPosition, { flush: 'post' });
       watch([() => props.closeOnEscape, () => props.closeOnInteractOutside], () => {
         const current = connection.value;

@@ -6,13 +6,11 @@ import { stableIDElementToken } from '@sectile/dom/identity';
 import { createSelect, type SelectConnection, type SelectPolicies } from '@sectile/dom/select';
 import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
-  PositionBoundary,
   PositionOptions,
-  PositionPadding,
   PositionStrategy,
-  PositionTracking,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { positionProps, positionSources, readPositionOptions } from './internal/position-options.js';
 import { useNextTickTask } from './internal/scheduled-task.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import {
@@ -106,13 +104,7 @@ export const SelectRoot = defineComponent({
     renderedItems: { type: Array as PropType<readonly string[] | undefined>, default: undefined },
     textValue: { type: Function as PropType<SelectTextValueResolver>, default: undefined },
     typeaheadTimeoutMs: { type: Number, default: 700 },
-    position: { type: Boolean, default: true },
-    side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
-    align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
-    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
-    collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-    hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
-    tracking: { type: String as PropType<PositionTracking>, default: 'events' },
+    ...positionProps, align: { ...positionProps.align, default: 'start' },
     unmountOnExit: { type: Boolean, default: false },
     policies: { type: Object as PropType<SelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
@@ -237,10 +229,7 @@ export const SelectRoot = defineComponent({
         ...(lifecycle.layerHost.value === undefined ? {} : { layerHost: lifecycle.layerHost.value }),
         root: root.value, trigger: trigger.value, popup: popup.value, items: props.items, disabledItems: props.disabledItems,
         textValue: props.textValue ?? ((value: string) => value), typeaheadTimeoutMs: props.typeaheadTimeoutMs,
-        position: props.position, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding,
-        ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions,
-        hideWhenDetached: props.hideWhenDetached, strategy: props.strategy,
-        tracking: props.tracking,
+        ...readPositionOptions(props),
         manageVisibility: false,
         ...(props.policies === undefined ? {} : { policies: props.policies }),
         ...(valueControlled ? { value } : { defaultValue: value }),
@@ -297,7 +286,7 @@ export const SelectRoot = defineComponent({
     });
     onMounted(() => { mounted = true; lifecycle.reconnect(); });
     onBeforeUnmount(() => { mounted = false; disconnect(); });
-    watch([() => props.items, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies], lifecycle.reconnect);
+    watch([() => props.items, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.textValue, () => props.typeaheadTimeoutMs, ...positionSources(props), () => props.policies], lifecycle.reconnect);
     watch([() => props.modelValue, () => props.open], () => {
       lifecycle.prepareModelUpdate();
       if (connection.value === undefined) return;

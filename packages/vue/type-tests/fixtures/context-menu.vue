@@ -7,7 +7,7 @@ const invoke = (value: string): void => { void value; };
 </script>
 
 <template>
-  <ContextMenuRoot v-model:open="open" :items="items" @invoke="invoke">
+  <ContextMenuRoot v-model:open="open" :items="items" :flip="false" :shift="true" @invoke="invoke">
     <ContextMenuTrigger>Parcel actions</ContextMenuTrigger>
     <ContextMenuContent>
       <ContextMenuItem value="copy">Copy</ContextMenuItem>

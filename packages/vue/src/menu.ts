@@ -20,6 +20,7 @@ import type {
   PositionRect,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { positionProps, positionSources, readPositionOptions } from './internal/position-options.js';
 import { provideHostLayerParent, useHostDirection, useHostId, useHostLayer } from './host-provider.js';
 import { usePopupPresentation } from './internal/popup-presentation.js';
 import { providePortalMove } from './internal/portal-move.js';
@@ -84,7 +85,7 @@ interface Context {
   registerSubmenu(element: HTMLElement | undefined, parent: string): void;
   refresh(parentID?: string): void;
 }
-interface ResolvedRootProps {
+interface ResolvedRootProps extends PositionOptions {
   readonly items: readonly MenuItemDefinition<string>[];
   readonly disabledItems: readonly string[];
   readonly disabled: boolean;
@@ -97,15 +98,6 @@ interface ResolvedRootProps {
   readonly open?: boolean;
   readonly defaultOpen?: boolean;
   readonly position?: boolean;
-  readonly side?: PositionOptions['side'];
-  readonly align?: PositionOptions['align'];
-  readonly sideOffset?: number;
-  readonly collisionPadding?: PositionPadding;
-  readonly collisionBoundary?: PositionBoundary;
-  readonly avoidCollisions?: boolean;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: PositionStrategy;
-  readonly tracking?: PositionTracking;
 }
 const key = Symbol('SectileMenuRoot');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -123,13 +115,7 @@ const menuButtonProps = {
   ...commonProps,
   open: { type: Boolean, default: undefined },
   defaultOpen: { type: Boolean, default: false },
-  position: { type: Boolean, default: true },
-  side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
-  align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
-  sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
-  collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-  hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
-  tracking: { type: String as PropType<PositionTracking>, default: 'events' },
+  ...positionProps, align: { ...positionProps.align, default: 'start' },
 } as const;
 const { as: _contextAs, asChild: _contextAsChild, ...contextOwnerProps } = menuButtonProps;
 const contextMenuProps = {
@@ -252,11 +238,8 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
           direction: direction.value, baseID, manageVisibility: false,
           ...(popup ? {
             ...(layerHost.value === undefined ? {} : { layerHost: layerHost.value }),
-            position: runtimeProps.position ?? true,
+            ...readPositionOptions(runtimeProps), position: runtimeProps.position ?? true,
             side: runtimeProps.side ?? 'bottom', align: runtimeProps.align ?? (kind === 'context-menu' && direction.value === 'rtl' ? 'end' : 'start'), sideOffset: runtimeProps.sideOffset ?? (kind === 'context-menu' ? 0 : 8),
-            collisionPadding: runtimeProps.collisionPadding ?? 8,
-            ...(runtimeProps.collisionBoundary === undefined ? {} : { collisionBoundary: runtimeProps.collisionBoundary }),
-            avoidCollisions: runtimeProps.avoidCollisions ?? true, hideWhenDetached: runtimeProps.hideWhenDetached ?? false,
             strategy: strategy.value, tracking: runtimeProps.tracking ?? 'events',
           } : {}),
           ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
@@ -334,7 +317,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       });
       onMounted(() => { mounted = true; lifecycle.reconnect(); });
       onBeforeUnmount(() => { mounted = false; disconnect(); });
-      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset, () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions, () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking], lifecycle.reconnect);
+      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, ...positionSources(runtimeProps)], lifecycle.reconnect);
       if (popup) watch(layerHost, lifecycle.reconnect, { flush: 'post' });
       watch(() => runtimeProps.open, (value) => {
         if (!controlled || value === undefined) return;

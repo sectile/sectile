@@ -7,14 +7,12 @@ import {
 } from '@sectile/dom/combobox';
 import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import type {
-  PositionBoundary,
   PositionOptions,
-  PositionPadding,
   PositionStrategy,
-  PositionTracking,
 } from '@sectile/dom/position';
 import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { positionProps, positionSources, readPositionOptions } from './internal/position-options.js';
 import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
 import { reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
@@ -85,16 +83,11 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     inputValue: { type: String, default: undefined }, defaultInputValue: { type: String, default: '' },
     open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined },
-    position: { type: Boolean, default: true }, presentation: { type: String as PropType<ComboboxPresentation>, default: 'popup' },
+    ...positionProps, presentation: { type: String as PropType<ComboboxPresentation>, default: 'popup' },
     anchor: { type: String as PropType<ComboboxAnchor>, default: 'input' },
     itemId: Function as PropType<(id: string) => string>,
     renderedItems: { type: Array as PropType<readonly string[] | undefined>, default: undefined },
-    side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
-    align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
-    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
-    collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-    hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
-    tracking: { type: String as PropType<PositionTracking>, default: 'events' },
+    align: { ...positionProps.align, default: 'start' },
     policies: { type: Object as PropType<ComboboxPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -233,13 +226,9 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
         ...(controlled.input ? { inputState } : { defaultInputState: inputState }),
         ...(controlled.open ? { open: props.open as boolean } : { defaultOpen: localOpen.value }),
         disabled: flags.value.disabled, readOnly: flags.value.readonly,
-        presentation: props.presentation, position: props.position, anchor: props.anchor, side: props.side, align: props.align, sideOffset: props.sideOffset,
+        presentation: props.presentation, anchor: props.anchor, ...readPositionOptions(props),
         ...(props.itemId === undefined ? {} : { getItemElementID: props.itemId }),
         isItemRendered: id => renderedItems.value?.has(id) ?? true,
-        collisionPadding: props.collisionPadding,
-        ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }),
-        avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached,
-        strategy: props.strategy, tracking: props.tracking,
         onValueChange: ({ value }) => { localValue.value = value; emit('update:modelValue', value); },
         onInputStateChange: ({ value }) => {
           proposedInputState = value;
@@ -336,7 +325,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     watch(() => props.items, (items, previousItems) => {
       if (!sameComboboxItems(items, previousItems)) requestConnect();
     });
-    watch([() => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.position, () => props.presentation, () => props.anchor, () => props.itemId, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking], requestConnect);
+    watch([() => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.presentation, () => props.anchor, () => props.itemId, ...positionSources(props)], requestConnect);
     watch(renderedItems, () => {
       if (connection.value?.getActive()) connection.value.setInputAttributes(props.label);
     }, { flush: 'post' });

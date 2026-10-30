@@ -40,7 +40,7 @@ export type DrawerOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
 export type DrawerInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export type DrawerPresentation = 'overlay' | 'inline';
 export type DrawerRootProps = Omit<PopupRootProps,
-  'align' | 'sideOffset' | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions' |
+  'align' | 'sideOffset' | 'collisionPadding' | 'collisionBoundary' | 'avoidCollisions' | 'flip' | 'shift' |
   'arrowPadding' | 'hideWhenDetached' | 'position' | 'strategy' | 'tracking' |
   'open' | 'defaultOpen' | 'unmountOnExit'
 > & {

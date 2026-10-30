@@ -47,6 +47,7 @@ export interface TooltipRootProps extends TooltipTimingOptions {
   readonly align?: PopupRootProps['align']; readonly sideOffset?: PopupRootProps['sideOffset'];
   readonly collisionPadding?: PopupRootProps['collisionPadding']; readonly collisionBoundary?: PopupRootProps['collisionBoundary'];
   readonly avoidCollisions?: PopupRootProps['avoidCollisions']; readonly arrowPadding?: PopupRootProps['arrowPadding'];
+  readonly flip?: PopupRootProps['flip']; readonly shift?: PopupRootProps['shift'];
   readonly hideWhenDetached?: PopupRootProps['hideWhenDetached']; readonly strategy?: PopupRootProps['strategy'];
   readonly tracking?: PopupRootProps['tracking']; readonly unmountOnExit?: PopupRootProps['unmountOnExit'];
 }

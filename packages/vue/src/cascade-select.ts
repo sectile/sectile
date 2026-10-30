@@ -9,13 +9,11 @@ import {
 import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import { unwrap } from '@sectile/core/result';
 import type {
-  PositionBoundary,
   PositionOptions,
-  PositionPadding,
   PositionStrategy,
-  PositionTracking,
 } from '@sectile/dom/position';
 import { Primitive, type PrimitiveAs } from './primitive.js';
+import { positionProps, positionSources, readPositionOptions } from './internal/position-options.js';
 import { visuallyHiddenInputStyle } from './input/native-input.js';
 import { provideFormControlOwner } from './form/control.js';
 import {
@@ -97,13 +95,7 @@ export const CascadeSelectRoot = defineComponent({
     nodes: { type: Array as PropType<readonly CascadeSelectItemDefinition<string>[]>, required: true }, modelValue: { type: String as PropType<string | null>, default: undefined }, defaultValue: { type: String as PropType<string | null>, default: null },
     open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false }, disabledItems: { type: Array as PropType<readonly string[]>, default: () => [] },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined }, name: { type: String, default: undefined }, form: { type: String, default: undefined }, required: { type: Boolean, default: false },
-    position: { type: Boolean, default: true },
-    side: { type: String as PropType<'top' | 'right' | 'bottom' | 'left'>, default: 'bottom' },
-    align: { type: String as PropType<'start' | 'center' | 'end'>, default: 'start' },
-    sideOffset: { type: Number, default: 8 }, collisionPadding: { type: [Number, Object] as PropType<PositionPadding>, default: 8 },
-    collisionBoundary: { type: [String, Object] as PropType<PositionBoundary>, default: undefined }, avoidCollisions: { type: Boolean, default: true },
-    hideWhenDetached: { type: Boolean, default: false }, strategy: { type: String as PropType<PositionStrategy>, default: 'absolute' },
-    tracking: { type: String as PropType<PositionTracking>, default: 'events' },
+    ...positionProps, align: { ...positionProps.align, default: 'start' },
     textValue: { type: Function as PropType<CascadeSelectTextValueResolver>, default: undefined }, policies: { type: Object as PropType<CascadeSelectPolicies<string>>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
@@ -156,7 +148,7 @@ export const CascadeSelectRoot = defineComponent({
       const value = requestedValue !== null && leafIDs.has(requestedValue) ? requestedValue : null;
       localValue.value = value;
       if (valueControlled && requestedValue !== value) emit('update:modelValue', value);
-      const options: CascadeSelectOptions<string> = { root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, position: props.position, manageVisibility: false, side: props.side, align: props.align, sideOffset: props.sideOffset, collisionPadding: props.collisionPadding, ...(props.collisionBoundary === undefined ? {} : { collisionBoundary: props.collisionBoundary }), avoidCollisions: props.avoidCollisions, hideWhenDetached: props.hideWhenDetached, strategy: props.strategy, tracking: props.tracking, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value } : { defaultValue: value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); }, onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); }, onOpenChange: (next) => { if (!openControlled) localOpen.value = next; emit('update:open', next); }, onUpdate: refresh };
+      const options: CascadeSelectOptions<string> = { root: root.value, trigger: trigger.value, popup: popup.value, nodes: props.nodes, disabledItems: props.disabledItems, ...readPositionOptions(props), manageVisibility: false, ...(props.policies === undefined ? {} : { policies: props.policies }), ...(valueControlled ? { value } : { defaultValue: value }), ...(openControlled ? { open: props.open as boolean } : { defaultOpen: localOpen.value }), disabled: props.disabled, readOnly: props.readonly, ...(props.label === undefined ? {} : { label: props.label }), onValueChange: (next) => { localValue.value = next; emit('update:modelValue', next); }, onHighlightedValueChange: (next) => { highlighted.value = next; emit('highlight', next); }, onOpenChange: (next) => { if (!openControlled) localOpen.value = next; emit('update:open', next); }, onUpdate: refresh };
       const host = lifecycle.layerHost.value;
       const layer = host === undefined ? {} : { layerHost: host };
       const interaction = { disabled: flags.value.disabled, readOnly: flags.value.readonly };
@@ -184,7 +176,7 @@ export const CascadeSelectRoot = defineComponent({
       });
     };
     provide<RootContext>(rootKey, { state, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence, position: computed(() => props.position), strategy: computed(() => props.strategy), label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), disabledItems: computed(() => new Set(props.disabledItems)), branchItems: branches, indicatorPresence, registerTrigger: (element) => { const next = element ?? null; const changed = trigger.value !== next; trigger.value = next; if (changed) scheduleConnect(); }, registerPopup: (element) => { const changed = popup.value !== element; popup.value = element; if (changed) scheduleConnect(); }, refresh: () => connection.value?.refresh(), registerColumn: (element, depth, label) => connection.value?.setColumnAttributes(element, depth === 0 ? null : state.value.path[depth - 1] ?? null, label), registerItem: (element, id, disabled) => connection.value?.setItemAttributes(element, id, disabled) });
-    onMounted(() => { mounted = true; lifecycle.reconnect(); }); onBeforeUnmount(() => { mounted = false; disconnect(); }); watch([() => props.nodes, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, () => props.position, () => props.side, () => props.align, () => props.sideOffset, () => props.collisionPadding, () => props.collisionBoundary, () => props.avoidCollisions, () => props.hideWhenDetached, () => props.strategy, () => props.tracking, () => props.policies, direction], lifecycle.reconnect);
+    onMounted(() => { mounted = true; lifecycle.reconnect(); }); onBeforeUnmount(() => { mounted = false; disconnect(); }); watch([() => props.nodes, () => props.disabledItems, () => flags.value.disabled, () => flags.value.readonly, () => props.label, ...positionSources(props), () => props.policies, direction], lifecycle.reconnect);
     watch([() => props.modelValue, () => props.open], () => { lifecycle.prepareModelUpdate(); if (connection.value === undefined) return; const result = connection.value.syncControlledValues({ ...(valueControlled ? { value: props.modelValue as string | null } : {}), ...(openControlled ? { open: props.open as boolean } : {}) }); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     const registerRoot = (node: unknown): void => { const next = node instanceof HTMLElement ? node : null; const changed = root.value !== next; root.value = next; if (changed) scheduleConnect(); };
     return (): VNodeChild => {

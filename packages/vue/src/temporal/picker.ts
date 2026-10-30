@@ -25,6 +25,7 @@ import {
 } from '../form/control.js';
 import { visuallyHiddenInputStyle } from '../input/native-input.js';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
+import { positionProps, positionSources, readPositionOptions } from '../internal/position-options.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { useNextTickTask } from '../internal/scheduled-task.js';
 import { usePresence } from '../presence/presence.js';
@@ -60,18 +61,7 @@ export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; 
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 export interface PickerPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
-export interface PickerPositionProps {
-  readonly position?: boolean;
-  readonly side?: PickerPositionOptions['side'];
-  readonly align?: PickerPositionOptions['align'];
-  readonly sideOffset?: number;
-  readonly collisionPadding?: PickerPositionOptions['collisionPadding'];
-  readonly collisionBoundary?: PickerPositionOptions['collisionBoundary'];
-  readonly avoidCollisions?: boolean;
-  readonly hideWhenDetached?: boolean;
-  readonly strategy?: PickerPositionOptions['strategy'];
-  readonly tracking?: PickerPositionOptions['tracking'];
-}
+export interface PickerPositionProps extends Omit<PickerPositionOptions, 'anchor' | 'arrowPadding'> {}
 
 export interface PickerRootConfig {
   readonly scope?: string;
@@ -101,7 +91,7 @@ export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue,
   readonly asChild?: boolean;
 }
 
-interface ResolvedPickerRootProps<Kind extends PickerKind> {
+interface ResolvedPickerRootProps<Kind extends PickerKind> extends PickerPositionProps {
   readonly modelValue?: PickerValueFor<Kind>;
   readonly defaultValue: PickerValueFor<Kind>;
   readonly open?: boolean;
@@ -223,15 +213,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       defaultView: { type: String as PropType<CalendarViewMode>, default: defaultView },
       disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, required: { type: Boolean, default: false },
       label: { type: String, default: undefined }, policies: { type: Object as PropType<PickerPoliciesFor<Kind>>, default: undefined },
-      position: { type: Boolean, default: true },
-      side: { type: String as PropType<NonNullable<PickerPositionOptions['side']>>, default: 'bottom' },
-      align: { type: String as PropType<NonNullable<PickerPositionOptions['align']>>, default: 'center' },
-      sideOffset: { type: Number, default: 8 },
-      collisionPadding: { type: [Number, Object] as PropType<PickerPositionOptions['collisionPadding']>, default: 8 },
-      collisionBoundary: { type: [String, Object] as PropType<PickerPositionOptions['collisionBoundary']>, default: undefined },
-      avoidCollisions: { type: Boolean, default: true }, hideWhenDetached: { type: Boolean, default: false },
-      strategy: { type: String as PropType<NonNullable<PickerPositionOptions['strategy']>>, default: 'absolute' },
-      tracking: { type: String as PropType<NonNullable<PickerPositionOptions['tracking']>>, default: 'events' },
+      ...positionProps,
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
     },
     emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
@@ -407,12 +389,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           if (anchor !== undefined) base['anchor'] = anchor;
           Object.assign(base, {
             manageVisibility: false,
-            position: runtimeProps.position, side: runtimeProps.side, align: runtimeProps.align, sideOffset: runtimeProps.sideOffset,
-            collisionPadding: runtimeProps.collisionPadding, avoidCollisions: runtimeProps.avoidCollisions,
-            hideWhenDetached: runtimeProps.hideWhenDetached, strategy: runtimeProps.strategy,
-            tracking: runtimeProps.tracking,
+            ...readPositionOptions(runtimeProps),
           });
-          if (runtimeProps.collisionBoundary !== undefined) base['collisionBoundary'] = runtimeProps.collisionBoundary;
           if (controlled.open) base['open'] = runtimeProps.open;
           else base['defaultOpen'] = localOpen.value;
           base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
@@ -610,9 +588,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       }, { flush: 'sync' });
       watch([
         () => flags.value.disabled, () => flags.value.readonly, () => flags.value.required, () => runtimeProps.label, () => runtimeProps.policies,
-        () => runtimeProps.position, () => runtimeProps.side, () => runtimeProps.align, () => runtimeProps.sideOffset,
-        () => runtimeProps.collisionPadding, () => runtimeProps.collisionBoundary, () => runtimeProps.avoidCollisions,
-        () => runtimeProps.hideWhenDetached, () => runtimeProps.strategy, () => runtimeProps.tracking,
+        ...positionSources(runtimeProps),
         () => kind !== 'calendar' ? layerHost.value : undefined,
         () => inputPresentation.value,
       ], requestConnect);

@@ -27,6 +27,24 @@ const actualInlineProps: typeof drawerInstance.$props = inlineDrawer;
 const actualOpenInlineProps: typeof drawerInstance.$props = { presentation: 'inline', open: true, unmountOnExit: false };
 void [actualInlineProps, actualOpenInlineProps];
 import type { PopoverRootSlotProps, PopoverRootExpose } from '@sectile/vue/popover';
+import type { PopoverRootProps } from '@sectile/vue/popover';
+import type { TooltipRootProps } from '@sectile/vue/tooltip';
+import type { SelectRootProps } from '@sectile/vue/select';
+import type { ComboboxRootProps } from '@sectile/vue/combobox';
+import type { CascadeSelectRootProps } from '@sectile/vue/cascade-select';
+import type { MenuButtonRootProps } from '@sectile/vue/menu-button';
+import type { DatePickerRootProps } from '@sectile/vue/temporal/date-picker';
+const independentPosition: PopoverRootProps & TooltipRootProps = { side: 'bottom', flip: false, shift: true };
+const selectPosition: SelectRootProps = { items: ['a'], ...independentPosition };
+const comboboxPosition: ComboboxRootProps = { items: [{ id: 'a', label: 'Alpha' }], ...independentPosition };
+const cascadePosition: CascadeSelectRootProps = { nodes: [{ id: 'a', parentID: null }], ...independentPosition };
+const menuPosition: MenuButtonRootProps = { items: [{ id: 'a', parentID: null }], ...independentPosition };
+const pickerPosition: DatePickerRootProps = { ...independentPosition };
+// @ts-expect-error Per-policy overrides remain booleans through public Vue declarations.
+const invalidFlip: PopoverRootProps = { flip: 'never' };
+// @ts-expect-error Drawer presentation does not own anchored collision policy.
+const positionedDrawer: DrawerRootProps = { flip: false };
+void [selectPosition, comboboxPosition, cascadePosition, menuPosition, pickerPosition, invalidFlip, positionedDrawer];
 import { DatePickerContent, type DatePickerContentSlotProps, type DateValue } from '@sectile/vue/temporal/date-picker';
 import type { DateRangePickerContentSlotProps, DateRange } from '@sectile/vue/temporal/date-range-picker';
 import type { DateTimePickerContentSlotProps, DateTimeValue } from '@sectile/vue/temporal/date-time-picker';
