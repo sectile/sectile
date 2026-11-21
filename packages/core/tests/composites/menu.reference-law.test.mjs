@@ -1,5 +1,18 @@
 import assert from 'node:assert/strict'; import test from 'node:test'; import { createTree } from '../../.verification-dist/structures/tree.js'; import { createMenuState, applyMenuEvent } from '../../.verification-dist/menu.js'; import { createReferenceMenuState, applyReferenceMenuEvent } from '../../.verification-dist/internal/reference/composites/menu.js'; import { unwrap } from '../support.mjs';
-test('nested menu popup path matches an independent transition reference', () => { const tree = createTree([{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }, { id: 'open', parentID: 'file' }, { id: 'edit', parentID: null }]); const states = [[false, null, []], [true, 'file', []], [true, 'new', ['file']], [true, 'open', ['file']], [true, 'edit', []]]; const events = ['open-popup', 'close-popup', 'next', 'previous', 'first', 'last', 'open-submenu', 'close-submenu', 'invoke', 'escape', { type: 'focus', id: 'edit' }]; for (const [open, current, path] of states) for (const event of events) { const policies = { disabled: (id) => id === 'open' }; const actual = applyMenuEvent(tree, createMenuState(tree, open, current, path), event, policies); const expected = applyReferenceMenuEvent(tree, createReferenceMenuState(open, current, path), event, policies); assert.deepEqual(observe(actual), observeReference(expected)); } });
+test('nested menu popup path matches an independent transition reference', () => {
+  const tree = createTree([{ id: 'file', parentID: null }, { id: 'new', parentID: 'file' }, { id: 'open', parentID: 'file' }, { id: 'edit', parentID: null }]);
+  const states = [[false, null, []], [true, null, []], [true, 'file', []], [true, 'file', ['file']], [true, 'new', ['file']], [true, 'open', ['file']], [true, 'edit', []]];
+  const events = [
+    'open-popup', 'open-popup-without-focus', 'close-popup', 'next', 'previous', 'first', 'last',
+    'open-submenu', 'open-submenu-without-focus', 'close-submenu', 'invoke', 'escape', { type: 'focus', id: 'edit' },
+  ];
+  const policies = { disabled: (id) => id === 'open' };
+  for (const [open, current, path] of states) for (const event of events) {
+    const actual = applyMenuEvent(tree, createMenuState(tree, open, current, path), event, policies);
+    const expected = applyReferenceMenuEvent(tree, createReferenceMenuState(open, current, path), event, policies);
+    assert.deepEqual(observe(actual), observeReference(expected), JSON.stringify({ open, current, path, event }));
+  }
+});
 function observe(result) { return result.ok ? { ok: true, state: result.value.state, commands: result.value.commands } : { ok: false, errorClass: result.error.class, errorCode: result.error.code }; } function observeReference(result) { return result.ok ? { ok: true, state: result.value.state, commands: result.value.commands } : { ok: false, errorClass: result.errorClass, errorCode: result.errorCode }; }
 
 test('menu root movement publishes one root focus and the destination branch only', () => {

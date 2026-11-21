@@ -10,8 +10,10 @@ const invalidCandidatePolicies: ComboboxPolicies<'a'> = { eligible: () => 'yes' 
 import type { MenubarEvent } from '@sectile/core/menubar';
 import type { NavigationMenuEvent } from '@sectile/core/navigation-menu';
 import type { MenuButtonEvent } from '@sectile/core/menu-button';
-const rootMovement: readonly (MenuEvent<'file' | 'edit'> & MenubarEvent<'file' | 'edit'> & NavigationMenuEvent<'file' | 'edit'> & MenuButtonEvent<'file' | 'edit'>)[] = ['next-root', 'previous-root'];
-void rootMovement;
+const menuEvents: readonly (MenuEvent<'file' | 'edit'> & MenubarEvent<'file' | 'edit'> & NavigationMenuEvent<'file' | 'edit'> & MenuButtonEvent<'file' | 'edit'>)[] = [
+  'next-root', 'previous-root', 'open-popup-without-focus', 'open-submenu-without-focus',
+];
+void menuEvents;
 
 import {
   createSequenceReorderState, createTreeReorderState,

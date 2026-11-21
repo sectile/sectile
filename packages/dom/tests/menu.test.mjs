@@ -71,6 +71,44 @@ test('menu button trigger arrows admit Core opening and endpoint focus and relea
   finally { refused.disconnect(); }
 });
 
+test('menu button pointer activation retains focus while keyboard activation enters the menu', async () => {
+  const { window, root, trigger, file, child, submenu } = menuDOM(600, 400);
+  const menu = createMenuButton({ root, trigger, position: false, items: [
+    { id: 'file', parentID: null }, { id: 'open', parentID: 'file' },
+  ] });
+  menu.setItemAttributes(file, 'file');
+  menu.setItemAttributes(child, 'open');
+  menu.setSubmenuAttributes(submenu, 'file');
+  const click = (element, detail) => element.dispatchEvent(new window.MouseEvent('click', { bubbles: true, detail }));
+  const arrow = (element, key) => element.dispatchEvent(new window.KeyboardEvent('keydown', { bubbles: true, cancelable: true, key }));
+  try {
+    trigger.focus();
+    click(trigger, 1);
+    assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(menu.state.cursor.current, null);
+    assert.equal(window.document.activeElement, trigger);
+
+    click(file, 1);
+    await settlePosition(window);
+    assert.equal(file.getAttribute('aria-expanded'), 'true');
+    assert.equal(submenu.hidden, false);
+    assert.equal(window.document.activeElement, file);
+
+    arrow(file, 'ArrowLeft');
+    assert.equal(submenu.hidden, true);
+    assert.equal(trigger.getAttribute('aria-expanded'), 'true');
+    assert.equal(window.document.activeElement, file);
+
+    click(trigger, 1);
+    click(trigger, 0);
+    assert.equal(menu.state.cursor.current, 'file');
+    assert.equal(window.document.activeElement, file);
+    arrow(file, 'ArrowRight');
+    await settlePosition(window);
+    assert.equal(window.document.activeElement, child);
+  } finally { menu.disconnect(); window.close(); }
+});
+
 test('menu keyboard input admits its actual focused registered item before interpreting the first key', async () => {
   for (const create of [createMenu, createMenuButton]) {
     const { window, root, trigger, file, child, submenu } = menuDOM(600, 400);

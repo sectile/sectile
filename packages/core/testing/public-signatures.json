@@ -295,7 +295,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "4a020786a9ed0fd6865c2a0353370dab718e6b1d7ecdeca8cab8e160be2c3311",
+  "fingerprint": "84eb2ee40feb0c4ec665a3e4610cd9a021af99d3afb6b84ad5f2bf794ede0948",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -411,7 +411,7 @@
     },
     {
       "path": "dist/internal/composites/menu.d.ts",
-      "sha256": "c4df16398bac8cb3a882adb11ab99280dd91c795e5e29d330e623e621e919720"
+      "sha256": "9928906aff602c37a04bb25f9073e8d75bea8bfc76ac21b3a2378ef70de052df"
     },
     {
       "path": "dist/internal/composites/popup.d.ts",

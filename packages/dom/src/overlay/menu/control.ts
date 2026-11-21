@@ -122,7 +122,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   #restoreTriggerRequested = false;
   #allowTriggerRestore = true;
   #projectedState: MenuState<ID> | undefined;
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: (event: MouseEvent) => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   readonly #triggerKeydown: (event: KeyboardEvent) => void;
   readonly #triggerContextMenu: ((event: MouseEvent) => void) | undefined;
   #contextRect: PositionRect | undefined;
@@ -215,10 +215,15 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       const wasOpen = this.getSnapshot().state.openPath.includes(id);
       this.handleEvent({ type: 'focus', id });
       if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) {
-        this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu');
+        if (this.#tree.isLeaf(id)) this.handleEvent('invoke');
+        else this.handleEvent(event.detail > 0 ? 'open-submenu-without-focus' : 'open-submenu');
       }
     };
-    this.#triggerClick = () => { if (this.getActive()) this.handleEvent(this.getSnapshot().state.open ? 'close-popup' : 'open-popup'); };
+    this.#triggerClick = (event) => {
+      if (!this.getActive()) return;
+      if (this.getSnapshot().state.open) this.handleEvent('close-popup');
+      else this.handleEvent(event.detail > 0 ? 'open-popup-without-focus' : 'open-popup');
+    };
     this.#triggerContextMenu = options.triggerMode === 'context-menu' ? (event) => {
       if (!this.getActive() || options.disabled === true || event.defaultPrevented) return;
       event.preventDefault();
