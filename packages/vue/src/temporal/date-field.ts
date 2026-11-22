@@ -20,6 +20,7 @@ export interface DateFieldProps {
   readonly required?: boolean;
   readonly label?: string;
   readonly native?: boolean;
+  readonly format?: DateFieldFormat;
 }
 
 type DateFieldPolicies = NonNullable<DateFieldOptions['policies']>;
@@ -28,7 +29,7 @@ function rebase(value: DateValue | null, inputState: Parameters<typeof createDat
   return unwrap(reformatDateFieldState(createDateFieldState(value, inputState, previousFormat), format)).inputState;
 }
 
-export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, DateFieldPolicies, DateFieldFormat>({
+export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, DateFieldPolicies, DateFieldFormat, { format?: DateFieldFormat }>({
   name: 'SectileDateField',
   scope: 'date-field',
   inputMode: 'numeric',
@@ -36,13 +37,15 @@ export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, D
   placeholder: 'YYYY-MM-DD',
   formatValue: formatDateValue,
   valueType: Object as PropType<DateValue | null>,
+  presentationProps: { format: { type: Object as PropType<DateFieldFormat>, default: undefined } },
   create: createDateField,
   rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
   usePresentation(props) {
     const formatter = useTemporalFormatter();
     return computed<NativeFieldPresentation<DateValue, DateFieldPolicies, DateFieldFormat> | undefined>(() => {
-      if (props.native === true || formatter.value === undefined) return undefined;
-      const format = unwrap(formatter.value.dateFieldFormat());
+      if (props.native === true) return undefined;
+      const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
+      if (format === undefined) return undefined;
       return { format, placeholder: getDateFieldPlaceholder(format), formatValue: (value: DateValue) => formatDateFieldValue(value, format),
         create: options => createDateField({ ...options, format }),
         rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat, format) };

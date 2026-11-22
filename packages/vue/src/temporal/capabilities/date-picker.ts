@@ -7,8 +7,8 @@ import { definePickerFamilyCapability, type PickerCapabilityGranularity } from '
 export const datePickerCapability = definePickerFamilyCapability({
   kind: 'date' as const,
   connect: (options) => createDatePicker(options as never),
-  presentation: formatter => {
-    const format = formatter === undefined ? undefined : unwrap(formatter.dateFieldFormat());
+  presentation: (formatter, explicit) => {
+    const format = explicit ?? (formatter === undefined ? undefined : unwrap(formatter.dateFieldFormat()));
     return { options: { format }, attributes: { input: { placeholder: getDateFieldPlaceholder(format), inputmode: 'numeric' } },
       formatInput: (part, value) => part === 'input' && format !== undefined ? formatDateFieldValue(value as DateValue, format) : undefined };
   },

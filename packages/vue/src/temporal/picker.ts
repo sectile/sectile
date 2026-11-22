@@ -9,7 +9,7 @@ import type { DatePickerOptions, PickerPositionOptions, CalendarMonthValue, Cale
 import type { DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
 import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-picker';
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
-import { formatDateValue, parseDateValue, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
+import { formatDateValue, parseDateValue, type DateFieldFormat, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';
@@ -74,6 +74,7 @@ export interface PickerPortalProps { readonly to?: string | HTMLElement; readonl
 export interface PickerPositionProps extends Omit<PickerPositionOptions, 'anchor' | 'arrowPadding'> {}
 
 export interface PickerRootConfig {
+  readonly dateFormat?: boolean;
   readonly scope?: string;
   readonly granularity?: 'day' | 'month' | 'year';
   readonly defaultView?: CalendarViewMode;
@@ -102,6 +103,7 @@ export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue,
 }
 
 interface ResolvedPickerRootProps<Kind extends PickerKind> extends ResolvedPositionProps {
+  readonly format?: DateFieldFormat;
   readonly modelValue?: PickerValueFor<Kind>;
   readonly defaultValue: PickerValueFor<Kind>;
   readonly open?: boolean;
@@ -130,9 +132,9 @@ export type PickerRootPublicProps<Kind extends PickerKind> =
     readonly 'onUpdate:highlightedValue'?: (value: DateValue) => unknown;
   };
 
-export interface PickerRootComponent<Kind extends PickerKind> {
-  new (props: PickerRootPublicProps<Kind>): {
-    $props: PickerRootPublicProps<Kind>;
+export interface PickerRootComponent<Kind extends PickerKind, ExtraProps extends object = {}> {
+  new (props: PickerRootPublicProps<Kind> & ExtraProps): {
+    $props: PickerRootPublicProps<Kind> & ExtraProps;
     $slots: { default?: (props: RootSlotFor<Kind>) => VNodeChild };
   };
 }
@@ -192,6 +194,8 @@ const key = Symbol('SectileDatePickerRoot');
 const noPendingPickerValue = Symbol('no-pending-picker-value');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
+export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig & { readonly dateFormat: true }): PickerRootComponent<Kind, { readonly format?: DateFieldFormat }>;
+export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config?: PickerRootConfig): PickerRootComponent<Kind>;
 export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
   const kind = capability.kind;
   const scope = config.scope ?? kind;
@@ -206,6 +210,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
     __sectileFormLabelMode: 'labelledby',
     name, inheritAttrs: false,
     props: {
+      ...(config.dateFormat === true ? { format: { type: Object as PropType<DateFieldFormat>, default: undefined } } : {}),
       modelValue: { type: Object as PropType<PickerValueFor<Kind>>, default: undefined }, defaultValue: { type: Object as PropType<PickerValueFor<Kind>>, default: null },
       open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: defaultOpen },
       highlightedValue: { type: Object as PropType<DateValue>, default: undefined }, defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
@@ -228,7 +233,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const hostReferenceDate = useTemporalReferenceDate();
       const formatter = useTemporalFormatter();
       const layerHost = useHostLayer();
-      const inputPresentation = computed(() => granularity === 'day' ? capability.presentation?.(formatter.value) : undefined);
+      const inputPresentation = computed(() => granularity === 'day' ? capability.presentation?.(formatter.value, runtimeProps.format) : undefined);
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
       const initialInputs = computed(() => capability.initialInputValues?.(referenceDate.value, runtimeProps.policies, formatter.value));
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');

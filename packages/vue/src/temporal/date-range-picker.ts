@@ -1,5 +1,5 @@
 import type { DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
-import type { DateRange, DateValue } from '@sectile/dom/temporal/date-field';
+import type { DateFieldFormat, DateRange, DateValue } from '@sectile/dom/temporal/date-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, type PickerRootPartComponent,
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
@@ -8,13 +8,14 @@ import { dateRangePickerCapability } from './capabilities/date-range-picker.js';
 import type { PickerContentPartComponent, RangePickerContentSlotProps, RangePickerRootSlotProps } from './picker.js';
 
 export interface DateRangePickerRootProps extends PickerPartProps, PickerPositionProps {
+  readonly format?: DateFieldFormat;
   readonly modelValue?: DateRange | null; readonly defaultValue?: DateRange | null;
   readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateRangePickerOptions['policies'];
 }
-export const DateRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot');
+export const DateRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot', { dateFormat: true });
 export type DateRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
 export type DateRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>;

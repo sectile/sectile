@@ -1,7 +1,7 @@
 import { unwrap, type Result } from '@sectile/core/result';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { compareDateValues, dateRangeContains, formatDateValue, type DateRange, type DateValue } from '@sectile/temporal/date-field';
+import { compareDateValues, dateRangeContains, formatDateFieldValue, formatDateValue, type DateFieldFormat, type DateRange, type DateValue } from '@sectile/temporal/date-field';
 import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
 import type { DatePickerEvent, DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { applyDateRangePickerEvent, tryCreateDateRangePickerState, type DateRangePickerCommand, type DateRangePickerEvent, type DateRangePickerState, type DateRangePickerStateInput } from '@sectile/temporal/date-range-picker';
@@ -20,6 +20,7 @@ import { createPickerPosition, type PickerPositionOptions } from '../overlay/pos
 import type { PositionConnection } from '../overlay/position/connection.js';
 import { createHiddenBinding, type HiddenBinding } from '../interaction/visibility.js';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
+import { getDateFieldPlaceholder } from './date-field.js';
 
 type DateRangePickerStateFactory = (input: DateRangePickerStateInput) => ReturnType<typeof tryCreateDateRangePickerState>;
 type DateRangePickerReducer = (state: DateRangePickerState, event: DateRangePickerEvent, policies: DatePickerPolicies) => ReturnType<typeof applyDateRangePickerEvent>;
@@ -27,6 +28,7 @@ interface InternalDateRangePickerOptions extends DateRangePickerOptions, Partial
 
 export interface DateRangePickerOptions {
   readonly layerHost?: Exclude<DOMLayerBindingOptions['layerHost'], undefined>;
+  readonly format?: DateFieldFormat | undefined;
 }
 
 export interface DateRangePickerOptions extends PickerPositionOptions { readonly defaultState?: DateRangePickerState; readonly root: HTMLElement; readonly grid: HTMLElement; readonly trigger: HTMLElement; readonly startInput?: HTMLInputElement; readonly endInput?: HTMLInputElement; readonly policies?: DatePickerPolicies; readonly value?: DateRange | null; readonly defaultValue?: DateRange | null; readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue; readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly manageVisibility?: boolean; readonly onValueChange?: (value: DateRange | null) => void; readonly onHighlightedValueChange?: (value: DateValue) => void; readonly onOpenChange?: (open: boolean) => void; readonly onUpdate?: () => void; }
@@ -126,7 +128,9 @@ class DOMDateRangePicker implements DateRangePickerConnection {
     this.options.trigger.setAttribute('aria-haspopup', 'dialog'); this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));
     if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     for (const [input, value] of [[this.options.startInput, state.value?.start], [this.options.endInput, state.value?.end]] as const) if (input !== undefined) {
-      input.value = value === undefined ? '' : formatDateValue(value); setInteractionAttributes(input, this.options, true); input.readOnly = true; input.setAttribute('aria-readonly', 'true');
+      input.value = value === undefined ? '' : formatDateFieldValue(value, this.options.format);
+      input.placeholder = getDateFieldPlaceholder(this.options.format);
+      setInteractionAttributes(input, this.options, true); input.readOnly = true; input.setAttribute('aria-readonly', 'true');
     }
     this.#layer.sync(); if (this.getActive()) this.#position.update();
   }

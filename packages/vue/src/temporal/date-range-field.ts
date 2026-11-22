@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import { reformatDateRangeFieldState } from '@sectile/temporal/date-range-field';
 import { getDateFieldPlaceholder } from '@sectile/dom/temporal/date-field';
 import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/temporal/date-range-field';
-import type { DateRange } from '@sectile/dom/temporal/date-field';
+import type { DateFieldFormat, DateRange } from '@sectile/dom/temporal/date-field';
 import { setupNativeRangeField, createNativeRangeFieldInput, type NativeRangeFieldConfig, type NativeRangePresentation } from '../input/native-range-field.js';
 import { useTemporalFormatter } from './temporal-provider.js';
 import type { PrimitiveAs } from '../primitive.js';
@@ -14,6 +14,7 @@ export interface DateRangeFieldRootProps {
   readonly modelValue?: DateRange | null;
   readonly defaultValue?: DateRange | null;
   readonly policies?: DateRangeFieldPolicies;
+  readonly format?: DateFieldFormat;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly required?: boolean;
@@ -39,17 +40,18 @@ const config: NativeRangeFieldConfig<DateRange, DateRangeFieldPolicies, DateRang
   reset: true,
   initial: tryCreateDateRangeFieldState, create: createDateRangeField,
   rebase: (state, start, end) => reformatDateRangeFieldState({ ...state, start: { ...state.start, inputState: start }, end: { ...state.end, inputState: end } }),
-  usePresentation() {
-    const formatter = useTemporalFormatter();
-    return computed<NativeRangePresentation<DateRange, DateRangeFieldPolicies, DateRangeFieldState> | undefined>(() => {
-      if (formatter.value === undefined) return undefined;
-      const format = unwrap(formatter.value.dateFieldFormat());
-      return { placeholder: getDateFieldPlaceholder(format), initial: options => tryCreateDateRangeFieldState({ ...options, startFormat: format, endFormat: format }),
-        create: options => createDateRangeField({ ...options, format }),
-        rebase: (state, start, end) => reformatDateRangeFieldState({ ...state, start: { ...state.start, inputState: start }, end: { ...state.end, inputState: end } }, format) };
-    });
-  },
 };
+
+function useDateRangePresentation(props: { readonly format?: DateFieldFormat | undefined }) {
+  const formatter = useTemporalFormatter();
+  return computed<NativeRangePresentation<DateRange, DateRangeFieldPolicies, DateRangeFieldState> | undefined>(() => {
+    const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
+    if (format === undefined) return undefined;
+    return { placeholder: getDateFieldPlaceholder(format), initial: options => tryCreateDateRangeFieldState({ ...options, startFormat: format, endFormat: format }),
+      create: options => createDateRangeField({ ...options, format }),
+      rebase: (state, start, end) => reformatDateRangeFieldState({ ...state, start: { ...state.start, inputState: start }, end: { ...state.end, inputState: end } }, format) };
+  });
+}
 
 export const DateRangeFieldRoot = /* @__PURE__ */ defineComponent({
   __sectileFormLabelMode: 'labelledby',
@@ -60,6 +62,7 @@ export const DateRangeFieldRoot = /* @__PURE__ */ defineComponent({
     modelValue: { type: Object as PropType<DateRange | null>, default: undefined },
     defaultValue: { type: Object as PropType<DateRange | null>, default: null },
     policies: { type: Object as PropType<DateRangeFieldPolicies>, default: undefined },
+    format: { type: Object as PropType<DateFieldFormat>, default: undefined },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
@@ -70,7 +73,7 @@ export const DateRangeFieldRoot = /* @__PURE__ */ defineComponent({
   },
   emits: { 'update:modelValue': (_value: DateRange | null): boolean => true },
   slots: Object as SlotsType<{ default: (props: DateRangeFieldRootSlotProps) => VNodeChild }>,
-  setup(props, context) { return setupNativeRangeField(config, props, context); },
+  setup(props, context) { return setupNativeRangeField({ ...config, usePresentation: () => useDateRangePresentation(props) }, props, context); },
 });
 
 export type DateRangeFieldValueChangeHandler = (value: DateRange | null) => void;

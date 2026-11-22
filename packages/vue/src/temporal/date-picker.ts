@@ -1,5 +1,5 @@
 import type { DatePickerOptions } from '@sectile/dom/temporal/date-picker';
-import type { DateValue } from '@sectile/dom/temporal/date-field';
+import type { DateFieldFormat, DateValue } from '@sectile/dom/temporal/date-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, type PickerRootPartComponent,
   createPickerRoot, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
@@ -8,13 +8,14 @@ import { datePickerCapability } from './capabilities/date-picker.js';
 import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
 export interface DatePickerRootProps extends PickerPartProps, PickerPositionProps {
+  readonly format?: DateFieldFormat;
   readonly modelValue?: DateValue | null; readonly defaultValue?: DateValue | null;
   readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DatePickerOptions['policies'];
 }
-export const DatePickerRoot = /* @__PURE__ */ createPickerRoot(datePickerCapability, 'SectileDatePickerRoot');
+export const DatePickerRoot = /* @__PURE__ */ createPickerRoot(datePickerCapability, 'SectileDatePickerRoot', { dateFormat: true });
 export type DatePickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type DatePickerContentSlotProps = PickerContentSlotProps<DateValue | null>;
 export type DatePickerValueChangeHandler = NonNullable<InstanceType<typeof DatePickerRoot>['$props']['onUpdate:modelValue']>;

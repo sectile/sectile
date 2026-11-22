@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, h } from 'vue';
+import { createDateFieldFormat } from '@sectile/temporal/date-field';
+import { TemporalProvider } from '../.verification-dist/temporal/temporal-provider.js';
 import { FormRoot, FormField } from '../.verification-dist/form.js';
 import { CalendarCell, CalendarContent, CalendarGrid, CalendarRoot } from '../.verification-dist/temporal/calendar.js';
 import { DatePickerCell, DatePickerContent, DatePickerGrid, DatePickerInput, DatePickerMonthCell, DatePickerRoot, DatePickerTrigger, DatePickerYearViewTrigger } from '../.verification-dist/temporal/date-picker.js';
@@ -16,6 +18,18 @@ import { YearRangePickerCell, YearRangePickerContent, YearRangePickerEndInput, Y
 
 async function render(component) { return renderToString(createSSRApp({ render: component })); }
 const date = Object.freeze({ year: 2026, month: 8, day: 22 });
+
+test('day pickers use an explicit editing format under a different locale', async () => {
+  const format = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const html = await render(() => h(TemporalProvider, { locale: 'ko-KR' }, () => [
+    h(DatePickerRoot, { defaultValue: date, format }, () => h(DatePickerInput)),
+    h(DateRangePickerRoot, { defaultValue: { start: date, end: { ...date, day: 23 } }, format },
+      () => [h(DateRangePickerStartInput), h(DateRangePickerEndInput)]),
+  ]));
+  assert.equal([...html.matchAll(/placeholder="DD\/MM\/YYYY"/gu)].length, 3);
+  assert.equal([...html.matchAll(/value="22\/08\/2026"/gu)].length, 2);
+  assert.match(html, /value="23\/08\/2026"/u);
+});
 
 test('readonly picker SSR projects inherited native constraints without another submitted value', async () => {
   const html = await render(() => h(FormRoot, {}, { default: () => h(FormField, { name: 'delivery', form: 'schedule', required: true }, {
