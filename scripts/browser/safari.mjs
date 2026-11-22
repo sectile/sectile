@@ -41,17 +41,31 @@ export async function verifySafari(url, report) {
       const value = await post('/element', { using: 'css selector', value: selector });
       const id = value['element-6066-11e4-a52e-4f735466cecf'];
       assert.equal(typeof id, 'string');
-      return '/element/' + encodeURIComponent(id);
+      return { value, path: '/element/' + encodeURIComponent(id) };
     };
-    const keys = (input, text) => post(input + '/value', { text });
+    const keys = (input, text) => post(input.path + '/value', { text });
 
     await post('/url', { url: url + '/interactions' });
     await waitFor(() => evaluate('return window.sectileProbe !== undefined;'), 'Safari fixture readiness');
     await mount('composedTrigger', 'menu');
     const opener = await element('[data-composed-native]');
-    await post(opener + '/click', {});
+    await evaluate(`window.safariMenuEvents = [];
+      const describe = element => element?.outerHTML?.split('>')[0];
+      const record = event => window.safariMenuEvents.push({
+        type: event.type, target: describe(event.target), active: describe(document.activeElement),
+        detail: event.detail, pointerType: event.pointerType, trusted: event.isTrusted,
+      });
+      for (const type of ['pointerdown', 'mousedown', 'pointerup', 'click', 'focusin', 'focusout'])
+        document.addEventListener(type, record, true);`);
+    await post('/actions', { actions: [{ type: 'pointer', id: 'mouse', parameters: { pointerType: 'mouse' }, actions: [
+      { type: 'pointerMove', x: 0, y: 0, origin: opener.value }, { type: 'pointerDown', button: 0 }, { type: 'pointerUp', button: 0 },
+    ] }] });
     await waitFor(() => evaluate('return window.sectileProbe.composed.open;'), 'Safari menu opening');
-    assert.equal(await evaluate('return document.activeElement.matches("[data-composed-native]");'), true);
+    report.observed = await evaluate(`return {
+      focused: document.activeElement.matches('[data-composed-native]'),
+      events: window.safariMenuEvents,
+    };`);
+    assert.equal(report.observed.focused, true, 'pointer-open menu trigger retains focus in Safari');
     await keys(opener, '\uE004');
     await waitFor(() => evaluate('return !window.sectileProbe.composed.open;'), 'Safari menu Tab dismissal');
     report.results.push({ id: 'safari-menu-pointer-and-tab', result: 'passed' });

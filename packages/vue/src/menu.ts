@@ -314,9 +314,7 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
       });
       onMounted(() => { mounted = true; lifecycle.reconnect(); });
       onBeforeUnmount(() => { mounted = false; disconnect(); });
-      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, ...positionSources(runtimeProps)], lifecycle.reconnect);
-      if (popup) watch(layerHost, lifecycle.reconnect, { flush: 'post' });
-      watch(() => runtimeProps.open, (value) => {
+      const syncOpen = (value: boolean | undefined): void => {
         if (!controlled || value === undefined) return;
         currentOpen = value;
         state.open = value;
@@ -325,7 +323,17 @@ function createRoot<RootProps extends typeof commonProps | typeof menuButtonProp
         const result = connection.value.syncControlledValue(value);
         if (!result.ok) throw new TypeError(result.error.message);
         refresh();
+      };
+      watch([() => runtimeProps.items, () => runtimeProps.disabledItems, () => runtimeProps.disabled, () => runtimeProps.label, () => runtimeProps.textValue, () => runtimeProps.policies, direction, ...positionSources(runtimeProps)], () => {
+        const owner = connection.value;
+        if (controlled && owner !== undefined && owner.getSnapshot().state.open !== runtimeProps.open) {
+          // Adopt the open proposal while its originating controller still owns the focus request.
+          syncOpen(runtimeProps.open);
+        }
+        lifecycle.reconnect();
       });
+      if (popup) watch(layerHost, lifecycle.reconnect, { flush: 'post' });
+      watch(() => runtimeProps.open, syncOpen);
       return (): VNodeChild => {
         if (providerOnly) return h(Fragment as Component, null, slots['default']?.(state) ?? []);
         return h(Primitive, mergeProps(attrs, {

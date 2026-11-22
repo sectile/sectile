@@ -42,6 +42,30 @@ const { TreeViewGroup, TreeViewItem, TreeViewRoot } = await import('../.verifica
 const { createPopover } = await import('@sectile/dom/popover');
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
 
+test('controlled menu opening retains its pointer trigger when the owner rerenders inline items', async () => {
+  const host = document.createElement('div'); document.body.append(host);
+  const open = ref(false), requests = [];
+  const app = createApp({ render: () => h(MenuButtonRoot, {
+    items: [{ id: 'item', parentID: null }], open: open.value, position: false,
+    'onUpdate:open': value => requests.push(value),
+  }, { default: () => [
+    h(MenuButtonTrigger, null, () => 'Actions'),
+    h(MenuButtonContent, null, () => h(MenuItem, { value: 'item' }, () => 'Item')),
+  ] }) });
+  app.mount(host);
+  try {
+    await nextTick(); await nextTick();
+    const trigger = host.querySelector('button');
+    trigger.dispatchEvent(new browserWindow.MouseEvent('click', { bubbles: true, detail: 1 }));
+    assert.deepEqual(requests, [true]);
+    assert.notEqual(document.activeElement, trigger);
+    open.value = true;
+    await nextTick(); await nextTick();
+    assert.equal(document.activeElement === trigger, true);
+    assert.equal(host.querySelector('[role="menu"]').hidden, false);
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('Tooltip shares the real Fragment trigger with controlled Popover and MenuButton roots', async () => {
   for (const [Root, Trigger, Content, extra] of [
     [PopoverRoot, PopoverTrigger, PopoverContent, {}],

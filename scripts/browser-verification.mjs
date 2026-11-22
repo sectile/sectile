@@ -445,7 +445,7 @@ try {
   report.status = 'passed';
 } catch (error) {
   report.status = 'failed'; report.error = error.stack;
-  report.observed = await page?.evaluate(() => ({ active: document.activeElement?.id,
+  if (page !== undefined) report.observed = await page.evaluate(() => ({ active: document.activeElement?.id,
     inputs: [...document.querySelectorAll('input')].map(input => ({ id: input.id, value: input.value })),
     events: window.sectileProbe?.events, writes: window.sectileProbe?.writes, valueWrites: window.sectileProbe?.valueWrites, nativeMutations: window.sectileProbe?.nativeMutations,
   })).catch(() => undefined);
