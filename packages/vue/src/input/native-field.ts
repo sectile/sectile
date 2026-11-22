@@ -27,6 +27,7 @@ export interface NativeFieldConnection<Value> {
   getSnapshot(): { readonly revision: number };
   getText(): string;
   getValue(): Value | null;
+  prepareSubmission?(): boolean;
   syncControlledValues(values: { readonly value?: Value | null }): { readonly ok: boolean };
   disconnect(): void;
 }
@@ -198,7 +199,9 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         if (preserved !== undefined && preserved.inputState.composition === null && preserved.inputState.snapshot.text === (preserved.value === null ? '' : presentation.value.formatValue(preserved.value))) connect(preserved);
       };
       const presentationTask = requestedPresentation === undefined ? undefined : useNextTickTask(settlePresentation);
-      const participation = useNativeInputFormControl(input, { reset: () => {
+      const participation = useNativeInputFormControl(input, { prepareSubmission: () => {
+        if (connection?.prepareSubmission?.() === false) throw new TypeError('Complete the input before submitting.');
+      }, reset: () => {
         if (!mounted) return;
         if (reconnectTimer !== null) clearTimeout(reconnectTimer);
         reconnectTimer = null; reconnectPending = false; inputComposing = false;

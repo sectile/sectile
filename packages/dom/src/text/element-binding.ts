@@ -19,6 +19,7 @@ export interface DOMTextSegments {
 interface PendingInput {
   readonly text: string;
   readonly selection: TextSelectionInput;
+  readonly prepared?: true;
 }
 
 interface ActiveComposition {
@@ -114,7 +115,9 @@ export class DOMTextElementBinding implements EventListenerObject {
     if (!this.#active || this.#segments === undefined || this.isComposing || event.isComposing || event.defaultPrevented) return false;
     const text = this.#element.value, selection = selectionFromElement(this.#element);
     if (selection === null) return false;
-    if (this.#pending?.text !== text) this.#pending = { text, selection };
+    const original = event.inputType === 'insertText' && this.#pending?.prepared && this.#pending.text === text
+      ? this.#pending.selection : selection;
+    this.#pending = { text, selection: original };
     if (!event.cancelable || typeof event.data !== 'string'
       || (event.inputType !== 'insertText' && event.inputType !== 'insertFromPaste')
       || event.data.includes('\r') || event.data.includes('\n')
@@ -228,7 +231,7 @@ export class DOMTextElementBinding implements EventListenerObject {
     if (selection === null || selectionStart(selection) !== selectionEnd(selection)) return;
     const range = this.#segments?.at(text, selectionStart(selection), key);
     if (range === null || range === undefined) return;
-    if (key !== undefined) this.#pending = { text, selection };
+    if (key !== undefined) this.#pending = { text, selection, prepared: true };
     this.#element.setSelectionRange(range[0], range[1]);
   }
 

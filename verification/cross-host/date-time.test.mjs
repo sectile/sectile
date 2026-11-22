@@ -22,6 +22,22 @@ import { createTimeRangeField as createTerminalTimeRangeField } from '@sectile/t
 
 const date = (year, month, day) => createDateValue(year, month, day);
 const time = (hour, minute) => createTimeValue(hour, minute);
+test('controlled required ranges stage the first endpoint before an owner accepts both', () => {
+  for (const create of [createDOMDateRangeField, createTerminalDateRangeField]) {
+    const starts = date(2026, 8, 22), ends = date(2026, 8, 24), proposals = [];
+    const field = create({ startInput: new FakeInput(), endInput: new FakeInput(), value: null, required: true,
+      onValueChange: value => proposals.push(value) });
+    try {
+      assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: starts } }), true);
+      assert.equal(field.getValue(), null);
+      assert.deepEqual(proposals, []);
+      assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: ends } }), true);
+      assert.deepEqual(proposals, [{ start: starts, end: ends }]);
+      assert.equal(field.syncControlledValues({ value: proposals[0] }).ok, true);
+      assert.deepEqual(field.getValue(), proposals[0]);
+    } finally { field.destroy(); }
+  }
+});
 const dateTime = (year, month, day, hour, minute) => createDateTimeValue(
   date(year, month, day),
   time(hour, minute),

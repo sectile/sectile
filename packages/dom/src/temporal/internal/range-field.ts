@@ -101,13 +101,16 @@ export function constructRangeField<Value, Range extends RangeValue<Value>, Stat
       ...rangeFormats(options.format, restored),
     }),
     reducer: (state, event) => adapter.reduce(state, event, options),
-    reconcile: (previous, proposed) => adapter.initial({
-      startValue: controlled.value ? previous.start.value : proposed.start.value,
-      endValue: controlled.value ? previous.end.value : proposed.end.value,
-      startInputState: controlled.start ? previous.start.inputState : proposed.start.inputState,
-      endInputState: controlled.end ? previous.end.inputState : proposed.end.inputState,
-      active: proposed.active, ...rangeFormats(options.format, previous),
-    }),
+    reconcile: (previous, proposed) => {
+      const accepted = controlled.value && (previous.value !== null || proposed.value !== null) ? previous : proposed;
+      return adapter.initial({
+        startValue: accepted.start.value,
+        endValue: accepted.end.value,
+        startInputState: controlled.start ? previous.start.inputState : proposed.start.inputState,
+        endInputState: controlled.end ? previous.end.inputState : proposed.end.inputState,
+        active: proposed.active, ...rangeFormats(options.format, previous),
+      });
+    },
     notify: [
       (previous, proposed) => { if (previous.start.inputState !== proposed.start.inputState) options.onStartInputStateChange?.(proposed.start.inputState); },
       (previous, proposed) => { if (previous.end.inputState !== proposed.end.inputState) options.onEndInputStateChange?.(proposed.end.inputState); },
@@ -163,11 +166,12 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
     }
     const current = this.getSnapshot().state;
     const value = this.#controlled.value ? values.value : current.value;
+    const syncValue = this.#controlled.value && (value != null || current.value !== null);
     const formats = rangeFormats(this.#options.format, current);
     // Admit endpoints before formatting; an incomplete uncontrolled range still owns its lone value.
     const admitted = this.#adapter.initial({
-      startValue: this.#controlled.value ? value?.start ?? null : current.start.value,
-      endValue: this.#controlled.value ? value?.end ?? null : current.end.value,
+      startValue: syncValue ? value?.start ?? null : current.start.value,
+      endValue: syncValue ? value?.end ?? null : current.end.value,
       ...optionalInputState('startInputState', this.#controlled.start ? values.startInputState : current.start.inputState),
       ...optionalInputState('endInputState', this.#controlled.end ? values.endInputState : current.end.inputState),
       active: current.active, ...formats,
