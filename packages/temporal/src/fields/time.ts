@@ -17,7 +17,7 @@ import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
 import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
-import { projectFieldSelection } from '../internal/field-format.js';
+import { numericFieldSegment, projectFieldSelection, retainCommittedFieldSelection } from '../internal/field-format.js';
 import { formatTimeFieldValue, parseTimeFieldValue, tryFormatTimeFieldValue, timeFieldFormatLayout, timeFieldFormatMaximum, type TimeFieldFormat, type TimeFieldFormatPart } from './time-format.js';
 export { createTimeFieldFormat, tryCreateTimeFieldFormat, formatTimeFieldValue, parseTimeFieldValue } from './time-format.js';
 export type { TimeFieldFormat, TimeFieldFormatOptions, TimeFieldPrecision, TimeFieldHourCycle, TimeFieldFormatPart } from './time-format.js';
@@ -118,10 +118,14 @@ export function applyTimeFieldEvent(state: TimeFieldState, event: TimeFieldEvent
   }
   if (event !== 'commit') return fail('transition-rejection', 'unsupported-time-field-event', 'Time field event is unsupported.');
   if (valid.value.inputState.composition !== null) return fail('transition-rejection', 'time-field-composition-active', 'Time field cannot commit while text composition is active.');
-  const text = valid.value.format === undefined ? valid.value.inputState.snapshot.text.trim() : valid.value.inputState.snapshot.text;
+  const draft = valid.value.inputState.snapshot.text;
+  const leading = valid.value.format === undefined ? draft.length - draft.trimStart().length : 0;
+  const text = valid.value.format === undefined ? draft.trim() : draft;
   if (text.trim().length === 0) return commitValue(null, accepted, undefined, valid.value.format);
   const parsed = parseTimeFieldValue(text, valid.value.format);
-  return parsed.ok ? commitValue(parsed.value, accepted, undefined, valid.value.format) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted,
+    fieldPartAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset - leading, parsed.value, valid.value.format),
+    valid.value.format, valid.value.inputState, leading) : parsed;
 }
 
 export function timeSegmentAt(offset: number): TimeSegment {
@@ -130,7 +134,7 @@ export function timeSegmentAt(offset: number): TimeSegment {
 
 type CapturedPolicies = { [Key in keyof TimeFieldPolicies]-?: TimeFieldPolicies[Key] | undefined };
 
-function commitValue(value: TimeValue | null, policies: CapturedPolicies, segment?: TimeFieldFormatPart, format?: TimeFieldFormat): TemporalResult<TimeFieldUpdate> {
+function commitValue(value: TimeValue | null, policies: CapturedPolicies, segment?: TimeFieldFormatPart, format?: TimeFieldFormat, draft?: TextEditingState, leadingOffset = 0): TemporalResult<TimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'time-field-value-required', 'Time field requires a value.');
   } else {
@@ -140,7 +144,9 @@ function commitValue(value: TimeValue | null, policies: CapturedPolicies, segmen
     if (policies.min !== undefined && compareTimeValues(value, policies.min) < 0) return fail('transition-rejection', 'time-field-value-below-minimum', 'Time field value is below its minimum.');
     if (policies.max !== undefined && compareTimeValues(value, policies.max) > 0) return fail('transition-rejection', 'time-field-value-above-maximum', 'Time field value is above its maximum.');
   }
-  const input = committedInput(value, segment, format);
+  const committed = committedInput(value, segment, format);
+  if (!committed.ok) return committed;
+  const input = draft === undefined ? committed : retainCommittedFieldSelection(committed.value, draft, leadingOffset);
   if (!input.ok) return input;
   return createMachineUpdate(fieldState(value, input.value, format), [
     { type: 'input-state-changed', value: input.value },
@@ -168,7 +174,22 @@ function committedInput(value: TimeValue | null, segment?: TimeFieldFormatPart, 
 function fieldState(value: TimeValue | null, inputState: TextEditingState, format?: TimeFieldFormat): TimeFieldState {
   return Object.freeze(format === undefined ? { value, inputState } : { value, inputState, format });
 }
-function fieldMaximum(format?: TimeFieldFormat): number { return format === undefined ? TIME_FIELD_MAX_CODE_UNITS : unwrap(timeFieldFormatMaximum(format)); }
+export function timeFieldMaximum(format?: TimeFieldFormat): number { return format === undefined ? TIME_FIELD_MAX_CODE_UNITS : unwrap(timeFieldFormatMaximum(format)); }
+const fieldMaximum = timeFieldMaximum;
+const timeParts = ['hour', 'minute', 'second', 'millisecond'] as const;
+const timeStarts = [0, 3, 6, 9] as const;
+const timeEnds = [2, 5, 8, 12] as const;
+
+export function timeFieldNumericSegment(text: string, offset: number, format?: TimeFieldFormat, key?: string): readonly [number, number] | null {
+  const parsed = parseTimeFieldValue(text, format);
+  if (!parsed.ok) return null;
+  if (format === undefined) {
+    const range = numericFieldSegment(offset, timeParts, timeStarts, timeEnds, undefined, key);
+    return range !== null && range[1] <= text.length ? range : null;
+  }
+  const layout = timeFieldFormatLayout(format, parsed.value);
+  return layout.ok ? numericFieldSegment(offset, format.order, layout.value.starts, layout.value.ends, format.digits, key) : null;
+}
 function draftMessage(format?: TimeFieldFormat): string { return format === undefined ? 'Time field drafts must fit HH:mm, HH:mm:ss, or HH:mm:ss.SSS.' : 'Time field drafts must fit their admitted time layout.'; }
 function fieldPartAt(offset: number, value: TimeValue, format?: TimeFieldFormat): TimeFieldFormatPart {
   if (format === undefined) return timeSegmentAt(offset);

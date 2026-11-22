@@ -2,7 +2,7 @@ import { unwrap } from '@sectile/core/result';
 import type { FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { formatTimeFieldValue, type TimeFieldFormat, type TimeValue } from '@sectile/temporal/time-field';
+import { timeFieldMaximum, timeFieldNumericSegment, formatTimeFieldValue, type TimeFieldFormat, type TimeValue } from '@sectile/temporal/time-field';
 import { applyTimeRangeFieldEvent, tryCreateTimeRangeFieldState, type TimeRange, type TimeRangeFieldEvent, type TimeRangeFieldPolicies, type TimeRangeFieldState } from '@sectile/temporal/time-range-field';
 import { getTimeFieldPlaceholder } from './time-field.js';
 import { createDOMTemporalFacadeConnection, type DOMTemporalResult } from './internal/result.js';
@@ -30,6 +30,8 @@ const adapter: RangeFieldAdapter<TimeValue, TimeRange, TimeRangeFieldState, Time
     ...options.policies, ...(options.required === undefined ? {} : { required: options.required }),
   }),
   format: formatTimeFieldValue,
+  maximum: timeFieldMaximum,
+  segment: timeFieldNumericSegment,
   placeholder: getTimeFieldPlaceholder,
   inputMode: format => format?.dayPeriods === undefined ? 'numeric' : 'text',
   controlledShapeMessage: 'Controlled time range field values must preserve their construction-time shape.',

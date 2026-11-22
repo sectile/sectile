@@ -5,6 +5,8 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
 import {
   applyDateTimeFieldEvent,
+  dateTimeFieldMaximum,
+  dateTimeFieldNumericSegment,
   formatDateTimeFieldValue,
   tryCreateDateTimeFieldState,
   type DateTimeFieldCommand,
@@ -143,7 +145,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
             : null;
     if (semantic === null) return;
     event.preventDefault();
-    if (semantic === 'increment-segment' || semantic === 'decrement-segment') {
+    if (semantic !== 'cancel' && this.#options.native !== true) {
       this.#syncSelection();
     }
     this.handleEvent(semantic);
@@ -169,6 +171,10 @@ class DOMDateTimeField implements DateTimeFieldConnection {
       getState: () => this.getSnapshot().state.inputState,
       dispatch: (input) => this.#text(input),
       keydown: this.#keydown, blur: this.#blur,
+      ...(this.#editable && options.native !== true ? { segments: {
+        maximum: () => dateTimeFieldMaximum(options.format),
+        at: (text, offset, key) => dateTimeFieldNumericSegment(text, offset, options.format, key),
+      } } : {}),
     });
     this.refresh();
   }

@@ -71,11 +71,13 @@ export function applyRangeFieldEvent<Value, Range extends RangeValue<Value>, Sta
   const changed = spec.applyField(active === 'start' ? valid.value.start : valid.value.end, event.event, endpointPolicies(policies)); if (!changed.ok) return changed;
   const start = active === 'start' ? changed.value.state : valid.value.start, end = active === 'end' ? changed.value.state : valid.value.end;
   const next = completeRange(spec, start.value, end.value); if (!next.ok) return next;
-  const committing = event.event === 'commit' || typeof event.event === 'object' && event.event.type === 'set-value';
-  if (committing && policies.required === true && next.value === null) return fail('transition-rejection', spec.requiredError.code, spec.requiredError.message);
+  const committed = changed.value.commands.find(command => command.type === 'value-committed');
+  if (committed !== undefined && policies.required === true && next.value === null && committed.value === null) {
+    return fail('transition-rejection', spec.requiredError.code, spec.requiredError.message);
+  }
   const commands: RangeCommand<Range>[] = changed.value.commands.filter(command => command.type === 'input-state-changed')
     .map(command => ({ type: 'input-state-changed', endpoint: active, value: command.value }));
-  if (committing && !sameRange(spec.compare, valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
+  if (committed !== undefined && !sameRange(spec.compare, valid.value.value, next.value)) commands.push({ type: 'range-committed', value: next.value });
   return compose(spec, start, end, active, commands);
 }
 

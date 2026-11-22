@@ -3,7 +3,7 @@ import { permitsInteraction } from '@sectile/core/interaction';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, formatDateFieldValue, tryCreateDateFieldState, type DateFieldFormat, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
+import { applyDateFieldEvent, dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, tryCreateDateFieldState, type DateFieldFormat, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
@@ -79,7 +79,7 @@ class DOMDateField implements DateFieldConnection {
     if (!this.getActive() || !this.#editable || this.#binding.isComposing || event.isComposing) return;
     if (this.#options.native === true && (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End')) return;
     const semantic = event.key === 'ArrowUp' ? 'increment-segment' : event.key === 'ArrowDown' ? 'decrement-segment' : event.key === 'Enter' ? 'commit' : event.key === 'Escape' ? 'cancel' : null;
-    if (semantic !== null) { event.preventDefault(); if (semantic === 'increment-segment' || semantic === 'decrement-segment') this.#syncSelection(); this.handleEvent(semantic); }
+    if (semantic !== null) { event.preventDefault(); if (semantic !== 'cancel' && this.#options.native !== true) this.#syncSelection(); this.handleEvent(semantic); }
   };
   readonly #blur = (): void => {
     if (this.getActive() && this.#editable && !this.#binding.isComposing && !this.handleEvent('commit')) this.handleEvent('cancel');
@@ -87,7 +87,14 @@ class DOMDateField implements DateFieldConnection {
   public constructor(options: DateFieldOptions, runtime: DOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand>, valueControlled: boolean, inputControlled: boolean) {
     this.#options = options; this.#runtime = runtime; this.#valueControlled = valueControlled; this.#inputControlled = inputControlled;
     this.#editable = permitsInteraction({ disabled: options.disabled ?? false, readOnly: options.readOnly ?? false }, 'mutate');
-    this.#binding = new DOMTextElementBinding({ element: options.input, getState: () => this.getSnapshot().state.inputState, dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur });
+    this.#binding = new DOMTextElementBinding({
+      element: options.input, getState: () => this.getSnapshot().state.inputState,
+      dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur,
+      ...(this.#editable && options.native !== true ? { segments: {
+        maximum: () => dateFieldMaximum(options.format),
+        at: (text, offset, key) => dateFieldNumericSegment(text, offset, options.format, key),
+      } } : {}),
+    });
     this.refresh();
   }
   public getActive(): boolean { return this.#binding.isActive; }

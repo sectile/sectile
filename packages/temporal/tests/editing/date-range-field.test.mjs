@@ -40,6 +40,27 @@ test('date range field exposes only complete ordered ranges', () => {
   assert.deepEqual(update.value.commands.at(-1), { type: 'range-committed', value: update.value.state.value });
 });
 
+test('required ranges stage either first endpoint and publish a subsequent step', () => {
+  for (const first of ['start', 'end']) {
+    const other = first === 'start' ? 'end' : 'start';
+    const dates = { start: date(2026, 8, 22), end: date(2026, 8, 28) };
+    const accept = (state, endpoint, value) => applyDateRangeFieldEvent(state, {
+      type: 'field', endpoint, event: { type: 'set-value', value },
+    }, { required: true }).value;
+    const staged = accept(createDateRangeFieldState(), first, dates[first]);
+    assert.equal(staged.state.value, null);
+    assert.equal(staged.commands.some(command => command.type === 'range-committed'), false);
+    const completed = accept(staged.state, other, dates[other]);
+    assert.deepEqual(completed.state.value, dates);
+    const stepped = applyDateRangeFieldEvent(completed.state, {
+      type: 'field', endpoint: 'end', event: 'increment-segment',
+    }, { required: true }).value;
+    assert.deepEqual(stepped.commands.filter(command => command.type === 'range-committed'), [
+      { type: 'range-committed', value: { start: dates.start, end: date(2026, 8, 29) } },
+    ]);
+  }
+});
+
 test('date range field rejects inverted endpoint changes atomically', () => {
   const state = createDateRangeFieldState({
     value: { start: date(2026, 8, 22), end: date(2026, 8, 28) },

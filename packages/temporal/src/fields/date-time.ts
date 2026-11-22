@@ -19,7 +19,7 @@ import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
 import { addDateYears, addDateMonths, addDateDays } from '../values/date.js';
 import { addTimeMilliseconds } from '../values/time.js';
-import { projectFieldSelection } from '../internal/field-format.js';
+import { numericFieldSegment, projectFieldSelection, retainCommittedFieldSelection } from '../internal/field-format.js';
 import { dateTimeFieldFormatLayout, dateTimeFieldFormatMaximum, tryFormatDateTimeFieldValue, formatDateTimeFieldValue, parseDateTimeFieldValue, type DateTimeFieldFormat, type DateTimeFieldFormatPart } from './date-time-format.js';
 export { createDateTimeFieldFormat, tryCreateDateTimeFieldFormat, formatDateTimeFieldValue, parseDateTimeFieldValue } from './date-time-format.js';
 export type { DateTimeFieldFormat, DateTimeFieldFormatOptions, DateTimeFieldFormatPart } from './date-time-format.js';
@@ -179,10 +179,14 @@ export function applyDateTimeFieldEvent(
       'Date-time field cannot commit while text composition is active.',
     );
   }
-  const text = valid.value.format === undefined ? valid.value.inputState.snapshot.text.trim() : valid.value.inputState.snapshot.text;
+  const draft = valid.value.inputState.snapshot.text;
+  const leading = valid.value.format === undefined ? draft.length - draft.trimStart().length : 0;
+  const text = valid.value.format === undefined ? draft.trim() : draft;
   if (text.trim().length === 0) return commitValue(null, accepted, undefined, valid.value.format);
   const parsed = parseDateTimeFieldValue(text, valid.value.format);
-  return parsed.ok ? commitValue(parsed.value, accepted, undefined, valid.value.format) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted,
+    fieldPartAt(valid.value.inputState.snapshot.selection.focusCodeUnitOffset - leading, parsed.value, valid.value.format),
+    valid.value.format, valid.value.inputState, leading) : parsed;
 }
 
 export function dateTimeSegmentAt(offset: number): DateTimeSegment {
@@ -223,7 +227,26 @@ type CapturedPolicies = { [Key in keyof DateTimeFieldPolicies]-?: DateTimeFieldP
 function fieldState(value: DateTimeValue | null, inputState: TextEditingState, format?: DateTimeFieldFormat): DateTimeFieldState {
   return Object.freeze(format === undefined ? { value, inputState } : { value, inputState, format });
 }
-function fieldMaximum(format?: DateTimeFieldFormat): number { return format === undefined ? DATE_TIME_FIELD_MAX_CODE_UNITS : unwrap(dateTimeFieldFormatMaximum(format)); }
+export function dateTimeFieldMaximum(format?: DateTimeFieldFormat): number { return format === undefined ? DATE_TIME_FIELD_MAX_CODE_UNITS : unwrap(dateTimeFieldFormatMaximum(format)); }
+const fieldMaximum = dateTimeFieldMaximum;
+const dateTimeParts = ['year', 'month', 'day', 'hour', 'minute', 'second', 'millisecond'] as const;
+const dateTimeStarts = [0, 5, 8, 11, 14, 17, 20] as const;
+const dateTimeEnds = [4, 7, 10, 13, 16, 19, 23] as const;
+
+export function dateTimeFieldNumericSegment(text: string, offset: number, format?: DateTimeFieldFormat, key?: string): readonly [number, number] | null {
+  const parsed = parseDateTimeFieldValue(text, format);
+  if (!parsed.ok) return null;
+  if (format === undefined) {
+    const range = numericFieldSegment(offset, dateTimeParts, dateTimeStarts, dateTimeEnds, undefined, key);
+    return range !== null && range[1] <= text.length ? range : null;
+  }
+  const layout = dateTimeFieldFormatLayout(format, parsed.value);
+  if (!layout.ok) return null;
+  const { parts, starts, ends } = layout.value;
+  const index = ends.findIndex(end => offset <= end);
+  return index < 0 ? null : numericFieldSegment(offset, parts, starts, ends,
+    parts[index] === 'year' || parts[index] === 'month' || parts[index] === 'day' ? format.date.digits : format.time.digits, key);
+}
 function draftMessage(format?: DateTimeFieldFormat): string { return format === undefined ? 'Date-time field drafts must fit YYYY-MM-DDTHH:mm with optional seconds and milliseconds.' : 'Date-time field draft exceeds its format length.'; }
 function fieldPartAt(offset: number, value: DateTimeValue | null, format?: DateTimeFieldFormat): DateTimeFieldFormatPart {
   if (format === undefined) return dateTimeSegmentAt(offset);
@@ -257,6 +280,8 @@ function commitValue(
   policies: CapturedPolicies,
   segment?: DateTimeFieldFormatPart,
   format?: DateTimeFieldFormat,
+  draft?: TextEditingState,
+  leadingOffset = 0,
 ): TemporalResult<DateTimeFieldUpdate> {
   if (value === null) {
     if (policies.required === true) {
@@ -288,7 +313,9 @@ function commitValue(
       );
     }
   }
-  const input = committedInput(value, segment, format);
+  const committed = committedInput(value, segment, format);
+  if (!committed.ok) return committed;
+  const input = draft === undefined ? committed : retainCommittedFieldSelection(committed.value, draft, leadingOffset);
   if (!input.ok) return input;
   return createMachineUpdate(fieldState(value, input.value, format), [
     { type: 'input-state-changed', value: input.value },

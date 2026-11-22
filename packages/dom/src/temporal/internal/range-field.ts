@@ -68,6 +68,8 @@ export interface RangeFieldAdapter<Value, Range extends RangeValue<Value>, State
   readonly initial: (input: StateInput<Value, Range, Format>) => DOMTemporalResult<State>;
   readonly reduce: (state: State, event: RangeEvent<Value>, options: FieldOptions<Range, State, Format, Policies>) => DOMTemporalResult<{ readonly state: State; readonly commands: readonly RangeCommand<Range>[] }>;
   readonly format: (value: Value, format?: Format) => string;
+  readonly maximum: (format?: Format) => number;
+  readonly segment: (text: string, offset: number, format?: Format, key?: string) => readonly [number, number] | null;
   readonly placeholder: (format?: Format) => string;
   readonly inputMode: (format?: Format) => 'numeric' | 'text';
   readonly controlledShapeMessage: string;
@@ -141,6 +143,10 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
         this.#bindings[endpoint] = new DOMTextElementBinding({
           element: input, getState: () => this.getSnapshot().state[endpoint].inputState,
           dispatch: native => this.#text(endpoint, native),
+          ...(this.#editable ? { segments: {
+            maximum: () => adapter.maximum(this.getSnapshot().state[endpoint].format),
+            at: (text, offset, key) => adapter.segment(text, offset, this.getSnapshot().state[endpoint].format, key),
+          } } : {}),
         });
         input.addEventListener('keydown', this.#keydown[endpoint]);
         input.addEventListener('blur', this.#blur[endpoint]);
@@ -233,7 +239,7 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
     const semantic = event.key === 'ArrowUp' ? 'increment-segment' : event.key === 'ArrowDown' ? 'decrement-segment' : event.key === 'Enter' ? 'commit' : event.key === 'Escape' ? 'cancel' : null;
     if (semantic === null) return;
     event.preventDefault();
-    if (semantic === 'increment-segment' || semantic === 'decrement-segment') {
+    if (semantic !== 'cancel') {
       this.handleEvent({ type: 'field', endpoint, event: { type: 'text', event: nativeFieldSelectionEvent(this.#input(endpoint)) } });
     }
     this.handleEvent(semantic === 'cancel' ? 'cancel' : { type: 'field', endpoint, event: semantic });

@@ -8,10 +8,22 @@ export interface DOMTextElementBindingOptions {
   readonly observeSelection?: boolean;
   readonly keydown?: (event: KeyboardEvent) => void;
   readonly blur?: (event: FocusEvent) => void;
+  readonly segments?: DOMTextSegments;
+}
+
+export interface DOMTextSegments {
+  readonly maximum: () => number;
+  readonly at: (text: string, offset: number, key?: string) => readonly [number, number] | null;
+}
+
+interface PendingInput {
+  readonly text: string;
+  readonly selection: TextSelectionInput;
 }
 
 interface ActiveComposition {
   readonly baseText: string;
+  readonly baseSelection: TextSelectionInput;
   readonly startCodeUnitOffset: number;
   readonly endCodeUnitOffset: number;
   coreActive: boolean;
@@ -28,6 +40,7 @@ export interface NativeReplacement {
 
 const bindingEvents = ['input', 'search', 'compositionstart', 'compositionend'] as const;
 const selectionEvents = ['select', 'selectionchange', 'focus'] as const;
+const segmentEvents = ['beforeinput', 'click'] as const;
 
 export class DOMTextElementBinding implements EventListenerObject {
   readonly #element: TextElement;
@@ -36,6 +49,7 @@ export class DOMTextElementBinding implements EventListenerObject {
   readonly #observeSelection: boolean;
   readonly #keydown: ((event: KeyboardEvent) => void) | undefined;
   readonly #blur: ((event: FocusEvent) => void) | undefined;
+  readonly #segments: DOMTextSegments | undefined;
   #active = true;
   #disconnected = false;
   #composing = false;
@@ -45,6 +59,7 @@ export class DOMTextElementBinding implements EventListenerObject {
   #lastObservedText = '';
   #lastObservedSelection: TextSelectionInput | null = null;
   #selectionDocument: Document | null = null;
+  #pending: PendingInput | null = null;
 
   public constructor(options: DOMTextElementBindingOptions) {
     this.#element = options.element;
@@ -52,6 +67,7 @@ export class DOMTextElementBinding implements EventListenerObject {
     this.#dispatch = options.dispatch;
     this.#observeSelection = options.observeSelection === true;
     this.#keydown = options.keydown; this.#blur = options.blur;
+    this.#segments = options.segments;
     try {
       this.#bind();
       this.render();
@@ -64,8 +80,10 @@ export class DOMTextElementBinding implements EventListenerObject {
   public handleEvent(event: Event): void {
     if (!this.#active) return;
     switch (event.type) {
-      case 'keydown': this.#keydown?.(event as KeyboardEvent); return;
-      case 'blur': this.#releaseDocumentSelection(); this.#blur?.(event as FocusEvent); return;
+      case 'keydown': this.#prepareDigit(event as KeyboardEvent); this.#keydown?.(event as KeyboardEvent); return;
+      case 'beforeinput': this.handleBeforeInput(event as InputEvent); return;
+      case 'click': this.#prepareClick(event as MouseEvent); return;
+      case 'blur': this.#pending = null; this.#releaseDocumentSelection(); this.#blur?.(event as FocusEvent); return;
       case 'focus':
         if (this.#observeSelection) { this.#observeDocumentSelection(); this.#reconcileSelection(); }
         return;
@@ -92,8 +110,20 @@ export class DOMTextElementBinding implements EventListenerObject {
   }
   public get isActive(): boolean { return this.#active; }
 
-  public handleBeforeInput(_event: InputEvent): boolean {
-    return false;
+  public handleBeforeInput(event: InputEvent): boolean {
+    if (!this.#active || this.#segments === undefined || this.isComposing || event.isComposing || event.defaultPrevented) return false;
+    const text = this.#element.value, selection = selectionFromElement(this.#element);
+    if (selection === null) return false;
+    if (this.#pending?.text !== text) this.#pending = { text, selection };
+    if (!event.cancelable || typeof event.data !== 'string'
+      || (event.inputType !== 'insertText' && event.inputType !== 'insertFromPaste')
+      || event.data.includes('\r') || event.data.includes('\n')
+      || text.length - (selectionEnd(selection) - selectionStart(selection)) + event.data.length <= this.#segments.maximum()) return false;
+    event.preventDefault();
+    const pending = this.#pending;
+    this.#pending = null;
+    this.#restoreSelection(pending.selection);
+    return true;
   }
 
   /** Exact explicit edits must survive native value normalization before any proposal. */
@@ -116,7 +146,10 @@ export class DOMTextElementBinding implements EventListenerObject {
   public render(): void {
     if (!this.#active || this.isComposing) return;
     const snapshot = this.#getState().snapshot;
-    if (this.#element.value !== snapshot.text) this.#element.value = snapshot.text;
+    if (this.#element.value !== snapshot.text) {
+      this.#pending = null;
+      this.#element.value = snapshot.text;
+    }
     this.#lastObservedText = this.#element.value;
     if (this.#observeSelection) this.#lastObservedSelection = snapshot.selection;
     const selection = selectionFromElement(this.#element);
@@ -132,12 +165,14 @@ export class DOMTextElementBinding implements EventListenerObject {
   public suspend(): void {
     if (!this.#active) return;
     this.#active = false;
+    this.#pending = null;
     this.#compositionGeneration += 1;
     for (const type of bindingEvents) this.#element.removeEventListener(type, this);
+    if (this.#segments) for (const type of segmentEvents) this.#element.removeEventListener(type, this);
     if (this.#observeSelection) for (const type of selectionEvents) this.#element.removeEventListener(type, this);
     this.#releaseDocumentSelection();
-    if (this.#keydown) this.#element.removeEventListener('keydown', this);
-    if (this.#blur || this.#observeSelection) this.#element.removeEventListener('blur', this);
+    if (this.#keydown || this.#segments) this.#element.removeEventListener('keydown', this);
+    if (this.#blur || this.#observeSelection || this.#segments) this.#element.removeEventListener('blur', this);
   }
 
   public resume(): void {
@@ -165,12 +200,44 @@ export class DOMTextElementBinding implements EventListenerObject {
   }
   #bind(): void {
     for (const type of bindingEvents) this.#element.addEventListener(type, this);
+    if (this.#segments) for (const type of segmentEvents) this.#element.addEventListener(type, this);
     if (this.#observeSelection) {
       for (const type of selectionEvents) this.#element.addEventListener(type, this);
       if (this.#element.matches?.(':focus')) this.#observeDocumentSelection();
     }
-    if (this.#keydown) this.#element.addEventListener('keydown', this);
-    if (this.#blur || this.#observeSelection) this.#element.addEventListener('blur', this);
+    if (this.#keydown || this.#segments) this.#element.addEventListener('keydown', this);
+    if (this.#blur || this.#observeSelection || this.#segments) this.#element.addEventListener('blur', this);
+  }
+
+  #prepareDigit(event: KeyboardEvent): void {
+    this.#pending = null;
+    if (this.#segments === undefined || this.isComposing || event.isComposing || event.defaultPrevented
+      || event.metaKey || (event.ctrlKey || event.altKey) && event.getModifierState?.('AltGraph') !== true
+      || typeof event.key !== 'string' || event.key.length > 2) return;
+    this.#prepareSegment(event.key);
+  }
+
+  #prepareClick(event: MouseEvent): void {
+    this.#pending = null;
+    if (this.isComposing || event.defaultPrevented || event.detail !== 1 || event.shiftKey || event.altKey || event.ctrlKey || event.metaKey) return;
+    this.#prepareSegment();
+  }
+
+  #prepareSegment(key?: string): void {
+    const text = this.#element.value, selection = selectionFromElement(this.#element);
+    if (selection === null || selectionStart(selection) !== selectionEnd(selection)) return;
+    const range = this.#segments?.at(text, selectionStart(selection), key);
+    if (range === null || range === undefined) return;
+    if (key !== undefined) this.#pending = { text, selection };
+    this.#element.setSelectionRange(range[0], range[1]);
+  }
+
+  #restoreSelection(selection: TextSelectionInput): void {
+    const current = selectionFromElement(this.#element);
+    if (current !== null && !sameSelection(current, selection)) {
+      this.#element.setSelectionRange(selectionStart(selection), selectionEnd(selection),
+        selection.anchorCodeUnitOffset > selection.focusCodeUnitOffset ? 'backward' : 'forward');
+    }
   }
 
   #observeDocumentSelection(): void {
@@ -198,8 +265,11 @@ export class DOMTextElementBinding implements EventListenerObject {
 
   #reconcileNativeInput(inputType: string): void {
     const currentText = this.#element.value;
+    const previousText = this.#lastObservedText;
+    const pending = this.#pending;
+    this.#pending = null;
     if (currentText === this.#lastObservedText) return;
-    const replacement = deriveNativeReplacement(this.#lastObservedText, currentText);
+    const replacement = deriveNativeReplacement(previousText, currentText);
     const selection = selectionFromElement(this.#element)
       ?? collapsedSelection(nativeSelectionFallback(inputType, replacement, currentText.length));
     const accepted = this.#dispatch({
@@ -214,10 +284,16 @@ export class DOMTextElementBinding implements EventListenerObject {
       this.#lastObservedText = this.#element.value;
       if (this.#observeSelection) this.#lastObservedSelection = selectionFromElement(this.#element);
     }
-    else this.render();
+    else {
+      this.render();
+      if (this.#segments !== undefined && this.#element.value === previousText) {
+        this.#restoreSelection(pending?.text === previousText ? pending.selection : collapsedSelection(replacement.startCodeUnitOffset));
+      }
+    }
   }
 
   #startComposition(): void {
+    this.#pending = null;
     if (this.#compositionEnding) {
       this.#compositionGeneration += 1;
       this.#commitComposition();
@@ -235,6 +311,7 @@ export class DOMTextElementBinding implements EventListenerObject {
     this.#composing = true;
     this.#composition = {
       baseText,
+      baseSelection: selection,
       startCodeUnitOffset: start,
       endCodeUnitOffset: end,
       coreActive: false,
@@ -315,7 +392,10 @@ export class DOMTextElementBinding implements EventListenerObject {
       this.#lastObservedText = this.#element.value;
       if (this.#observeSelection) this.#lastObservedSelection = selectionFromElement(this.#element);
     }
-    else this.render();
+    else {
+      this.render();
+      if (this.#segments !== undefined && composition !== null && this.#element.value === composition.baseText) this.#restoreSelection(composition.baseSelection);
+    }
   }
 }
 

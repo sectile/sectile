@@ -117,6 +117,24 @@ try {
     assert.equal(await page.locator(`#${id}`).inputValue(), 'abc', `${id}: native redo`);
     report.results.push({ id, undoRedo: 'passed' });
   }
+  if (!nativeIME) {
+    await page.evaluate(() => window.sectileProbe.field('date'));
+    const input = page.locator('#date');
+    await input.fill('2026-08-22');
+    await input.press('Enter');
+    await input.press('End');
+    for (let i = 0; i < 4; i++) await input.press('ArrowLeft');
+    await input.press('ArrowUp');
+    assert.equal(await input.inputValue(), '2026-09-22');
+    for (let i = 0; i < 3; i++) await input.press('ArrowRight');
+    await input.press('1');
+    assert.equal(await input.inputValue(), '2026-09-1');
+    await input.press('9');
+    await input.press('Enter');
+    assert.equal(await input.inputValue(), '2026-09-19');
+    assert.notEqual(await input.getAttribute('aria-invalid'), 'true');
+    report.results.push({ id: 'date-segment-keyboard', result: 'passed' });
+  }
   if (nativeIME) {
     execFileSync('swiftc', ['scripts/browser/macos-input-source.swift', '-o', swift], { timeout: 60000, stdio: 'inherit' });
     await page.bringToFront();

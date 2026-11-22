@@ -3,7 +3,7 @@ import { permitsInteraction } from '@sectile/core/interaction';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyTimeFieldEvent, formatTimeValue, formatTimeFieldValue, tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
+import { applyTimeFieldEvent, formatTimeValue, formatTimeFieldValue, timeFieldMaximum, timeFieldNumericSegment, tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
@@ -43,7 +43,7 @@ class DOMTimeField implements TimeFieldConnection {
     const semantic = increment ? 'increment-segment' : decrement ? 'decrement-segment' : key === 'Enter' ? 'commit' : key === 'Escape' ? 'cancel' : null;
     if (semantic !== null) {
       event.preventDefault();
-      if (increment || decrement) this.#syncSelection();
+      if (semantic !== 'cancel' && this.#options.native !== true) this.#syncSelection();
       this.handleEvent(semantic);
     }
   };
@@ -52,7 +52,16 @@ class DOMTimeField implements TimeFieldConnection {
   };
   public constructor(options: TimeFieldOptions, runtime: DOMTemporalController<TimeFieldState, TimeFieldEvent, TimeFieldCommand>, valueControlled: boolean, inputControlled: boolean) { this.#options = options; this.#runtime = runtime; this.#valueControlled = valueControlled; this.#inputControlled = inputControlled;
     this.#editable = permitsInteraction({ disabled: options.disabled ?? false, readOnly: options.readOnly ?? false }, 'mutate');
-    this.#binding = new DOMTextElementBinding({ element: options.input, getState: () => this.getSnapshot().state.inputState, dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur }); this.refresh(); }
+    this.#binding = new DOMTextElementBinding({
+      element: options.input, getState: () => this.getSnapshot().state.inputState,
+      dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur,
+      ...(this.#editable && options.native !== true ? { segments: {
+        maximum: () => timeFieldMaximum(options.format),
+        at: (text, offset, key) => timeFieldNumericSegment(text, offset, options.format, key),
+      } } : {}),
+    });
+    this.refresh();
+  }
   public getActive(): boolean { return this.#binding.isActive; }
   public suspend(): void { this.#binding.suspend(); }
   public resume(): void { this.#binding.resume(); try { if (this.getActive()) this.refresh(); } catch (error) { this.suspend(); throw error; } }

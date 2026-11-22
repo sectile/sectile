@@ -17,7 +17,7 @@ import { unwrap } from '@sectile/core/result';
 import type { TemporalResult } from '../error.js';
 import { transitionFailure, ok, fail } from '../internal/foundation.js';
 import { createMachineUpdate } from '../internal/machine.js';
-import { projectFieldSelection } from '../internal/field-format.js';
+import { numericFieldSegment, projectFieldSelection, retainCommittedFieldSelection } from '../internal/field-format.js';
 import { dateFieldFormatLayout, invalidDateFieldFormat as invalidFormat, formatDateFieldValue, parseDateFieldValue, type DateFieldFormat, type DateSegment } from './date-format.js';
 export { createDateFieldFormat, tryCreateDateFieldFormat, formatDateFieldValue, parseDateFieldValue } from './date-format.js';
 export type { DateFieldFormatOptions, DateFieldFormat, DateSegment } from './date-format.js';
@@ -77,6 +77,9 @@ export interface DateFieldUpdate {
 }
 
 const DATE_FIELD_MAX_CODE_UNITS = 10;
+const dateParts = ['year', 'month', 'day'] as const;
+const dateStarts = [0, 5, 8] as const;
+const dateEnds = [4, 7, 10] as const;
 
 export function createDateFieldState(
   value: DateValue | null = null,
@@ -152,7 +155,7 @@ export function applyDateFieldEvent(
   const text = valid.value.format === undefined ? draft.trim() : draft;
   if (text.trim().length === 0) return commitValue(null, accepted, undefined, valid.value.format);
   const parsed = parseDateFieldValue(text, valid.value.format);
-  return parsed.ok ? commitValue(parsed.value, accepted, undefined, valid.value.format) : parsed;
+  return parsed.ok ? commitValue(parsed.value, accepted, undefined, valid.value.format, valid.value.inputState, draft.length - draft.trimStart().length) : parsed;
 }
 
 export function dateSegmentAt(offset: number, format?: DateFieldFormat): DateSegment {
@@ -161,7 +164,14 @@ export function dateSegmentAt(offset: number, format?: DateFieldFormat): DateSeg
   return format.order[offset <= layout.ends[0]! ? 0 : offset <= layout.ends[1]! ? 1 : 2];
 }
 
-function fieldMaximum(format?: DateFieldFormat): number { return format === undefined ? DATE_FIELD_MAX_CODE_UNITS : dateFieldFormatLayout(format)!.length; }
+export function dateFieldMaximum(format?: DateFieldFormat): number { return format === undefined ? DATE_FIELD_MAX_CODE_UNITS : dateFieldFormatLayout(format)!.length; }
+const fieldMaximum = dateFieldMaximum;
+
+export function dateFieldNumericSegment(text: string, offset: number, format?: DateFieldFormat, key?: string): readonly [number, number] | null {
+  if (text.length !== fieldMaximum(format) || !parseDateFieldValue(text, format).ok) return null;
+  const layout = format === undefined ? undefined : dateFieldFormatLayout(format);
+  return numericFieldSegment(offset, format?.order ?? dateParts, layout?.starts ?? dateStarts, layout?.ends ?? dateEnds, format?.digits, key);
+}
 export function reformatDateFieldState(state: DateFieldState, format?: DateFieldFormat): TemporalResult<DateFieldState> {
   const valid = tryCreateDateFieldState(state.value, state.inputState, state.format); if (!valid.ok) return valid;
   if (format !== undefined && dateFieldFormatLayout(format) === undefined) return invalidFormat();
@@ -184,7 +194,7 @@ function fieldState(value: DateValue | null, inputState: TextEditingState, forma
 
 type CapturedPolicies = { [Key in keyof DateFieldPolicies]-?: DateFieldPolicies[Key] | undefined };
 
-function commitValue(value: DateValue | null, policies: CapturedPolicies, segment?: DateSegment, format?: DateFieldFormat): TemporalResult<DateFieldUpdate> {
+function commitValue(value: DateValue | null, policies: CapturedPolicies, segment?: DateSegment, format?: DateFieldFormat, draft?: TextEditingState, leadingOffset = 0): TemporalResult<DateFieldUpdate> {
   if (value === null) {
     if (policies.required === true) return fail('transition-rejection', 'date-field-value-required', 'Date field requires a value.');
   } else {
@@ -195,7 +205,9 @@ function commitValue(value: DateValue | null, policies: CapturedPolicies, segmen
     if (policies.max !== undefined && compareDateValues(value, policies.max) > 0) return fail('transition-rejection', 'date-field-value-above-maximum', 'Date field value is above its maximum.');
     if (policies.unavailable?.(value) === true) return fail('transition-rejection', 'date-field-value-unavailable', 'Date field value is unavailable.');
   }
-  const input = committedInput(value, segment, format);
+  const committed = committedInput(value, segment, format);
+  if (!committed.ok) return committed;
+  const input = draft === undefined ? committed : retainCommittedFieldSelection(committed.value, draft, format === undefined ? leadingOffset : 0);
   if (!input.ok) return input;
   return createMachineUpdate(fieldState(value, input.value, format), [
     { type: 'input-state-changed', value: input.value },

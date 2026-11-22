@@ -5,6 +5,15 @@ import { createTimeFieldState, tryCreateTimeFieldState, applyTimeFieldEvent, ref
 import { createTimeFieldFormat, tryCreateTimeFieldFormat, formatTimeFieldValue, parseTimeFieldValue, formatTimeValue } from '../../.verification-dist/fields/time.js';
 const time = (hour, second = 0, millisecond = 0) => ({ hour, minute: 30, second, millisecond });
 const value = result => { assert.equal(result.ok, true); return result.value; };
+test('committing a typed zero second keeps its caret for the next step', () => {
+  const original = createTimeFieldState(time(10, 1), createTextEditingState('10:30:00', {
+    anchorCodeUnitOffset: 7, focusCodeUnitOffset: 7,
+  }));
+  const committed = value(applyTimeFieldEvent(original, 'commit')).state;
+  assert.equal(committed.inputState.snapshot.text, '10:30:00');
+  assert.equal(committed.inputState.snapshot.selection.focusCodeUnitOffset, 7);
+  assert.equal(value(applyTimeFieldEvent(committed, 'decrement-segment')).state.inputState.snapshot.text, '10:29:59');
+});
 test('formatted TimeField reducer preserves format through commit, cancel, set-value and period arithmetic', () => {
   const format = createTimeFieldFormat({ precision: 'minute', hourCycle: 'h12' });
   let state = createTimeFieldState(time(3), createTextEditingState('03:30 AM', { anchorCodeUnitOffset: 6, focusCodeUnitOffset: 8 }), format);
