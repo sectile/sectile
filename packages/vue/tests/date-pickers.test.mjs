@@ -33,7 +33,7 @@ test('day pickers use an explicit editing format under a different locale', asyn
 
 test('readonly picker SSR projects inherited native constraints without another submitted value', async () => {
   const html = await render(() => h(FormRoot, {}, { default: () => h(FormField, { name: 'delivery', form: 'schedule', required: true }, {
-    default: () => h(MonthPickerRoot, {}, { default: () => h(MonthPickerInput) }),
+    default: () => h(MonthPickerRoot, {}, { default: () => h(MonthPickerInput, { readonly: true }) }),
   }) }));
   const select = html.match(/<select\b[^>]*>/u)?.[0];
   assert.ok(select);

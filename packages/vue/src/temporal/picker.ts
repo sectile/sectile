@@ -11,9 +11,8 @@ import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-pick
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateFieldFormat, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
-import type { DateTimePickerState } from '@sectile/temporal/date-time-picker';
+import type { DateTimeChoiceLimits, DateTimePickerState } from '@sectile/temporal/date-time-picker';
 import type { DateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
-import type { DateTimeChoiceLimits } from '@sectile/temporal/time-picker';
 import type { TimeValue } from '@sectile/temporal/time-field';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';

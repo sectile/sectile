@@ -2,7 +2,7 @@ import type { RevisionSnapshot } from '@sectile/core/revision';
 import { permitsInteraction } from '@sectile/core/interaction';
 import type { TextEditingState, TextEvent } from '@sectile/core/text';
 import { setFieldValidity, setInteractionAttributes } from '../../interaction/attributes.js';
-import { DOMTextElementBinding } from '../../text/element-binding.js';
+import { TemporalFieldBinding } from './field-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../../text.js';
 import { createDOMTemporalController, type DOMTemporalController, type DOMTemporalResult } from './result.js';
@@ -127,7 +127,7 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
   readonly #runtime: DOMTemporalController<State, RangeEvent<Value>, RangeCommand<Range>>;
   readonly #controlled: ControlledShape;
   readonly #editable: boolean;
-  readonly #bindings: Partial<Record<Endpoint, DOMTextElementBinding>> = {};
+  readonly #bindings: Partial<Record<Endpoint, TemporalFieldBinding>> = {};
   readonly #keydown: Record<Endpoint, (event: Event) => void>;
   readonly #blur: Record<Endpoint, () => void>;
   readonly #focus: Record<Endpoint, () => void>;
@@ -143,16 +143,15 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
     try {
       for (const endpoint of ['start', 'end'] as const) {
         const input = this.#input(endpoint);
-        this.#bindings[endpoint] = new DOMTextElementBinding({
+        this.#bindings[endpoint] = new TemporalFieldBinding({
           element: input, getState: () => this.getSnapshot().state[endpoint].inputState,
           dispatch: native => this.#text(endpoint, native),
+          keydown: this.#keydown[endpoint], blur: this.#blur[endpoint],
           ...(this.#editable ? { segments: {
             maximum: () => adapter.maximum(this.getSnapshot().state[endpoint].format),
             at: (text, offset, key) => adapter.segment(text, offset, this.getSnapshot().state[endpoint].format, key),
           } } : {}),
         });
-        input.addEventListener('keydown', this.#keydown[endpoint]);
-        input.addEventListener('blur', this.#blur[endpoint]);
         input.addEventListener('focus', this.#focus[endpoint]);
       }
       this.refresh();
@@ -227,8 +226,6 @@ class DOMRangeField<Value, Range extends RangeValue<Value>, State extends RangeS
     for (const endpoint of ['start', 'end'] as const) {
       const input = this.#input(endpoint);
       this.#bindings[endpoint]?.disconnect();
-      input.removeEventListener('keydown', this.#keydown[endpoint]);
-      input.removeEventListener('blur', this.#blur[endpoint]);
       input.removeEventListener('focus', this.#focus[endpoint]);
     }
   }

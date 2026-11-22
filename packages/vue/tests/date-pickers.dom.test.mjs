@@ -181,7 +181,7 @@ test('date-time range time choices replace only their own dirty input', async ()
     h(parts.DateTimeRangePickerTrigger), h(parts.DateTimeRangePickerContent, {}, () => [
       h(parts.DateTimeRangePickerGrid),
       h(parts.DateTimeRangePickerTimeChoices, { endpoint: 'start', label: 'Start time' },
-        { default: state => { chooseStart = state.selectChoice; return h('span', state.value.minute); } }),
+        { default: state => { chooseStart = state.selectChoice; return h('span', state.value?.minute); } }),
       h(parts.DateTimeRangePickerTimeChoices, { endpoint: 'end', label: 'End time' }),
     ]),
   ]) });
@@ -902,9 +902,9 @@ test('Vue period pickers keep granularity-specific text and keyboard movement', 
   const monthInput = host.querySelector('input[data-scope="month-picker"][data-part="input"]:not([type="hidden"])');
   const yearInput = host.querySelector('input[data-scope="year-picker"][data-part="input"]:not([type="hidden"])');
   assert.equal(monthInput?.value, '2026-08');
-  assert.equal(monthInput?.readOnly, true);
+  assert.equal(monthInput?.readOnly, false);
   assert.equal(yearInput?.value, '2028');
-  assert.equal(yearInput?.readOnly, true);
+  assert.equal(yearInput?.readOnly, false);
 
   const monthGrid = host.querySelector('[data-scope="month-picker"][data-part="grid"]');
   monthGrid?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
@@ -1398,7 +1398,7 @@ test('Vue range picker display inputs remain read-only after DOM connection refr
         defaultOpen: true,
         position: false,
       }, { default: () => [
-        h(DateRangePickerStartInput), h(DateRangePickerEndInput), h(DateRangePickerTrigger),
+        h(DateRangePickerStartInput, { readonly: true }), h(DateRangePickerEndInput, { readonly: true }), h(DateRangePickerTrigger),
         h(DateRangePickerContent, null, { default: () => h(DateRangePickerGrid) }),
       ] }),
       h(DateTimeRangePickerRoot, {

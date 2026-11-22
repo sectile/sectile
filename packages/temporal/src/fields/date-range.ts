@@ -3,6 +3,7 @@ import type { TextEditingState } from '@sectile/core/text';
 import type { TemporalResult } from '../error.js';
 import { applyDateFieldEvent, tryCreateDateFieldState, reformatDateFieldState, type DateFieldEvent, type DateFieldGranularity, type DateFieldPolicies, type DateFieldState, type DateFieldFormat } from './date.js';
 import { compareDateValues, tryCreateDateRange, type DateRange, type DateValue } from '../values/date.js';
+import { fail } from '../internal/foundation.js';
 import { applyRangeFieldEvent, tryCreateRangeFieldState, reformatRangeFieldState,
   type RangeFieldConstruction, type RangeFieldTransition, type RangeFieldPresentation } from '../internal/range-field.js';
 
@@ -26,19 +27,34 @@ const transition: RangeFieldTransition<DateValue, DateRange, DateFieldState, Dat
 });
 const presentation: RangeFieldPresentation<DateValue, DateRange, DateFieldState, DateFieldFormat> = /* @__PURE__ */ Object.assign({}, construction, { reformatField: reformatDateFieldState });
 
-function periodConstruction<Spec extends typeof construction>(spec: Spec, granularity: DateFieldGranularity | undefined): Spec {
-  return granularity === undefined || granularity === 'day' ? spec
-    : { ...spec, createField: (value: DateValue | null, input?: TextEditingState, format?: DateFieldFormat) =>
-      tryCreateDateFieldState(value, input, format, granularity) };
+function fieldConstructions<Spec extends typeof construction>(spec: Spec): Readonly<Record<DateFieldGranularity, Spec>> {
+  const forPeriod = (granularity: 'month' | 'year'): Spec => ({ ...spec,
+    createField: (value: DateValue | null, input?: TextEditingState, format?: DateFieldFormat) =>
+      tryCreateDateFieldState(value, input, format, granularity) });
+  return { day: spec, month: forPeriod('month'), year: forPeriod('year') };
+}
+const constructions = /* @__PURE__ */ fieldConstructions(construction);
+const transitions = /* @__PURE__ */ fieldConstructions(transition);
+const presentations = /* @__PURE__ */ fieldConstructions(presentation);
+
+function validGranularity(value: DateFieldGranularity): boolean {
+  return value === 'day' || value === 'month' || value === 'year';
+}
+
+function invalidGranularity(errorClass: 'construction' | 'transition-rejection' = 'construction'): TemporalResult<never> {
+  return fail(errorClass, 'invalid-date-field-format', 'Date field granularity must be day, month or year.');
 }
 
 export function createDateRangeFieldState(input: DateRangeFieldStateInput = {}): DateRangeFieldState { return unwrap(tryCreateDateRangeFieldState(input)); }
 export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> {
-  return tryCreateRangeFieldState(periodConstruction(construction, input.granularity), input);
+  const granularity = input.granularity ?? 'day';
+  return validGranularity(granularity) ? tryCreateRangeFieldState(constructions[granularity], input) : invalidGranularity();
 }
 export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> {
-  return applyRangeFieldEvent(periodConstruction(transition, state.start.granularity), state, event, policies);
+  const granularity = state.start.granularity ?? 'day';
+  return validGranularity(granularity) ? applyRangeFieldEvent(transitions[granularity], state, event, policies) : invalidGranularity('transition-rejection');
 }
 export function reformatDateRangeFieldState(state: DateRangeFieldState, format?: DateFieldFormat): TemporalResult<DateRangeFieldState> {
-  return reformatRangeFieldState(periodConstruction(presentation, state.start.granularity), state, format);
+  const granularity = state.start.granularity ?? 'day';
+  return validGranularity(granularity) ? reformatRangeFieldState(presentations[granularity], state, format) : invalidGranularity();
 }

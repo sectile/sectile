@@ -20,7 +20,7 @@ import {
 } from '@sectile/temporal/date-time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
-import { DOMTextElementBinding } from '../text/element-binding.js';
+import { TemporalFieldBinding } from './internal/field-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
 import { bindTemporalSubmit } from './internal/submit.js';
@@ -134,7 +134,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
   readonly #runtime: DOMTemporalController<DateTimeFieldState, DateTimeFieldEvent, DateTimeFieldCommand>;
   readonly #valueControlled: boolean;
   readonly #inputControlled: boolean;
-  readonly #binding: DOMTextElementBinding;
+  readonly #binding: TemporalFieldBinding;
   readonly #editable: boolean;
   readonly #submission = bindTemporalSubmit(() => this.prepareSubmission());
 
@@ -173,7 +173,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     this.#valueControlled = valueControlled;
     this.#inputControlled = inputControlled;
     this.#editable = permitsInteraction({ disabled: options.disabled ?? false, readOnly: options.readOnly ?? false }, 'mutate');
-    this.#binding = new DOMTextElementBinding({
+    this.#binding = new TemporalFieldBinding({
       element: options.input,
       getState: () => this.getSnapshot().state.inputState,
       dispatch: (input) => this.#text(input),

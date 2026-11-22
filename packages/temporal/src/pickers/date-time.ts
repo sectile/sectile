@@ -20,6 +20,41 @@ import {
 import { compareTimeValues, createTimeValue, type TimeValue, tryCreateTimeValue } from '../values/time.js';
 import type { TimeFieldPolicies } from '../fields/time.js';
 
+export interface DateTimeChoiceLimits extends Pick<TimeFieldPolicies, 'min' | 'max'> {
+  readonly date: DateValue | null;
+  readonly dateTimeMin?: DateTimeValue;
+  readonly dateTimeMax?: DateTimeValue;
+  readonly opposite?: DateTimeValue;
+  readonly endpoint?: 'start' | 'end';
+}
+
+export interface TimeChoiceInterval extends Pick<TimeFieldPolicies, 'min' | 'max'> {
+  readonly empty: boolean;
+}
+
+/** Intersect the numeric limits of a time choice for one civil date. */
+export function dateTimeChoiceInterval(limits: DateTimeChoiceLimits): TimeChoiceInterval {
+  const { date, dateTimeMin, dateTimeMax, opposite } = limits;
+  let { min, max } = limits;
+  if (date !== null) {
+    const lowerDate = dateTimeMin === undefined ? 1 : compareDateValues(date, dateTimeMin.date);
+    const upperDate = dateTimeMax === undefined ? -1 : compareDateValues(date, dateTimeMax.date);
+    if (lowerDate < 0 || upperDate > 0) return { empty: true };
+    if (lowerDate === 0 && dateTimeMin !== undefined && (min === undefined || compareTimeValues(min, dateTimeMin.time) < 0)) min = dateTimeMin.time;
+    if (upperDate === 0 && dateTimeMax !== undefined && (max === undefined || compareTimeValues(max, dateTimeMax.time) > 0)) max = dateTimeMax.time;
+    if (opposite !== undefined && limits.endpoint !== undefined) {
+      const order = compareDateValues(date, opposite.date);
+      if (limits.endpoint === 'start' ? order > 0 : order < 0) return { empty: true };
+      if (order === 0) {
+        if (limits.endpoint === 'start' && (max === undefined || compareTimeValues(max, opposite.time) > 0)) max = opposite.time;
+        if (limits.endpoint === 'end' && (min === undefined || compareTimeValues(min, opposite.time) < 0)) min = opposite.time;
+      }
+    }
+  }
+  return { empty: min !== undefined && max !== undefined && compareTimeValues(min, max) > 0,
+    ...(min === undefined ? {} : { min }), ...(max === undefined ? {} : { max }) };
+}
+
 export interface DateTimePickerState {
   readonly value: DateTimeValue | null;
   readonly time: TimeValue;

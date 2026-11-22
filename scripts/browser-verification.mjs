@@ -128,6 +128,18 @@ try {
     const input = page.locator('#date');
     await input.fill('2026-08-22');
     await input.press('Enter');
+    await input.focus();
+    await input.press('End');
+    for (let i = 0; i < 4; i++) await input.press('ArrowLeft');
+    await input.press('1');
+    assert.equal(await input.inputValue(), '2026-1-22');
+    assert.equal(await input.evaluate(element => element.selectionStart), 6);
+    await input.press('0');
+    await input.press('Enter');
+    assert.equal(await input.inputValue(), '2026-10-22');
+
+    await input.fill('2026-08-22');
+    await input.press('Enter');
     await input.press('End');
     for (let i = 0; i < 4; i++) await input.press('ArrowLeft');
     await input.press('ArrowUp');
@@ -140,6 +152,15 @@ try {
     assert.equal(await input.inputValue(), '2026-09-19');
     assert.notEqual(await input.getAttribute('aria-invalid'), 'true');
     report.results.push({ id: 'date-segment-keyboard', result: 'passed' });
+
+    await page.evaluate(() => window.sectileProbe.composedTrigger('menu'));
+    const opener = page.locator('[data-composed-native]');
+    await opener.click();
+    await page.waitForFunction(() => window.sectileProbe.composed.open);
+    assert.equal(await opener.evaluate(element => element.ownerDocument.activeElement === element), true);
+    await page.keyboard.press('Tab');
+    await page.waitForFunction(() => !window.sectileProbe.composed.open);
+    report.results.push({ id: 'menu-pointer-and-tab', result: 'passed' });
   }
   if (nativeIME) {
     execFileSync('swiftc', ['scripts/browser/macos-input-source.swift', '-o', swift], { timeout: 60000, stdio: 'inherit' });

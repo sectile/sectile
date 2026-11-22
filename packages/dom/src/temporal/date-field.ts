@@ -6,7 +6,7 @@ import { sameTextEditingState, type TextEditingState } from '@sectile/core/text'
 import { applyDateFieldEvent, dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, tryCreateDateFieldState, type DateFieldFormat, type DateFieldGranularity, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
-import { DOMTextElementBinding } from '../text/element-binding.js';
+import { TemporalFieldBinding } from './internal/field-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
 import { bindTemporalSubmit } from './internal/submit.js';
@@ -78,7 +78,7 @@ class DOMDateField implements DateFieldConnection {
   readonly #runtime: DOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand>;
   readonly #valueControlled: boolean;
   readonly #inputControlled: boolean;
-  readonly #binding: DOMTextElementBinding;
+  readonly #binding: TemporalFieldBinding;
   readonly #editable: boolean;
   readonly #submission = bindTemporalSubmit(() => this.prepareSubmission());
   readonly #keydown = (event: KeyboardEvent): void => {
@@ -93,7 +93,7 @@ class DOMDateField implements DateFieldConnection {
   public constructor(options: DateFieldOptions, runtime: DOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand>, valueControlled: boolean, inputControlled: boolean) {
     this.#options = options; this.#runtime = runtime; this.#valueControlled = valueControlled; this.#inputControlled = inputControlled;
     this.#editable = permitsInteraction({ disabled: options.disabled ?? false, readOnly: options.readOnly ?? false }, 'mutate');
-    this.#binding = new DOMTextElementBinding({
+    this.#binding = new TemporalFieldBinding({
       element: options.input, getState: () => this.getSnapshot().state.inputState,
       dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur,
       ...(this.#editable && options.native !== true ? { segments: {

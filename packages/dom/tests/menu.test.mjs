@@ -205,6 +205,36 @@ test('retained menu moves preserve only current focus and release cancelled or r
   }
 });
 
+test('a deferred pointer opening focuses its trigger only while the captured focus still owns the interaction', () => {
+  const { window, root, trigger, file } = menuDOM(500, 300);
+  const outside = window.document.createElement('button');
+  window.document.body.append(outside);
+  const menu = createMenuButton({ root, trigger, open: false, position: false,
+    items: [{ id: 'file', parentID: null }],
+  });
+  menu.setItemAttributes(file, 'file');
+  const click = () => trigger.dispatchEvent(new window.MouseEvent('click', { detail: 1, bubbles: true }));
+  try {
+    click();
+    assert.notEqual(window.document.activeElement, trigger);
+    menu.syncControlledValue(true);
+    assert.equal(window.document.activeElement, trigger);
+    menu.syncControlledValue(false);
+
+    trigger.blur();
+    click();
+    outside.focus();
+    menu.syncControlledValue(true);
+    assert.equal(window.document.activeElement, outside);
+    menu.syncControlledValue(false);
+
+    click();
+    menu.syncControlledValue(false);
+    menu.syncControlledValue(true);
+    assert.equal(window.document.activeElement, outside);
+  } finally { menu.destroy(); window.close(); }
+});
+
 test('controlled popup focus returns only after an accepted close without replacing newer focus', () => {
   for (const create of [createMenuButton, createContextMenu]) {
     const { window, root, trigger, file } = menuDOM(500, 300);

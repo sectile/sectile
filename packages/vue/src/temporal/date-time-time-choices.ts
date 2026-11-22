@@ -1,7 +1,8 @@
 import { computed, defineComponent, h, shallowRef, watch, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { unwrap } from '@sectile/core/result';
 import { compareTimeValues, type TimeFieldPrecision, type TimeValue } from '@sectile/temporal/time-field';
-import { createTimePicker, dateTimeChoiceInterval, timeChoicePrecision, type TimePickerState } from '@sectile/temporal/time-picker';
+import { createTimePicker, timeChoicePrecision, type TimePickerState } from '@sectile/temporal/time-picker';
+import { dateTimeChoiceInterval } from '@sectile/temporal/date-time-picker';
 import { provideFormBoundary } from '../form/context.js';
 import { useTimePresentation } from './internal/time-presentation.js';
 import { usePickerTimeChoices } from './picker.js';

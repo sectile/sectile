@@ -60,6 +60,22 @@ test('terminal time range field switches endpoints and commits a complete range'
   assert.equal(formatTimeValue(field.getValue().end), '17:45');
 });
 
+test('terminal required ranges keep the first endpoint when the controlled value remains null', () => {
+  for (const [create, start, end] of [
+    [createDateRangeField, createDateValue(2026, 8, 22), createDateValue(2026, 8, 28)],
+    [createTimeRangeField, createTimeValue(9, 30), createTimeValue(17, 45)],
+  ]) {
+    const proposals = [];
+    const field = create({ value: null, required: true, onValueChange: value => proposals.push(value) });
+    assert.equal(field.handleEvent({ type: 'field', endpoint: 'start', event: { type: 'set-value', value: start } }), true);
+    assert.equal(field.syncControlledValues({ value: null }).ok, true);
+    assert.deepEqual(field.getSnapshot().state.start.value, start);
+    assert.deepEqual(proposals, []);
+    assert.equal(field.handleEvent({ type: 'field', endpoint: 'end', event: { type: 'set-value', value: end } }), true);
+    assert.deepEqual(proposals, [{ start, end }]);
+  }
+});
+
 test('terminal date-time field carries time segments across civil day boundaries', () => {
   const field = createDateTimeField({
     defaultValue: createDateTimeValue(

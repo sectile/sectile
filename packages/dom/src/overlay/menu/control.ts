@@ -126,6 +126,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   readonly #triggerKeydown: (event: KeyboardEvent) => void;
   readonly #triggerContextMenu: ((event: MouseEvent) => void) | undefined;
   #contextRect: PositionRect | undefined;
+  #pointerOpenFocus: Element | null | undefined;
   #typeaheadBuffer = ''; #lastTypeaheadAt = Number.NEGATIVE_INFINITY;
   #active = true;
   #disconnected = false;
@@ -225,9 +226,9 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       if (this.getSnapshot().state.open) { this.handleEvent('close-popup'); return; }
       const trigger = this.#options.trigger;
       const pointer = event.detail > 0;
-      const active = trigger?.ownerDocument?.activeElement;
-      this.handleEvent(pointer ? { type: 'open-popup', focus: false } : 'open-popup');
-      if (pointer && trigger !== undefined && this.getSnapshot().state.open && trigger.ownerDocument?.activeElement === active) trigger.focus();
+      if (pointer && trigger !== undefined) this.#pointerOpenFocus = trigger.ownerDocument?.activeElement;
+      if (!this.handleEvent(pointer ? { type: 'open-popup', focus: false } : 'open-popup')) this.#pointerOpenFocus = undefined;
+      this.#focusPointerOpener();
     };
     this.#triggerContextMenu = options.triggerMode === 'context-menu' ? (event) => {
       if (!this.getActive() || options.disabled === true || event.defaultPrevented) return;
@@ -239,6 +240,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     } : undefined;
     this.#triggerKeydown = (event) => {
       if (!this.getActive() || options.disabled === true || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+      this.#pointerOpenFocus = undefined;
       if (options.triggerMode === 'context-menu') {
         if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
         event.preventDefault();
@@ -283,8 +285,9 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (open) this.#restoreTriggerRequested = false;
     const result = this.#runtime.syncControlledValue(open);
     if (result.ok) {
-      if (!open) this.#pendingFocus = undefined;
+      if (!open) { this.#pendingFocus = undefined; this.#pointerOpenFocus = undefined; }
       this.#projectTransition(); this.#options.onUpdate?.();
+      this.#focusPointerOpener();
     }
     return result;
   }
@@ -363,6 +366,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     if (this.getActive() && this.getSnapshot().state.open) restoreSurfaceMoveFocus(this.#options.root, held, this.getSnapshot().revision);
   }
   public handleEvent(event: MenuEvent<ID>): boolean {
+    if (typeof event === 'string' || event.type !== 'open-popup' || event.focus !== false) this.#pointerOpenFocus = undefined;
     this.#restoreTriggerRequested = false;
     const before = this.getSnapshot().state, result = this.#runtime.handle(event);
     if (!result.ok) return false;
@@ -446,6 +450,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   }
   #suspendResources(): void {
     this.#active = false; this.#pendingFocus = undefined; this.#restoreTriggerRequested = false; this.#moveFocus = undefined;
+    this.#pointerOpenFocus = undefined;
     this.#typeaheadBuffer = ''; this.#lastTypeaheadAt = Number.NEGATIVE_INFINITY;
     this.#unbindNative();
     let failed = false, failure: unknown;
@@ -467,6 +472,13 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     this.#active = true;
     this.#pausedRootVisibility?.disconnect(); this.#pausedRootVisibility = undefined;
     this.#bindNative(); this.#refresh(); this.#options.onUpdate?.();
+  }
+  #focusPointerOpener(): void {
+    const active = this.#pointerOpenFocus;
+    if (active === undefined || !this.getSnapshot().state.open) return;
+    this.#pointerOpenFocus = undefined;
+    const trigger = this.#options.trigger;
+    if (this.getActive() && trigger !== undefined && trigger.ownerDocument?.activeElement === active && trigger !== active) trigger.focus();
   }
   #findItemTarget(event: Event): ID | undefined {
     const path = event.composedPath?.();

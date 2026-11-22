@@ -159,7 +159,7 @@ export class PickerPopup {
   disconnect(): void {
     if (this.#disposed) return;
     this.#disposed = true;
-    this.#detach();
+    try { this.#detach(); } finally { this.#owner.suspend(); }
   }
 
   #detach(): void {

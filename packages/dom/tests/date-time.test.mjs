@@ -110,12 +110,16 @@ test('shared native range connection bounds listeners, rejects retired callbacks
     const startInput = new FakeInput(), endInput = new FakeInput();
     let updates = 0;
     const field = createDateTimeRangeField({ startInput, endInput, onUpdate: () => { updates++; } });
-    assert.equal(liveRangeListeners(startInput, endInput), 14);
+    assert.equal(liveRangeListeners(startInput, endInput), 18);
     const stale = [...startInput.listeners.get('focus'), ...startInput.listeners.get('keydown')];
     field.disconnect(); field.disconnect();
     assert.equal(liveRangeListeners(startInput, endInput), 0);
     const before = updates;
-    for (const listener of stale) listener({ key: 'Enter', preventDefault() { assert.fail('retired key listener consumed input'); } });
+    for (const listener of stale) {
+      const event = { type: 'keydown', key: 'Enter', preventDefault() { assert.fail('retired key listener consumed input'); } };
+      if (typeof listener === 'function') listener(event);
+      else listener.handleEvent(event);
+    }
     assert.equal(updates, before);
   }
   const startInput = new FakeInput(), endInput = new FakeInput();
@@ -185,13 +189,13 @@ test('civil scalar fields suspend native observation and retain IME drafts throu
     const input = new FakeInput(), field = create({ input, label: 'Civil input' });
     const listenerCount = () => [...input.listeners.values()].reduce((total, listeners) => total + listeners.size, 0);
     try {
-      assert.equal(listenerCount(), 6);
+      assert.equal(listenerCount(), 8);
       for (let cycle = 0; cycle < 3; cycle++) {
         const snapshot = field.getSnapshot(), staleKey = [...input.listeners.get('keydown')][0];
         field.suspend(); field.suspend(); assert.equal(listenerCount(), 0); assert.equal(field.getActive(), false);
         replaceInput(input, 'unobserved'); input.emit('blur'); staleKey.handleEvent({ type: 'keydown', ...keyboard('ArrowUp') });
         assert.equal(field.getSnapshot(), snapshot);
-        field.resume(); field.resume(); assert.equal(field.getActive(), true); assert.equal(listenerCount(), 6);
+        field.resume(); field.resume(); assert.equal(field.getActive(), true); assert.equal(listenerCount(), 8);
         assert.equal(input.value, field.getText());
       }
       input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, text, text.length);
@@ -203,7 +207,7 @@ test('civil scalar fields suspend native observation and retain IME drafts throu
       field.suspend(); const setAttribute = input.setAttribute, failure = new Error('Field projection failed');
       input.setAttribute = () => { throw failure; };
       assert.throws(() => field.resume(), error => error === failure); assert.equal(field.getActive(), false); assert.equal(listenerCount(), 0);
-      input.setAttribute = setAttribute; field.resume(); assert.equal(listenerCount(), 6);
+      input.setAttribute = setAttribute; field.resume(); assert.equal(listenerCount(), 8);
       field.disconnect(); field.disconnect(); field.resume(); assert.equal(field.getActive(), false); assert.equal(listenerCount(), 0);
       const terminal = field.getSnapshot(); replaceInput(input, 'unobserved'); input.emit('blur'); assert.equal(field.getSnapshot(), terminal);
     } finally { field.disconnect(); }
@@ -218,21 +222,21 @@ test('date picker suspends its editable field, rejects stale focus and drains pr
     referenceDate: createDateValue(2026, 1, 1), onUpdate: () => { if (failUpdate) throw failure; } });
   const listeners = () => [grid, trigger, input].reduce((sum, element) => sum + [...element.listeners.values()].reduce((total, values) => total + values.size, 0), 0);
   try {
-    assert.equal(listeners(), 9);
+    assert.equal(listeners(), 11);
     picker.handleEvent('next-month'); const snapshot = picker.getSnapshot();
     picker.suspend(); picker.resume(); await Promise.resolve(); assert.equal(focuses, 0, 'previous activation focus cannot replay');
     for (let cycle = 0; cycle < 3; cycle++) {
       picker.suspend(); picker.suspend(); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
       replaceInput(input, 'unobserved'); trigger.emit('click'); grid.emit('keydown', keyboard('ArrowRight'));
       picker.refresh(); assert.equal(picker.getSnapshot(), snapshot); assert.equal(root.hidden, true);
-      picker.resume(); picker.resume(); assert.equal(listeners(), 9); assert.equal(picker.getActive(), true); assert.equal(root.hidden, false);
+      picker.resume(); picker.resume(); assert.equal(listeners(), 11); assert.equal(picker.getActive(), true); assert.equal(root.hidden, false);
     }
     input.setSelectionRange(0, input.value.length); input.emit('compositionstart'); compositionInput(input, '2026-03-18', 10);
     picker.suspend(); replaceInput(input, 'unobserved'); picker.resume(); assert.equal(input.value, '2026-03-18');
     input.emit('keydown', keyboard('Enter')); assert.equal(formatDateValue(picker.getSnapshot().state.value), '2026-03-18');
     failUpdate = true; assert.throws(() => picker.suspend(), error => error === failure); assert.equal(listeners(), 0);
     assert.throws(() => picker.resume(), error => error === failure); assert.equal(listeners(), 0); assert.equal(picker.getActive(), false);
-    failUpdate = false; picker.resume(); assert.equal(listeners(), 9);
+    failUpdate = false; picker.resume(); assert.equal(listeners(), 11);
     failUpdate = true; assert.throws(() => picker.disconnect(), error => error === failure);
     picker.resume(); picker.refresh(); assert.equal(picker.getActive(), false); assert.equal(listeners(), 0);
   } finally { failUpdate = false; picker.disconnect(); }
@@ -278,7 +282,7 @@ test('compound date-time pickers suspend every field and roll back partial nativ
     const picker = create({ root, grid, trigger, ...fields, position: false, defaultOpen: true,
       defaultValue: range ? createDateTimeRange(start, end) : start,
       onUpdate: () => { if (failUpdate) throw failure; } });
-    const inputs = Object.values(fields), peak = 3 + 6 * inputs.length;
+    const inputs = Object.values(fields), peak = 3 + 8 * inputs.length;
     const listeners = () => [grid, trigger, ...inputs].reduce((sum, element) => sum + [...element.listeners.values()].reduce((total, values) => total + values.size, 0), 0);
     try {
       assert.equal(listeners(), peak); picker.handleEvent('next-day'); const snapshot = picker.getSnapshot();
@@ -1165,6 +1169,7 @@ test('date-time range picker rolls back inverted split endpoint proposals', () =
 
 test('picker display-only range inputs stay natively read-only', () => {
   const startInput = new FakeInput(); const endInput = new FakeInput();
+  startInput.readOnly = endInput.readOnly = true;
   createDateRangePicker({
     root: new FakeElement(), grid: new FakeElement(), trigger: new FakeElement(),
     startInput, endInput,
