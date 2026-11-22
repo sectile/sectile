@@ -222,6 +222,28 @@ test('DOM and terminal date-time range pickers preserve endpoint times and range
   ]);
 });
 
+test('a controlled empty date-time range stages each time before proposing selected dates', () => {
+  const startDate = date(2026, 8, 22), endDate = date(2026, 8, 24);
+  const startTime = time(9, 15), endTime = time(17, 45);
+  const expected = createDateTimeRange(createDateTimeValue(startDate, startTime), createDateTimeValue(endDate, endTime));
+  for (const create of [createDOMDateTimeRangePicker, createTerminalDateTimeRangePicker]) {
+    const proposed = [];
+    const picker = create({ value: null, referenceDate: startDate, onValueChange: value => proposed.push(value) });
+    try {
+      assert.equal(picker.handleEvent({ type: 'set-start-time', value: startTime }), true);
+      assert.equal(picker.syncControlledValues({ value: null }).ok, true);
+      assert.equal(picker.handleEvent({ type: 'set-end-time', value: endTime }), true);
+      assert.deepEqual(picker.getSnapshot().state.startTime, startTime);
+      assert.deepEqual(picker.getSnapshot().state.endTime, endTime);
+      assert.deepEqual(proposed, []);
+      assert.equal(picker.handleEvent({ type: 'select-date', value: startDate }), true);
+      assert.equal(picker.handleEvent({ type: 'select-date', value: endDate }), true);
+      assert.deepEqual(proposed, [expected]);
+      assert.equal(picker.getSnapshot().state.value, null);
+    } finally { picker.destroy(); }
+  }
+});
+
 function assertTrace(DOM, terminal, events) {
   assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
   for (const event of events) {

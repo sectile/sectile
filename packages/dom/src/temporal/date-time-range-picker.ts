@@ -151,20 +151,23 @@ function construct(options: DateTimeRangePickerOptions): DOMTemporalResult<DateT
   >({
     initial,
     reducer: (state, event) => applyDateTimeRangePickerEvent(state, event, policies),
-    reconcile: (previous, proposed) => tryCreateDateTimeRangePickerState({
-      value: controls.value ? previous.value : proposed.value,
-      anchor: proposed.anchor,
-      startTime: controls.value ? previous.startTime : proposed.startTime,
-      endTime: controls.value ? previous.endTime : proposed.endTime,
-      calendar: {
-        ...proposed.calendar,
-        highlighted: controls.highlighted
-          ? previous.calendar.highlighted
-          : proposed.calendar.highlighted,
-        view: controls.highlighted ? previous.calendar.view : proposed.calendar.view,
-        open: controls.open ? previous.calendar.open : proposed.calendar.open,
-      },
-    }),
+    reconcile: (previous, proposed) => {
+      const times = controls.value && (previous.value !== null || proposed.value !== null) ? previous : proposed;
+      return tryCreateDateTimeRangePickerState({
+        value: controls.value ? previous.value : proposed.value,
+        anchor: proposed.anchor,
+        startTime: times.startTime,
+        endTime: times.endTime,
+        calendar: {
+          ...proposed.calendar,
+          highlighted: controls.highlighted
+            ? previous.calendar.highlighted
+            : proposed.calendar.highlighted,
+          view: controls.highlighted ? previous.calendar.view : proposed.calendar.view,
+          open: controls.open ? previous.calendar.open : proposed.calendar.open,
+        },
+      });
+    },
     notify: [
       (previous, proposed) => {
         if (rangeKey(previous.value) !== rangeKey(proposed.value)) options.onValueChange?.(proposed.value);
