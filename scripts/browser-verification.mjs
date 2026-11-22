@@ -4,21 +4,26 @@ import { spawn, execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, rmSync } from 'node:fs';
 import { basename, resolve, join } from 'node:path';
 import { createHash } from 'node:crypto';
-import { chromium } from 'playwright';
+import { chromium, firefox, webkit } from 'playwright';
 import { publishedPackageDirectories } from './lib/published-packages.mjs';
 import { validateTarballEntries } from './lib/packed-package-contract.mjs';
 
 const nativeIME = process.argv.includes('--macos-ime');
 const shardArgument = process.argv.find(argument => argument.startsWith('--shard='));
 const tarballArgument = process.argv.find(argument => argument.startsWith('--tarball-directory='));
-assert.deepEqual(process.argv.slice(2).filter(argument => argument !== '--macos-ime' && argument !== shardArgument && argument !== tarballArgument), [], 'unexpected browser verification argument');
+const engineArgument = process.argv.find(argument => argument.startsWith('--engine='));
+const engine = engineArgument?.slice('--engine='.length) ?? 'chromium';
+const engines = { chromium, firefox, webkit };
+assert.ok(Object.hasOwn(engines, engine) && (!nativeIME || engine === 'chromium'), 'invalid browser verification engine');
+const browserType = engines[engine];
+assert.deepEqual(process.argv.slice(2).filter(argument => argument !== '--macos-ime' && argument !== shardArgument && argument !== tarballArgument && argument !== engineArgument), [], 'unexpected browser verification argument');
 assert.notEqual(tarballArgument?.slice('--tarball-directory='.length), '', 'tarball directory must not be empty');
 const tarballDirectory = resolve(tarballArgument?.slice('--tarball-directory='.length) ?? '.tasks/verification/publication-packs');
 const shard = shardArgument?.slice('--shard='.length).split('/').map(Number) ?? [1,1];
 assert.ok(shard.length === 2 && shard.every(Number.isSafeInteger) && shard[0] >= 1 && shard[0] <= shard[1] && shard[1] <= 4, 'invalid browser shard');
 if (nativeIME) assert.equal(process.platform, 'darwin', 'native macOS IME verification requires macOS');
 const output = '.tasks/browser'; mkdirSync(output, { recursive: true });
-const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), nativeIME, status: 'running', results: [] };
+const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine, nativeIME, status: 'running', results: [] };
 // Root owns artifact composition. The package server receives explicit aliases;
 // it never reads sibling packages or reaches upwards for workspace policy.
 const packedRoot = resolve(output, 'packages');
@@ -76,7 +81,7 @@ try {
       if (match) { clearTimeout(timer); resolve(match[1]); }
     });
   });
-  browser = await chromium.launch({ headless: !nativeIME, ...(process.env['SECTILE_CHROMIUM_PATH'] ? { executablePath: process.env['SECTILE_CHROMIUM_PATH'] } : {}) });
+  browser = await browserType.launch({ headless: !nativeIME, ...(engine === 'chromium' && process.env['SECTILE_CHROMIUM_PATH'] ? { executablePath: process.env['SECTILE_CHROMIUM_PATH'] } : {}) });
   context = await browser.newContext();
   await context.tracing.start({ screenshots: true, snapshots: true });
   page = await context.newPage();
@@ -90,7 +95,8 @@ try {
   await page.waitForFunction(() => window.sectileProbe !== undefined);
   const catalog = await page.evaluate(() => window.sectileProbe.inputFamilies);
   const selected = catalog.filter((_, index) => index % shard[1] === shard[0] - 1);
-  const fields = nativeIME ? ['native','native-textarea', ...selected.filter(id => id !== 'native' && id !== 'native-textarea')] : selected;
+  const fields = nativeIME ? ['native','native-textarea', ...selected.filter(id => id !== 'native' && id !== 'native-textarea')]
+    : engine === 'chromium' ? selected : [];
   report.shard = shard; report.families = selected;
   for (const id of fields) {
     if(id !== 'pin') {
@@ -257,7 +263,7 @@ try {
       if (reference) await page.locator('#native-reference').evaluate(element => element.remove());
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.writes), [], 'framework rewrote a live composition');
-  } else {
+  } else if (engine === 'chromium') {
     const positioning = await page.evaluate(() => window.sectileProbe.positioning());
     assert.equal(positioning.rows.length, 96);
     for (const row of positioning.rows) {

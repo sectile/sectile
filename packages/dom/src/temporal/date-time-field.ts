@@ -8,6 +8,8 @@ import {
   dateTimeFieldMaximum,
   dateTimeFieldNumericSegment,
   formatDateTimeFieldValue,
+  parseDateTimeFieldValue,
+  compareDateTimeValues,
   tryCreateDateTimeFieldState,
   type DateTimeFieldCommand,
   type DateTimeFieldEvent,
@@ -21,6 +23,7 @@ import { setFieldValidity, setInteractionAttributes } from '../interaction/attri
 import { DOMTextElementBinding } from '../text/element-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
+import { bindTemporalSubmit } from './internal/submit.js';
 import { getDateFieldPlaceholder } from './date-field.js';
 import { getTimeFieldPlaceholder } from './time-field.js';
 
@@ -46,6 +49,7 @@ export interface DateTimeFieldOptions {
   readonly label?: string;
   readonly native?: boolean;
   readonly format?: DateTimeFieldFormat;
+  readonly prepareForm?: false;
   readonly onValueChange?: (value: DateTimeValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
@@ -69,6 +73,8 @@ export interface DateTimeFieldConnection {
   getValue(): DateTimeValue | null;
   syncControlledValues(values: DateTimeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateTimeFieldState>>;
   handleEvent(event: DateTimeFieldEvent): boolean;
+  prepareSubmission(): boolean;
+  replaceDraft(value: DateTimeValue | null): boolean;
   refresh(): void;
   disconnect(): void;
 }
@@ -130,6 +136,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
   readonly #inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
   readonly #editable: boolean;
+  readonly #submission = bindTemporalSubmit(() => this.prepareSubmission());
 
   readonly #keydown = (event: KeyboardEvent): void => {
     if (!this.getActive() || !this.#editable || this.#binding.isComposing || event.isComposing) return;
@@ -179,7 +186,7 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     this.refresh();
   }
   public getActive(): boolean { return this.#binding.isActive; }
-  public suspend(): void { this.#binding.suspend(); }
+  public suspend(): void { this.#submission(); this.#binding.suspend(); }
   public resume(): void { this.#binding.resume(); try { if (this.getActive()) this.refresh(); } catch (error) { this.suspend(); throw error; } }
 
   public getSnapshot(): RevisionSnapshot<DateTimeFieldState> {
@@ -254,6 +261,25 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     return result.ok;
   }
 
+  public prepareSubmission(): boolean {
+    if (!this.getActive() || !this.#editable || this.#options.input.name === '') return true;
+    if (this.#binding.isComposing) return false;
+    const { format } = this.getSnapshot().state;
+    const text = format === undefined ? this.getText().trim() : this.getText();
+    if (text.trim() === '') return this.getValue() === null || this.handleEvent('commit') && this.getValue() === null;
+    const parsed = parseDateTimeFieldValue(text, format);
+    if (!parsed.ok) return this.handleEvent('commit');
+    const adopted = (): boolean => { const value = this.getValue(); return value !== null && compareDateTimeValues(value, parsed.value) === 0; };
+    return adopted() || this.handleEvent('commit') && adopted();
+  }
+
+  public replaceDraft(value: DateTimeValue | null): boolean {
+    if (this.#binding.isComposing) return false;
+    const update = this.#runtime.replace(tryCreateDateTimeFieldState(value, undefined, this.getSnapshot().state.format));
+    if (update.ok) { this.refresh(); this.#options.onUpdate?.(); }
+    return update.ok;
+  }
+
   public refresh(): void {
     const input = this.#options.input;
     input.type = this.#options.native === true ? 'datetime-local' : 'text';
@@ -264,9 +290,11 @@ class DOMDateTimeField implements DateTimeFieldConnection {
     setInteractionAttributes(input, this.#options, true, true);
     if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label);
     this.#binding.render();
+    if (this.#editable && this.#options.prepareForm !== false && this.getActive()) this.#submission(input.form);
   }
 
   public disconnect(): void {
+    this.#submission();
     this.#binding.disconnect();
   }
 

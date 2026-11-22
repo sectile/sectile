@@ -13,34 +13,29 @@ import {
   type DateTimeRangePickerState,
 } from '@sectile/temporal/date-time-range-picker';
 export type { DateTimeRangePickerPolicies } from '@sectile/temporal/date-time-range-picker';
-import { type TimeValue } from '@sectile/temporal/time-field';
+import { compareTimeValues, type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from '../interaction/attributes.js';
 import {
-  focusDatePickerEntry,
   setDatePickerCellAvailability,
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
-import { createDOMLayerBinding, type DOMLayerBinding, type DOMLayerBindingOptions, type DOMLayerPresentationListener, type DOMLayerPresentationSubscription, type DOMLayerReparentErrorCode } from '../overlay/layer/binding.js';
+import type { DOMLayerBindingOptions, DOMLayerPresentationListener, DOMLayerPresentationSubscription, DOMLayerReparentErrorCode } from '../overlay/layer/binding.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
 import { createTimeField, type TimeFieldConnection } from './time-field.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
-import type { PositionConnection } from '../overlay/position/connection.js';
-import { createHiddenBinding, type HiddenBinding } from '../interaction/visibility.js';
+import type { PickerPositionOptions } from '../overlay/position/picker.js';
+import { calendarFocusEvent, PickerPopup, pickerPopupElements, type PickerPopupElements } from './internal/picker-popup.js';
 import { detachedFieldState } from '../text/controlled-input.js';
 import { pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
 import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
 import { tryCreateTimeFieldState, reformatTimeFieldState, type TimeFieldState, type TimeFieldFormat } from '@sectile/temporal/time-field';
 
-export interface DateTimeRangePickerOptions extends PickerPositionOptions {
+export interface DateTimeRangePickerOptions extends PickerPositionOptions, Partial<PickerPopupElements> {
   readonly layerHost?: Exclude<DOMLayerBindingOptions['layerHost'], undefined>;
   readonly defaultState?: DateTimeRangePickerState;
   readonly defaultFieldStates?: Readonly<{ startDate?: DateFieldState; endDate?: DateFieldState; startTime?: TimeFieldState; endTime?: TimeFieldState }>;
-  readonly root: HTMLElement;
-  readonly grid: HTMLElement;
-  readonly trigger: HTMLElement;
   readonly startDateTimeInput?: HTMLInputElement;
   readonly endDateTimeInput?: HTMLInputElement;
   readonly startDateInput?: HTMLInputElement;
@@ -86,6 +81,9 @@ export interface DateTimeRangePickerConnection {
   syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode>;
   suspend(): void;
   resume(): void;
+  setPopup(elements: PickerPopupElements | null): void;
+  prepareSubmission(): boolean;
+  selectTime(value: TimeValue, endpoint?: 'start' | 'end'): boolean;
   getSnapshot(): RevisionSnapshot<DateTimeRangePickerState>;
   getFieldStates(): NonNullable<DateTimeRangePickerOptions['defaultFieldStates']>;
   getMonth(): readonly (readonly DateValue[])[];
@@ -198,12 +196,10 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   readonly #endTimeField: FacadeConnection<TimeFieldConnection> | null;
   readonly #startDateField: FacadeConnection<DateFieldConnection> | null;
   readonly #endDateField: FacadeConnection<DateFieldConnection> | null;
-  readonly #layer: DOMLayerBinding;
-  readonly #position: PositionConnection;
-  readonly #visibility: HiddenBinding | undefined;
+  readonly #popup: PickerPopup;
+  #choice: { readonly value: TimeValue; readonly endpoint: 'start' | 'end' } | null = null;
   #syncingFields = false;
   #disconnected = false;
-  #focusGeneration = 0;
   readonly #trigger = (): void => { if (this.getActive()) this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => {
     if (!this.getActive()) return;
@@ -219,7 +215,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       ? event.target.closest<HTMLElement>('[data-date-picker-id]')
       : null;
     const parts = target?.dataset['datePickerId']?.split('-').map(Number);
-    if (target !== null && this.options.grid.contains(target) && parts?.length === 3) {
+    if (target !== null && this.#popup.elements?.grid.contains(target) && parts?.length === 3) {
       this.handleEvent({
         type: 'select-date',
         value: { year: parts[0] as number, month: parts[1] as number, day: parts[2] as number },
@@ -235,10 +231,13 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.options = options;
     this.runtime = runtime;
     this.controls = controls;
-    const manageVisibility = options.manageVisibility;
-    this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
-    this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, ...(options.layerHost === undefined ? {} : { layerHost: options.layerHost }), dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.calendar.open, close: () => { this.handleEvent('close'); }, presentation: { suspend: () => this.#suspendResources(), resume: () => this.#resumeResources() } });
-    this.#position = createPickerPosition(options.root, options.trigger, options);
+    this.#popup = new PickerPopup(options, {
+      readOpen: () => this.getSnapshot().state.calendar.open,
+      close: restoreFocus => { this.#handleEvent('close', restoreFocus); },
+      trigger: this.#trigger, keydown: this.#keydown, click: this.#click,
+      suspend: () => { this.#choice = null; for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) field?.suspend(); options.onUpdate?.(); },
+      resume: () => { for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) field?.resume(); this.refresh(); options.onUpdate?.(); },
+    });
     const state = runtime.getSnapshot().state;
     this.#startDateField = options.startDateInput === undefined ? null : createDateField({
       input: options.startDateInput,
@@ -247,7 +246,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       ...(options.defaultFieldStates?.startDate === undefined ? {} : { defaultInputState: detachedFieldState(options.defaultFieldStates.startDate).inputState }),
       ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
-      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      readOnly: options.readOnly === true || options.startDateInput.readOnly,
       required: true,
       onValueChange: (value) => {
         if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-start-date', value });
@@ -261,7 +260,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       ...(options.defaultFieldStates?.endDate === undefined ? {} : { defaultInputState: detachedFieldState(options.defaultFieldStates.endDate).inputState }),
       ...(options.policies?.date === undefined ? {} : { policies: options.policies.date }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
-      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      readOnly: options.readOnly === true || options.endDateInput.readOnly,
       required: true,
       onValueChange: (value) => {
         if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-end-date', value });
@@ -275,7 +274,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       ...(options.defaultFieldStates?.startTime === undefined ? {} : { defaultInputState: detachedFieldState(options.defaultFieldStates.startTime).inputState }),
       ...(options.policies?.startTime === undefined ? {} : { policies: options.policies.startTime }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
-      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      readOnly: options.readOnly === true || options.startTimeInput.readOnly,
       required: true,
       onValueChange: (value) => {
         if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-start-time', value });
@@ -289,29 +288,39 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       ...(options.defaultFieldStates?.endTime === undefined ? {} : { defaultInputState: detachedFieldState(options.defaultFieldStates.endTime).inputState }),
       ...(options.policies?.endTime === undefined ? {} : { policies: options.policies.endTime }),
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
-      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      readOnly: options.readOnly === true || options.endTimeInput.readOnly,
       required: true,
       onValueChange: (value) => {
         if (!this.#syncingFields && value !== null) return this.handleEvent({ type: 'set-end-time', value });
         return true;
       },
     });
-    this.#bindNative();
-    options.root.setAttribute('role', 'dialog');
-    options.root.setAttribute('aria-modal', 'false');
-    options.grid.setAttribute('role', 'grid');
-    setInteractionAttributes(options.trigger, options, true);
-    setInteractionAttributes(options.grid, options);
-    this.refresh();
-    if (options.layerHost === null || options.layerHost?.active === false) this.suspend();
+    this.setPopup(pickerPopupElements(options));
+    if (!this.getActive()) for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) field?.suspend();
   }
 
-  public getActive(): boolean { return !this.#disconnected && this.#layer.getActive(); }
-  public getLayerOrder(): number | null { return this.#layer.getLayerOrder(); }
-  public subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription { return this.#layer.subscribeLayerPresentation(listener); }
-  public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#layer.syncLayerParent(parent); }
-  public suspend(): void { this.#layer.suspend(); }
-  public resume(): void { this.#layer.resume(); }
+  public getActive(): boolean { return !this.#disconnected && this.#popup.getActive(); }
+  public getLayerOrder(): number | null { return this.#popup.getLayerOrder(); }
+  public subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription { return this.#popup.subscribe(listener); }
+  public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#popup.reparent(parent); }
+  public suspend(): void { this.#popup.suspend(); }
+  public resume(): void { this.#popup.resume(); }
+  public setPopup(elements: PickerPopupElements | null): void { this.#popup.attach(elements); this.refresh(); }
+  public prepareSubmission(): boolean { return [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField].every(field => field?.prepareSubmission() ?? true); }
+
+  public selectTime(value: TimeValue, endpoint?: 'start' | 'end'): boolean {
+    if (!this.getActive() || this.options.disabled === true || this.options.readOnly === true || endpoint === undefined) return false;
+    const field = endpoint === 'start' ? this.#startTimeField : this.#endTimeField;
+    const draft = field?.getSnapshot().state;
+    if (draft?.inputState.composition != null
+      || !tryCreateTimeFieldState(value, undefined, draft?.format).ok) return false;
+    const choice = { value, endpoint };
+    this.#choice = choice;
+    const accepted = this.handleEvent({ type: endpoint === 'start' ? 'set-start-time' : 'set-end-time', value });
+    if (!accepted) this.#choice = null;
+    else if (this.#choice === choice) queueMicrotask(() => { if (this.#choice === choice) this.#choice = null; });
+    return accepted;
+  }
   public getSnapshot(): RevisionSnapshot<DateTimeRangePickerState> { return this.runtime.getSnapshot(); }
   public getFieldStates(): NonNullable<DateTimeRangePickerOptions['defaultFieldStates']> {
     return Object.freeze({
@@ -379,16 +388,16 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     setDatePickerCellFocusEntry(element, available, compareDateValues(state.calendar.highlighted, value) === 0);
   }
 
-  public handleEvent(event: DateTimeRangePickerEvent): boolean {
+  public handleEvent(event: DateTimeRangePickerEvent): boolean { return this.#handleEvent(event, true); }
+  #handleEvent(event: DateTimeRangePickerEvent, restoreFocus: boolean): boolean {
     const result = this.runtime.handle(event);
     if (result.ok) {
       this.refresh();
       this.options.onUpdate?.();
-      if (this.getActive() && !this.getSnapshot().state.calendar.open && result.commands.some((command) => command.type === 'open-changed' && !command.open)) {
-        this.options.trigger.focus();
-      } else if (this.getActive() && result.commands.some((command) => command.type === 'highlight-changed')) {
-        const generation = this.#focusGeneration;
-        queueMicrotask(() => { if (this.getActive() && generation === this.#focusGeneration) focusDatePickerEntry(this.options.grid); });
+      if (this.getActive()) {
+        const open = result.commands.find(command => command.type === 'open-changed')?.open;
+        if (restoreFocus && open === false && !this.getSnapshot().state.calendar.open) this.#popup.focusTrigger();
+        else if (open === true || calendarFocusEvent(event) && result.commands.some(command => command.type === 'highlight-changed')) this.#popup.focusGrid();
       }
     }
     return result.ok;
@@ -397,14 +406,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
   public refresh(): void {
     if (this.#disconnected) return;
     const state = this.getSnapshot().state;
-    setDatePickerGridFocusEntry(
-      this.options.grid,
-      isCalendarValueAvailable(state.calendar.highlighted, this.options.policies?.date),
-    );
-    this.#visibility?.setHidden(!this.getActive() || !state.calendar.open);
-    this.options.trigger.setAttribute('aria-haspopup', 'dialog');
-    this.options.trigger.setAttribute('aria-expanded', String(state.calendar.open));
-    if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
+    const grid = this.#popup.elements?.grid;
+    if (grid !== undefined) setDatePickerGridFocusEntry(grid, isCalendarValueAvailable(state.calendar.highlighted, this.options.policies?.date));
     for (const [input, value] of [
       [this.options.startDateTimeInput, state.value?.start],
       [this.options.endDateTimeInput, state.value?.end],
@@ -422,9 +425,13 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       syncDateField(this.#endDateField, state.value?.end.date ?? null);
       syncTimeField(this.#startTimeField, state.startTime);
       syncTimeField(this.#endTimeField, state.endTime);
+      const choice = this.#choice;
+      if (choice !== null && compareTimeValues(choice.value, choice.endpoint === 'start' ? state.startTime : state.endTime) === 0) {
+        this.#choice = null;
+        (choice.endpoint === 'start' ? this.#startTimeField : this.#endTimeField)?.replaceDraft(choice.value);
+      }
     } finally { this.#syncingFields = false; }
-    this.#layer.sync();
-    if (this.getActive()) this.#position.update();
+    this.#popup.refresh();
   }
 
   public disconnect(): void {
@@ -432,33 +439,10 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     this.#disconnected = true;
     let failed = false, failure: unknown;
     const drain = (operation: () => void): void => { try { operation(); } catch (error) { if (!failed) { failed = true; failure = error; } } };
-    drain(() => this.#layer.disconnect()); drain(() => this.#position.disconnect()); drain(() => this.#visibility?.disconnect());
+    this.#choice = null;
+    drain(() => this.#popup.disconnect());
     for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) drain(() => field?.disconnect());
-    this.#unbindNative(); if (failed) throw failure;
-  }
-  #bindNative(): void {
-    this.options.trigger.addEventListener('click', this.#trigger);
-    this.options.grid.addEventListener('keydown', this.#keydown);
-    this.options.grid.addEventListener('click', this.#click);
-  }
-  #unbindNative(): void {
-    this.options.trigger.removeEventListener('click', this.#trigger);
-    this.options.grid.removeEventListener('keydown', this.#keydown);
-    this.options.grid.removeEventListener('click', this.#click);
-  }
-  #suspendResources(): void {
-    this.#focusGeneration += 1; this.#unbindNative();
-    let failed = false, failure: unknown;
-    const drain = (operation: () => void): void => { try { operation(); } catch (error) { if (!failed) { failed = true; failure = error; } } };
-    for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) drain(() => field?.suspend());
-    drain(() => this.#position.disconnect());
-    if (!this.#disconnected) drain(() => this.#visibility?.setHidden(true));
-    drain(() => this.options.onUpdate?.()); if (failed) throw failure;
-  }
-  #resumeResources(): void {
-    this.#bindNative();
-    for (const field of [this.#startDateField, this.#endDateField, this.#startTimeField, this.#endTimeField]) field?.resume();
-    this.refresh(); this.options.onUpdate?.();
+    if (failed) throw failure;
   }
 }
 

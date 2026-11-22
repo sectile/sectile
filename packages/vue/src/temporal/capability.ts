@@ -1,5 +1,6 @@
 import type { TemporalFormatter } from '@sectile/dom/temporal/format';
 import type { DateFieldFormat } from '@sectile/temporal/date-field';
+import type { TimeValue } from '@sectile/temporal/time-field';
 export type PickerCapabilityGranularity = 'day' | 'month' | 'year';
 
 export interface PickerInputPresentation {
@@ -12,6 +13,7 @@ export interface PickerCapabilityConnection extends Pick<import('@sectile/dom/te
   Partial<Pick<import('@sectile/dom/temporal/date-picker').DatePickerConnection, 'getLayerOrder' | 'subscribeLayerPresentation' | 'syncLayerParent' | 'setPopup' | 'prepareSubmission'>> {
   getSnapshot(): { readonly state: unknown };
   getFieldStates?(): unknown;
+  selectTime?(value: TimeValue, endpoint?: 'start' | 'end'): boolean;
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];

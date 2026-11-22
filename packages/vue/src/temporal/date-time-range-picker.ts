@@ -15,7 +15,8 @@ export interface DateTimeRangePickerRootProps extends PickerPartProps, PickerPos
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateTimeRangePickerOptions['policies'];
 }
-export const DateTimeRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimeRangePickerCapability, 'SectileDateTimeRangePickerRoot', { formLayout: dateTimeSubmissionLayout });
+export const DateTimeRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimeRangePickerCapability, 'SectileDateTimeRangePickerRoot', { formLayout: dateTimeSubmissionLayout, fieldFirst: true });
+export { DateTimeRangePickerTimeChoices, type DateTimeRangePickerTimeChoicesProps, type DateTimeTimeChoicesSlotProps } from './date-time-time-choices.js';
 export type DateTimeRangePickerRootSlotProps = RangePickerRootSlotProps<DateTimeRange | null>;
 export type DateTimeRangePickerContentSlotProps = RangePickerContentSlotProps<DateTimeRange | null>;
 export type DateTimeRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateTimeRangePickerRoot>['$props']['onUpdate:modelValue']>;

@@ -115,7 +115,6 @@ interface ColumnMetadata {
 interface PickerContext {
   readonly value: ComputedRef<TimeValue | null>;
   readonly state: ComputedRef<TimePickerState>;
-  readonly metadata: ComputedRef<readonly ColumnMetadata[]>;
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly composing: ComputedRef<boolean>;
@@ -133,6 +132,7 @@ interface LivePicker {
 }
 const pickerKey = Symbol('SectileTimePicker');
 const columnKey = Symbol('SectileTimePickerColumn');
+const timeColumnsKey = Symbol('SectileTimeColumns');
 const emptyIDs: readonly string[] = Object.freeze([]);
 
 function usePicker(): PickerContext {
@@ -152,12 +152,23 @@ function projectView(current: () => LivePicker | null): TimePickerExpose {
 function inputView(view: TimePickerExpose): TimePickerInputExpose {
   return { get element() { return view.element; }, focus: view.focus, select: view.select };
 }
-function columnMetadata(model: ChoiceModel): readonly ColumnMetadata[] {
-  return Object.freeze(unwrap(model.resolve(null)).columns.map(column => {
+function columnMetadata(columns: ChoiceModel['columns']): readonly ColumnMetadata[] {
+  return Object.freeze(columns.map(column => {
     const labels = column.choices.map(choice => choice.label);
     return Object.freeze({ part: column.part, items: Object.freeze(column.choices.map(choice => String(choice.id))),
       textValue: (id: string) => labels[Number(id)] ?? id });
   }));
+}
+interface TimeColumnsOptions extends Pick<PickerContext, 'state' | 'disabled' | 'readonly' | 'composing'> {
+  readonly model: ComputedRef<ChoiceModel | null>;
+  selectChoice(part: TimePickerPart, choice: number): boolean;
+}
+interface TimeColumnsContext extends Omit<TimeColumnsOptions, 'model'> {
+  readonly metadata: ComputedRef<readonly ColumnMetadata[]>;
+}
+export function provideTimePickerColumns(options: TimeColumnsOptions): void {
+  const identities = computed(() => options.model.value?.columns);
+  provide<TimeColumnsContext>(timeColumnsKey, { ...options, metadata: computed(() => columnMetadata(identities.value ?? [])) });
 }
 function createTimePickerRoot() {
   const popupProps = (PopoverRoot as unknown as { readonly props: ComponentObjectPropsOptions<PopoverRootProps> }).props;
@@ -183,7 +194,6 @@ function createTimePickerRoot() {
       const input = shallowRef<NativeFieldValueControl<TimeValue> | null>(null);
       const composing = computed(() => input.value?.composing.value ?? false);
       const state = computed(() => unwrap(model.value.resolve(value.value)));
-      const metadata = computed(() => columnMetadata(model.value));
       let popup: PopoverRootExpose | null = null, inputs = 0, disposed = false;
       const handle = createComponentHandle<LivePicker, TimePickerExpose>(projectView);
       const publish = (next: TimeValue | null): boolean => {
@@ -216,7 +226,7 @@ function createTimePickerRoot() {
         return result;
       });
       provide<PickerContext>(pickerKey, {
-        value, state, metadata, disabled, readonly, composing, inputProps, view: handle.view, publish,
+        value, state, disabled, readonly, composing, inputProps, view: handle.view, publish,
         attach(control) {
           input.value = control;
           return () => { if (input.value === control) input.value = null; };
@@ -227,6 +237,7 @@ function createTimePickerRoot() {
           return () => { inputs--; input.value = null; };
         },
       });
+      provideTimePickerColumns({ model, state, disabled, readonly, composing, selectChoice: handle.view.selectChoice });
       onBeforeUnmount(() => { disposed = true; handle.release(); input.value = null; popup = null; });
       return () => {
         const forwarded: Record<string, unknown> = {};
@@ -301,7 +312,8 @@ export const TimePickerContent = /* @__PURE__ */ defineComponent<PopoverPartProp
 
 export const TimePickerColumn = /* @__PURE__ */ defineComponent<TimePickerColumnProps, TimePickerColumnEmits, string, SlotsType<TimePickerColumnSlots>>(
   (props, { attrs, slots, emit }) => {
-    const context = usePicker();
+    const context = inject<TimeColumnsContext>(timeColumnsKey);
+    if (context === undefined) throw new TypeError('TimePickerColumn requires a time choice group.');
     provideFormBoundary();
     const column = computed(() => {
       const found = context.state.value.columns.find(current => current.part === props.part);
@@ -325,7 +337,7 @@ export const TimePickerColumn = /* @__PURE__ */ defineComponent<TimePickerColumn
       as: props.as ?? 'div', asChild: props.asChild ?? false, 'aria-label': props.label,
       'data-scope': 'time-picker', 'data-part': 'column', 'data-time-part': props.part,
       onHighlight: (id: string | null) => emit('highlight', id === null ? null : Number(id)),
-      onActivate: (id: string) => { if (context.view.selectChoice(props.part, Number(id))) emit('activate', Number(id)); },
+      onActivate: (id: string) => { if (context.selectChoice(props.part, Number(id))) emit('activate', Number(id)); },
     }, { default: (state: ListboxRootSlotProps) => slots.default?.({
       part: props.part, choices: column.value.choices, selected: column.value.selected,
       highlighted: state.highlightedValue === null ? null : Number(state.highlightedValue),

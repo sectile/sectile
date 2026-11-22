@@ -3,23 +3,24 @@ import { permitsInteraction } from '@sectile/core/interaction';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyTimeFieldEvent, formatTimeValue, formatTimeFieldValue, timeFieldMaximum, timeFieldNumericSegment, tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
+import { applyTimeFieldEvent, formatTimeValue, formatTimeFieldValue, parseTimeFieldValue, compareTimeValues, timeFieldMaximum, timeFieldNumericSegment, tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldCommand, type TimeFieldEvent, type TimeFieldPolicies, type TimeFieldState, type TimeValue } from '@sectile/temporal/time-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
+import { bindTemporalSubmit } from './internal/submit.js';
 
 export { formatTimeValue } from '@sectile/temporal/time-field';
 export type { TimeValue } from '@sectile/temporal/time-field';
 
-export interface TimeFieldOptions { readonly input: HTMLInputElement; readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly native?: boolean; readonly format?: TimeFieldFormat; readonly onValueChange?: (value: TimeValue | null) => boolean | void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
+export interface TimeFieldOptions { readonly input: HTMLInputElement; readonly policies?: TimeFieldPolicies; readonly value?: TimeValue | null; readonly defaultValue?: TimeValue | null; readonly inputState?: TextEditingState; readonly defaultInputState?: TextEditingState; readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly label?: string; readonly native?: boolean; readonly format?: TimeFieldFormat; readonly prepareForm?: false; readonly onValueChange?: (value: TimeValue | null) => boolean | void; readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void; readonly onUpdate?: () => void; }
 
 export type TimeFieldValueChangeHandler = NonNullable<TimeFieldOptions['onValueChange']>;
 export type TimeFieldInputStateChangeHandler = NonNullable<TimeFieldOptions['onInputStateChange']>;
 export type TimeFieldUpdateHandler = NonNullable<TimeFieldOptions['onUpdate']>;
 export interface TimeFieldControlledValues { readonly value?: TimeValue | null; readonly inputState?: TextEditingState; }
-export interface TimeFieldConnection { getActive(): boolean; suspend(): void; resume(): void; getSnapshot(): RevisionSnapshot<TimeFieldState>; getText(): string; getValue(): TimeValue | null; syncControlledValues(values: TimeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<TimeFieldState>>; handleEvent(event: TimeFieldEvent): boolean; refresh(): void; disconnect(): void; }
+export interface TimeFieldConnection { getActive(): boolean; suspend(): void; resume(): void; getSnapshot(): RevisionSnapshot<TimeFieldState>; getText(): string; getValue(): TimeValue | null; syncControlledValues(values: TimeFieldControlledValues): DOMTemporalResult<RevisionSnapshot<TimeFieldState>>; handleEvent(event: TimeFieldEvent): boolean; prepareSubmission(): boolean; replaceDraft(value: TimeValue | null): boolean; refresh(): void; disconnect(): void; }
 
 export function createTimeField(options: TimeFieldOptions): FacadeConnection<TimeFieldConnection> { return unwrap(tryCreateTimeField(options)); }
 export function tryCreateTimeField(options: TimeFieldOptions): DOMTemporalResult<FacadeConnection<TimeFieldConnection>> { return createDOMTemporalFacadeConnection(options, construct); }
@@ -34,6 +35,7 @@ class DOMTimeField implements TimeFieldConnection {
   readonly #options: TimeFieldOptions; readonly #runtime: DOMTemporalController<TimeFieldState, TimeFieldEvent, TimeFieldCommand>; readonly #valueControlled: boolean; readonly #inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
   readonly #editable: boolean;
+  readonly #submission = bindTemporalSubmit(() => this.prepareSubmission());
   readonly #keydown = (event: KeyboardEvent): void => {
     if (!this.getActive() || !this.#editable || this.#binding.isComposing || event.isComposing) return;
     const key = event.key;
@@ -63,7 +65,7 @@ class DOMTimeField implements TimeFieldConnection {
     this.refresh();
   }
   public getActive(): boolean { return this.#binding.isActive; }
-  public suspend(): void { this.#binding.suspend(); }
+  public suspend(): void { this.#submission(); this.#binding.suspend(); }
   public resume(): void { this.#binding.resume(); try { if (this.getActive()) this.refresh(); } catch (error) { this.suspend(); throw error; } }
   public getSnapshot(): RevisionSnapshot<TimeFieldState> { return this.#runtime.getSnapshot(); }
   public getText(): string { return this.getSnapshot().state.inputState.snapshot.text; }
@@ -79,8 +81,29 @@ class DOMTimeField implements TimeFieldConnection {
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); } return result;
   }
   public handleEvent(event: TimeFieldEvent): boolean { const previous = this.getSnapshot(); const result = this.#runtime.handle(event); setFieldValidity(this.#options.input, result); if (result.ok) { for (const command of result.commands) if (command.type === 'value-committed' && this.#options.onValueChange?.(command.value) === false) { this.#runtime.replace({ ok: true, value: previous.state }); this.refresh(); setFieldValidity(this.#options.input, { ok: false, error: { message: 'The parent control rejected the time value.' } }); this.#options.onUpdate?.(); return false; } this.refresh(); this.#options.onUpdate?.(); } return result.ok; }
-  public refresh(): void { const input = this.#options.input; const native = this.#options.native === true, format = this.getSnapshot().state.format; input.type = native ? 'time' : 'text'; input.inputMode = native ? '' : format?.dayPeriods !== undefined ? 'text' : 'numeric'; const placeholder = native ? '' : getTimeFieldPlaceholder(format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render(); }
-  public disconnect(): void { this.#binding.disconnect(); }
+  public prepareSubmission(): boolean {
+    if (!this.getActive() || !this.#editable || this.#options.input.name === '') return true;
+    if (this.#binding.isComposing) return false;
+    const { format } = this.getSnapshot().state;
+    const text = format === undefined ? this.getText().trim() : this.getText();
+    if (text.trim() === '') return this.getValue() === null || this.handleEvent('commit') && this.getValue() === null;
+    const parsed = parseTimeFieldValue(text, format);
+    if (!parsed.ok) return this.handleEvent('commit');
+    const adopted = (): boolean => { const value = this.getValue(); return value !== null && compareTimeValues(value, parsed.value) === 0; };
+    return adopted() || this.handleEvent('commit') && adopted();
+  }
+
+  public replaceDraft(value: TimeValue | null): boolean {
+    if (this.#binding.isComposing) return false;
+    const update = this.#runtime.replace(tryCreateTimeFieldState(value, undefined, this.getSnapshot().state.format));
+    if (update.ok) { this.refresh(); this.#options.onUpdate?.(); }
+    return update.ok;
+  }
+
+  public refresh(): void { const input = this.#options.input; const native = this.#options.native === true, format = this.getSnapshot().state.format; input.type = native ? 'time' : 'text'; input.inputMode = native ? '' : format?.dayPeriods !== undefined ? 'text' : 'numeric'; const placeholder = native ? '' : getTimeFieldPlaceholder(format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render();
+    if (this.#editable && this.#options.prepareForm !== false && this.getActive()) this.#submission(input.form);
+  }
+  public disconnect(): void { this.#submission(); this.#binding.disconnect(); }
   #text(input: TextInput): boolean { const event = toTextEvent(input); return event !== null && this.handleEvent({ type: 'text', event }); }
   #syncSelection(): void {
     this.handleEvent({ type: 'text', event: nativeFieldSelectionEvent(this.#options.input) });

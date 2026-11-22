@@ -168,6 +168,41 @@ test('an input-only date picker keeps its editor while calendar parts come and g
   } finally { app.unmount(); host.remove(); }
 });
 
+test('date-time range time choices replace only their own dirty input', async () => {
+  const parts = await import('../.verification-dist/temporal/date-time-range-picker.js');
+  const host = document.createElement('div'); document.body.append(host);
+  const commits = [];
+  let chooseStart;
+  const app = createApp({ render: () => h(parts.DateTimeRangePickerRoot, {
+    defaultValue: { start, end }, defaultOpen: true, position: false,
+    'onUpdate:modelValue': value => commits.push(value),
+  }, () => [
+    h(parts.DateTimeRangePickerStartTimeInput), h(parts.DateTimeRangePickerEndTimeInput),
+    h(parts.DateTimeRangePickerTrigger), h(parts.DateTimeRangePickerContent, {}, () => [
+      h(parts.DateTimeRangePickerGrid),
+      h(parts.DateTimeRangePickerTimeChoices, { endpoint: 'start', label: 'Start time' },
+        { default: state => { chooseStart = state.selectChoice; return h('span', state.value.minute); } }),
+      h(parts.DateTimeRangePickerTimeChoices, { endpoint: 'end', label: 'End time' }),
+    ]),
+  ]) });
+  app.mount(host);
+  try {
+    await settle();
+    const a = host.querySelector('[data-part=start-time-input]'), b = host.querySelector('[data-part=end-time-input]');
+    a.value = '09:'; a.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    b.value = '17:'; b.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    assert.equal(chooseStart('minute', 45), true);
+    await settle();
+    assert.equal(commits.length, 1);
+    assert.equal(commits[0].start.time.minute, 45);
+    assert.deepEqual(commits[0].start.date, start.date);
+    assert.deepEqual(commits[0].end.date, end.date);
+    assert.equal(a.value, `${String(start.time.hour).padStart(2, '0')}:45`);
+    assert.equal(b.value, '17:');
+    assert.ok(host.querySelector('[aria-label="End time"] [role=listbox]'));
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('required composite pickers validate without changing native submitted values or persistent associations', async () => {
   const date = { year: 2026, month: 10, day: 14 };
   for (const [file, prefix, range, time, inline] of [

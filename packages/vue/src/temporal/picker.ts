@@ -1,6 +1,6 @@
 import {
   Fragment, computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, onUpdated,
-  nextTick, provide, shallowRef, ssrContextKey, watch, type AllowedComponentProps, type Component,
+  nextTick, provide, shallowReactive, shallowRef, ssrContextKey, watch, type AllowedComponentProps, type Component,
   type ComponentCustomProps, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
   type VNodeProps, type ShallowRef,
 } from 'vue';
@@ -11,6 +11,10 @@ import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-pick
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateFieldFormat, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
+import type { DateTimePickerState } from '@sectile/temporal/date-time-picker';
+import type { DateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
+import type { DateTimeChoiceLimits } from '@sectile/temporal/time-picker';
+import type { TimeValue } from '@sectile/temporal/time-field';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';
 import type { FormSubmissionRegistration } from '../form/control.js';
@@ -178,6 +182,8 @@ interface Context {
   registerPresence(present: ShallowRef<boolean>): () => void;
   isSubmission(part: PickerInputPart): boolean;
   isEditable(part: PickerInputPart): boolean;
+  readTimeChoices(endpoint?: 'start' | 'end'): PickerTimeChoiceSource;
+  selectTime(value: TimeValue, endpoint?: 'start' | 'end'): boolean;
   rebindInputs(): void;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   setInputFocused(part: PickerInputPart, focused: boolean): void;
@@ -193,6 +199,7 @@ interface Context {
   dayAvailable(value: DateValue): boolean;
   periodAvailable(value: CalendarMonthValue | PickerYearValue): boolean;
 }
+interface PickerTimeChoiceSource { readonly value: TimeValue | null; readonly limits: DateTimeChoiceLimits; readonly composing: boolean; }
 const key = Symbol('SectileDatePickerRoot');
 const noPendingPickerValue = Symbol('no-pending-picker-value');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
@@ -243,6 +250,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
       const rangeAnchor = shallowRef<DateValue | null>(null);
+      const dateTimeState = shallowRef<DateTimePickerState | DateTimeRangePickerState>();
       const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
       const popupElements = (): PickerPopupElements | null => {
         const root = elements.get('content'), grid = elements.get('grid'), trigger = elements.get('trigger') ?? inlineTrigger;
@@ -340,6 +348,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const refresh = (): void => {
         const raw = connection.value?.getSnapshot().state; if (raw === undefined) return;
         const picked = extractState(kind, raw); localValue.value = picked.value; localHighlight.value = picked.highlighted; rangeAnchor.value = picked.anchor;
+        if (kind === 'date-time' || kind === 'date-time-range') dateTimeState.value = raw as DateTimePickerState | DateTimeRangePickerState;
         localOpen.value = picked.open; localView.value = picked.view; localViewMode.value = picked.viewMode;
         if (connection.value !== undefined) {
           dates.value = picked.viewMode === 'week' ? [connection.value.getWeek()] : picked.viewMode === 'month' ? connection.value.getMonth() : [];
@@ -441,7 +450,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       let mounted = false;
       let connectQueued = false;
       const focusedInputs = new Set<PickerInputPart>();
-      const composingInputs = new Set<PickerInputPart>();
+      const composingInputs = shallowReactive(new Set<PickerInputPart>());
       let reconnectPending = false;
       let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
       const hasActiveInput = (): boolean => focusedInputs.size > 0 || composingInputs.size > 0;
@@ -532,6 +541,34 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           ? { placeholder: granularity === 'year' ? 'YYYY' : 'YYYY-MM', inputmode: 'numeric' } : undefined),
         isSubmission: part => config.formLayout?.includes(submissionLayout!.value, part) ?? true,
         isEditable,
+        readTimeChoices: endpoint => {
+          const state = dateTimeState.value;
+          const composing = (part: PickerInputPart) => composingInputs.has(part);
+          if (kind === 'date-time') {
+            const snapshot = state as DateTimePickerState | undefined;
+            const policies = runtimeProps.policies as DateTimePickerOptions['policies'];
+            return { value: snapshot?.time ?? null, composing: composing('time-input') || composing('date-time-input'), limits: {
+              date: snapshot?.value?.date ?? snapshot?.calendar.highlighted ?? localHighlight.value,
+              ...(policies?.time?.min === undefined ? {} : { min: policies.time.min }),
+              ...(policies?.time?.max === undefined ? {} : { max: policies.time.max }),
+              ...(policies?.min === undefined ? {} : { dateTimeMin: policies.min }),
+              ...(policies?.max === undefined ? {} : { dateTimeMax: policies.max }),
+            } };
+          }
+          const snapshot = state as DateTimeRangePickerState | undefined;
+          const policies = runtimeProps.policies as DateTimeRangePickerOptions['policies'];
+          const target = endpoint ?? 'start', time = target === 'start' ? policies?.startTime : policies?.endTime;
+          const opposite = target === 'start' ? snapshot?.value?.end : snapshot?.value?.start;
+          return { value: (target === 'start' ? snapshot?.startTime : snapshot?.endTime) ?? null, composing: composing(`${target}-time-input`), limits: {
+            date: snapshot?.value?.[target].date ?? null, endpoint: target,
+            ...(opposite === undefined ? {} : { opposite }),
+            ...(time?.min === undefined ? {} : { min: time.min }),
+            ...(time?.max === undefined ? {} : { max: time.max }),
+            ...(policies?.min === undefined ? {} : { dateTimeMin: policies.min }),
+            ...(policies?.max === undefined ? {} : { dateTimeMax: policies.max }),
+          } };
+        },
+        selectTime: (value, endpoint) => connection.value?.selectTime?.(value, endpoint) ?? false,
         rebindInputs: scheduleConnect,
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
@@ -905,6 +942,9 @@ export function createPickerViewTrigger(view: CalendarViewMode, name: string) {
 }
 
 function useRoot(part: string): Context { const root = inject<Context>(key); if (root === undefined) throw new TypeError(`${part} must be used inside a date picker root.`); return root; }
+export function usePickerTimeChoices(part: string): Pick<Context, 'kind' | 'state' | 'active' | 'readTimeChoices' | 'selectTime'> {
+  return useRoot(part);
+}
 function firstPickerInput(
   elements: ReadonlyMap<string, HTMLElement>,
   kind: PickerKind,
