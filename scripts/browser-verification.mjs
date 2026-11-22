@@ -153,6 +153,43 @@ try {
     assert.notEqual(await input.getAttribute('aria-invalid'), 'true');
     report.results.push({ id: 'date-segment-keyboard', result: 'passed' });
 
+    for (const direction of ['forward', 'backward']) {
+      await page.evaluate(() => window.sectileProbe.dateClipboard());
+      await input.fill('2026-08-22'); await input.press('Enter');
+      await page.locator('#clipboard-source').selectText();
+      await page.keyboard.press('ControlOrMeta+c');
+      await input.focus();
+      await input.evaluate((element, direction) => element.setSelectionRange(8, 10, direction), direction);
+      await page.keyboard.press('ControlOrMeta+v');
+      assert.equal(await input.inputValue(), '2026-08-19');
+      await page.keyboard.press('x');
+      assert.equal(await input.inputValue(), '2026-08-19');
+      assert.deepEqual(await page.evaluate(() => window.sectileProbe.dateClipboardEvents), [
+        { type: 'paste', trusted: true, text: '19' }, { type: 'rejection', trusted: true, prevented: true },
+      ]);
+      await page.keyboard.press('ControlOrMeta+z');
+      assert.equal(await input.inputValue(), '2026-08-22');
+      await page.keyboard.press('ControlOrMeta+Shift+z');
+      assert.equal(await input.inputValue(), '2026-08-19');
+    }
+    report.results.push({ id: 'date-segment-clipboard-and-undo', result: 'passed' });
+
+    await page.evaluate(() => window.sectileProbe.dateTimeRangeChoices());
+    await page.getByRole('button', { name: 'Choose date and times' }).click();
+    for (const [endpoint, minute] of [['Start', '15'], ['End', '45']]) {
+      await page.getByRole('group', { name: `${endpoint} choices` }).getByRole('listbox', { name: 'Minutes' })
+        .getByRole('option', { name: minute, exact: true }).click();
+      assert.equal(await page.getByRole('textbox', { name: `${endpoint} input` }).inputValue(), `00:${minute}`);
+    }
+    assert.deepEqual(await page.evaluate(() => window.sectileProbe.dateTimeRangeProposals), []);
+    await page.getByRole('gridcell', { name: '22', exact: true }).click();
+    await page.getByRole('gridcell', { name: '24', exact: true }).click();
+    assert.deepEqual(await page.evaluate(() => window.sectileProbe.dateTimeRangeProposals), [{
+      start: { date: { year: 2026, month: 8, day: 22 }, time: { hour: 0, minute: 15, second: 0, millisecond: 0 } },
+      end: { date: { year: 2026, month: 8, day: 24 }, time: { hour: 0, minute: 45, second: 0, millisecond: 0 } },
+    }]);
+    report.results.push({ id: 'datetime-range-stage-time-before-dates', result: 'passed' });
+
     await page.evaluate(() => window.sectileProbe.composedTrigger('menu'));
     const opener = page.locator('[data-composed-native]');
     await opener.click();

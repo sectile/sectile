@@ -29,6 +29,10 @@ import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '@sectil
 import { useDataGrid, createDataGridComponents } from '@sectile/vue/data-grid';
 import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue/tree-select';
 import { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } from '@sectile/vue/temporal/date-time-range-field';
+import {
+  DateTimeRangePickerRoot, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger,
+  DateTimeRangePickerContent, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerTimeChoices,
+} from '@sectile/vue/temporal/date-time-range-picker';
 
 const host = document.querySelector('#probe');
 const style = document.createElement('style');
@@ -74,6 +78,42 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
+  async dateTimeRangeChoices() {
+    reset();
+    const value = ref(null), proposals = [];
+    const start = { year: 2026, month: 8, day: 22 }, end = { ...start, day: 24 };
+    this.dateTimeRangeProposals = proposals;
+    app = createApp({ render: () => h(DateTimeRangePickerRoot, {
+      modelValue: value.value, referenceDate: start, position: false,
+      'onUpdate:modelValue': next => { proposals.push(next); value.value = next; },
+    }, () => [
+      h(DateTimeRangePickerStartTimeInput, { 'aria-label': 'Start input' }),
+      h(DateTimeRangePickerEndTimeInput, { 'aria-label': 'End input' }),
+      h(DateTimeRangePickerTrigger, null, () => 'Choose date and times'),
+      h(DateTimeRangePickerContent, null, () => [
+        h(DateTimeRangePickerGrid, null, () => h('div', { role: 'row' }, [start, end].map(date =>
+          h(DateTimeRangePickerCell, { value: date, key: date.day }, () => String(date.day))))),
+        h(DateTimeRangePickerTimeChoices, { endpoint: 'start', label: 'Start choices' }),
+        h(DateTimeRangePickerTimeChoices, { endpoint: 'end', label: 'End choices' }),
+      ]),
+    ]) });
+    app.mount(host); await settle();
+  },
+  async dateClipboard() {
+    await this.field('date');
+    const input = host.querySelector('#date');
+    const source = document.createElement('input');
+    source.id = 'clipboard-source';
+    source.value = '19';
+    host.append(source);
+    const events = this.dateClipboardEvents = [];
+    input.addEventListener('paste', event => {
+      events.push({ type: 'paste', trusted: event.isTrusted, text: event.clipboardData.getData('text/plain') });
+    });
+    input.addEventListener('beforeinput', event => {
+      if (event.data === 'x') queueMicrotask(() => events.push({ type: 'rejection', trusted: event.isTrusted, prevented: event.defaultPrevented }));
+    });
+  },
   async composedTrigger(kind) {
     reset();
     const open = ref(false), disabled = ref(false), moved = ref(false), errors = [], requests = [];
