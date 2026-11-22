@@ -34,21 +34,22 @@ export interface TimeChoiceInterval extends Pick<TimeFieldPolicies, 'min' | 'max
 
 /** Intersect the numeric limits of a time choice for one civil date. */
 export function dateTimeChoiceInterval(limits: DateTimeChoiceLimits): TimeChoiceInterval {
-  const { date, dateTimeMin, dateTimeMax, opposite } = limits;
-  let { min, max } = limits;
+  const { date, opposite, endpoint } = limits;
+  let { min, max, dateTimeMin: lower, dateTimeMax: upper } = limits;
   if (date !== null) {
-    const lowerDate = dateTimeMin === undefined ? 1 : compareDateValues(date, dateTimeMin.date);
-    const upperDate = dateTimeMax === undefined ? -1 : compareDateValues(date, dateTimeMax.date);
-    if (lowerDate < 0 || upperDate > 0) return { empty: true };
-    if (lowerDate === 0 && dateTimeMin !== undefined && (min === undefined || compareTimeValues(min, dateTimeMin.time) < 0)) min = dateTimeMin.time;
-    if (upperDate === 0 && dateTimeMax !== undefined && (max === undefined || compareTimeValues(max, dateTimeMax.time) > 0)) max = dateTimeMax.time;
-    if (opposite !== undefined && limits.endpoint !== undefined) {
-      const order = compareDateValues(date, opposite.date);
-      if (limits.endpoint === 'start' ? order > 0 : order < 0) return { empty: true };
-      if (order === 0) {
-        if (limits.endpoint === 'start' && (max === undefined || compareTimeValues(max, opposite.time) > 0)) max = opposite.time;
-        if (limits.endpoint === 'end' && (min === undefined || compareTimeValues(min, opposite.time) < 0)) min = opposite.time;
-      }
+    if (opposite !== undefined) {
+      if (endpoint === 'end' && (lower === undefined || compareDateTimeValues(opposite, lower) > 0)) lower = opposite;
+      if (endpoint === 'start' && (upper === undefined || compareDateTimeValues(opposite, upper) < 0)) upper = opposite;
+    }
+    if (lower !== undefined) {
+      const order = compareDateValues(date, lower.date);
+      if (order < 0) return { empty: true };
+      if (order === 0 && (min === undefined || compareTimeValues(min, lower.time) < 0)) min = lower.time;
+    }
+    if (upper !== undefined) {
+      const order = compareDateValues(date, upper.date);
+      if (order > 0) return { empty: true };
+      if (order === 0 && (max === undefined || compareTimeValues(max, upper.time) > 0)) max = upper.time;
     }
   }
   return { empty: min !== undefined && max !== undefined && compareTimeValues(min, max) > 0,

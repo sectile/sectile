@@ -9,11 +9,26 @@ import { applyMonthPickerEvent, createMonthPickerState, createMonthPickerValue, 
 import { applyMonthRangePickerEvent, createMonthRangePickerState, tryCreateMonthRangePickerState } from '../../.verification-dist/pickers/period/month-range.js';
 import { applyYearPickerEvent, createYearPickerPage, createYearPickerState, createYearPickerValue, tryCreateYearPickerPage, tryCreateYearPickerState, tryCreateYearPickerValue, MAX_YEAR_PICKER_PAGE_SIZE } from '../../.verification-dist/pickers/period/year.js';
 import { applyYearRangePickerEvent, createYearRangePickerState, tryCreateYearRangePickerState } from '../../.verification-dist/pickers/period/year-range.js';
-import { applyDateTimePickerEvent, createDateTimePickerState } from '../../.verification-dist/pickers/date-time.js';
+import { applyDateTimePickerEvent, createDateTimePickerState, dateTimeChoiceInterval } from '../../.verification-dist/pickers/date-time.js';
 import { applyDateTimeRangePickerEvent, createDateTimeRangePickerState } from '../../.verification-dist/pickers/date-time-range.js';
 import { createTimeValue } from '../../.verification-dist/fields/time.js';
 
 const date = (year, month, day) => createDateValue(year, month, day);
+
+test('date-time choices enforce the closest same-day policy and opposing endpoint bounds', () => {
+  const day = date(2026, 8, 22), nextDay = date(2026, 8, 23);
+  const at = (day, hour) => createDateTimeValue(day, createTimeValue(hour));
+  const limits = { date: day, min: createTimeValue(9), max: createTimeValue(18),
+    dateTimeMin: at(day, 10), dateTimeMax: at(nextDay, 12), opposite: at(day, 16) };
+  assert.deepEqual(dateTimeChoiceInterval({ ...limits, endpoint: 'start' }),
+    { empty: false, min: createTimeValue(10), max: createTimeValue(16) });
+  assert.deepEqual(dateTimeChoiceInterval({ ...limits, endpoint: 'end' }),
+    { empty: false, min: createTimeValue(16), max: createTimeValue(18) });
+  assert.deepEqual(dateTimeChoiceInterval({ ...limits, date: nextDay, endpoint: 'start' }), { empty: true });
+  assert.equal(dateTimeChoiceInterval({ ...limits, min: createTimeValue(17), endpoint: 'start' }).empty, true);
+  assert.deepEqual(dateTimeChoiceInterval({ ...limits, date: null, endpoint: 'end' }),
+    { empty: false, min: createTimeValue(9), max: createTimeValue(18) });
+});
 
 test('date picker moves by semantic calendar units and selects atomically', () => {
   let state = createDatePickerState({ highlighted: date(2024, 1, 31), open: true });

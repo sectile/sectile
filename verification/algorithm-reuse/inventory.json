@@ -4262,7 +4262,7 @@
       "detector": "whole-state-validation",
       "category": "whole-domain-validation",
       "path": "packages/temporal/src/pickers/date-time.ts",
-      "line": 160,
+      "line": 161,
       "evidence": "const valid = tryCreateDateTimePickerState(",
       "rule": "temporal-bounded-domain",
       "classification": "bounded-small",
