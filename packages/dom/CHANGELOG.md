@@ -1,5 +1,21 @@
 # @sectile/dom
 
+## 0.22.0
+
+### Changes
+
+- fix(temporal): settle blank ranges before form submission (35560c47e)
+- fix(temporal): retain times in empty controlled date-time ranges (6b210ae5f)
+- chore(verification): record Temporal and Menu public artifacts (4dc35190b)
+- fix(temporal): isolate native segment handling and keep staged range values (fd7645067)
+- fix(temporal): preserve staged editing through ownership changes (6f133a4e8)
+- feat(vue): add optional date-time picker time choices (dfda2a6f4)
+- feat(temporal): make month and year pickers editable (2aee903e8)
+- feat(temporal): separate date editing from calendar presentation (eb7a54f5d)
+- feat(vue): support explicit date editing formats (14ee45fb7)
+- fix(menu): preserve pointer focus and dismiss one level (cf935a800)
+- fix(temporal): preserve segments during field editing (f8bfee314)
+
 ## 0.21.0
 
 ### Changes

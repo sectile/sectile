@@ -1,5 +1,13 @@
 # @sectile/core
 
+## 0.16.1
+
+### Changes
+
+- chore(verification): record Temporal and Menu public artifacts (4dc35190b)
+- fix(temporal): preserve staged editing through ownership changes (6f133a4e8)
+- fix(menu): preserve pointer focus and dismiss one level (cf935a800)
+
 ## 0.16.0
 
 ### Changes

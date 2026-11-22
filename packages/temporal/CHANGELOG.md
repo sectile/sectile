@@ -1,5 +1,17 @@
 # @sectile/temporal
 
+## 0.16.0
+
+### Changes
+
+- perf(temporal): reuse effective bounds for date-time time choices (fc6f8ad59)
+- chore(verification): record Temporal and Menu public artifacts (4dc35190b)
+- fix(temporal): isolate native segment handling and keep staged range values (fd7645067)
+- feat(vue): add optional date-time picker time choices (dfda2a6f4)
+- feat(temporal): make month and year pickers editable (2aee903e8)
+- feat(temporal): separate date editing from calendar presentation (eb7a54f5d)
+- fix(temporal): preserve segments during field editing (f8bfee314)
+
 ## 0.15.1
 
 ### Changes

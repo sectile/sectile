@@ -1,5 +1,21 @@
 # @sectile/vue
 
+## 0.22.0
+
+### Changes
+
+- fix(menu): adopt controlled open before reconfiguring the trigger (062666315)
+- test(browser): cover packed temporal choices and native clipboard (a9ec89991)
+- chore(verification): record Temporal and Menu public artifacts (4dc35190b)
+- fix(temporal): isolate native segment handling and keep staged range values (fd7645067)
+- fix(temporal): preserve staged editing through ownership changes (6f133a4e8)
+- feat(vue): add optional date-time picker time choices (dfda2a6f4)
+- feat(temporal): make month and year pickers editable (2aee903e8)
+- feat(temporal): separate date editing from calendar presentation (eb7a54f5d)
+- feat(vue): support explicit date editing formats (14ee45fb7)
+- feat(vue): expose active range anchors (b1c9f630c)
+- fix(vue): mark both period range endpoints (dfa64889b)
+
 ## 0.21.0
 
 ### Changes

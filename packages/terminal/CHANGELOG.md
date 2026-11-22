@@ -1,5 +1,13 @@
 # @sectile/terminal
 
+## 0.15.2
+
+### Changes
+
+- fix(temporal): retain times in empty controlled date-time ranges (6b210ae5f)
+- fix(temporal): isolate native segment handling and keep staged range values (fd7645067)
+- fix(temporal): preserve staged editing through ownership changes (6f133a4e8)
+
 ## 0.15.1
 
 ### Changes
