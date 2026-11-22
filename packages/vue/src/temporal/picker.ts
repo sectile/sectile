@@ -710,7 +710,8 @@ export function createPickerMonthCell(part = 'month-cell', name = 'SectilePicker
       const root = useRoot(name);
       const state = computed<PickerMonthCellSlotProps>(() => ({
         value: props.value,
-        selected: monthContainsValue(root.state.value.value, props.value) || monthContainsValue(root.rangeAnchor.value, props.value),
+        selected: periodContainsEndpoint(root.state.value.value, props.value.year, props.value.month)
+          || periodContainsEndpoint(root.rangeAnchor.value, props.value.year, props.value.month),
         inRange: periodInRange(root.state.value.value, { ...props.value, day: 1 }, { ...props.value, day: daysInMonth(props.value.year, props.value.month) }),
         highlighted: root.state.value.highlightedValue.year === props.value.year && root.state.value.highlightedValue.month === props.value.month,
         current: props.value.year === root.referenceDate.value.year && props.value.month === root.referenceDate.value.month,
@@ -740,7 +741,8 @@ export function createPickerYearCell(part = 'year-cell', name = 'SectilePickerYe
       const root = useRoot(name);
       const state = computed<PickerYearCellSlotProps>(() => ({
         value: props.value,
-        selected: yearContainsValue(root.state.value.value, props.value) || yearContainsValue(root.rangeAnchor.value, props.value),
+        selected: periodContainsEndpoint(root.state.value.value, props.value.year)
+          || periodContainsEndpoint(root.rangeAnchor.value, props.value.year),
         inRange: periodInRange(root.state.value.value, { year: props.value.year, month: 1, day: 1 }, { year: props.value.year, month: 12, day: 31 }),
         highlighted: root.state.value.highlightedValue.year === props.value.year,
         current: props.value.year === root.referenceDate.value.year,
@@ -960,8 +962,13 @@ function cellState(state: PickerRootSlotProps, value: DateValue, available: bool
   selected ||= anchor !== null && compare(anchor, value) === 0;
   return { value, selected, inRange, highlighted: compare(state.highlightedValue, value) === 0, current: compare(value, referenceDate) === 0, disabled: state.disabled || !available, outsideMonth: value.month !== state.view.month || value.year !== state.view.year };
 }
-function monthContainsValue(value: PickerValue, month: CalendarMonthValue): boolean { const date = dateOf(value); return date !== null && date.year === month.year && date.month === month.month; }
-function yearContainsValue(value: PickerValue, year: PickerYearValue): boolean { const date = dateOf(value); return date !== null && date.year === year.year; }
+function isPeriod(date: DateValue | null, year: number, month?: number): boolean {
+  return date !== null && date.year === year && (month === undefined || date.month === month);
+}
+function periodContainsEndpoint(value: PickerValue, year: number, month?: number): boolean {
+  return isPeriod(dateOf(value), year, month)
+    || (value !== null && 'end' in value && isPeriod(dateOf(value.end), year, month));
+}
 function periodInRange(value: PickerValue, start: DateValue, end: DateValue): boolean {
   if (value === null || 'year' in value || 'date' in value) return false;
   const rangeStart = 'date' in value.start ? value.start.date : value.start;

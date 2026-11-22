@@ -122,6 +122,9 @@ test('range picker families retain their first endpoint through live and inactiv
       assert.equal(host.querySelector('[data-part=cell]').getAttribute('data-selected'), '', prefix);
       host.querySelectorAll('[data-part=cell]')[1].dispatchEvent(new MouseEvent('click', { bubbles: true })); await settle();
       assert.notEqual(state.value, null, prefix);
+      const endCell = host.querySelectorAll('[data-part=cell]')[1];
+      assert.equal(endCell.hasAttribute('data-selected'), true, prefix);
+      assert.equal(endCell.getAttribute('aria-selected'), 'true', prefix);
       if (file === 'month-range-picker') assert.equal(host.querySelector('[data-prior-month]').hasAttribute('data-in-range'), false);
       const start = state.value.start.date ?? state.value.start, end = state.value.end.date ?? state.value.end;
       assert.equal(start.year, 2026, prefix); assert.equal(end.year, 2027, prefix);
