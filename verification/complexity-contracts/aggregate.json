@@ -9903,6 +9903,24 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "temporal:./date-field:dateFieldMaximum",
+      "package": "temporal",
+      "subpath": "./date-field",
+      "exportName": "dateFieldMaximum",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./date-field:dateFieldNumericSegment",
+      "package": "temporal",
+      "subpath": "./date-field",
+      "exportName": "dateFieldNumericSegment",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "temporal:./date-field:dateRangeContains",
       "package": "temporal",
       "subpath": "./date-field",
@@ -10182,6 +10200,24 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "temporal:./date-time-field:dateTimeFieldMaximum",
+      "package": "temporal",
+      "subpath": "./date-time-field",
+      "exportName": "dateTimeFieldMaximum",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./date-time-field:dateTimeFieldNumericSegment",
+      "package": "temporal",
+      "subpath": "./date-time-field",
+      "exportName": "dateTimeFieldNumericSegment",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "temporal:./date-time-field:dateTimeSegmentAt",
       "package": "temporal",
       "subpath": "./date-time-field",
@@ -10294,6 +10330,15 @@
       "package": "temporal",
       "subpath": "./date-time-picker",
       "exportName": "createDateTimePickerState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./date-time-picker:dateTimeChoiceInterval",
+      "package": "temporal",
+      "subpath": "./date-time-picker",
+      "exportName": "dateTimeChoiceInterval",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -10650,6 +10695,24 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "temporal:./time-field:timeFieldMaximum",
+      "package": "temporal",
+      "subpath": "./time-field",
+      "exportName": "timeFieldMaximum",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./time-field:timeFieldNumericSegment",
+      "package": "temporal",
+      "subpath": "./time-field",
+      "exportName": "timeFieldNumericSegment",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "temporal:./time-field:timeSegmentAt",
       "package": "temporal",
       "subpath": "./time-field",
@@ -10690,6 +10753,15 @@
       "package": "temporal",
       "subpath": "./time-picker",
       "exportName": "createTimePicker",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "temporal:./time-picker:timeChoicePrecision",
+      "package": "temporal",
+      "subpath": "./time-picker",
+      "exportName": "timeChoicePrecision",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -18732,6 +18804,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "vue:./temporal/date-time-picker:DateTimePickerTimeChoices",
+      "package": "vue",
+      "subpath": "./temporal/date-time-picker",
+      "exportName": "DateTimePickerTimeChoices",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "vue:./temporal/date-time-picker:DateTimePickerTimeInput",
       "package": "vue",
       "subpath": "./temporal/date-time-picker",
@@ -18970,6 +19051,15 @@
       "package": "vue",
       "subpath": "./temporal/date-time-range-picker",
       "exportName": "DateTimeRangePickerStartTimeInput",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./temporal/date-time-range-picker:DateTimeRangePickerTimeChoices",
+      "package": "vue",
+      "subpath": "./temporal/date-time-range-picker",
+      "exportName": "DateTimeRangePickerTimeChoices",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -19467,6 +19557,15 @@
       "exportName": "TimePickerTrigger",
       "kind": "object",
       "aliasOf": "vue:./popover:PopoverTrigger",
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./temporal/time-picker:provideTimePickerColumns",
+      "package": "vue",
+      "subpath": "./temporal/time-picker",
+      "exportName": "provideTimePickerColumns",
+      "kind": "function",
+      "aliasOf": null,
       "inherits": "public-callable-v1"
     },
     {

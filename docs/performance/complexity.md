@@ -13,10 +13,10 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom | 490 | 177 | 62 |
 | form | 26 | 0 | 9 |
 | tabular | 35 | 0 | 11 |
-| temporal | 129 | 14 | 4 |
+| temporal | 137 | 14 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 839 | 351 | 17 |
+| vue | 842 | 351 | 17 |
 
 ## Variables
 

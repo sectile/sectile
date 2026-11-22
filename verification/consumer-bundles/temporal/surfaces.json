@@ -54,6 +54,8 @@
         "createDateRange",
         "createDateValue",
         "dateDayOfWeek",
+        "dateFieldMaximum",
+        "dateFieldNumericSegment",
         "dateRangeContains",
         "dateSegmentAt",
         "daysInMonth",
@@ -137,6 +139,8 @@
         "createDateTimeFieldState",
         "createDateTimeRange",
         "createDateTimeValue",
+        "dateTimeFieldMaximum",
+        "dateTimeFieldNumericSegment",
         "dateTimeSegmentAt",
         "formatDateTimeFieldValue",
         "formatDateTimeRange",
@@ -163,6 +167,7 @@
       "runtimeExports": [
         "applyDateTimePickerEvent",
         "createDateTimePickerState",
+        "dateTimeChoiceInterval",
         "tryCreateDateTimePickerState"
       ],
       "typeBearing": true,
@@ -288,6 +293,8 @@
         "parseTimeFieldValue",
         "parseTimeValue",
         "reformatTimeFieldState",
+        "timeFieldMaximum",
+        "timeFieldNumericSegment",
         "timeSegmentAt",
         "tryCreateTimeFieldFormat",
         "tryCreateTimeFieldState",
@@ -306,6 +313,7 @@
       "platform": "browser",
       "runtimeExports": [
         "createTimePicker",
+        "timeChoicePrecision",
         "tryCreateTimePicker"
       ],
       "typeBearing": true,

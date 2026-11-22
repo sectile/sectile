@@ -2,25 +2,25 @@
   "schemaVersion": 2,
   "packages": {
     "core": {
-      "tarballBytes": 223995,
-      "unpackedBytes": 1020782,
+      "tarballBytes": 224518,
+      "unpackedBytes": 1023218,
       "unpackedFiles": 306,
       "categories": {
         "runtimeJS": {
           "files": 101,
-          "bytes": 466602
+          "bytes": 467861
         },
         "declarations": {
           "files": 101,
-          "bytes": 193368
+          "bytes": 193585
         },
         "sourceMaps": {
           "files": 101,
-          "bytes": 346011
+          "bytes": 346915
         },
         "other": {
           "files": 3,
-          "bytes": 14801
+          "bytes": 14857
         }
       }
     },
@@ -94,25 +94,25 @@
       }
     },
     "temporal": {
-      "tarballBytes": 57359,
-      "unpackedBytes": 277162,
+      "tarballBytes": 62202,
+      "unpackedBytes": 296212,
       "unpackedFiles": 93,
       "categories": {
         "runtimeJS": {
           "files": 30,
-          "bytes": 121534
+          "bytes": 130085
         },
         "declarations": {
           "files": 30,
-          "bytes": 58265
+          "bytes": 61159
         },
         "sourceMaps": {
           "files": 30,
-          "bytes": 91483
+          "bytes": 99033
         },
         "other": {
           "files": 3,
-          "bytes": 5880
+          "bytes": 5935
         }
       }
     },
@@ -140,36 +140,36 @@
       }
     },
     "dom": {
-      "tarballBytes": 479367,
-      "unpackedBytes": 2156135,
-      "unpackedFiles": 513,
+      "tarballBytes": 510189,
+      "unpackedBytes": 2268976,
+      "unpackedFiles": 531,
       "categories": {
         "runtimeJS": {
-          "files": 170,
-          "bytes": 996823
+          "files": 176,
+          "bytes": 1052017
         },
         "declarations": {
-          "files": 170,
-          "bytes": 384841
+          "files": 176,
+          "bytes": 396179
         },
         "sourceMaps": {
-          "files": 170,
-          "bytes": 753674
+          "files": 176,
+          "bytes": 797536
         },
         "other": {
           "files": 3,
-          "bytes": 20797
+          "bytes": 23244
         }
       }
     },
     "terminal": {
-      "tarballBytes": 113119,
-      "unpackedBytes": 627429,
+      "tarballBytes": 113456,
+      "unpackedBytes": 628057,
       "unpackedFiles": 246,
       "categories": {
         "runtimeJS": {
           "files": 81,
-          "bytes": 261733
+          "bytes": 262024
         },
         "declarations": {
           "files": 81,
@@ -177,34 +177,34 @@
         },
         "sourceMaps": {
           "files": 81,
-          "bytes": 183276
+          "bytes": 183558
         },
         "other": {
           "files": 3,
-          "bytes": 13703
+          "bytes": 13758
         }
       }
     },
     "vue": {
-      "tarballBytes": 430109,
-      "unpackedBytes": 2318137,
-      "unpackedFiles": 432,
+      "tarballBytes": 456171,
+      "unpackedBytes": 2413789,
+      "unpackedFiles": 441,
       "categories": {
         "runtimeJS": {
-          "files": 143,
-          "bytes": 824488
+          "files": 146,
+          "bytes": 860525
         },
         "declarations": {
-          "files": 143,
-          "bytes": 789601
+          "files": 146,
+          "bytes": 811615
         },
         "sourceMaps": {
-          "files": 143,
-          "bytes": 683204
+          "files": 146,
+          "bytes": 714456
         },
         "other": {
           "files": 3,
-          "bytes": 20844
+          "bytes": 27193
         }
       }
     }
@@ -212,9 +212,9 @@
   "installs": [
     {
       "packageManager": "npm",
-      "installedBytes": 22451019,
-      "installedPayloadBytes": 22251621,
-      "installedFiles": 1850,
+      "installedBytes": 22839438,
+      "installedPayloadBytes": 22631309,
+      "installedFiles": 1877,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -252,12 +252,12 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.14.8",
+          "version": "0.16.0",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.18.3",
+          "version": "0.21.0",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -266,7 +266,7 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.14.8",
+              "version": "0.16.0",
               "dependencies": []
             },
             {
@@ -293,7 +293,7 @@
         },
         {
           "name": "@sectile/vue",
-          "version": "0.18.3",
+          "version": "0.21.0",
           "dependencies": [
             {
               "name": "@sectile/chart",
@@ -302,12 +302,12 @@
             },
             {
               "name": "@sectile/core",
-              "version": "0.14.8",
+              "version": "0.16.0",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.18.3",
+              "version": "0.21.0",
               "dependencies": []
             },
             {
@@ -351,7 +351,7 @@
                   "dependencies": [
                     {
                       "name": "@babel/parser",
-                      "version": "7.29.9",
+                      "version": "7.29.15",
                       "dependencies": []
                     },
                     {
@@ -371,7 +371,7 @@
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.2",
+                      "version": "1.2.4",
                       "dependencies": []
                     }
                   ]
@@ -389,15 +389,15 @@
               "dependencies": [
                 {
                   "name": "@babel/parser",
-                  "version": "7.29.9",
+                  "version": "7.29.15",
                   "dependencies": [
                     {
                       "name": "@babel/types",
-                      "version": "7.29.8",
+                      "version": "7.29.15",
                       "dependencies": [
                         {
                           "name": "@babel/helper-string-parser",
-                          "version": "7.29.7",
+                          "version": "7.29.15",
                           "dependencies": []
                         },
                         {
@@ -458,7 +458,7 @@
                 },
                 {
                   "name": "postcss",
-                  "version": "8.5.31",
+                  "version": "8.5.33",
                   "dependencies": [
                     {
                       "name": "nanoid",
@@ -472,14 +472,14 @@
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.2",
+                      "version": "1.2.4",
                       "dependencies": []
                     }
                   ]
                 },
                 {
                   "name": "source-map-js",
-                  "version": "1.2.2",
+                  "version": "1.2.4",
                   "dependencies": []
                 }
               ]
@@ -522,7 +522,7 @@
                 },
                 {
                   "name": "csstype",
-                  "version": "3.2.3",
+                  "version": "3.2.4",
                   "dependencies": []
                 }
               ]
@@ -565,9 +565,9 @@
     },
     {
       "packageManager": "pnpm",
-      "installedBytes": 22458900,
-      "installedPayloadBytes": 22259502,
-      "installedFiles": 1859,
+      "installedBytes": 22848520,
+      "installedPayloadBytes": 22640391,
+      "installedFiles": 1886,
       "dependencyNames": [
         "@babel/helper-string-parser",
         "@babel/helper-validator-identifier",
@@ -599,32 +599,32 @@
       "dependencyTree": [
         {
           "name": "@sectile/core",
-          "version": "0.14.8",
+          "version": "0.16.0",
           "dependencies": []
         },
         {
           "name": "@sectile/dom",
-          "version": "0.18.3",
+          "version": "0.21.0",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.14.8",
+              "version": "0.16.0",
               "dependencies": []
             }
           ]
         },
         {
           "name": "@sectile/vue",
-          "version": "0.18.3",
+          "version": "0.21.0",
           "dependencies": [
             {
               "name": "@sectile/core",
-              "version": "0.14.8",
+              "version": "0.16.0",
               "dependencies": []
             },
             {
               "name": "@sectile/dom",
-              "version": "0.18.3",
+              "version": "0.21.0",
               "dependencies": []
             },
             {
@@ -641,15 +641,15 @@
                       "dependencies": [
                         {
                           "name": "@babel/parser",
-                          "version": "7.29.9",
+                          "version": "7.29.15",
                           "dependencies": [
                             {
                               "name": "@babel/types",
-                              "version": "7.29.8",
+                              "version": "7.29.15",
                               "dependencies": [
                                 {
                                   "name": "@babel/helper-string-parser",
-                                  "version": "7.29.7",
+                                  "version": "7.29.15",
                                   "dependencies": []
                                 },
                                 {
@@ -678,7 +678,7 @@
                         },
                         {
                           "name": "source-map-js",
-                          "version": "1.2.2",
+                          "version": "1.2.4",
                           "dependencies": []
                         }
                       ]
@@ -696,7 +696,7 @@
                   "dependencies": [
                     {
                       "name": "@babel/parser",
-                      "version": "7.29.9",
+                      "version": "7.29.15",
                       "dependencies": []
                     },
                     {
@@ -748,7 +748,7 @@
                     },
                     {
                       "name": "postcss",
-                      "version": "8.5.31",
+                      "version": "8.5.33",
                       "dependencies": [
                         {
                           "name": "nanoid",
@@ -762,14 +762,14 @@
                         },
                         {
                           "name": "source-map-js",
-                          "version": "1.2.2",
+                          "version": "1.2.4",
                           "dependencies": []
                         }
                       ]
                     },
                     {
                       "name": "source-map-js",
-                      "version": "1.2.2",
+                      "version": "1.2.4",
                       "dependencies": []
                     }
                   ]
@@ -812,7 +812,7 @@
                     },
                     {
                       "name": "csstype",
-                      "version": "3.2.3",
+                      "version": "3.2.4",
                       "dependencies": []
                     }
                   ]

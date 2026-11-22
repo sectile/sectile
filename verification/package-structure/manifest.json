@@ -3065,6 +3065,9 @@
           "kind": "owner"
         },
         "src/temporal/internal/picker-field-options.ts": { "role": "temporal-support", "kind": "owner" },
+        "src/temporal/internal/picker-popup.ts": { "role": "temporal-picker", "kind": "owner" },
+        "src/temporal/internal/submit.ts": { "role": "temporal-support", "kind": "owner" },
+        "src/temporal/internal/field-binding.ts": { "role": "temporal-field", "kind": "owner" },
         "src/temporal/internal/result.ts": {
           "role": "temporal-support",
           "kind": "owner"
@@ -3846,12 +3849,17 @@
           "reason": "Time choice composition borrows native TimeField, Popover and Listbox owners rather than another calendar or text runtime.",
           "allows": ["temporal-time-picker", "temporal-fields", "temporal-provider", "native-field", "overlay-profiles", "controls", "form-context", "form-control", "foundation"]
         },
+        "temporal-time-choices": {
+          "reason": "Inline date-time choices compose the shared picker context and reusable time columns with a Form boundary.",
+          "allows": ["temporal-picker", "temporal-time-picker", "temporal-fields", "form-context"]
+        },
         "temporal-profiles": {
           "reason": "Named Calendar and picker public components compose selected capability adapters and shared picker parts.",
           "allows": [
             "temporal-profiles",
             "temporal-picker",
-            "temporal-capabilities"
+            "temporal-capabilities",
+            "temporal-time-choices"
           ]
         },
         "temporal-fields": {
@@ -4165,6 +4173,7 @@
           "role": "temporal-profiles",
           "kind": "owner"
         },
+        "src/temporal/date-time-time-choices.ts": { "role": "temporal-time-choices", "kind": "owner" },
         "src/overlay/dialog.ts": {
           "role": "overlay-profiles",
           "kind": "owner"

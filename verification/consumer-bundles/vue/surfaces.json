@@ -1534,6 +1534,7 @@
         "DateTimePickerPreviousWeek",
         "DateTimePickerPreviousYear",
         "DateTimePickerRoot",
+        "DateTimePickerTimeChoices",
         "DateTimePickerTimeInput",
         "DateTimePickerTrigger",
         "DateTimePickerWeekViewTrigger",
@@ -1589,6 +1590,7 @@
         "DateTimeRangePickerStartDateInput",
         "DateTimeRangePickerStartDateTimeInput",
         "DateTimeRangePickerStartTimeInput",
+        "DateTimeRangePickerTimeChoices",
         "DateTimeRangePickerTrigger",
         "DateTimeRangePickerWeekViewTrigger",
         "DateTimeRangePickerYearViewTrigger"
@@ -1727,7 +1729,8 @@
         "TimePickerPortal",
         "TimePickerRoot",
         "TimePickerTitle",
-        "TimePickerTrigger"
+        "TimePickerTrigger",
+        "provideTimePickerColumns"
       ],
       "typeBearing": true,
       "optionalPeer": "@sectile/temporal",

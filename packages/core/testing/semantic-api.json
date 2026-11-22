@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "4a020786a9ed0fd6865c2a0353370dab718e6b1d7ecdeca8cab8e160be2c3311",
+    "publicSignatureFingerprint": "bad7f464c0957b6f6073a1da7b87d0adbfd810f400936fea3d21c909971f9d9b",
     "subpaths": [
       ".",
       "./accordion",
@@ -562,6 +562,6 @@
   ],
   "acceptance": {
     "classification": "minor",
-    "reason": "issue-231-number-field-exact-set-value-and-step-events-additive-no-default-or-error-code-change"
+    "reason": "Add an explicit pointer activation option while preserving existing menu opening events"
   }
 }
