@@ -122,7 +122,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
   #restoreTriggerRequested = false;
   #allowTriggerRestore = true;
   #projectedState: MenuState<ID> | undefined;
-  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: () => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
+  readonly #keydown: (event: KeyboardEvent) => void; readonly #click: (event: MouseEvent) => void; readonly #triggerClick: (event: MouseEvent) => void; readonly #instanceID: string; readonly #layer: DOMLayerBinding | undefined; readonly #popupPosition: PositionConnection | undefined; readonly #submenuPositions = new Map<ID, PositionConnection>();
   readonly #triggerKeydown: (event: KeyboardEvent) => void;
   readonly #triggerContextMenu: ((event: MouseEvent) => void) | undefined;
   #contextRect: PositionRect | undefined;
@@ -142,7 +142,7 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
     setInteractionAttributes(options.root, options); if (options.trigger !== undefined && options.triggerMode !== 'context-menu') setInteractionAttributes(options.trigger, options, true);
     this.#instanceID = options.baseID ?? String(nextMenuControlID += 1);
     this.#layer = options.kind === 'menu-button' && options.trigger !== undefined ? createDOMLayerBinding({ surface: options.root, owner: options.trigger, dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: (reason) => {
-      const event = reason === 'escape' && options.triggerMode === 'context-menu' ? 'escape' : 'close-popup';
+      const event = reason === 'escape' ? 'escape' : 'close-popup';
       if (reason === 'escape') this.handleEvent(event); else this.#withoutTriggerRestore(event);
     },
       ...(options.layerHost === undefined ? {} : { layerHost: options.layerHost }),
@@ -215,10 +215,20 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
       const wasOpen = this.getSnapshot().state.openPath.includes(id);
       this.handleEvent({ type: 'focus', id });
       if (this.#policies.disabled?.(id) !== true && (this.#tree.isLeaf(id) || !wasOpen)) {
-        this.handleEvent(this.#tree.isLeaf(id) ? 'invoke' : 'open-submenu');
+        this.handleEvent(this.#tree.isLeaf(id) ? 'invoke'
+          : this.#options.kind === 'menu-button' && this.#options.triggerMode !== 'context-menu' && event.detail > 0
+            ? { type: 'open-submenu', focus: false } : 'open-submenu');
       }
     };
-    this.#triggerClick = () => { if (this.getActive()) this.handleEvent(this.getSnapshot().state.open ? 'close-popup' : 'open-popup'); };
+    this.#triggerClick = (event) => {
+      if (!this.getActive() || event.defaultPrevented) return;
+      if (this.getSnapshot().state.open) { this.handleEvent('close-popup'); return; }
+      const trigger = this.#options.trigger;
+      const pointer = event.detail > 0;
+      const active = trigger?.ownerDocument?.activeElement;
+      this.handleEvent(pointer ? { type: 'open-popup', focus: false } : 'open-popup');
+      if (pointer && trigger !== undefined && this.getSnapshot().state.open && trigger.ownerDocument?.activeElement === active) trigger.focus();
+    };
     this.#triggerContextMenu = options.triggerMode === 'context-menu' ? (event) => {
       if (!this.getActive() || options.disabled === true || event.defaultPrevented) return;
       event.preventDefault();
@@ -233,6 +243,10 @@ class DOMMenuControl<ID extends StableID> implements MenuControl<ID> {
         if (event.key !== 'ContextMenu' && !(event.shiftKey && event.key === 'F10')) return;
         event.preventDefault();
         if (!event.repeat) this.#openContext(undefined);
+        return;
+      }
+      if (event.key === 'Tab' && this.getSnapshot().state.open) {
+        this.#withoutTriggerRestore('close-popup');
         return;
       }
       if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;

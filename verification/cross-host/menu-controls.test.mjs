@@ -91,6 +91,25 @@ test('controlled menu owner rejection discards the pending opening cursor in bot
   assert.deepEqual(controls[0].getSnapshot(), controls[1].getSnapshot());
 });
 
+test('pointer opening retains its opener and Escape closes the newest branch first', () => {
+  const root = new FakeElement(), trigger = new FakeElement();
+  const dom = createDOMMenuButton({ items, root, trigger });
+  dom.handleEvent({ type: 'open-popup', focus: false });
+  assert.equal(dom.state.open, true);
+  assert.equal(dom.state.cursor.current, null);
+  dom.handleEvent({ type: 'focus', id: 'file' });
+  dom.handleEvent({ type: 'open-submenu', focus: false });
+  assert.equal(dom.state.cursor.current, 'file');
+  assert.deepEqual(dom.state.openPath, ['file']);
+  dom.handleEvent('escape');
+  assert.equal(dom.state.open, true);
+  assert.deepEqual(dom.state.openPath, []);
+  assert.equal(dom.state.cursor.current, 'file');
+  dom.handleEvent('escape');
+  assert.equal(dom.state.open, false);
+  dom.destroy();
+});
+
 function assertTrace(DOM, terminal, events) {
   assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot()));
   for (const event of events) { DOM.handleEvent(event); terminal.handleEvent(event); assert.deepEqual(observe(DOM.getSnapshot()), observe(terminal.getSnapshot())); }
