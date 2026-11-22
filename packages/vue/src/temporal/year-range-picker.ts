@@ -5,7 +5,7 @@ import {
   createPickerRoot, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps, type PickerYearCellSlotProps,
 } from './picker.js';
 import { yearRangePickerCapability } from './capabilities/year-range-picker.js';
-import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
+import type { PickerContentPartComponent, RangePickerContentSlotProps, RangePickerRootSlotProps } from './picker.js';
 
 export interface YearRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null;
@@ -23,8 +23,8 @@ export interface YearRangePickerRootProps extends PickerPartProps, PickerPositio
 }
 
 export const YearRangePickerRoot = /* @__PURE__ */ createPickerRoot(yearRangePickerCapability, 'SectileYearRangePickerRoot', { scope: 'year-range-picker', granularity: 'year', defaultView: 'year' });
-export type YearRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
-export type YearRangePickerContentSlotProps = PickerContentSlotProps<DateRange | null>;
+export type YearRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
+export type YearRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type YearRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:open']>;
 export type YearRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:highlightedValue']>;

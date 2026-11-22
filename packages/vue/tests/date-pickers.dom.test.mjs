@@ -105,23 +105,27 @@ test('range picker families retain their first endpoint through live and inactiv
     const parts = await import(`../.verification-dist/temporal/${file}.js`);
     const Root = parts[`${prefix}Root`], Content = parts[`${prefix}Content`], Grid = parts[`${prefix}Grid`], Cell = parts[`${prefix}Cell`], Trigger = parts[`${prefix}Trigger`];
     const host = document.createElement('div'); document.body.append(host);
-    const active = shallowRef(true), label = shallowRef('Range'); let state;
+    const active = shallowRef(true), label = shallowRef('Range'); let state, contentState;
     const first = { year: 2026, month: file === 'month-range-picker' ? 10 : 8, day: 1 }, second = { year: 2027, month: 9, day: 1 };
     const app = createApp({ render: () => h(HostProvider, { active }, { default: () => h(Root,
       { defaultHighlightedValue: first, defaultOpen: true, position: false, label: label.value },
       { default: next => { state = next; return [Trigger ? h(Trigger) : null,
-        h(Content, {}, { default: () => h(Grid, {}, { default: () => [h(Cell, { value: first }), h(Cell, { value: second }),
-          file === 'month-range-picker' ? h(Cell, { value: { year: 2026, month: 9, day: 1 }, 'data-prior-month': '' }) : null] }) })]; } }) }) });
+        h(Content, {}, { default: nextContent => { contentState = nextContent; return h(Grid, {}, { default: () => [h(Cell, { value: first }), h(Cell, { value: second }),
+          file === 'month-range-picker' ? h(Cell, { value: { year: 2026, month: 9, day: 1 }, 'data-prior-month': '' }) : null] }); } })]; } }) }) });
     app.mount(host);
     try {
       await settle(); host.querySelectorAll('[data-part=cell]')[0].dispatchEvent(new MouseEvent('click', { bubbles: true })); await settle();
       assert.equal(host.querySelector('[data-part=cell]').getAttribute('data-selected'), '', prefix);
       assert.equal(host.querySelector('[data-part=cell]').getAttribute('aria-selected'), 'true', prefix);
+      assert.deepEqual(state.rangeAnchor, { ...first, ...(file === 'year-range-picker' ? { month: 1 } : {}) }, prefix);
+      assert.deepEqual(contentState.rangeAnchor, state.rangeAnchor, prefix);
       assert.equal(state.value, null, prefix); label.value = 'Live replacement'; await settle();
       active.value = false; await settle(); label.value = 'Inactive replacement'; await settle(); active.value = true; await settle();
       assert.equal(host.querySelector('[data-part=cell]').getAttribute('data-selected'), '', prefix);
       host.querySelectorAll('[data-part=cell]')[1].dispatchEvent(new MouseEvent('click', { bubbles: true })); await settle();
       assert.notEqual(state.value, null, prefix);
+      assert.equal(state.rangeAnchor, null, prefix);
+      assert.equal(contentState.rangeAnchor, null, prefix);
       const endCell = host.querySelectorAll('[data-part=cell]')[1];
       assert.equal(endCell.hasAttribute('data-selected'), true, prefix);
       assert.equal(endCell.getAttribute('aria-selected'), 'true', prefix);

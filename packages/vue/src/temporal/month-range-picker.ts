@@ -5,7 +5,7 @@ import {
   createPickerRoot, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { monthRangePickerCapability } from './capabilities/month-range-picker.js';
-import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
+import type { PickerContentPartComponent, RangePickerContentSlotProps, RangePickerRootSlotProps } from './picker.js';
 
 export interface MonthRangePickerRootProps extends PickerPartProps, PickerPositionProps {
   readonly modelValue?: DateRange | null;
@@ -23,8 +23,8 @@ export interface MonthRangePickerRootProps extends PickerPartProps, PickerPositi
 }
 
 export const MonthRangePickerRoot = /* @__PURE__ */ createPickerRoot(monthRangePickerCapability, 'SectileMonthRangePickerRoot', { scope: 'month-range-picker', granularity: 'month', defaultView: 'year' });
-export type MonthRangePickerRootSlotProps = PickerRootSlotProps<DateRange | null>;
-export type MonthRangePickerContentSlotProps = PickerContentSlotProps<DateRange | null>;
+export type MonthRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
+export type MonthRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>;
 export type MonthRangePickerOpenChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:open']>;
 export type MonthRangePickerHighlightedValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:highlightedValue']>;

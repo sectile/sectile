@@ -61,7 +61,10 @@ declare const actualDateContent: Parameters<NonNullable<InstanceType<typeof Date
 declare const actualYearRangeContent: Parameters<NonNullable<InstanceType<typeof YearRangePickerContent>['$slots']['default']>>[0];
 const dateContent: DatePickerContentSlotProps = actualDateContent;
 const yearRangeContent: YearRangePickerContentSlotProps = actualYearRangeContent;
-void [pickerValues, dateContent, yearRangeContent];
+const rangeAnchors: readonly (DateValue | null)[] = [
+  pickerSlots[1].rangeAnchor, pickerSlots[3].rangeAnchor, pickerSlots[5].rangeAnchor, actualYearRangeContent.rangeAnchor,
+];
+void [pickerValues, dateContent, yearRangeContent, rangeAnchors];
 import { TooltipRoot, type TooltipRootExpose, type TooltipRootProps } from '@sectile/vue/tooltip';
 declare const tooltipRootInstance: InstanceType<typeof TooltipRoot>;
 const tooltipRootExpose: TooltipRootExpose = tooltipRootInstance;

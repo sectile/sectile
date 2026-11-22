@@ -5,6 +5,7 @@ import {
   type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerRootSlotProps,
 } from './picker.js';
 import { rangeCalendarCapability } from './capabilities/range-calendar.js';
+import type { PickerContentPartComponent, RangePickerContentSlotProps, RangePickerRootSlotProps } from './picker.js';
 
 export interface RangeCalendarRootProps extends PickerPartProps {
   readonly modelValue?: DateRange | null;
@@ -27,11 +28,12 @@ export const RangeCalendarRoot = /* @__PURE__ */ createPickerRoot(rangeCalendarC
   defaultView: 'month',
   inline: true,
 });
-export type RangeCalendarRootSlotProps = PickerRootSlotProps<DateRange | null>;
+export type RangeCalendarRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
+export type RangeCalendarContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type RangeCalendarValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:modelValue']>;
 export type RangeCalendarOpenChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:open']>;
 export type RangeCalendarHighlightedValueChangeHandler = NonNullable<InstanceType<typeof RangeCalendarRoot>['$props']['onUpdate:highlightedValue']>;
-export const RangeCalendarContent = PickerContent as unknown as PickerRootPartComponent<'date-range'>;
+export const RangeCalendarContent = PickerContent as unknown as PickerContentPartComponent<'date-range'>;
 export const RangeCalendarGrid = PickerGrid as unknown as PickerRootPartComponent<'date-range'>;
 export const RangeCalendarCell = PickerCell;
 export const RangeCalendarMonthCell = PickerMonthCell;

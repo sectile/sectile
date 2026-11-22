@@ -56,6 +56,16 @@ export interface PickerRootSlotProps<Value extends PickerValue = PickerValue> { 
 export interface PickerContentSlotProps<Value extends PickerValue = PickerValue> extends PickerRootSlotProps<Value> {
   readonly presentation: DOMLayerPresentationSnapshot | undefined;
 }
+export interface RangePickerRootSlotProps<Value extends DateRange | DateTimeRange | null> extends PickerRootSlotProps<Value> {
+  readonly rangeAnchor: DateValue | null;
+}
+export interface RangePickerContentSlotProps<Value extends DateRange | DateTimeRange | null> extends PickerContentSlotProps<Value> {
+  readonly rangeAnchor: DateValue | null;
+}
+type RootSlotFor<Kind extends PickerKind> = Kind extends 'date-range' | 'date-time-range'
+  ? RangePickerRootSlotProps<PickerValueFor<Kind>> : PickerRootSlotProps<PickerValueFor<Kind>>;
+type ContentSlotFor<Kind extends PickerKind> = Kind extends 'date-range' | 'date-time-range'
+  ? RangePickerContentSlotProps<PickerValueFor<Kind>> : PickerContentSlotProps<PickerValueFor<Kind>>;
 export interface PickerCellSlotProps { readonly value: DateValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean; readonly outsideMonth: boolean }
 export interface PickerMonthCellSlotProps { readonly value: CalendarMonthValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
 export interface PickerYearCellSlotProps { readonly value: PickerYearValue; readonly selected: boolean; readonly inRange: boolean; readonly highlighted: boolean; readonly current: boolean; readonly disabled: boolean }
@@ -123,7 +133,7 @@ export type PickerRootPublicProps<Kind extends PickerKind> =
 export interface PickerRootComponent<Kind extends PickerKind> {
   new (props: PickerRootPublicProps<Kind>): {
     $props: PickerRootPublicProps<Kind>;
-    $slots: { default?: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild };
+    $slots: { default?: (props: RootSlotFor<Kind>) => VNodeChild };
   };
 }
 
@@ -142,7 +152,7 @@ export interface PickerRootPartComponent<Kind extends PickerKind> {
 export interface PickerContentPartComponent<Kind extends PickerKind> {
   new (props: PickerRootPartPublicProps): {
     $props: PickerRootPartPublicProps;
-    $slots: { default?: (props: PickerContentSlotProps<PickerValueFor<Kind>>) => VNodeChild };
+    $slots: { default?: (props: ContentSlotFor<Kind>) => VNodeChild };
   };
 }
 
@@ -207,7 +217,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
     },
     emits: { 'update:modelValue': (_value: PickerValueFor<Kind>): boolean => true, 'update:open': (_value: boolean): boolean => true, 'update:highlightedValue': (_value: DateValue): boolean => true },
-    slots: Object as SlotsType<{ default: (props: PickerRootSlotProps<PickerValueFor<Kind>>) => VNodeChild }>,
+    slots: Object as SlotsType<{ default: (props: RootSlotFor<Kind>) => VNodeChild }>,
     setup(props, { emit, slots }) {
       const runtimeProps = props as unknown as ResolvedPickerRootProps<Kind>;
       const flags = useFormControlFlags(runtimeProps);
@@ -257,6 +267,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           view: localView.value, viewMode: localViewMode.value, disabled: flags.value.disabled, readonly: flags.value.readonly,
         });
       });
+      const slotState = computed(() => withRangeAnchor(kind, state.value, rangeAnchor.value));
       const lifecycle = usePopupPresentation({ connection, open: computed(() => inline || state.value.open), connect: () => connect(), refresh: () => refresh() });
       const semanticTarget = (): HTMLElement | null => inline ? elements.get('content') ?? elements.get('grid') ?? null
         : elements.get('anchor') ?? firstPickerInput(elements, kind) ?? elements.get('trigger') ?? elements.get('content') ?? elements.get('grid') ?? null;
@@ -601,7 +612,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
       });
       return (): VNodeChild => {
-        const children: VNodeChild[] = [slots['default']?.(state.value as PickerRootSlotProps<PickerValueFor<Kind>>)];
+        const children: VNodeChild[] = [slots['default']?.(slotState.value as RootSlotFor<Kind>)];
         if (config.formLayout !== undefined) submissionLayout!.value = config.formLayout.inspect(children);
         const constraintValue = controlled.value && kind !== 'calendar' ? runtimeProps.modelValue ?? null : state.value.value;
         if (compositeConstraint) children.push(h('select', {
@@ -643,7 +654,9 @@ export const PickerContent = /* @__PURE__ */ defineComponent({
   setup(props, { attrs, slots }) {
     const root = useRoot('PickerContent');
     const element = shallowRef<HTMLElement>();
-    const state = computed<PickerContentSlotProps>(() => Object.freeze({ ...root.state.value, presentation: root.presentation.value }));
+    const state = computed<PickerContentSlotProps>(() => Object.freeze({
+      ...withRangeAnchor(root.kind, root.state.value, root.rangeAnchor.value), presentation: root.presentation.value,
+    }));
     const open = computed(() => root.inline || root.state.value.open);
     provideHostLayerParent({ element, open, inline: computed(() => root.inline), presentation: root.presentation, active: root.active });
     const present = usePresence(open, element, undefined, root.active);
@@ -945,6 +958,10 @@ function monthAvailable(value: CalendarMonthValue, policies: PeriodPolicies | un
   return false;
 }
 function dateOf(value: PickerValue): DateValue | null { if (value === null) return null; if ('year' in value) return value; if ('date' in value) return value.date; const start = value.start; return 'date' in start ? start.date : start; }
+function withRangeAnchor(kind: PickerKind, state: PickerRootSlotProps, rangeAnchor: DateValue | null): PickerRootSlotProps {
+  if (kind !== 'date-range' && kind !== 'date-time-range') return state;
+  return Object.freeze({ ...state, rangeAnchor });
+}
 function extractState(kind: PickerKind, raw: unknown): { value: PickerValue; anchor: DateValue | null; highlighted: DateValue; open: boolean; view: { readonly year: number; readonly month: number }; viewMode: CalendarViewMode } {
   const state = raw as Record<string, unknown>;
   if (kind === 'calendar') return { value: state['value'] as PickerValue, anchor: null, highlighted: state['highlighted'] as DateValue, open: true, view: state['view'] as { readonly year: number; readonly month: number }, viewMode: state['viewMode'] as CalendarViewMode };
