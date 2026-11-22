@@ -91,8 +91,8 @@ class DOMDateRangePicker implements DateRangePickerConnection {
   readonly #fields: Partial<Record<Endpoint, FacadeConnection<DateFieldConnection>>> = {};
   #draft: Record<Endpoint, DateValue | null>;
   #fieldBasis: DateRange | null;
-  readonly #startSubmission = bindTemporalSubmit(() => this.prepareSubmission());
-  readonly #endSubmission = bindTemporalSubmit(() => this.prepareSubmission());
+  readonly #startSubmission = bindTemporalSubmit(() => this.#prepareNativeSubmission());
+  readonly #endSubmission = bindTemporalSubmit(() => this.#prepareNativeSubmission());
   #disconnected = false;
   #keyEvent: ReturnType<PeriodPickerHost<DateRangePickerState>['createKeyEvent']> | undefined;
   readonly #trigger = (): void => { if (this.getActive()) this.handleEvent('toggle'); };
@@ -159,8 +159,22 @@ class DOMDateRangePicker implements DateRangePickerConnection {
     }
     if ((candidate.start === null) !== (candidate.end === null)) return false;
     const value = candidate.start === null || candidate.end === null ? null : { start: candidate.start, end: candidate.end };
-    if (rangeKey(value) === rangeKey(this.getSnapshot().state.value)) return true;
-    return this.handleEvent({ type: 'commit-range', value }) && rangeKey(value) === rangeKey(this.getSnapshot().state.value);
+    const key = rangeKey(value);
+    if (key !== rangeKey(this.getSnapshot().state.value) &&
+      (!this.handleEvent({ type: 'commit-range', value }) || key !== rangeKey(this.getSnapshot().state.value))) return false;
+    if (value === null) {
+      this.#draft = candidate;
+      for (const field of [this.#fields.start, this.#fields.end]) {
+        if (field === undefined) continue;
+        if (field.getValue() !== null) field.syncControlledValues({ value: null });
+        if (field.getText() !== '') field.handleEvent('cancel');
+      }
+    }
+    return true;
+  }
+  #prepareNativeSubmission(): boolean {
+    if (this.options.disabled === true || this.options.readOnly === true) return true;
+    return this.prepareSubmission() && (!(this.options.required ?? this.options.policies?.required) || this.getSnapshot().state.value !== null);
   }
   #commitEndpoint(endpoint: Endpoint, value: DateValue | null): boolean {
     const draft = { ...this.#draft, [endpoint]: value };

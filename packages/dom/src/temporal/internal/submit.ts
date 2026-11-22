@@ -30,6 +30,9 @@ export function bindTemporalSubmit(prepare: () => boolean): (form?: HTMLFormElem
         running = true;
         try {
           for (const resolve of callbacks) if (!resolve()) { event.preventDefault(); break; }
+        } catch (error) {
+          event.preventDefault();
+          throw error;
         } finally { running = false; }
       };
       entry = { callbacks, listener };

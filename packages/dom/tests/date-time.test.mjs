@@ -24,6 +24,36 @@ import { createDateTimeRangeField, tryCreateDateTimeRangeField } from '../.verif
 const dateTimeAt = (day, hour, minute = 0) => createDateTimeValue(createDateValue(2026, 10, day), createTimeValue(hour, minute));
 const liveRangeListeners = (...inputs) => inputs.reduce((count, input) => count + [...input.listeners.values()].reduce((sum, values) => sum + values.size, 0), 0);
 
+test('date-range submission handles blank drafts with the accepted value and requirement', () => {
+  for (const required of [true, false]) {
+    const form = new FakeElement(), startInput = new FakeInput(), endInput = new FakeInput();
+    Object.assign(startInput, { form, name: 'start' });
+    Object.assign(endInput, { form, name: 'end' });
+    const picker = createDateRangePicker({ startInput, endInput, policies: { required } });
+    try {
+      replaceInput(startInput, ' ');
+      replaceInput(endInput, '  ');
+      let cancelled = false;
+      form.emit('submit', { preventDefault: () => { cancelled = true; } });
+      assert.equal(cancelled, required);
+      if (!required) assert.deepEqual([startInput.value, endInput.value], ['', '']);
+      assert.equal(picker.getSnapshot().state.value, null);
+    } finally { picker.destroy(); }
+  }
+});
+
+test('native submit is cancelled when an editor cannot confirm its value due to a callback error', () => {
+  const form = new FakeElement(), input = new FakeInput();
+  Object.assign(input, { form, name: 'date' });
+  const field = createDateField({ input, onValueChange: () => { throw new Error('owner failed'); } });
+  try {
+    replaceInput(input, '2026-08-22');
+    let cancelled = false;
+    assert.throws(() => form.emit('submit', { preventDefault: () => { cancelled = true; } }), /owner failed/);
+    assert.equal(cancelled, true);
+  } finally { field.destroy(); }
+});
+
 test('all native range adapters preserve accepted partial endpoints through uncontrolled synchronization', () => {
   for (const [create, value] of [
     [createDateRangeField, createDateValue(2026, 10, 14)],
