@@ -14,7 +14,7 @@ const tarballArgument = process.argv.find(argument => argument.startsWith('--tar
 const engineArgument = process.argv.find(argument => argument.startsWith('--engine='));
 const engine = engineArgument?.slice('--engine='.length) ?? 'chromium';
 const engines = { chromium, firefox, webkit };
-assert.ok(Object.hasOwn(engines, engine) && (!nativeIME || engine === 'chromium'), 'invalid browser verification engine');
+assert.ok((Object.hasOwn(engines, engine) || engine === 'safari') && (!nativeIME || engine === 'chromium'), 'invalid browser verification engine');
 const browserType = engines[engine];
 assert.deepEqual(process.argv.slice(2).filter(argument => argument !== '--macos-ime' && argument !== shardArgument && argument !== tarballArgument && argument !== engineArgument), [], 'unexpected browser verification argument');
 assert.notEqual(tarballArgument?.slice('--tarball-directory='.length), '', 'tarball directory must not be empty');
@@ -22,6 +22,7 @@ const tarballDirectory = resolve(tarballArgument?.slice('--tarball-directory='.l
 const shard = shardArgument?.slice('--shard='.length).split('/').map(Number) ?? [1,1];
 assert.ok(shard.length === 2 && shard.every(Number.isSafeInteger) && shard[0] >= 1 && shard[0] <= shard[1] && shard[1] <= 4, 'invalid browser shard');
 if (nativeIME) assert.equal(process.platform, 'darwin', 'native macOS IME verification requires macOS');
+if (engine === 'safari') assert.equal(process.platform, 'darwin', 'Safari verification requires macOS');
 const output = '.tasks/browser'; mkdirSync(output, { recursive: true });
 const report = { sha: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(), engine, nativeIME, status: 'running', results: [] };
 // Root owns artifact composition. The package server receives explicit aliases;
@@ -69,8 +70,8 @@ const typeNative = codes => new Promise((resolve, reject) => {
     if (code === 0) resolve(); else reject(new Error(`native typing failed: ${code}: ${errors}`));
   });
 });
-try {
-  const url = await new Promise((resolve, reject) => {
+function waitForServer() {
+  return new Promise((resolve, reject) => {
     let log = '';
     const timer = setTimeout(() => reject(new Error(`browser server readiness timeout: ${log}`)), 20000);
     server.once('exit', code => { clearTimeout(timer); reject(new Error(`browser server exited: ${code}: ${log}`)); });
@@ -81,6 +82,9 @@ try {
       if (match) { clearTimeout(timer); resolve(match[1]); }
     });
   });
+}
+
+async function runPlaywright(url) {
   browser = await browserType.launch({ headless: !nativeIME, ...(engine === 'chromium' && process.env['SECTILE_CHROMIUM_PATH'] ? { executablePath: process.env['SECTILE_CHROMIUM_PATH'] } : {}) });
   context = await browser.newContext();
   await context.tracing.start({ screenshots: true, snapshots: true });
@@ -427,8 +431,18 @@ try {
   }
   assert.deepEqual(warnings, []);
   assert.deepEqual(errors, []);
-  report.status = 'passed';
   await context.tracing.stop();
+}
+
+try {
+  const url = await waitForServer();
+  if (engine === 'safari') {
+    const { verifySafari } = await import('./browser/safari.mjs');
+    await verifySafari(url, report);
+  } else {
+    await runPlaywright(url);
+  }
+  report.status = 'passed';
 } catch (error) {
   report.status = 'failed'; report.error = error.stack;
   report.observed = await page?.evaluate(() => ({ active: document.activeElement?.id,
