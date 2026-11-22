@@ -22,7 +22,7 @@ export interface MonthRangePickerRootProps extends PickerPartProps, PickerPositi
   readonly policies?: DateRangePickerOptions['policies'];
 }
 
-export const MonthRangePickerRoot = /* @__PURE__ */ createPickerRoot(monthRangePickerCapability, 'SectileMonthRangePickerRoot', { scope: 'month-range-picker', granularity: 'month', defaultView: 'year' });
+export const MonthRangePickerRoot = /* @__PURE__ */ createPickerRoot(monthRangePickerCapability, 'SectileMonthRangePickerRoot', { scope: 'month-range-picker', granularity: 'month', defaultView: 'year', fieldFirst: true });
 export type MonthRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
 export type MonthRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type MonthRangePickerValueChangeHandler = NonNullable<InstanceType<typeof MonthRangePickerRoot>['$props']['onUpdate:modelValue']>;

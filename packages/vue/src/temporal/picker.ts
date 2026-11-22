@@ -251,7 +251,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           : { root, grid, trigger, ...(anchor === undefined ? {} : { anchor }) };
       };
       const isEditable = (part: PickerInputPart): boolean =>
-        fieldFirst && kind === 'date-range' && (part === 'start-input' || part === 'end-input')
+        fieldFirst && (kind === 'date' && part === 'input' || kind === 'date-range' && (part === 'start-input' || part === 'end-input'))
         || granularity === 'day' && !isPickerDisplayInput(part);
       const localHighlight = shallowRef<DateValue>(runtimeProps.highlightedValue ?? runtimeProps.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
       const periodReferenceYear = localHighlight.value.year;
@@ -419,7 +419,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           else base['defaultOpen'] = localOpen.value;
           base['onOpenChange'] = (value: boolean) => { localOpen.value = value; emit('update:open', value); };
         }
-        if (granularity === 'day') {
+        if (granularity === 'day' || fieldFirst) {
           Object.assign(base, inputPresentation.value?.options);
           for (const part of inputParts(kind)) {
             const element = elements.get(part);
@@ -528,7 +528,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           return value === null ? initialInputs.value?.[part] ?? ''
             : inputPresentation.value?.formatInput(part, value) ?? capability.formatInput(granularity, part, value);
         },
-        inputAttributes: part => inputPresentation.value?.attributes[part],
+        inputAttributes: part => inputPresentation.value?.attributes[part] ?? (fieldFirst && granularity !== 'day'
+          ? { placeholder: granularity === 'year' ? 'YYYY' : 'YYYY-MM', inputmode: 'numeric' } : undefined),
         isSubmission: part => config.formLayout?.includes(submissionLayout!.value, part) ?? true,
         isEditable,
         rebindInputs: scheduleConnect,

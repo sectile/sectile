@@ -1,14 +1,14 @@
 import { unwrap } from '@sectile/core/result';
 import type { TextEditingState } from '@sectile/core/text';
 import type { TemporalResult } from '../error.js';
-import { applyDateFieldEvent, tryCreateDateFieldState, reformatDateFieldState, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateFieldFormat } from './date.js';
+import { applyDateFieldEvent, tryCreateDateFieldState, reformatDateFieldState, type DateFieldEvent, type DateFieldGranularity, type DateFieldPolicies, type DateFieldState, type DateFieldFormat } from './date.js';
 import { compareDateValues, tryCreateDateRange, type DateRange, type DateValue } from '../values/date.js';
 import { applyRangeFieldEvent, tryCreateRangeFieldState, reformatRangeFieldState,
   type RangeFieldConstruction, type RangeFieldTransition, type RangeFieldPresentation } from '../internal/range-field.js';
 
 export type DateRangeFieldEndpoint = 'start' | 'end';
 export interface DateRangeFieldState { readonly value: DateRange | null; readonly start: DateFieldState; readonly end: DateFieldState; readonly active: DateRangeFieldEndpoint }
-export interface DateRangeFieldStateInput { readonly value?: DateRange | null; readonly startValue?: DateValue | null; readonly endValue?: DateValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly startFormat?: DateFieldFormat; readonly endFormat?: DateFieldFormat; readonly active?: DateRangeFieldEndpoint }
+export interface DateRangeFieldStateInput { readonly value?: DateRange | null; readonly startValue?: DateValue | null; readonly endValue?: DateValue | null; readonly startInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly startFormat?: DateFieldFormat; readonly endFormat?: DateFieldFormat; readonly active?: DateRangeFieldEndpoint; readonly granularity?: DateFieldGranularity }
 export type DateRangeFieldEvent = { readonly type: 'field'; readonly endpoint: DateRangeFieldEndpoint; readonly event: DateFieldEvent } | { readonly type: 'focus'; readonly endpoint: DateRangeFieldEndpoint } | 'cancel';
 export type DateRangeFieldCommand = { readonly type: 'input-state-changed'; readonly endpoint: DateRangeFieldEndpoint; readonly value: TextEditingState } | { readonly type: 'range-committed'; readonly value: DateRange | null } | { readonly type: 'focus-endpoint'; readonly endpoint: DateRangeFieldEndpoint };
 export interface DateRangeFieldPolicies extends DateFieldPolicies {}
@@ -26,7 +26,19 @@ const transition: RangeFieldTransition<DateValue, DateRange, DateFieldState, Dat
 });
 const presentation: RangeFieldPresentation<DateValue, DateRange, DateFieldState, DateFieldFormat> = /* @__PURE__ */ Object.assign({}, construction, { reformatField: reformatDateFieldState });
 
+function periodConstruction<Spec extends typeof construction>(spec: Spec, granularity: DateFieldGranularity | undefined): Spec {
+  return granularity === undefined || granularity === 'day' ? spec
+    : { ...spec, createField: (value: DateValue | null, input?: TextEditingState, format?: DateFieldFormat) =>
+      tryCreateDateFieldState(value, input, format, granularity) };
+}
+
 export function createDateRangeFieldState(input: DateRangeFieldStateInput = {}): DateRangeFieldState { return unwrap(tryCreateDateRangeFieldState(input)); }
-export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> { return tryCreateRangeFieldState(construction, input); }
-export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> { return applyRangeFieldEvent(transition, state, event, policies); }
-export function reformatDateRangeFieldState(state: DateRangeFieldState, format?: DateFieldFormat): TemporalResult<DateRangeFieldState> { return reformatRangeFieldState(presentation, state, format); }
+export function tryCreateDateRangeFieldState(input: DateRangeFieldStateInput = {}): TemporalResult<DateRangeFieldState> {
+  return tryCreateRangeFieldState(periodConstruction(construction, input.granularity), input);
+}
+export function applyDateRangeFieldEvent(state: DateRangeFieldState, event: DateRangeFieldEvent, policies: DateRangeFieldPolicies = {}): TemporalResult<DateRangeFieldUpdate> {
+  return applyRangeFieldEvent(periodConstruction(transition, state.start.granularity), state, event, policies);
+}
+export function reformatDateRangeFieldState(state: DateRangeFieldState, format?: DateFieldFormat): TemporalResult<DateRangeFieldState> {
+  return reformatRangeFieldState(periodConstruction(presentation, state.start.granularity), state, format);
+}

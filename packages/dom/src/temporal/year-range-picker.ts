@@ -16,4 +16,4 @@ export type { YearRangePickerValue } from '@sectile/temporal/year-range-picker';
 export type { YearPickerCellValue } from '@sectile/temporal/year-picker';
 
 export function createYearRangePicker(options: YearRangePickerOptions): FacadeConnection<YearRangePickerConnection> { return unwrap(tryCreateYearRangePicker(options)); }
-export function tryCreateYearRangePicker(options: YearRangePickerOptions): DOMTemporalResult<FacadeConnection<YearRangePickerConnection>> { return tryCreateDateRangePicker({ ...options, stateFactory: tryCreateYearRangePickerState, reducer: applyYearRangePickerEvent, ...createPeriodPickerHost('year', (value) => tryCreateYearPickerValue(value.year)) } as YearRangePickerOptions); }
+export function tryCreateYearRangePicker(options: YearRangePickerOptions): DOMTemporalResult<FacadeConnection<YearRangePickerConnection>> { return tryCreateDateRangePicker({ ...options, granularity: 'year', stateFactory: tryCreateYearRangePickerState, reducer: applyYearRangePickerEvent, ...createPeriodPickerHost('year', (value) => tryCreateYearPickerValue(value.year)) } as YearRangePickerOptions); }

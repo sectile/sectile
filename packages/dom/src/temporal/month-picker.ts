@@ -19,7 +19,7 @@ export function createMonthPicker(options: MonthPickerOptions): FacadeConnection
 }
 
 export function tryCreateMonthPicker(options: MonthPickerOptions): DOMTemporalResult<FacadeConnection<MonthPickerConnection>> {
-  return tryCreateDatePicker({ ...options, stateFactory: tryCreateMonthPickerState, reducer: applyMonthPickerEvent, ...createPeriodPickerHost('month', (value) => tryCreateMonthPickerValue(value.year, value.month)) } as MonthPickerOptions);
+  return tryCreateDatePicker({ ...options, granularity: 'month', stateFactory: tryCreateMonthPickerState, reducer: applyMonthPickerEvent, ...createPeriodPickerHost('month', (value) => tryCreateMonthPickerValue(value.year, value.month)) } as MonthPickerOptions);
 }
 
 export function createMonthPickerYear(year: number): ReturnType<typeof createCalendarYear> { return createCalendarYear(year); }

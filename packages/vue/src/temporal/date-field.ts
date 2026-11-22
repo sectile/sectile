@@ -1,6 +1,6 @@
 import { computed, type PropType } from 'vue';
 import { unwrap } from '@sectile/core/result';
-import { createDateFieldState, formatDateFieldValue, reformatDateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
+import { createDateFieldState, formatDateFieldValue, reformatDateFieldState, type DateFieldFormat, type DateFieldGranularity } from '@sectile/temporal/date-field';
 import {
   createDateField,
   formatDateValue,
@@ -21,6 +21,7 @@ export interface DateFieldProps {
   readonly label?: string;
   readonly native?: boolean;
   readonly format?: DateFieldFormat;
+  readonly granularity?: DateFieldGranularity;
 }
 
 type DateFieldPolicies = NonNullable<DateFieldOptions['policies']>;
@@ -29,7 +30,7 @@ function rebase(value: DateValue | null, inputState: Parameters<typeof createDat
   return unwrap(reformatDateFieldState(createDateFieldState(value, inputState, previousFormat), format)).inputState;
 }
 
-export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, DateFieldPolicies, DateFieldFormat, { format?: DateFieldFormat }>({
+export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, DateFieldPolicies, DateFieldFormat, { format?: DateFieldFormat; granularity?: DateFieldGranularity }>({
   name: 'SectileDateField',
   scope: 'date-field',
   inputMode: 'numeric',
@@ -37,13 +38,25 @@ export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, D
   placeholder: 'YYYY-MM-DD',
   formatValue: formatDateValue,
   valueType: Object as PropType<DateValue | null>,
-  presentationProps: { format: { type: Object as PropType<DateFieldFormat>, default: undefined } },
+  presentationProps: {
+    format: { type: Object as PropType<DateFieldFormat>, default: undefined },
+    granularity: { type: String as PropType<DateFieldGranularity>, default: 'day' },
+  },
   create: createDateField,
   rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
   usePresentation(props) {
     const formatter = useTemporalFormatter();
     return computed<NativeFieldPresentation<DateValue, DateFieldPolicies, DateFieldFormat> | undefined>(() => {
       if (props.native === true) return undefined;
+      if (props.granularity === 'month' || props.granularity === 'year') {
+        const granularity = props.granularity;
+        return {
+          placeholder: getDateFieldPlaceholder(undefined, granularity),
+          formatValue: value => formatDateFieldValue(value, undefined, granularity),
+          create: options => createDateField({ ...options, granularity }),
+          rebase: value => createDateFieldState(value, undefined, undefined, granularity).inputState,
+        };
+      }
       const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
       if (format === undefined) return undefined;
       return { format, placeholder: getDateFieldPlaceholder(format), formatValue: (value: DateValue) => formatDateFieldValue(value, format),

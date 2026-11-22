@@ -19,7 +19,7 @@ import { currentReferenceDate } from './internal/reference-date.js';
 import type { PickerPositionOptions } from '../overlay/position/picker.js';
 import { detachedFieldState } from '../text/controlled-input.js';
 import { pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
-import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
+import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat, type DateFieldGranularity } from '@sectile/temporal/date-field';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
 import { calendarFocusEvent, PickerPopup, pickerPopupElements, type PickerPopupElements } from './internal/picker-popup.js';
 
@@ -36,6 +36,7 @@ export interface DatePickerOptions extends PickerPositionOptions, Partial<Picker
   readonly defaultFieldStates?: Readonly<{ input?: DateFieldState }>;
   readonly input?: HTMLInputElement;
   readonly format?: DateFieldFormat | undefined;
+  readonly granularity?: DateFieldGranularity;
   readonly policies?: DatePickerPolicies;
   readonly value?: DateValue | null;
   readonly defaultValue?: DateValue | null;
@@ -133,6 +134,7 @@ class DOMDatePicker implements DatePickerConnection {
     });
     this.#field = options.input === undefined ? null : createDateField({
       input: options.input,
+      ...(options.granularity === undefined ? {} : { granularity: options.granularity }),
       ...pickerFieldFormat(options.format, options.defaultFieldStates?.input, Object.hasOwn(options, 'format')),
       value: options.defaultFieldStates?.input === undefined ? runtime.getSnapshot().state.value : options.defaultFieldStates.input.value,
       ...(options.defaultFieldStates?.input === undefined ? {} : { defaultInputState: detachedFieldState(options.defaultFieldStates.input).inputState }),

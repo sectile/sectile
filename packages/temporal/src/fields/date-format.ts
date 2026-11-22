@@ -6,6 +6,7 @@ import { fail, ok } from '../internal/foundation.js';
 import type { TemporalResult } from '../error.js';
 
 export type DateSegment = 'year' | 'month' | 'day';
+export type DateFieldGranularity = 'day' | 'month' | 'year';
 export interface DateFieldFormatOptions {
   readonly order: readonly [DateSegment, DateSegment, DateSegment];
   readonly literals?: readonly [string, string, string, string];
@@ -52,7 +53,8 @@ export function invalidDateFieldFormat(): TemporalResult<never> {
 /** Internal issued-layout access; not reexported by the public field entry. */
 export function dateFieldFormatLayout(format: DateFieldFormat): DateFieldLayout | undefined { return dateFieldLayouts.get(format); }
 
-export function formatDateFieldValue(value: DateValue, format?: DateFieldFormat): string {
+export function formatDateFieldValue(value: DateValue, format?: DateFieldFormat, granularity: DateFieldGranularity = 'day'): string {
+  if (granularity !== 'day') return formatDateValue(value).slice(0, granularity === 'year' ? 4 : 7);
   if (format === undefined) return formatDateValue(value);
   if (!dateFieldLayouts.has(format)) return unwrap(invalidDateFieldFormat());
   const valid = unwrap(tryCreateDateValue(value.year, value.month, value.day));
@@ -65,7 +67,8 @@ export function formatDateFieldValue(value: DateValue, format?: DateFieldFormat)
   }
   return text;
 }
-export function parseDateFieldValue(text: string, format?: DateFieldFormat): TemporalResult<DateValue> {
+export function parseDateFieldValue(text: string, format?: DateFieldFormat, granularity: DateFieldGranularity = 'day'): TemporalResult<DateValue> {
+  if (granularity !== 'day') return parseDateValue(granularity === 'year' ? `${text}-01-01` : `${text}-01`);
   if (format === undefined) return parseDateValue(text);
   const layout = dateFieldLayouts.get(format); if (layout === undefined) return invalidDateFieldFormat();
   if (typeof text !== 'string') return fail('construction', 'invalid-date-text', 'Date text must be a string.');

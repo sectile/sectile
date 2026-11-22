@@ -18,5 +18,5 @@ export function createYearPicker(options: YearPickerOptions): FacadeConnection<Y
 }
 
 export function tryCreateYearPicker(options: YearPickerOptions): DOMTemporalResult<FacadeConnection<YearPickerConnection>> {
-  return tryCreateDatePicker({ ...options, stateFactory: tryCreateYearPickerState, reducer: applyYearPickerEvent, ...createPeriodPickerHost('year', (value) => tryCreateYearPickerValue(value.year)) } as YearPickerOptions);
+  return tryCreateDatePicker({ ...options, granularity: 'year', stateFactory: tryCreateYearPickerState, reducer: applyYearPickerEvent, ...createPeriodPickerHost('year', (value) => tryCreateYearPickerValue(value.year)) } as YearPickerOptions);
 }

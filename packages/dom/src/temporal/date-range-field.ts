@@ -2,7 +2,7 @@ import { unwrap } from '@sectile/core/result';
 import type { FacadeConnection } from '@sectile/core/adapter-runtime';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import type { TextEditingState } from '@sectile/core/text';
-import { dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, type DateFieldFormat, type DateValue, type DateRange } from '@sectile/temporal/date-field';
+import { dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, type DateFieldFormat, type DateFieldGranularity, type DateValue, type DateRange } from '@sectile/temporal/date-field';
 import { applyDateRangeFieldEvent, tryCreateDateRangeFieldState, type DateRangeFieldEvent, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/temporal/date-range-field';
 import { getDateFieldPlaceholder } from './date-field.js';
 import { createDOMTemporalFacadeConnection, type DOMTemporalResult } from './internal/result.js';
@@ -14,6 +14,7 @@ export interface DateRangeFieldOptions {
   readonly startInputState?: TextEditingState; readonly defaultStartInputState?: TextEditingState; readonly endInputState?: TextEditingState; readonly defaultEndInputState?: TextEditingState;
   readonly disabled?: boolean; readonly readOnly?: boolean; readonly required?: boolean; readonly startLabel?: string; readonly endLabel?: string;
   readonly format?: DateFieldFormat;
+  readonly granularity?: DateFieldGranularity;
   readonly defaultState?: DateRangeFieldState;
   readonly onValueChange?: (value: DateRange | null) => void; readonly onStartInputStateChange?: (value: TextEditingState) => void; readonly onEndInputStateChange?: (value: TextEditingState) => void; readonly onUpdate?: () => void;
 }
@@ -45,7 +46,15 @@ const adapter: RangeFieldAdapter<DateValue, DateRange, DateRangeFieldState, Date
   controlledShapeMessage: 'Controlled date range field values must preserve their construction-time shape.',
 };
 function construct(options: DateRangeFieldOptions): DOMTemporalResult<DateRangeFieldConnection> {
-  return constructRangeField(adapter, options);
+  const granularity = options.granularity ?? options.defaultState?.start.granularity;
+  return constructRangeField(granularity === undefined || granularity === 'day' ? adapter : {
+    ...adapter,
+    initial: input => tryCreateDateRangeFieldState({ ...input, granularity }),
+    format: (value, format) => formatDateFieldValue(value, format, granularity),
+    maximum: format => dateFieldMaximum(format, granularity),
+    segment: (text, offset, format, key) => dateFieldNumericSegment(text, offset, format, key, granularity),
+    placeholder: format => getDateFieldPlaceholder(format, granularity),
+  }, options);
 }
 
 export { tryCreateDateRangeFieldState } from '@sectile/temporal/date-range-field';

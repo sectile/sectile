@@ -1,7 +1,7 @@
 import { unwrap, type Result } from '@sectile/core/result';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import { compareDateValues, dateRangeContains, formatDateValue, parseDateFieldValue, reformatDateFieldState, tryCreateDateFieldState, type DateFieldFormat, type DateFieldState, type DateRange, type DateValue } from '@sectile/temporal/date-field';
+import { compareDateValues, dateRangeContains, formatDateValue, parseDateFieldValue, reformatDateFieldState, tryCreateDateFieldState, type DateFieldFormat, type DateFieldGranularity, type DateFieldState, type DateRange, type DateValue } from '@sectile/temporal/date-field';
 import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
 import type { DatePickerEvent, DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { applyDateRangePickerEvent, tryCreateDateRangePickerState, type DateRangePickerCommand, type DateRangePickerEvent, type DateRangePickerState, type DateRangePickerStateInput } from '@sectile/temporal/date-range-picker';
@@ -32,6 +32,7 @@ interface InternalDateRangePickerOptions extends DateRangePickerOptions, Partial
 export interface DateRangePickerOptions {
   readonly layerHost?: Exclude<DOMLayerBindingOptions['layerHost'], undefined>;
   readonly format?: DateFieldFormat | undefined;
+  readonly granularity?: DateFieldGranularity;
   readonly defaultFieldStates?: DateRangeFieldStates;
 }
 
@@ -115,6 +116,7 @@ class DOMDateRangePicker implements DateRangePickerConnection {
         if (saved !== undefined) this.#draft[endpoint] = saved.value;
         this.#fields[endpoint] = createDateField({
           input, prepareForm: false, value: this.#draft[endpoint],
+          ...(options.granularity === undefined ? {} : { granularity: options.granularity }),
           ...pickerFieldFormat(options.format, saved, Object.hasOwn(options, 'format')),
           ...(saved === undefined ? {} : { defaultInputState: detachedFieldState(saved).inputState }),
           ...(options.policies === undefined ? {} : { policies: options.policies }),
@@ -147,11 +149,11 @@ class DOMDateRangePicker implements DateRangePickerConnection {
     for (const endpoint of ['start', 'end'] as const) {
       const field = this.#fields[endpoint];
       if (field === undefined) continue;
-      const { inputState, format } = field.getSnapshot().state;
+      const { inputState, format, granularity } = field.getSnapshot().state;
       if (inputState.composition !== null) return false;
       const text = inputState.snapshot.text;
       if (text.trim() === '') { candidate[endpoint] = null; continue; }
-      const parsed = parseDateFieldValue(format === undefined ? text.trim() : text, format);
+      const parsed = parseDateFieldValue(format === undefined ? text.trim() : text, format, granularity);
       if (!parsed.ok) return false;
       candidate[endpoint] = parsed.value;
     }

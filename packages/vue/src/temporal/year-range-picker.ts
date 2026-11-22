@@ -22,7 +22,7 @@ export interface YearRangePickerRootProps extends PickerPartProps, PickerPositio
   readonly policies?: DateRangePickerOptions['policies'];
 }
 
-export const YearRangePickerRoot = /* @__PURE__ */ createPickerRoot(yearRangePickerCapability, 'SectileYearRangePickerRoot', { scope: 'year-range-picker', granularity: 'year', defaultView: 'year' });
+export const YearRangePickerRoot = /* @__PURE__ */ createPickerRoot(yearRangePickerCapability, 'SectileYearRangePickerRoot', { scope: 'year-range-picker', granularity: 'year', defaultView: 'year', fieldFirst: true });
 export type YearRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
 export type YearRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type YearRangePickerValueChangeHandler = NonNullable<InstanceType<typeof YearRangePickerRoot>['$props']['onUpdate:modelValue']>;

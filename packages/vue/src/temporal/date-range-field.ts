@@ -3,7 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import { reformatDateRangeFieldState } from '@sectile/temporal/date-range-field';
 import { getDateFieldPlaceholder } from '@sectile/dom/temporal/date-field';
 import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/temporal/date-range-field';
-import type { DateFieldFormat, DateRange } from '@sectile/dom/temporal/date-field';
+import type { DateFieldFormat, DateFieldGranularity, DateRange } from '@sectile/dom/temporal/date-field';
 import { setupNativeRangeField, createNativeRangeFieldInput, type NativeRangeFieldConfig, type NativeRangePresentation } from '../input/native-range-field.js';
 import { useTemporalFormatter } from './temporal-provider.js';
 import type { PrimitiveAs } from '../primitive.js';
@@ -15,6 +15,7 @@ export interface DateRangeFieldRootProps {
   readonly defaultValue?: DateRange | null;
   readonly policies?: DateRangeFieldPolicies;
   readonly format?: DateFieldFormat;
+  readonly granularity?: DateFieldGranularity;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly required?: boolean;
@@ -42,9 +43,15 @@ const config: NativeRangeFieldConfig<DateRange, DateRangeFieldPolicies, DateRang
   rebase: (state, start, end) => reformatDateRangeFieldState({ ...state, start: { ...state.start, inputState: start }, end: { ...state.end, inputState: end } }),
 };
 
-function useDateRangePresentation(props: { readonly format?: DateFieldFormat | undefined }) {
+function useDateRangePresentation(props: { readonly format?: DateFieldFormat | undefined; readonly granularity: DateFieldGranularity }) {
   const formatter = useTemporalFormatter();
   return computed<NativeRangePresentation<DateRange, DateRangeFieldPolicies, DateRangeFieldState> | undefined>(() => {
+    if (props.granularity !== 'day') {
+      const granularity = props.granularity;
+      return { placeholder: getDateFieldPlaceholder(undefined, granularity), initial: options => tryCreateDateRangeFieldState({ ...options, granularity }),
+        create: options => createDateRangeField({ ...options, granularity }),
+        rebase: state => tryCreateDateRangeFieldState({ value: state.value, active: state.active, granularity }) };
+    }
     const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
     if (format === undefined) return undefined;
     return { placeholder: getDateFieldPlaceholder(format), initial: options => tryCreateDateRangeFieldState({ ...options, startFormat: format, endFormat: format }),
@@ -63,6 +70,7 @@ export const DateRangeFieldRoot = /* @__PURE__ */ defineComponent({
     defaultValue: { type: Object as PropType<DateRange | null>, default: null },
     policies: { type: Object as PropType<DateRangeFieldPolicies>, default: undefined },
     format: { type: Object as PropType<DateFieldFormat>, default: undefined },
+    granularity: { type: String as PropType<DateFieldGranularity>, default: 'day' },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
     required: { type: Boolean, default: false },

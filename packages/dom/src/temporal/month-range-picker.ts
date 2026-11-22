@@ -18,5 +18,5 @@ export type { MonthRangePickerValue } from '@sectile/temporal/month-range-picker
 export type { MonthPickerCellValue } from '@sectile/temporal/month-picker';
 
 export function createMonthRangePicker(options: MonthRangePickerOptions): FacadeConnection<MonthRangePickerConnection> { return unwrap(tryCreateMonthRangePicker(options)); }
-export function tryCreateMonthRangePicker(options: MonthRangePickerOptions): DOMTemporalResult<FacadeConnection<MonthRangePickerConnection>> { return tryCreateDateRangePicker({ ...options, stateFactory: tryCreateMonthRangePickerState, reducer: applyMonthRangePickerEvent, ...createPeriodPickerHost('month', (value) => tryCreateMonthPickerValue(value.year, value.month)) } as MonthRangePickerOptions); }
+export function tryCreateMonthRangePicker(options: MonthRangePickerOptions): DOMTemporalResult<FacadeConnection<MonthRangePickerConnection>> { return tryCreateDateRangePicker({ ...options, granularity: 'month', stateFactory: tryCreateMonthRangePickerState, reducer: applyMonthRangePickerEvent, ...createPeriodPickerHost('month', (value) => tryCreateMonthPickerValue(value.year, value.month)) } as MonthRangePickerOptions); }
 export function createMonthRangePickerYear(year: number): ReturnType<typeof createCalendarYear> { return createCalendarYear(year); }

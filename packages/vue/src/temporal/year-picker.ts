@@ -22,7 +22,7 @@ export interface YearPickerRootProps extends PickerPartProps, PickerPositionProp
   readonly policies?: DatePickerOptions['policies'];
 }
 
-export const YearPickerRoot = /* @__PURE__ */ createPickerRoot(yearPickerCapability, 'SectileYearPickerRoot', { scope: 'year-picker', granularity: 'year', defaultView: 'year' });
+export const YearPickerRoot = /* @__PURE__ */ createPickerRoot(yearPickerCapability, 'SectileYearPickerRoot', { scope: 'year-picker', granularity: 'year', defaultView: 'year', fieldFirst: true });
 export type YearPickerRootSlotProps = PickerRootSlotProps<DateValue | null>;
 export type YearPickerContentSlotProps = PickerContentSlotProps<DateValue | null>;
 export type YearPickerValueChangeHandler = NonNullable<InstanceType<typeof YearPickerRoot>['$props']['onUpdate:modelValue']>;

@@ -3,7 +3,7 @@ import { permitsInteraction } from '@sectile/core/interaction';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { sameTextEditingState, type TextEditingState } from '@sectile/core/text';
-import { applyDateFieldEvent, dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, tryCreateDateFieldState, type DateFieldFormat, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
+import { applyDateFieldEvent, dateFieldMaximum, dateFieldNumericSegment, formatDateFieldValue, tryCreateDateFieldState, type DateFieldFormat, type DateFieldGranularity, type DateFieldCommand, type DateFieldEvent, type DateFieldPolicies, type DateFieldState, type DateValue } from '@sectile/temporal/date-field';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setFieldValidity, setInteractionAttributes } from '../interaction/attributes.js';
 import { DOMTextElementBinding } from '../text/element-binding.js';
@@ -12,7 +12,7 @@ import { toTextEvent, type TextInput } from '../text.js';
 import { bindTemporalSubmit } from './internal/submit.js';
 
 export { formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
-export type { DateFieldFormat, DateRange, DateValue } from '@sectile/temporal/date-field';
+export type { DateFieldFormat, DateFieldGranularity, DateRange, DateValue } from '@sectile/temporal/date-field';
 
 export interface DateFieldOptions {
   readonly input: HTMLInputElement;
@@ -27,6 +27,7 @@ export interface DateFieldOptions {
   readonly label?: string;
   readonly native?: boolean;
   readonly format?: DateFieldFormat;
+  readonly granularity?: DateFieldGranularity;
   readonly prepareForm?: false;
   readonly onValueChange?: (value: DateValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
@@ -60,10 +61,11 @@ function construct(options: DateFieldOptions): DOMTemporalResult<DateFieldConnec
   const inputControlled = options.inputState !== undefined;
   const policies = Object.freeze({ ...options.policies, ...(options.required === undefined ? {} : { required: options.required }) });
   const format = options.native === true ? undefined : options.format;
+  const granularity = options.native === true ? 'day' : options.granularity;
   const runtime = createDOMTemporalController<DateFieldState, DateFieldEvent, DateFieldCommand, DateFieldCommand>({
-    initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState, format),
+    initial: tryCreateDateFieldState(options.value !== undefined ? options.value : options.defaultValue ?? null, options.inputState !== undefined ? options.inputState : options.defaultInputState, format, granularity),
     reducer: (state, event) => applyDateFieldEvent(state, event, policies),
-    reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState, format),
+    reconcile: (previous, proposed) => tryCreateDateFieldState(valueControlled ? previous.value : proposed.value, inputControlled ? previous.inputState : proposed.inputState, format, granularity),
     notify: (previous, proposed) => { if (!sameTextEditingState(previous.inputState, proposed.inputState)) options.onInputStateChange?.(proposed.inputState, previous.inputState); },
     toEffect: (command) => command,
     interaction: options,
@@ -95,8 +97,8 @@ class DOMDateField implements DateFieldConnection {
       element: options.input, getState: () => this.getSnapshot().state.inputState,
       dispatch: (input) => this.#text(input), keydown: this.#keydown, blur: this.#blur,
       ...(this.#editable && options.native !== true ? { segments: {
-        maximum: () => dateFieldMaximum(options.format),
-        at: (text, offset, key) => dateFieldNumericSegment(text, offset, options.format, key),
+        maximum: () => dateFieldMaximum(options.format, options.granularity),
+        at: (text, offset, key) => dateFieldNumericSegment(text, offset, options.format, key, options.granularity),
       } } : {}),
     });
     this.refresh();
@@ -115,10 +117,10 @@ class DOMDateField implements DateFieldConnection {
       ? values.inputState as TextEditingState
       : synchronizeControlledFieldInput(
         synchronizeFieldInputSelection(state.inputState, this.#options.input),
-        state.value === null ? '' : formatDateFieldValue(state.value, state.format),
-        value === null ? '' : formatDateFieldValue(value, state.format),
+        state.value === null ? '' : formatDateFieldValue(state.value, state.format, state.granularity),
+        value === null ? '' : formatDateFieldValue(value, state.format, state.granularity),
       );
-    const result = this.#runtime.replace(tryCreateDateFieldState(value, inputState, state.format));
+    const result = this.#runtime.replace(tryCreateDateFieldState(value, inputState, state.format, state.granularity));
     if (result.ok) { this.refresh(); this.#options.onUpdate?.(); } return result;
   }
   public handleEvent(event: DateFieldEvent): boolean {
@@ -141,10 +143,10 @@ class DOMDateField implements DateFieldConnection {
   public prepareSubmission(): boolean {
     if (!this.getActive() || !this.#editable || this.#options.input.name === '') return true;
     if (this.#binding.isComposing) return false;
-    const text = () => { const { value, format } = this.getSnapshot().state; return value === null ? '' : formatDateFieldValue(value, format); };
+    const text = () => { const { value, format, granularity } = this.getSnapshot().state; return value === null ? '' : formatDateFieldValue(value, format, granularity); };
     return this.getText() === text() || this.handleEvent('commit') && this.getText() === text();
   }
-  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; const placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(this.getSnapshot().state.format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render();
+  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; const { format, granularity } = this.getSnapshot().state; const placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(format, granularity); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render();
     if (this.#editable && this.#options.prepareForm !== false && this.getActive()) this.#submission(input.form);
   }
   public disconnect(): void { this.#submission(); this.#binding.disconnect(); }
@@ -154,7 +156,9 @@ class DOMDateField implements DateFieldConnection {
   }
 }
 
-export function getDateFieldPlaceholder(format?: DateFieldFormat): string {
+export function getDateFieldPlaceholder(format?: DateFieldFormat, granularity: DateFieldGranularity = 'day'): string {
+  if (granularity === 'year') return 'YYYY';
+  if (granularity === 'month') return 'YYYY-MM';
   if (format === undefined) return 'YYYY-MM-DD';
   let text = format.literals[0];
   for (let index = 0; index < 3; index++) text += (format.order[index] === 'year' ? 'YYYY' : format.order[index] === 'month' ? 'MM' : 'DD') + format.literals[index + 1];

@@ -3,6 +3,19 @@ import test from 'node:test';
 import { createTextEditingState } from '@sectile/core/text';
 import { reformatDateFieldState } from '../../.verification-dist/fields/date.js';
 import { createDateFieldFormat, tryCreateDateFieldFormat, createDateFieldState, tryCreateDateFieldState, applyDateFieldEvent, formatDateFieldValue, parseDateFieldValue, formatDateValue, dateSegmentAt } from '../../.verification-dist/fields/date.js';
+
+test('period fields step through canonical first days', () => {
+  for (const [granularity, expected, first] of [
+    ['month', '2026-12', { year: 2027, month: 1, day: 1 }],
+    ['year', '2026', { year: 2027, month: 1, day: 1 }],
+  ]) {
+    const state = createDateFieldState({ year: 2026, month: 12, day: 31 }, undefined, undefined, granularity);
+    assert.equal(state.inputState.snapshot.text, expected);
+    const next = applyDateFieldEvent(state, 'increment-segment');
+    assert.equal(next.ok, true);
+    assert.deepEqual(next.value.state.value, first);
+  }
+});
 const date = { year: 2026, month: 10, day: 14 };
 const value = result => { assert.equal(result.ok, true); return result.value; };
 const code = result => { assert.equal(result.ok, false); return result.error.code; };
