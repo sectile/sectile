@@ -5,7 +5,7 @@ import {
   type VNodeProps, type ShallowRef,
 } from 'vue';
 import type { CalendarPolicies } from '@sectile/dom/temporal/calendar';
-import type { DatePickerOptions, PickerPositionOptions, CalendarMonthValue, CalendarViewMode } from '@sectile/dom/temporal/date-picker';
+import type { DatePickerOptions, PickerPopupElements, PickerPositionOptions, CalendarMonthValue, CalendarViewMode } from '@sectile/dom/temporal/date-picker';
 import type { DateRangePickerOptions } from '@sectile/dom/temporal/date-range-picker';
 import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-picker';
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
@@ -75,6 +75,7 @@ export interface PickerPositionProps extends Omit<PickerPositionOptions, 'anchor
 
 export interface PickerRootConfig {
   readonly dateFormat?: boolean;
+  readonly fieldFirst?: boolean;
   readonly scope?: string;
   readonly granularity?: 'day' | 'month' | 'year';
   readonly defaultView?: CalendarViewMode;
@@ -176,6 +177,8 @@ interface Context {
   readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   registerPresence(present: ShallowRef<boolean>): () => void;
   isSubmission(part: PickerInputPart): boolean;
+  isEditable(part: PickerInputPart): boolean;
+  rebindInputs(): void;
   register(part: PickerInputPart | 'anchor' | 'content' | 'grid' | 'trigger', element?: HTMLElement): void;
   setInputFocused(part: PickerInputPart, focused: boolean): void;
   setInputComposing(part: PickerInputPart, composing: boolean): void;
@@ -204,6 +207,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
   const defaultOpen = config.defaultOpen ?? false;
   const yearPageSize = config.yearPageSize ?? 12;
   const inline = config.inline ?? false;
+  const fieldFirst = config.fieldFirst === true;
   const compositeConstraint = granularity !== 'day' || kind === 'calendar' || kind === 'date-range' || kind === 'date-time-range';
   const selectionEventType = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
   const component = defineComponent({
@@ -240,6 +244,15 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
       const rangeAnchor = shallowRef<DateValue | null>(null);
       const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
+      const popupElements = (): PickerPopupElements | null => {
+        const root = elements.get('content'), grid = elements.get('grid'), trigger = elements.get('trigger') ?? inlineTrigger;
+        const anchor = elements.get('anchor');
+        return root === undefined || grid === undefined || trigger === undefined ? null
+          : { root, grid, trigger, ...(anchor === undefined ? {} : { anchor }) };
+      };
+      const isEditable = (part: PickerInputPart): boolean =>
+        fieldFirst && kind === 'date-range' && (part === 'start-input' || part === 'end-input')
+        || granularity === 'day' && !isPickerDisplayInput(part);
       const localHighlight = shallowRef<DateValue>(runtimeProps.highlightedValue ?? runtimeProps.defaultHighlightedValue ?? dateOf(localValue.value) ?? referenceDate.value);
       const periodReferenceYear = localHighlight.value.year;
       const yearPageStart = shallowRef(localHighlight.value.year - Math.floor(yearPageSize / 2));
@@ -277,13 +290,18 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const semanticTarget = (): HTMLElement | null => inline ? elements.get('content') ?? elements.get('grid') ?? null
         : elements.get('anchor') ?? firstPickerInput(elements, kind) ?? elements.get('trigger') ?? elements.get('content') ?? elements.get('grid') ?? null;
       const focusTarget = (): HTMLElement | null => lifecycle.active.value
-        ? elements.get('trigger') ?? (kind === 'calendar' ? null : firstPickerInput(elements, kind)) ?? elements.get('grid') ?? null : null;
+        ? (fieldFirst ? firstPickerInput(elements, kind) : undefined)
+          ?? elements.get('trigger') ?? (kind === 'calendar' ? null : firstPickerInput(elements, kind)) ?? elements.get('grid') ?? null
+        : null;
       const participation = useCompositeFormControl({
         root: semanticTarget,
         focusTarget,
         validationTarget: () => constraint.value ?? semanticTarget(),
         submissions: () => pickerFormSubmissions(elements, kind),
         reset: () => resetTask.schedule(),
+        prepareSubmission: () => {
+          if (connection.value?.prepareSubmission?.() === false) throw new TypeError('Complete the date input before submitting.');
+        },
       });
       let baselinePending = false;
       const valueTask = useNextTickTask(() => {
@@ -371,11 +389,13 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         }
         const viewMode = localViewMode.value;
         const content = elements.get('content'); const grid = elements.get('grid'); const trigger = elements.get('trigger') ?? inlineTrigger;
-        if (content === undefined || grid === undefined || (kind !== 'calendar' && trigger === undefined)) return;
+        const parts = popupElements();
+        const hasPopup = content !== undefined && grid !== undefined && (kind === 'calendar' || trigger !== undefined);
+        if (!hasPopup && (!fieldFirst || firstPickerInput(elements, kind) === undefined)) return;
         const base: Record<string, unknown> = {
           ...(retainedState === undefined ? {} : { defaultState: retainedState }),
           ...(retainedFieldStates === undefined ? {} : { defaultFieldStates: retainedFieldStates }),
-          root: content, grid, disabled: flags.value.disabled, readOnly: flags.value.readonly, required: flags.value.required,
+          ...(hasPopup ? { root: content, grid } : {}), disabled: flags.value.disabled, readOnly: flags.value.readonly, required: flags.value.required,
           referenceDate: referenceDate.value,
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
           ...(controlled.value ? { value: runtimeProps.modelValue } : { defaultValue: localValue.value }),
@@ -390,9 +410,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         };
         if (kind !== 'calendar') {
           if (layerHost.value !== undefined) base['layerHost'] = layerHost.value;
-          base['trigger'] = trigger;
-          const anchor = elements.get('anchor');
-          if (anchor !== undefined) base['anchor'] = anchor;
+          if (parts !== null) { base['trigger'] = parts.trigger; if (parts.anchor !== undefined) base['anchor'] = parts.anchor; }
           Object.assign(base, {
             manageVisibility: false,
             ...readPositionOptions(runtimeProps),
@@ -464,6 +482,20 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           if (mounted) requestConnect();
         });
       };
+      let popupQueued = false;
+      const schedulePopup = (): void => {
+        if (!mounted || popupQueued) return;
+        popupQueued = true;
+        void nextTick(() => {
+          popupQueued = false;
+          if (!mounted) return;
+          const owner = connection.value;
+          if (owner?.setPopup === undefined) { requestConnect(); return; }
+          lifecycle.release();
+          owner.setPopup(popupElements());
+          refreshCells(); refresh(); lifecycle.update();
+        });
+      };
       const moveBy = (unit: PickerNavigationUnit, delta: number): void => {
         if (!lifecycle.active.value) return;
         const direction = delta < 0 ? -1 : 1;
@@ -492,17 +524,20 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           calendarPolicies(),
         ),
         periodAvailable, formatInput: (granularity, part, inputValue) => {
-          const value = isPickerDisplayInput(part as PickerInputPart) && controlled.value ? runtimeProps.modelValue ?? null : inputValue;
+          const value = !isEditable(part as PickerInputPart) && controlled.value ? runtimeProps.modelValue ?? null : inputValue;
           return value === null ? initialInputs.value?.[part] ?? ''
             : inputPresentation.value?.formatInput(part, value) ?? capability.formatInput(granularity, part, value);
         },
         inputAttributes: part => inputPresentation.value?.attributes[part],
         isSubmission: part => config.formLayout?.includes(submissionLayout!.value, part) ?? true,
+        isEditable,
+        rebindInputs: scheduleConnect,
         position: computed(() => runtimeProps.position), strategy: computed(() => runtimeProps.strategy),
         register: (part, element) => {
           if (elements.get(part) === element || (element === undefined && !elements.has(part))) return;
           if (element === undefined) elements.delete(part); else elements.set(part, element);
-          scheduleConnect();
+          if (fieldFirst && (part === 'anchor' || part === 'content' || part === 'grid' || part === 'trigger')) schedulePopup();
+          else scheduleConnect();
         },
         setInputFocused,
         setInputComposing,
@@ -803,15 +838,16 @@ export function createPickerInput(part: PickerInputPart, name: string, type: 'te
   return defineComponent({
     name, inheritAttrs: false,
     __sectileSubmissionPart: part === 'date-time-input' ? 1 : part === 'start-date-time-input' ? 2 : part === 'end-date-time-input' ? 4 : 0,
-    props: { name: { type: String, default: undefined }, form: { type: String, default: undefined }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
+    props: { name: { type: String, default: undefined }, form: { type: String, default: undefined },
+      readonly: { type: Boolean, default: false },
+      as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'input' }, asChild: { type: Boolean, default: false } },
     setup(props, { attrs }) {
       const root = useRoot(name);
       const renderServerValue = inject(ssrContextKey, undefined) !== undefined;
       const submissionAttributes = useFormSubmissionProps(pickerSubmission(part, () => null), props);
       const bindMetadata = useFormSubmissionMetadata(['disabled', 'readonly', 'required']);
-      const browserOwned = type === 'text'
-        && root.granularity === 'day'
-        && !isPickerDisplayInput(part);
+      const browserOwned = type === 'text' && root.isEditable(part);
+      watch(() => props.readonly, root.rebindInputs);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild,
         ...(renderServerValue ? root.inputAttributes(part) : {}),
@@ -822,7 +858,7 @@ export function createPickerInput(part: PickerInputPart, name: string, type: 'te
         ...submissionAttributes.value,
         ...(!root.isSubmission(part) && props.name === undefined ? { name: undefined } : {}),
         type, disabled: root.state.value.disabled,
-        readOnly: root.granularity !== 'day' || root.state.value.readonly || isPickerDisplayInput(part),
+        readOnly: props.readonly || root.state.value.readonly || !browserOwned,
         required: submissionAttributes.value['required'] === true,
         ...(renderServerValue || !browserOwned
           ? { value: root.formatInput(root.granularity, part, root.state.value.value) }

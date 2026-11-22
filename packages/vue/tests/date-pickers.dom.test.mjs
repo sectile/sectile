@@ -141,6 +141,33 @@ async function settle() {
   await nextTick();
 }
 
+test('an input-only date picker keeps its editor while calendar parts come and go', async () => {
+  const { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerGrid } = await import('../.verification-dist/temporal/date-picker.js');
+  const host = document.createElement('div'); document.body.append(host);
+  const withCalendar = shallowRef(false), accepted = [];
+  const app = createApp({ render: () => h(DatePickerRoot, {
+    defaultValue: { year: 2026, month: 8, day: 22 }, position: false,
+    'onUpdate:modelValue': value => accepted.push(value),
+  }, () => [h(DatePickerInput, { key: 'date' }),
+    ...(withCalendar.value ? [h(DatePickerTrigger), h(DatePickerContent, {}, () => h(DatePickerGrid))] : []),
+  ]) });
+  app.mount(host);
+  try {
+    await settle();
+    const input = host.querySelector('input');
+    assert.equal(input.value, '2026-08-22');
+    input.focus(); input.value = '2026-08-2'; input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    for (const value of [true, false]) {
+      withCalendar.value = value; await settle();
+      assert.equal(host.querySelector('input'), input);
+      assert.equal(input.value, '2026-08-2');
+    }
+    input.value = '2026-08-23'; input.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }));
+    assert.deepEqual(accepted, [{ year: 2026, month: 8, day: 23 }]);
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('required composite pickers validate without changing native submitted values or persistent associations', async () => {
   const date = { year: 2026, month: 10, day: 14 };
   for (const [file, prefix, range, time, inline] of [

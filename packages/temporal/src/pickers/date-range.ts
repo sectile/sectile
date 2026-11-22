@@ -28,7 +28,7 @@ export interface DateRangePickerState {
   readonly calendar: DatePickerState;
 }
 
-export type DateRangePickerEvent = DatePickerEvent | 'clear';
+export type DateRangePickerEvent = DatePickerEvent | 'clear' | { readonly type: 'commit-range'; readonly value: DateRange | null };
 
 export type DateRangePickerCommand =
   | DatePickerCommand
@@ -87,6 +87,18 @@ export function applyDateRangePickerEvent(
     return createMachineUpdate(Object.freeze({ value: null, anchor: null, calendar: state.calendar }), [
       { type: 'range-committed', value: null },
       { type: 'range-anchor-changed', value: null },
+    ]);
+  }
+  if (typeof event === 'object' && event.type === 'commit-range') {
+    if (event.value === null) return applyDateRangePickerEvent(state, 'clear', policies);
+    const range = tryCreateDateRange(event.value.start, event.value.end);
+    if (!range.ok) return transitionFailure(range);
+    if (!isCalendarValueAvailable(range.value.start, policies) || !isCalendarValueAvailable(range.value.end, policies)) {
+      return fail('transition-rejection', 'date-range-picker-value-unavailable', 'Date range endpoint is outside its selectable domain.');
+    }
+    return createMachineUpdate(Object.freeze({ value: range.value, anchor: null, calendar: state.calendar }), [
+      { type: 'range-committed', value: range.value },
+      ...(state.anchor === null ? [] : [{ type: 'range-anchor-changed' as const, value: null }]),
     ]);
   }
   const selected = event === 'select-highlighted' ? state.calendar.highlighted

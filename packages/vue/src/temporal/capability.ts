@@ -9,7 +9,7 @@ export interface PickerInputPresentation {
 }
 
 export interface PickerCapabilityConnection extends Pick<import('@sectile/dom/temporal/calendar').CalendarConnection, 'getActive' | 'suspend' | 'resume'>,
-  Partial<Pick<import('@sectile/dom/temporal/date-picker').DatePickerConnection, 'getLayerOrder' | 'subscribeLayerPresentation' | 'syncLayerParent'>> {
+  Partial<Pick<import('@sectile/dom/temporal/date-picker').DatePickerConnection, 'getLayerOrder' | 'subscribeLayerPresentation' | 'syncLayerParent' | 'setPopup' | 'prepareSubmission'>> {
   getSnapshot(): { readonly state: unknown };
   getFieldStates?(): unknown;
   getMonth(): readonly (readonly DateValue[])[];

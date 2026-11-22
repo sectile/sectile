@@ -8,37 +8,32 @@ export { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear
 export type { CalendarMonthValue, CalendarViewMode } from '@sectile/temporal/calendar';
 export type { DatePickerPolicies } from '@sectile/temporal/date-picker';
 import { type FacadeConnection } from '@sectile/core/adapter-runtime';
-import { setInteractionAttributes } from '../interaction/attributes.js';
 import {
-  focusDatePickerEntry,
   setDatePickerCellAvailability,
   setDatePickerCellFocusEntry,
   setDatePickerGridFocusEntry,
 } from './internal/date-picker-cell.js';
 import { createDateField, type DateFieldConnection } from './date-field.js';
-import { createDOMLayerBinding, type DOMLayerBinding, type DOMLayerBindingOptions, type DOMLayerPresentationListener, type DOMLayerPresentationSubscription, type DOMLayerReparentErrorCode } from '../overlay/layer/binding.js';
+import type { DOMLayerBindingOptions, DOMLayerPresentationListener, DOMLayerPresentationSubscription, DOMLayerReparentErrorCode } from '../overlay/layer/binding.js';
 import { currentReferenceDate } from './internal/reference-date.js';
-import { createPickerPosition, type PickerPositionOptions } from '../overlay/position/picker.js';
-import type { PositionConnection } from '../overlay/position/connection.js';
-import { createHiddenBinding, type HiddenBinding } from '../interaction/visibility.js';
+import type { PickerPositionOptions } from '../overlay/position/picker.js';
 import { detachedFieldState } from '../text/controlled-input.js';
 import { pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
 import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
 import type { PeriodPickerHost, PeriodPickerEvent } from './internal/period-picker.js';
+import { calendarFocusEvent, PickerPopup, pickerPopupElements, type PickerPopupElements } from './internal/picker-popup.js';
 
 export type { PickerPositionOptions } from '../overlay/position/picker.js';
+export type { PickerPopupElements } from './internal/picker-popup.js';
 
 type DatePickerStateFactory = (input: DatePickerStateInput) => ReturnType<typeof tryCreateDatePickerState>;
 type DatePickerReducer = (state: DatePickerState, event: DatePickerEvent, policies: DatePickerPolicies) => ReturnType<typeof applyDatePickerEvent>;
 interface InternalDatePickerOptions extends DatePickerOptions, Partial<PeriodPickerHost<DatePickerState>> { readonly stateFactory?: DatePickerStateFactory; readonly reducer?: DatePickerReducer }
 
-export interface DatePickerOptions extends PickerPositionOptions {
+export interface DatePickerOptions extends PickerPositionOptions, Partial<PickerPopupElements> {
   readonly layerHost?: Exclude<DOMLayerBindingOptions['layerHost'], undefined>;
   readonly defaultState?: DatePickerState;
   readonly defaultFieldStates?: Readonly<{ input?: DateFieldState }>;
-  readonly root: HTMLElement;
-  readonly grid: HTMLElement;
-  readonly trigger: HTMLElement;
   readonly input?: HTMLInputElement;
   readonly format?: DateFieldFormat | undefined;
   readonly policies?: DatePickerPolicies;
@@ -72,6 +67,8 @@ export interface DatePickerConnection {
   syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode>;
   suspend(): void;
   resume(): void;
+  setPopup(elements: PickerPopupElements | null): void;
+  prepareSubmission(): boolean;
   getSnapshot(): RevisionSnapshot<DatePickerState>;
   getFieldStates(): NonNullable<DatePickerOptions['defaultFieldStates']>;
   getMonth(): readonly (readonly DateValue[])[];
@@ -114,26 +111,26 @@ function construct(options: DatePickerOptions): DOMTemporalResult<DatePickerConn
 class DOMDatePicker implements DatePickerConnection {
   readonly options: DatePickerOptions; readonly runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>; readonly controls: { value: boolean; highlighted: boolean; open: boolean }; readonly stateFactory: DatePickerStateFactory;
   readonly #field: FacadeConnection<DateFieldConnection> | null;
-  readonly #layer: DOMLayerBinding;
-  readonly #position: PositionConnection;
-  readonly #visibility: HiddenBinding | undefined;
+  readonly #popup: PickerPopup;
   #syncingField = false;
   #disconnected = false;
-  #focusGeneration = 0;
   readonly #keyEvent: ReturnType<PeriodPickerHost<DatePickerState>['createKeyEvent']>;
   readonly #trigger = (): void => { if (this.getActive()) this.handleEvent('toggle'); };
   readonly #keydown = (event: KeyboardEvent): void => { if (!this.getActive()) return; const semantic = this.#keyEvent(event); if (semantic !== null) { event.preventDefault(); this.handleEvent(semantic); } };
-  readonly #click = (event: MouseEvent): void => { if (!this.getActive()) return; const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-date-picker-id]') : null; if (target !== null && this.options.grid.contains(target)) { const parsed = target.dataset['datePickerId']?.split('-').map(Number); if (parsed?.length === 3) this.handleEvent({ type: 'select', value: { year: parsed[0] as number, month: parsed[1] as number, day: parsed[2] as number } }); } };
+  readonly #click = (event: MouseEvent): void => { if (!this.getActive()) return; const target = event.target instanceof Element ? event.target.closest<HTMLElement>('[data-date-picker-id]') : null; if (target !== null && this.#popup.elements?.grid.contains(target)) { const parsed = target.dataset['datePickerId']?.split('-').map(Number); if (parsed?.length === 3) this.handleEvent({ type: 'select', value: { year: parsed[0] as number, month: parsed[1] as number, day: parsed[2] as number } }); } };
   public constructor(options: DatePickerOptions, runtime: DOMTemporalController<DatePickerState, DatePickerEvent, DatePickerCommand>, controls: { value: boolean; highlighted: boolean; open: boolean }, stateFactory: DatePickerStateFactory) {
     this.options = options;
     this.runtime = runtime;
     this.#keyEvent = (options as InternalDatePickerOptions).createKeyEvent?.(runtime.getSnapshot().state.highlighted.year) ?? keyEvent;
     this.controls = controls;
     this.stateFactory = stateFactory;
-    const manageVisibility = options.manageVisibility;
-    this.#visibility = manageVisibility === false ? undefined : createHiddenBinding(options.root);
-    this.#layer = createDOMLayerBinding({ surface: options.root, owner: options.trigger, ...(options.layerHost === undefined ? {} : { layerHost: options.layerHost }), dismissOnInteractOutside: true, readOpen: () => this.getSnapshot().state.open, close: () => { this.handleEvent('close'); }, presentation: { suspend: () => this.#suspendResources(), resume: () => this.#resumeResources() } });
-    this.#position = createPickerPosition(options.root, options.trigger, options);
+    this.#popup = new PickerPopup(options, {
+      readOpen: () => this.getSnapshot().state.open,
+      close: restoreFocus => { this.#handleEvent('close', restoreFocus); },
+      trigger: this.#trigger, keydown: this.#keydown, click: this.#click,
+      suspend: () => { this.#field?.suspend(); this.options.onUpdate?.(); },
+      resume: () => { this.#field?.resume(); this.refresh(); this.options.onUpdate?.(); },
+    });
     this.#field = options.input === undefined ? null : createDateField({
       input: options.input,
       ...pickerFieldFormat(options.format, options.defaultFieldStates?.input, Object.hasOwn(options, 'format')),
@@ -145,7 +142,7 @@ class DOMDatePicker implements DatePickerConnection {
         ...(options.policies?.unavailable === undefined ? {} : { unavailable: options.policies.unavailable }),
       },
       ...(options.disabled === undefined ? {} : { disabled: options.disabled }),
-      ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+      readOnly: options.readOnly === true || options.input.readOnly,
       ...(options.required === undefined ? {} : { required: options.required }),
       ...(options.label === undefined ? {} : { label: options.label }),
       onValueChange: (value) => {
@@ -153,21 +150,18 @@ class DOMDatePicker implements DatePickerConnection {
         return true;
       },
     });
-    this.#bindNative();
-    options.root.setAttribute('role', 'dialog');
-    options.root.setAttribute('aria-modal', 'false');
-    options.grid.setAttribute('role', 'grid');
-    setInteractionAttributes(options.trigger, options, true);
-    setInteractionAttributes(options.grid, options);
+    this.setPopup(pickerPopupElements(options));
     this.refresh();
-    if (options.layerHost === null || options.layerHost?.active === false) this.suspend();
+    if (!this.getActive()) this.#field?.suspend();
   }
-  public getActive(): boolean { return !this.#disconnected && this.#layer.getActive(); }
-  public getLayerOrder(): number | null { return this.#layer.getLayerOrder(); }
-  public subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription { return this.#layer.subscribeLayerPresentation(listener); }
-  public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#layer.syncLayerParent(parent); }
-  public suspend(): void { this.#layer.suspend(); }
-  public resume(): void { this.#layer.resume(); }
+  public getActive(): boolean { return !this.#disconnected && this.#popup.getActive(); }
+  public getLayerOrder(): number | null { return this.#popup.getLayerOrder(); }
+  public subscribeLayerPresentation(listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription { return this.#popup.subscribe(listener); }
+  public syncLayerParent(parent: HTMLElement | null): Result<void, DOMLayerReparentErrorCode> { return this.#popup.reparent(parent); }
+  public suspend(): void { this.#popup.suspend(); }
+  public resume(): void { this.#popup.resume(); }
+  public setPopup(elements: PickerPopupElements | null): void { this.#popup.attach(elements); this.refresh(); }
+  public prepareSubmission(): boolean { return this.#field?.prepareSubmission() ?? true; }
   public getSnapshot(): RevisionSnapshot<DatePickerState> { return this.runtime.getSnapshot(); }
   public getFieldStates(): NonNullable<DatePickerOptions['defaultFieldStates']> { return Object.freeze(this.#field === null ? {} : { input: detachedFieldState(this.#field.getSnapshot().state) }); }
   public getMonth(): readonly (readonly DateValue[])[] { return createCalendarMonth(this.getSnapshot().state.view, this.options.policies?.weekStartsOn); }
@@ -186,15 +180,16 @@ class DOMDatePicker implements DatePickerConnection {
     setDatePickerCellFocusEntry(element, available, compareDateValues(state.highlighted, value) === 0);
   }
   public handleEvent(event: DatePickerEvent | PeriodPickerEvent): boolean {
+    return this.#handleEvent(event, true);
+  }
+  #handleEvent(event: DatePickerEvent | PeriodPickerEvent, restoreFocus: boolean): boolean {
     const result = this.runtime.handle(event as DatePickerEvent);
     if (result.ok) {
       this.refresh(); this.options.onUpdate?.();
       if (this.getActive()) {
-        if (!this.getSnapshot().state.open && result.commands.some((command) => command.type === 'open-changed' && !command.open)) this.options.trigger.focus();
-        else if (result.commands.some((command) => command.type === 'highlight-changed')) {
-          const generation = this.#focusGeneration;
-          queueMicrotask(() => { if (this.getActive() && generation === this.#focusGeneration) focusDatePickerEntry(this.options.grid); });
-        }
+        const open = result.commands.find(command => command.type === 'open-changed')?.open;
+        if (restoreFocus && open === false && !this.getSnapshot().state.open) this.#popup.focusTrigger();
+        else if (open === true || calendarFocusEvent(event) && result.commands.some(command => command.type === 'highlight-changed')) this.#popup.focusGrid();
       }
     }
     return result.ok;
@@ -202,57 +197,28 @@ class DOMDatePicker implements DatePickerConnection {
   public refresh(): void {
     if (this.#disconnected) return;
     const state = this.getSnapshot().state;
-    if ((this.options as InternalDatePickerOptions).projectCell === undefined) {
+    const grid = this.#popup.elements?.grid;
+    if (grid !== undefined && (this.options as InternalDatePickerOptions).projectCell === undefined) {
       setDatePickerGridFocusEntry(
-        this.options.grid,
+        grid,
         isCalendarValueAvailable(state.highlighted, this.options.policies),
       );
     }
-    this.#visibility?.setHidden(!this.getActive() || !state.open);
-    this.options.trigger.setAttribute('aria-haspopup', 'dialog');
-    this.options.trigger.setAttribute('aria-expanded', String(state.open));
-    if (this.options.label !== undefined) this.options.grid.setAttribute('aria-label', this.options.label);
     if (this.#field !== null && compareNullable(this.#field.getValue(), state.value) !== 0) {
       this.#syncingField = true;
       try { this.#field.syncControlledValues({ value: state.value }); }
       finally { this.#syncingField = false; }
     }
-    this.#layer.sync();
-    if (this.getActive()) this.#position.update();
+    this.#popup.refresh();
   }
   public disconnect(): void {
     if (this.#disconnected) return;
     this.#disconnected = true;
     let failed = false, failure: unknown;
     const drain = (operation: () => void): void => { try { operation(); } catch (error) { if (!failed) { failed = true; failure = error; } } };
-    drain(() => this.#layer.disconnect());
-    drain(() => this.#position.disconnect());
-    drain(() => this.#visibility?.disconnect());
+    drain(() => this.#popup.disconnect());
     drain(() => this.#field?.disconnect());
-    this.#unbindNative();
     if (failed) throw failure;
-  }
-  #bindNative(): void {
-    this.options.trigger.addEventListener('click', this.#trigger);
-    this.options.grid.addEventListener('keydown', this.#keydown);
-    this.options.grid.addEventListener('click', this.#click);
-  }
-  #unbindNative(): void {
-    this.options.trigger.removeEventListener('click', this.#trigger);
-    this.options.grid.removeEventListener('keydown', this.#keydown);
-    this.options.grid.removeEventListener('click', this.#click);
-  }
-  #suspendResources(): void {
-    this.#focusGeneration += 1; this.#unbindNative();
-    let failed = false, failure: unknown;
-    const drain = (operation: () => void): void => { try { operation(); } catch (error) { if (!failed) { failed = true; failure = error; } } };
-    drain(() => this.#field?.suspend()); drain(() => this.#position.disconnect());
-    if (!this.#disconnected) drain(() => this.#visibility?.setHidden(true));
-    drain(() => this.options.onUpdate?.());
-    if (failed) throw failure;
-  }
-  #resumeResources(): void {
-    this.#bindNative(); this.#field?.resume(); this.refresh(); this.options.onUpdate?.();
   }
 }
 function keyEvent(event: KeyboardEvent): DatePickerEvent | null { if (event.altKey || event.ctrlKey || event.metaKey) return null; if (event.key === 'ArrowLeft') return 'previous-day'; if (event.key === 'ArrowRight') return 'next-day'; if (event.key === 'ArrowUp') return 'previous-week'; if (event.key === 'ArrowDown') return 'next-week'; if (event.key === 'Home') return 'start-of-week'; if (event.key === 'End') return 'end-of-week'; if (event.key === 'PageUp') return event.shiftKey ? 'previous-year' : 'previous-month'; if (event.key === 'PageDown') return event.shiftKey ? 'next-year' : 'next-month'; if (event.key === 'Enter' || event.key === ' ') return 'select-highlighted'; if (event.key === 'Escape') return 'close'; return null; }

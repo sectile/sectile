@@ -9,6 +9,7 @@ import { setFieldValidity, setInteractionAttributes } from '../interaction/attri
 import { DOMTextElementBinding } from '../text/element-binding.js';
 import { nativeFieldSelectionEvent, synchronizeControlledFieldInput, synchronizeFieldInputSelection } from '../text/controlled-input.js';
 import { toTextEvent, type TextInput } from '../text.js';
+import { bindTemporalSubmit } from './internal/submit.js';
 
 export { formatDateValue, parseDateValue } from '@sectile/temporal/date-field';
 export type { DateFieldFormat, DateRange, DateValue } from '@sectile/temporal/date-field';
@@ -26,6 +27,7 @@ export interface DateFieldOptions {
   readonly label?: string;
   readonly native?: boolean;
   readonly format?: DateFieldFormat;
+  readonly prepareForm?: false;
   readonly onValueChange?: (value: DateValue | null) => boolean | void;
   readonly onInputStateChange?: (value: TextEditingState, previousValue: TextEditingState) => void;
   readonly onUpdate?: () => void;
@@ -45,6 +47,7 @@ export interface DateFieldConnection {
   getValue(): DateValue | null;
   syncControlledValues(values: DateFieldControlledValues): DOMTemporalResult<RevisionSnapshot<DateFieldState>>;
   handleEvent(event: DateFieldEvent): boolean;
+  prepareSubmission(): boolean;
   refresh(): void;
   disconnect(): void;
 }
@@ -75,6 +78,7 @@ class DOMDateField implements DateFieldConnection {
   readonly #inputControlled: boolean;
   readonly #binding: DOMTextElementBinding;
   readonly #editable: boolean;
+  readonly #submission = bindTemporalSubmit(() => this.prepareSubmission());
   readonly #keydown = (event: KeyboardEvent): void => {
     if (!this.getActive() || !this.#editable || this.#binding.isComposing || event.isComposing) return;
     if (this.#options.native === true && (event.key.startsWith('Arrow') || event.key === 'Home' || event.key === 'End')) return;
@@ -98,7 +102,7 @@ class DOMDateField implements DateFieldConnection {
     this.refresh();
   }
   public getActive(): boolean { return this.#binding.isActive; }
-  public suspend(): void { this.#binding.suspend(); }
+  public suspend(): void { this.#submission(); this.#binding.suspend(); }
   public resume(): void { this.#binding.resume(); try { if (this.getActive()) this.refresh(); } catch (error) { this.suspend(); throw error; } }
   public getSnapshot(): RevisionSnapshot<DateFieldState> { return this.#runtime.getSnapshot(); }
   public getText(): string { return this.getSnapshot().state.inputState.snapshot.text; }
@@ -134,8 +138,16 @@ class DOMDateField implements DateFieldConnection {
     }
     return result.ok;
   }
-  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; const placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(this.getSnapshot().state.format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render(); }
-  public disconnect(): void { this.#binding.disconnect(); }
+  public prepareSubmission(): boolean {
+    if (!this.getActive() || !this.#editable || this.#options.input.name === '') return true;
+    if (this.#binding.isComposing) return false;
+    const text = () => { const { value, format } = this.getSnapshot().state; return value === null ? '' : formatDateFieldValue(value, format); };
+    return this.getText() === text() || this.handleEvent('commit') && this.getText() === text();
+  }
+  public refresh(): void { const input = this.#options.input; input.type = this.#options.native === true ? 'date' : 'text'; input.inputMode = this.#options.native === true ? '' : 'numeric'; const placeholder = this.#options.native === true ? '' : getDateFieldPlaceholder(this.getSnapshot().state.format); if (input.placeholder !== placeholder) input.placeholder = placeholder; input.required = this.#options.required ?? this.#options.policies?.required ?? false; setInteractionAttributes(input, this.#options, true, true); if (this.#options.label !== undefined) input.setAttribute('aria-label', this.#options.label); this.#binding.render();
+    if (this.#editable && this.#options.prepareForm !== false && this.getActive()) this.#submission(input.form);
+  }
+  public disconnect(): void { this.#submission(); this.#binding.disconnect(); }
   #text(input: TextInput): boolean { const event = toTextEvent(input); return event !== null && this.handleEvent({ type: 'text', event }); }
   #syncSelection(): void {
     this.handleEvent({ type: 'text', event: nativeFieldSelectionEvent(this.#options.input) });

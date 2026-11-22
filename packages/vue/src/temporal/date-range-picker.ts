@@ -15,7 +15,7 @@ export interface DateRangePickerRootProps extends PickerPartProps, PickerPositio
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateRangePickerOptions['policies'];
 }
-export const DateRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot', { dateFormat: true });
+export const DateRangePickerRoot = /* @__PURE__ */ createPickerRoot(dateRangePickerCapability, 'SectileDateRangePickerRoot', { dateFormat: true, fieldFirst: true });
 export type DateRangePickerRootSlotProps = RangePickerRootSlotProps<DateRange | null>;
 export type DateRangePickerContentSlotProps = RangePickerContentSlotProps<DateRange | null>;
 export type DateRangePickerValueChangeHandler = NonNullable<InstanceType<typeof DateRangePickerRoot>['$props']['onUpdate:modelValue']>;
