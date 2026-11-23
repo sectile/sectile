@@ -59,6 +59,7 @@ const {
   DateTimePickerGrid,
   DateTimePickerRoot,
   DateTimePickerTimeInput,
+  DateTimePickerTimeChoices,
   DateTimePickerTrigger,
 } = await import('../.verification-dist/temporal/date-time-picker.js');
 const {
@@ -134,7 +135,12 @@ test('date-time picker formats share literals and reject precision loss before r
     assert.equal(rangeDisplay.value, combined.value);
     value.value = { ...start, time: { ...start.time, second: 12 } };
     await settle();
+    combined.focus();
     format.value = undefined;
+    await settle();
+    assert.deepEqual(errors, []);
+    combined.blur();
+    await new Promise(resolve => setTimeout(resolve, 0));
     await settle();
     assert.equal(host.querySelector('#combined'), combined);
     assert.equal(combined.value, '18/08/2026 @ 09·30·12');
@@ -142,11 +148,38 @@ test('date-time picker formats share literals and reject precision loss before r
     value.value = { ...start, time: { ...start.time, second: 12, millisecond: 1 } };
     await settle();
     assert.equal(combined.value, '18/08/2026 @ 09·30·12');
-    assert.match(errors[1]?.message ?? '', /precision/i);
+    assert.equal(errors[1]?.code, 'time-field-format-precision-loss');
     precision.value = 'millisecond';
     await settle();
     assert.equal(host.querySelector('#combined'), combined);
     assert.equal(combined.value, '2026-08-18T09:30:12.000');
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('a controlled empty date-time picker keeps its fields until a time choice proposal is accepted', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const proposals = [];
+  const accepted = shallowRef(null);
+  const app = createApp({ render: () => h(DateTimePickerRoot, {
+    modelValue: accepted.value, defaultOpen: true, referenceDate: start.date, position: false, precision: 'minute',
+    'onUpdate:modelValue': value => proposals.push(value),
+  }, () => [h(DateTimePickerTimeInput), h(DateTimePickerTrigger), h(DateTimePickerContent, null, () => [
+    h(DateTimePickerGrid, null, () => h('div', { role: 'row' }, h(DateTimePickerCell, { value: start.date }, () => '18'))),
+    h(DateTimePickerTimeChoices),
+  ])]) });
+  app.mount(host);
+  try {
+    await settle();
+    const hour = [...host.querySelectorAll('[role=option]')].find(option => option.getAttribute('aria-label') === '09' || option.textContent === '09');
+    assert.ok(hour);
+    hour.click();
+    await settle();
+    assert.equal(host.querySelector('input').value, '00:00');
+    assert.deepEqual(proposals, [{ date: start.date, time: { hour: 9, minute: 0, second: 0, millisecond: 0 } }]);
+    accepted.value = proposals[0];
+    await settle();
+    assert.equal(host.querySelector('input').value, '09:00');
   } finally { app.unmount(); host.remove(); }
 });
 

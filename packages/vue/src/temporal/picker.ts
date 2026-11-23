@@ -487,6 +487,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const composingInputs = shallowReactive(new Set<PickerInputPart>());
       let reconnectPending = false;
       let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+      const deferredConnect = dateTimeFormat ? shallowRef(0) : undefined;
+      if (deferredConnect !== undefined) watch(deferredConnect, () => lifecycle.reconnect());
       const hasActiveInput = (): boolean => focusedInputs.size > 0 || composingInputs.size > 0;
       const requestConnect = (): void => {
         if (!lifecycle.availability.value) { lifecycle.invalidate(); return; }
@@ -502,7 +504,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           reconnectTimer = null;
           if (!mounted || hasActiveInput()) return;
           reconnectPending = false;
-          lifecycle.reconnect();
+          if (deferredConnect === undefined) lifecycle.reconnect();
+          else deferredConnect.value++;
         }, 0);
       };
       const setInputFocused = (part: PickerInputPart, focused: boolean): void => {
@@ -721,7 +724,10 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           ...(controlled.value ? { value: runtimeProps.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: runtimeProps.open } : {}),
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : {}),
         });
-        if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.');
+        if (!result.ok) {
+          if (dateTimeFormat) unwrap(result);
+          throw new TypeError(result.error.message);
+        }
         if (acceptedModel !== undefined) acceptedModel.value = runtimeProps.modelValue;
         refresh();
       });

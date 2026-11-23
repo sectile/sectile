@@ -110,6 +110,29 @@ test('a mounted TimePicker keeps its input and choice model on precision rejecti
   } finally { app.unmount(); host.remove(); }
 });
 
+test('controlled TimePicker applies a co-updated format and value as one editor change', async () => {
+  const value = shallowRef({ hour: 9, minute: 30 }), precision = ref('minute'), errors = [];
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({ render: () => h(TimePickerRoot, { modelValue: value.value, precision: precision.value }, () => h(TimePickerInput)) });
+  app.config.errorHandler = error => errors.push(error);
+  app.mount(host);
+  try {
+    await nextTick();
+    const input = host.querySelector('input');
+    value.value = { hour: 9, minute: 30, second: 1, millisecond: 125 };
+    precision.value = 'millisecond';
+    await nextTick();
+    assert.equal(host.querySelector('input'), input);
+    assert.equal(input.value, '09:30:01.125');
+    value.value = { hour: 9, minute: 45 };
+    precision.value = 'minute';
+    await nextTick();
+    assert.equal(input.value, '09:45');
+    assert.deepEqual(errors, []);
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('ComboboxResults reuses matching publication across windows and preserves the canonical IME baseline', async () => {
   const items = shallowRef([{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }, { id: 'k', label: '한글' }]);
   let reads = 0, results, state;

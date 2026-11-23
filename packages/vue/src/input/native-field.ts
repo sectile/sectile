@@ -17,7 +17,7 @@ import {
   type ShallowRef,
   type VNodeChild,
 } from 'vue';
-import type { TextEditingState } from '@sectile/core/text';
+import { createTextEditingState, isTextCodeUnitBoundary, type TextEditingState } from '@sectile/core/text';
 import { hiddenInputSubmissionCapabilities, useFormControlFlags, useFormSubmissionProps, useNativeInputFormControl } from '../form/control.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { captureNativeTextState } from './native-text-state.js';
@@ -151,15 +151,15 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           inputState: captureNativeTextState(element, target.getText()),
         };
       };
-      const connect = (preserved?: PreservedNativeField<Value>, reset = false): void => {
+      const connect = (preserved?: PreservedNativeField<Value>, reset = false, replaceControlled = false): void => {
         const element = input.value;
         if (element === undefined) return;
         const wanted = requestedPresentation?.value ?? config;
         const previous = presentation.value;
-        const dirty = preserved !== undefined && (preserved.inputState.composition !== null || preserved.inputState.snapshot.text !== (preserved.value === null ? '' : previous.formatValue(preserved.value)));
+        const dirty = !replaceControlled && preserved !== undefined && (preserved.inputState.composition !== null || preserved.inputState.snapshot.text !== (preserved.value === null ? '' : previous.formatValue(preserved.value)));
         const deferred = wanted !== previous && dirty;
         const next = deferred ? previous : wanted;
-        if (preserved !== undefined && next !== previous) {
+        if (!replaceControlled && preserved !== undefined && next !== previous) {
           preserved = { value: preserved.value, inputState: next.rebase?.(preserved.value, preserved.inputState, previous.format) ?? preserved.inputState };
         }
         connection?.disconnect();
@@ -185,18 +185,33 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
           },
         };
         if (props.policies !== undefined) fieldOptions.policies = props.policies as Policies;
-        if (controlled) fieldOptions.value = acceptedValue as Value | null;
+        if (controlled) fieldOptions.value = replaceControlled ? preserved!.value : acceptedValue as Value | null;
         else fieldOptions.defaultValue = (reset ? resetValue : preserved === undefined ? props.defaultValue : preserved.value) as Value | null;
         if (preserved !== undefined) fieldOptions.defaultInputState = preserved.inputState;
         if (props.label !== undefined) fieldOptions.label = props.label;
         connection = next.create(fieldOptions);
+        if (replaceControlled) acceptedValue = fieldOptions.value;
         projectedText.value = connection.getText();
       };
       const resetTask = useNextTickTask(() => { if (mounted) connect(undefined, true); });
       const settlePresentation = (): void => {
-        if (!mounted || inputComposing || (requestedPresentation?.value ?? config) === presentation.value) return;
+        const wanted = requestedPresentation?.value ?? config;
+        if (!mounted || inputComposing || wanted === presentation.value) return;
         const preserved = capture();
-        if (preserved !== undefined && preserved.inputState.composition === null && preserved.inputState.snapshot.text === (preserved.value === null ? '' : presentation.value.formatValue(preserved.value))) connect(preserved);
+        if (preserved === undefined || preserved.inputState.composition !== null
+          || preserved.inputState.snapshot.text !== (preserved.value === null ? '' : presentation.value.formatValue(preserved.value))) return;
+        const candidate = props.modelValue as Value | null | undefined;
+        if (valueBinding !== undefined && controlled && candidate !== undefined && candidate !== acceptedValue) {
+          const text = candidate === null ? '' : wanted.formatValue(candidate);
+          const { snapshot } = preserved.inputState;
+          const offset = (old: number): number => {
+            const mapped = old === snapshot.text.length ? text.length : Math.min(old, text.length);
+            return isTextCodeUnitBoundary(text, mapped) ? mapped : mapped - 1;
+          };
+          connect({ value: candidate, inputState: createTextEditingState(text, {
+            anchorCodeUnitOffset: offset(snapshot.selection.anchorCodeUnitOffset), focusCodeUnitOffset: offset(snapshot.selection.focusCodeUnitOffset),
+          }) }, false, true);
+        } else connect(preserved);
       };
       const presentationTask = requestedPresentation === undefined ? undefined : useNextTickTask(settlePresentation);
       const participation = useNativeInputFormControl(input, { prepareSubmission: () => {
@@ -263,6 +278,10 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
       });
       watch(() => props.modelValue, (value) => {
         if (!controlled || value === undefined || connection === undefined) return;
+        if (valueBinding !== undefined) {
+          if ((requestedPresentation?.value ?? config) !== presentation.value) { settlePresentation(); return; }
+          if (value === acceptedValue) return;
+        }
         const result = connection.syncControlledValues({ value: value as Value | null });
         if (!result.ok) throw new TypeError('Controlled native field synchronization failed.');
         acceptedValue = value as Value | null;

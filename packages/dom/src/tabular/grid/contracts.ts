@@ -99,7 +99,7 @@ export type GridDOMFilterControlOptions =
 
 export interface GridDOMSelectionControlOptions { readonly rowID: TabularRowID; readonly name: string; readonly value: string; readonly form?: string; readonly disabled?: boolean }
 
-export type { BulkSelectionBindingOptions as GridDOMBulkSelectionControlOptions } from '../bindings/selection.js';
+export type { BulkSelectionBindingOptions as GridDOMBulkSelectionControlOptions } from '../contracts.js';
 
 export interface GridDOMDisclosureOptions { readonly rowID: TabularGroupID; readonly disabled?: boolean }
 

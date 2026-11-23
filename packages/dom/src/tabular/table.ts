@@ -64,8 +64,8 @@ import {
   rowSelectionActivation,
   bindRowSelectionActivation,
   prepareBulkSelectionBinding,
-  type BulkSelectionBindingOptions,
 } from './bindings/selection.js';
+import type { BulkSelectionBindingOptions } from './contracts.js';
 import {
   setEditorAttributes,
   readEditorValue,

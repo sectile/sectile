@@ -1260,6 +1260,7 @@
           "allows": [
             "contracts",
             "foundation",
+            "query",
             "model-slices",
             "model",
             "table-state"
@@ -1270,6 +1271,7 @@
           "allows": [
             "contracts",
             "foundation",
+            "query",
             "model-slices",
             "model",
             "source-view",
@@ -1343,6 +1345,10 @@
           "kind": "owner"
         },
         "src/model/expansion.ts": {
+          "role": "model-slices",
+          "kind": "owner"
+        },
+        "src/model/group-selection.ts": {
           "role": "model-slices",
           "kind": "owner"
         },
@@ -3833,12 +3839,17 @@
             "temporal-provider"
           ]
         },
+        "temporal-presentation": {
+          "reason": "Shared locale and issued-format selection below both picker and field components.",
+          "allows": ["temporal-provider"]
+        },
         "temporal-picker": {
           "reason": "Shared Vue picker context, connection lifecycle and parts over selected capabilities and existing host foundations.",
           "allows": [
             "temporal-picker",
             "temporal-capability",
             "temporal-provider",
+            "temporal-presentation",
             "foundation",
             "form-control",
             "input-style",
@@ -3847,11 +3858,11 @@
         },
         "temporal-time-picker": {
           "reason": "Time choice composition borrows native TimeField, Popover and Listbox owners rather than another calendar or text runtime.",
-          "allows": ["temporal-time-picker", "temporal-fields", "temporal-provider", "native-field", "overlay-profiles", "controls", "form-context", "form-control", "foundation"]
+          "allows": ["temporal-time-picker", "temporal-fields", "temporal-presentation", "temporal-provider", "native-field", "overlay-profiles", "controls", "form-context", "form-control", "foundation"]
         },
         "temporal-time-choices": {
           "reason": "Inline date-time choices compose the shared picker context and reusable time columns with a Form boundary.",
-          "allows": ["temporal-picker", "temporal-time-picker", "temporal-fields", "form-context"]
+          "allows": ["temporal-picker", "temporal-time-picker", "temporal-presentation", "form-context"]
         },
         "temporal-profiles": {
           "reason": "Named Calendar and picker public components compose selected capability adapters and shared picker parts.",
@@ -3867,6 +3878,7 @@
           "allows": [
             "temporal-fields",
             "temporal-provider",
+            "temporal-presentation",
             "native-field",
             "foundation",
             "form-control"
@@ -4510,7 +4522,7 @@
           "kind": "owner"
         },
         "src/temporal/internal/time-presentation.ts": {
-          "role": "temporal-fields",
+          "role": "temporal-presentation",
           "kind": "owner"
         },
         "src/temporal/date-time-range-field.ts": {

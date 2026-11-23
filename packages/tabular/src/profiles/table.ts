@@ -188,9 +188,12 @@ class DataTableRuntime implements DataTableController {
 
   public dispatch(event: DataTableEvent, expectedRevision: number = this.#snapshot.revision): TabularResult<DataTableUpdate> {
     if (this.#disposed) return dataTableDisposed('dispatch events');
-    const proposed = proposeDataTableEvent(this.#model, this.#snapshot, event, expectedRevision);
+    const previous = this.#snapshot;
+    const proposed = proposeDataTableEvent(this.#model, previous, event, expectedRevision);
     if (!proposed.ok) return proposed;
-    const before = this.#snapshot.state;
+    if (this.#disposed) return dataTableDisposed('dispatch events');
+    if (this.#snapshot !== previous) return fail('transition-rejection', 'stale-revision', 'The event was superseded during admission.');
+    const before = previous.state;
     const proposedState = proposed.value.snapshot.state;
     const controlledRequestProposal = (
       (this.#model.controlled.query && proposedState.query !== before.query)

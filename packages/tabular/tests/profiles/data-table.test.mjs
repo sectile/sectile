@@ -108,6 +108,24 @@ test('remote group deltas keep outside selection and reject obsolete responses',
   }
 });
 
+test('remote group response admission cannot overwrite a newer membership revision', () => {
+  const table = createDataTable({ columns });
+  try {
+    const { state, membership, request, resolve } = groupSelectionFixture(table);
+    const pending = request(0, 1);
+    const response = [];
+    Object.defineProperty(response, '0', { get() { membership(2); return 'a'; } });
+    assert.equal(resolve(pending, response).error.code, 'stale-revision');
+    assert.equal(state().groupSelection.membershipRevision, 2);
+    assert.deepEqual(state().rowSelection.rowIDs, []);
+    const current = request(0, 1);
+    const invalid = new Proxy(['a'], { get() { throw new Error('unreadable response'); } });
+    assert.equal(resolve(current, invalid).ok, true);
+    assert.equal(state().groupSelection.error.code, 'invalid-group-selection-delta');
+    assert.equal(state().groupSelection.pending, null);
+  } finally { table.dispose(); }
+});
+
 test('remote group failures and controlled proposals use the accepted selection revision', () => {
   const rowSelection = { kind: 'explicit-rows', rowIDs: ['outside'] };
   let proposed;

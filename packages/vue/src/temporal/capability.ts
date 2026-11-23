@@ -1,4 +1,5 @@
 import type { TemporalFormatter } from '@sectile/dom/temporal/format';
+import type { Result } from '@sectile/core/result';
 import type { DateFieldFormat } from '@sectile/temporal/date-field';
 import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { TimeFieldFormat, TimeValue } from '@sectile/temporal/time-field';
@@ -19,7 +20,7 @@ export interface PickerCapabilityConnection extends Pick<import('@sectile/dom/te
   getMonth(): readonly (readonly DateValue[])[];
   getWeek(): readonly DateValue[];
   getYear(): readonly (readonly CalendarMonthValue[])[];
-  syncControlledValues(values: Record<string, unknown>): { readonly ok: boolean; readonly error?: { readonly message: string } };
+  syncControlledValues(values: Record<string, unknown>): Result<unknown, string>;
   setCellAttributes(element: HTMLElement, value: DateValue): void;
   handleEvent(event: unknown): boolean;
   refresh(): void;

@@ -1,5 +1,7 @@
 import type {
   TabularBulkSelectionState,
+  TabularGroupID,
+  TabularGroupSelectionAggregate,
   TabularColumnID,
   TabularResult,
   TabularWireValue,
@@ -58,6 +60,11 @@ export interface ResolvedTabularHeaderReference {
 }
 
 export type TabularDOMBulkSelectionState = TabularBulkSelectionState;
+
+export type BulkSelectionBindingOptions =
+  | { readonly target: { readonly kind: 'all-matching' }; readonly disabled?: boolean }
+  | { readonly target: { readonly kind: 'group-leaves'; readonly groupID: TabularGroupID }; readonly disabled?: boolean;
+      readonly groupSelection?: () => TabularGroupSelectionAggregate | null };
 
 export interface TabularDOMRowSelectionAnchor {
   readonly rowID: TabularRowID;

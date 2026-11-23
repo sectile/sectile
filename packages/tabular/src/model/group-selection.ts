@@ -85,11 +85,12 @@ function selectionCeiling(): TabularResult<never> {
 function applyGroupDelta(
   state: TabularState, pending: TabularGroupSelectionIntent, rowIDs: readonly TabularRowID[], limits: TabularLimits,
 ): TabularResult<TabularRowSelection> {
-  if (!Array.isArray(rowIDs)) return invalidDelta();
-  if (rowIDs.length > limits.maxSelectionIDs) return selectionCeiling();
-  if (rowIDs.length !== pending.changedRowCount) return invalidDelta();
   const ids = new Set<TabularRowID>();
   try {
+    if (!Array.isArray(rowIDs)) return invalidDelta();
+    const length = rowIDs.length;
+    if (length > limits.maxSelectionIDs) return selectionCeiling();
+    if (length !== pending.changedRowCount) return invalidDelta();
     for (let index = 0; index < pending.changedRowCount; index++) {
       const id = rowIDs[index]!;
       const error = validateID(id, 'changedRowID', limits);

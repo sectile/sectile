@@ -7,23 +7,18 @@ import {
   getGroupSelectionState,
   rowSelectionContains,
   type DataTableEvent,
-  type TabularGroupSelectionAggregate,
 } from '@sectile/tabular/data-table';
 import type { TabularSnapshot } from '@sectile/tabular';
 import type {
   TabularDOMRowSelectionAnchor,
   TabularDOMRowSelectionActivation,
   TabularDOMBulkSelectionState,
+  BulkSelectionBindingOptions,
 } from '../contracts.js';
 import {
   type BindingScope,
   bindEvent,
 } from './scope.js';
-
-export type BulkSelectionBindingOptions =
-  | { readonly target: { readonly kind: 'all-matching' }; readonly disabled?: boolean }
-  | { readonly target: { readonly kind: 'group-leaves'; readonly groupID: string }; readonly disabled?: boolean;
-      readonly groupSelection?: () => TabularGroupSelectionAggregate | null };
 
 export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID): boolean {
   return rowSelectionContains(selection, rowID);
