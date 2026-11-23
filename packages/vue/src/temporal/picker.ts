@@ -14,7 +14,7 @@ import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-ti
 import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { DateTimeChoiceLimits, DateTimePickerState } from '@sectile/temporal/date-time-picker';
 import type { DateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
-import { tryCreateTimeFieldState, type TimeFieldPrecision, type TimeValue } from '@sectile/temporal/time-field';
+import type { TimeFieldPrecision, TimeValue } from '@sectile/temporal/time-field';
 import { unwrap } from '@sectile/core/result';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';
@@ -40,7 +40,6 @@ import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import { useTemporalReferenceDate, useTemporalFormatter } from './temporal-provider.js';
 import { useHostLayer } from '../host-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';
-import { resolveDateTimeFormat } from './internal/time-presentation.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -261,8 +260,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const layerHost = useHostLayer();
       const requestedPresentation = computed(() => {
         if (granularity !== 'day') return undefined;
-        const explicit = dateTimeFormat ? (runtimeProps.format as DateTimeFieldFormat | undefined)
-          ?? (runtimeProps.precision === undefined ? undefined : resolveDateTimeFormat(formatter.value, runtimeProps.precision)) : undefined;
+        const explicit = dateTimeFormat ? { format: runtimeProps.format as DateTimeFieldFormat | undefined, precision: runtimeProps.precision } : undefined;
         return capability.presentation?.(formatter.value, dateTimeFormat ? undefined : runtimeProps.format as DateFieldFormat | undefined, explicit);
       });
       const acceptedPresentation = dateTimeFormat ? shallowRef(requestedPresentation.value) : undefined;
@@ -406,12 +404,8 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const connect = (): void => {
         const requested = requestedPresentation.value;
         if (acceptedPresentation !== undefined && acceptedPresentation.value !== requested) {
-          const format = requested?.timeFormat;
           const current = dateTimeState.value;
-          if (format !== undefined && current !== undefined) {
-            const times = 'time' in current ? [current.time] : [current.startTime, current.endTime];
-            for (const time of times) unwrap(tryCreateTimeFieldState(time, undefined, format));
-          }
+          if (current !== undefined) requested?.admitTimes?.('time' in current ? [current.time] : [current.startTime, current.endTime]);
           acceptedPresentation.value = requested;
         }
         if (!restoringInitial) {

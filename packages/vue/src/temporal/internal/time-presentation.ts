@@ -1,6 +1,6 @@
 import { computed, type ComputedRef } from 'vue';
 import { unwrap } from '@sectile/core/result';
-import { createTimeFieldFormat, type TimeFieldFormat, type TimeFieldPrecision } from '@sectile/temporal/time-field';
+import { createTimeFieldFormat, tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldPrecision, type TimeValue } from '@sectile/temporal/time-field';
 import { createDateFieldFormat } from '@sectile/temporal/date-field';
 import { createDateTimeFieldFormat, type DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import { useTemporalFormatter, type TemporalFormatter } from '../temporal-provider.js';
@@ -32,4 +32,8 @@ export function resolveDateTimeFormat(formatter: TemporalFormatter | undefined, 
   return formatter === undefined
     ? createDateTimeFieldFormat({ date: createDateFieldFormat({ order: ['year', 'month', 'day'] }), time: createTimeFieldFormat({ precision }), separator: 'T' })
     : unwrap(formatter.dateTimeFieldFormat(precision));
+}
+
+export function admitTimePresentation(format: TimeFieldFormat, times: readonly TimeValue[]): void {
+  for (const time of times) unwrap(tryCreateTimeFieldState(time, undefined, format));
 }

@@ -3828,9 +3828,10 @@
           ]
         },
         "temporal-capabilities": {
-          "reason": "Independently selected family DOM adapters depend only on the lower capability contract, not peer adapters or Vue roots.",
+          "reason": "Independently selected family DOM adapters use the lower capability and presentation owners.",
           "allows": [
-            "temporal-capability"
+            "temporal-capability",
+            "temporal-presentation"
           ]
         },
         "temporal-provider": {
@@ -3849,7 +3850,6 @@
             "temporal-picker",
             "temporal-capability",
             "temporal-provider",
-            "temporal-presentation",
             "foundation",
             "form-control",
             "input-style",

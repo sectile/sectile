@@ -8,17 +8,20 @@ import { formatTimeFieldValue } from '@sectile/temporal/time-field';
 import { unwrap } from '@sectile/core/result';
 import { createDateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
 import { definePickerFamilyCapability } from '../capability.js';
+import { admitTimePresentation, resolveDateTimeFormat } from '../internal/time-presentation.js';
 
 export const dateTimeRangePickerCapability = definePickerFamilyCapability({
   kind: 'date-time-range' as const,
   connect: (options) => createDateTimeRangePicker(options as never),
-  presentation: (formatter, _date, format) => {
+  presentation: (formatter, _date, explicit) => {
+    const format = explicit?.format ?? (explicit?.precision === undefined ? undefined : resolveDateTimeFormat(formatter, explicit.precision));
     const dateFormat = format?.date ?? (formatter === undefined ? undefined : unwrap(formatter.dateFieldFormat()));
     const timeFormat = format?.time ?? (formatter === undefined ? undefined : unwrap(formatter.timeFieldFormat('millisecond')));
     const date = { placeholder: getDateFieldPlaceholder(dateFormat), inputmode: 'numeric' as const };
     const time = { placeholder: getTimeFieldPlaceholder(timeFormat), inputmode: timeFormat?.dayPeriods === undefined ? 'numeric' as const : 'text' as const };
     const combined = { placeholder: getDateTimeFieldPlaceholder(format), inputmode: 'text' as const };
-    return { timeFormat, options: { dateFormat, timeFormat, format }, attributes: {
+    return { timeFormat, ...(timeFormat === undefined ? {} : { admitTimes: times => admitTimePresentation(timeFormat, times) }),
+      options: { dateFormat, timeFormat, format }, attributes: {
       'start-date-input': date, 'end-date-input': date, 'start-time-input': time, 'end-time-input': time,
       ...(format === undefined ? {} : { 'start-date-time-input': combined, 'end-date-time-input': combined }),
     },

@@ -8,14 +8,18 @@ import { formatDateTimeFieldValue } from '@sectile/temporal/date-time-field';
 import { unwrap } from '@sectile/core/result';
 import { createDateTimePickerState, type DateTimePickerPolicies } from '@sectile/temporal/date-time-picker';
 import { definePickerFamilyCapability } from '../capability.js';
+import { admitTimePresentation, resolveDateTimeFormat } from '../internal/time-presentation.js';
 
 export const dateTimePickerCapability = definePickerFamilyCapability({
   kind: 'date-time' as const,
   connect: (options) => createDateTimePicker(options as never),
   presentation: (formatter, _date, explicit) => {
-    const format = explicit ?? (formatter === undefined ? undefined : unwrap(formatter.dateTimeFieldFormat('millisecond')));
+    const format = explicit?.format ?? (explicit?.precision === undefined
+      ? formatter === undefined ? undefined : unwrap(formatter.dateTimeFieldFormat('millisecond'))
+      : resolveDateTimeFormat(formatter, explicit.precision));
     const dateFormat = format?.date, timeFormat = format?.time;
-    return { timeFormat, options: { format, dateFormat, timeFormat }, attributes: {
+    return { timeFormat, ...(timeFormat === undefined ? {} : { admitTimes: times => admitTimePresentation(timeFormat, times) }),
+      options: { format, dateFormat, timeFormat }, attributes: {
       'date-time-input': { placeholder: getDateTimeFieldPlaceholder(format), inputmode: 'text' },
       'date-input': { placeholder: getDateFieldPlaceholder(dateFormat), inputmode: 'numeric' },
       'time-input': { placeholder: getTimeFieldPlaceholder(timeFormat), inputmode: timeFormat?.dayPeriods === undefined ? 'numeric' : 'text' },
