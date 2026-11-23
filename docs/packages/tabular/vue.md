@@ -134,6 +134,16 @@ Root and part slots expose the source and interaction state near the template th
 
 Use `useData*Context()` when a descendant component needs the same values in script. Calling it outside a matching Provider fails immediately.
 
+## Select a remote group's leaves
+
+Render `BulkSelectionControl` with `target` set to `{ kind: 'group-leaves', groupID }` and pass `groupSelection` to opt in to remote group selection. Pass `null` while counts are unavailable. A current aggregate supplies `totalLeafCount`, `selectedLeafCount`, and a `scope` containing `groupID`, `sourceGeneration`, `queryRevision`, `rowSelectionRevision`, and `membershipRevision`. Count distinct eligible leaves across all pages, including collapsed descendants. Count selection against the controller's accepted `rowSelection`.
+
+1. Dispatch `sync-group-membership-revision` for the current source and query when the adapter knows the membership revision. Derive each aggregate's scope from the accepted controller state and the membership revision used by the count request.
+2. In `Root`'s `onCommand`, handle `request-bulk-selection` with a group target and `target.intent`. Use the intent's `rowSelection` and `selected` flag to resolve only the eligible leaf IDs whose membership in the selection changes. The intent provides `changedRowCount` for this response. Selection outside the group is preserved.
+3. Dispatch `resolve-group-leaf-selection` with the same `requestID` and `scope`, and `changedRowIDs`. On adapter failure, dispatch `fail-group-leaf-selection` with the same identity. Read `state.groupSelection.error` for a current failure. Refresh counts for the new `rowSelectionRevision` after applying a delta.
+
+Missing or stale counts disable the control. A request in progress sets `aria-busy`; an indeterminate control projects `aria-checked="mixed"`. A source, query, accepted selection, or membership change invalidates an in-flight reply. Paging and collapse leave a valid aggregate usable when its scope is current.
+
 ## Rendering contracts
 
 - `as` selects the rendered element; `asChild` adopts exactly one valid child.

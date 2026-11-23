@@ -140,6 +140,16 @@ Root/Provider/part slot은 source와 interaction state를 함께 제공합니다
 
 `useData*Context()`는 같은 값을 script에서 읽어야 하는 하위 component에 사용합니다. matching Provider 밖에서 호출하면 즉시 실패합니다.
 
+## 원격 그룹의 행 선택
+
+`BulkSelectionControl`의 `target`을 `{ kind: 'group-leaves', groupID }`로 설정하고 `groupSelection`을 전달합니다. 집계가 준비되기 전에는 `null`을 전달합니다. 집계에는 `totalLeafCount`, `selectedLeafCount`와 `groupID`, `sourceGeneration`, `queryRevision`, `rowSelectionRevision`, `membershipRevision`을 담은 `scope`가 필요합니다. 페이지가 다르거나 접혀서 보이지 않는 경우에도 선택 가능한 하위 행을 중복 없이 셉니다. 선택된 행 수는 컨트롤러가 확정한 `rowSelection`을 기준으로 계산합니다.
+
+1. 어댑터가 그룹 구성 버전을 알게 되면 현재 소스와 쿼리에 대해 `sync-group-membership-revision`을 전달합니다. 집계의 `scope`는 확정된 컨트롤러 상태와 실제 집계에 사용한 구성 버전으로 만듭니다.
+2. `Root`의 `onCommand`에서 그룹 대상과 `target.intent`가 있는 `request-bulk-selection`을 처리합니다. `rowSelection`과 `selected`를 기준으로 선택 여부가 바뀌는 하위 행 ID만 구합니다. `changedRowCount`가 응답에 필요한 ID 수입니다. 그룹 밖의 선택은 유지됩니다.
+3. 같은 `requestID`와 `scope`에 `changedRowIDs`를 담아 `resolve-group-leaf-selection`을 전달합니다. 어댑터 요청이 실패하면 같은 식별자로 `fail-group-leaf-selection`을 전달합니다. 현재 실패는 `state.groupSelection.error`에서 읽습니다. 응답을 적용한 뒤 새 `rowSelectionRevision`으로 다시 집계합니다.
+
+집계가 없거나 버전이 맞지 않으면 컨트롤이 비활성화됩니다. 요청 중에는 `aria-busy`, 부분 선택 상태에서는 `aria-checked="mixed"`가 설정됩니다. 소스, 쿼리, 확정된 선택 또는 그룹 구성이 바뀌면 진행 중인 응답은 무효가 됩니다. 페이지를 바꾸거나 그룹을 접어도 집계의 `scope`가 현재 상태와 일치하면 계속 사용할 수 있습니다.
+
 ## 렌더링 계약
 
 - `as`는 element를 고르고 `asChild`는 유효한 child 하나를 채택합니다.

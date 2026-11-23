@@ -27,6 +27,7 @@ import { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } 
 import { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerGrid } from '@sectile/vue/temporal/date-picker';
 import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '@sectile/vue/tree-grid';
 import { useDataGrid, createDataGridComponents } from '@sectile/vue/data-grid';
+import { useDataTreeGrid, createDataTreeGridComponents } from '@sectile/vue/data-tree-grid';
 import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue/tree-select';
 import { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } from '@sectile/vue/temporal/date-time-range-field';
 import {
@@ -78,6 +79,44 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
+  async remoteGroupSelection() {
+    reset();
+    const controller = useDataTreeGrid({ defaultRowSelection: { kind: 'explicit-rows', rowIDs: ['a', 'outside'] } });
+    const state = () => controller.getSnapshot().tabular.state;
+    const Grid = createDataTreeGridComponents(controller);
+    const aggregate = ref(null);
+    const intents = [];
+    const syncMembership = (membershipRevision) => {
+      const { sourceGeneration, queryRevision } = state();
+      controller.dispatch({ type: 'sync-group-membership-revision', sourceGeneration, queryRevision, membershipRevision });
+    };
+    const refresh = () => {
+      const { sourceGeneration, queryRevision, rowSelectionRevision, groupSelection, rowSelection } = state();
+      aggregate.value = { totalLeafCount: 2, selectedLeafCount: rowSelection.rowIDs.filter(id => id === 'a' || id === 'b').length,
+        scope: { groupID: 'g', sourceGeneration, queryRevision, rowSelectionRevision, membershipRevision: groupSelection.membershipRevision } };
+    };
+    syncMembership(1);
+    refresh();
+    this.remoteGroup = {
+      async membership(revision) { syncMembership(revision); await settle(); },
+      async refresh() { refresh(); await settle(); },
+      async reply(index, changedRowIDs) {
+        const { requestID, scope } = intents[index];
+        controller.dispatch(changedRowIDs === null ? { type: 'fail-group-leaf-selection', requestID, scope }
+          : { type: 'resolve-group-leaf-selection', requestID, scope, changedRowIDs });
+        await settle();
+        return { selected: state().rowSelection.rowIDs, error: state().groupSelection.error?.code };
+      },
+    };
+    app = createApp({ render: () => h(Grid.Provider, null, () => h(Grid.Root, {
+      onCommand(command) { if (command.type === 'request-bulk-selection') intents.push(command.target.intent); },
+    }, () => h(Grid.BulkSelectionControl, {
+      asChild: true, target: { kind: 'group-leaves', groupID: 'g' }, groupSelection: aggregate.value,
+    }, () => h('input', { type: 'checkbox', 'aria-label': 'Remote group' })))) });
+    app.onUnmount(() => controller.dispose());
+    app.mount(host);
+    await settle();
+  },
   async dateTimeRangeChoices() {
     reset();
     const value = ref(null), proposals = [];

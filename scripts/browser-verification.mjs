@@ -128,6 +128,27 @@ async function runPlaywright(url) {
     report.results.push({ id, undoRedo: 'passed' });
   }
   if (!nativeIME) {
+    await page.evaluate(() => window.sectileProbe.remoteGroupSelection());
+    const group = page.getByRole('checkbox', { name: 'Remote group' });
+    assert.equal(await group.getAttribute('aria-checked'), 'mixed');
+    await group.click();
+    assert.equal(await group.getAttribute('aria-busy'), 'true');
+    assert.equal(await group.isDisabled(), true);
+    await page.evaluate(() => window.sectileProbe.remoteGroup.membership(2));
+    assert.equal(await group.getAttribute('data-state'), 'unavailable');
+    assert.deepEqual((await page.evaluate(() => window.sectileProbe.remoteGroup.reply(0, ['b']))).selected, ['a', 'outside']);
+    await page.evaluate(() => window.sectileProbe.remoteGroup.refresh());
+    await group.click();
+    assert.equal((await page.evaluate(() => window.sectileProbe.remoteGroup.reply(1, null))).error, 'group-selection-failed');
+    assert.equal(await group.isDisabled(), false);
+    await group.click();
+    assert.deepEqual((await page.evaluate(() => window.sectileProbe.remoteGroup.reply(2, ['b']))).selected, ['a', 'outside', 'b']);
+    await page.evaluate(() => window.sectileProbe.remoteGroup.refresh());
+    assert.equal(await group.isChecked(), true);
+    await group.click();
+    assert.deepEqual((await page.evaluate(() => window.sectileProbe.remoteGroup.reply(3, ['a', 'b']))).selected, ['outside']);
+    report.results.push({ id: 'remote-group-selection', result: 'passed' });
+
     await page.evaluate(() => window.sectileProbe.field('date'));
     const input = page.locator('#date');
     await input.fill('2026-08-22');
