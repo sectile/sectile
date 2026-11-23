@@ -1,5 +1,14 @@
 # @sectile/tabular
 
+## 0.18.1
+
+### Changes
+
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+- fix(tabular): reconcile projection and package verification (e678bb590)
+- perf(tabular): materialize grouped access ranges on demand (f3af1a79d)
+- perf(tabular): add access-range cell materialization (6324d5a6f)
+
 ## 0.18.0
 
 ### Changes

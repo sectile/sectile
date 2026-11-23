@@ -1,5 +1,11 @@
 # @sectile/form
 
+## 0.15.3
+
+### Changes
+
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+
 ## 0.15.2
 
 ### Changes

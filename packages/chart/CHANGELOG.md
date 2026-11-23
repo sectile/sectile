@@ -1,5 +1,11 @@
 # @sectile/chart
 
+## 0.16.2
+
+### Changes
+
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+
 ## 0.16.1
 
 ### Changes

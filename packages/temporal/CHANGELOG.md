@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.16.1
+
+### Changes
+
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+
 ## 0.16.0
 
 ### Changes

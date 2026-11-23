@@ -1,5 +1,18 @@
 # @sectile/vue
 
+## 0.24.0
+
+### Changes
+
+- fix(vue)!: require the patched Vue SSR renderer (e12b6f378)
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+- test(vue): focus the pinned grid before keyboard navigation (a41c55039)
+- fix(vue): defer initial virtual layouts until ready (f13253c8c)
+- perf(vue): narrow choice and tree slot invalidation (3b7036b27)
+- perf(dom): project Tabular cursor and selection changes incrementally (3b1327cde)
+- test(vue): exercise the Grid selection slot on a rendered host (4e7ddeed8)
+- perf(vue): narrow Tabular slot invalidation (0dff05c33)
+
 ## 0.23.0
 
 ### Changes

@@ -1,5 +1,13 @@
 # @sectile/dom
 
+## 0.23.1
+
+### Changes
+
+- fix(packaging): preserve published dependency ranges (d1cb1a5a5)
+- fix(tabular): reconcile projection and package verification (e678bb590)
+- perf(dom): project Tabular cursor and selection changes incrementally (3b1327cde)
+
 ## 0.23.0
 
 ### Changes
