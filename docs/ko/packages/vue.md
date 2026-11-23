@@ -24,6 +24,29 @@ import { PopoverContent, PopoverRoot, PopoverTrigger } from '@sectile/vue/popove
 
 지원하는 공개 경로 전체는 [Vue API 참조](/ko/api/vue)에 정리되어 있습니다. Form, Temporal, Virtual, Tabular, Chart는 해당 Vue 연결을 사용할 때만 각각의 추가 패키지가 필요합니다.
 
+## 날짜와 시간의 편집 형식 지정하기
+
+`DateTimePickerRoot`와 `DateTimeRangePickerRoot`에 `precision="minute"`을 지정하면 초와 밀리초가 없는 값을 분 단위로 편집할 수 있습니다. `TemporalProvider`가 있으면 그 로캘을 따릅니다. 제공자가 없으면 날짜와 24시간제 시각을 `T`로 이어 표시합니다.
+
+구분 문자까지 지정하려면 Temporal에서 형식을 만든 뒤 두 피커 루트 중 하나에 `:format="format"`으로 전달합니다.
+
+```ts
+import { createDateFieldFormat } from '@sectile/temporal/date-field'
+import { createDateTimeFieldFormat } from '@sectile/temporal/date-time-field'
+import { createTimeFieldFormat } from '@sectile/temporal/time-field'
+
+const time = createTimeFieldFormat({ precision: 'minute', literals: ['', '·', ''] })
+const format = createDateTimeFieldFormat({
+  date: createDateFieldFormat({ order: ['year', 'month', 'day'] }),
+  time,
+  separator: ' @ ',
+})
+```
+
+범위 피커에서 날짜와 시간을 합친 시작 및 종료 입력은 읽기 전용입니다. 날짜와 시간을 따로 편집하려면 각각의 입력을 사용하고, 선택 방식도 제공하려면 달력과 각 끝점의 시간 선택 목록을 구성합니다.
+
+`DateTimeField`와 `DateTimeRangeFieldRoot`에는 같은 `format`을 쓸 수 있습니다. `TimeField`, `TimeRangeFieldRoot`, `TimePickerRoot`에는 `time`을 전달합니다. 명시한 형식이 `precision`과 제공자 설정보다 우선합니다. 단일 필드에 `native`를 지정하면 브라우저가 ISO 값과 화면에 표시할 형식을 관리합니다. TimePicker는 확정된 형식을 입력과 선택 목록에 함께 적용합니다. 정밀도를 잃는 형식 변경은 거부하고 현재 입력과 값을 유지합니다.
+
 ## 제어 상태 컴포넌트 구성하기
 
 `Root`는 하위 구성 요소가 함께 쓰는 상호작용 상태를 소유합니다. 최종 값을 애플리케이션 상태가 결정한다면 `v-model`을 사용합니다. 아래 체크박스는 `name`과 `required`도 지정했으므로 브라우저 폼 제출에도 참여합니다.

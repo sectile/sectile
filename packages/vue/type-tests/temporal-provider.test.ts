@@ -4,10 +4,27 @@ import { TimeField } from '@sectile/vue/temporal/time-field';
 import { DateTimeField } from '@sectile/vue/temporal/date-time-field';
 import { TimeRangeFieldRoot, type TimeRangeFieldRootProps } from '@sectile/vue/temporal/time-range-field';
 import { DateTimeRangeFieldRoot, type DateTimeRangeFieldRootProps } from '@sectile/vue/temporal/date-time-range-field';
+import { DateTimePickerRoot } from '@sectile/vue/temporal/date-time-picker';
+import { DateTimeRangePickerRoot } from '@sectile/vue/temporal/date-time-range-picker';
+import { createDateFieldFormat } from '@sectile/temporal/date-field';
+import { createTimeFieldFormat } from '@sectile/temporal/time-field';
+import { createDateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { DateRangeFieldRootProps } from '@sectile/vue/temporal/date-range-field';
 const rangeSubmission: Pick<DateRangeFieldRootProps, 'name' | 'form'> & Pick<TimeRangeFieldRootProps, 'name' | 'form'> & Pick<DateTimeRangeFieldRootProps, 'name' | 'form'> = { name: undefined, form: undefined };
 h(TimeRangeFieldRoot, { ...rangeSubmission, name: 'delivery' });
 h(DateTimeRangeFieldRoot, { ...rangeSubmission, form: 'outside' });
+const time = createTimeFieldFormat({ precision: 'minute', literals: ['', '·', ''] });
+const format = createDateTimeFieldFormat({
+  date: createDateFieldFormat({ order: ['year', 'month', 'day'] }), time, separator: ' @ ',
+});
+h(DateTimePickerRoot, { format, precision: 'minute' });
+h(DateTimeRangePickerRoot, { format, precision: 'minute' });
+h(TimeField, { format: time });
+h(TimeRangeFieldRoot, { format: time });
+h(DateTimeField, { format });
+h(DateTimeRangeFieldRoot, { format });
+// @ts-expect-error Date-time pickers require a combined issued format.
+h(DateTimeRangePickerRoot, { format: time });
 // @ts-expect-error Native submission namespaces are strings, not Form domain paths.
 const invalidRangeName: DateTimeRangeFieldRootProps = { name: ['delivery', 0] };
 const props: TemporalProviderProps = { formatting: { locale: 'ko-KR', timeZone: 'Asia/Seoul' }, referenceInstant: 0 };

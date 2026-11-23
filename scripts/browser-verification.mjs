@@ -199,12 +199,22 @@ async function runPlaywright(url) {
     }
     report.results.push({ id: 'date-segment-clipboard-and-undo', result: 'passed' });
 
-    await page.evaluate(() => window.sectileProbe.dateTimeRangeChoices());
+    await page.evaluate(() => window.sectileProbe.timePickerPrecision());
+    const timePrecision = page.locator('#time-precision');
+    assert.equal(await timePrecision.inputValue(), '09:30:01.125');
+    assert.deepEqual(await page.evaluate(() => window.sectileProbe.timePrecision('minute')), ['time-field-format-precision-loss']);
+    assert.equal(await timePrecision.evaluate(element => element === window.sectileProbe.timePrecisionInput), true);
+    assert.equal(await timePrecision.inputValue(), '09:30:01.125');
+    await page.evaluate(async () => { await window.sectileProbe.timePrecision('millisecond'); await window.sectileProbe.timePickerChoice(); });
+    assert.equal(await timePrecision.inputValue(), '09:45:01.125');
+    report.results.push({ id: 'time-picker-precision-recovery', result: 'passed' });
+
+    await page.evaluate(() => window.sectileProbe.dateTimeRangeChoices(true));
     await page.getByRole('button', { name: 'Choose date and times' }).click();
     for (const [endpoint, minute] of [['Start', '15'], ['End', '45']]) {
       await page.getByRole('group', { name: `${endpoint} choices` }).getByRole('listbox', { name: 'Minutes' })
         .getByRole('option', { name: minute, exact: true }).click();
-      assert.equal(await page.getByRole('textbox', { name: `${endpoint} input` }).inputValue(), `00:${minute}`);
+      assert.equal(await page.getByRole('textbox', { name: `${endpoint} input` }).inputValue(), `00·${minute}`);
     }
     assert.deepEqual(await page.evaluate(() => window.sectileProbe.dateTimeRangeProposals), []);
     await page.getByRole('gridcell', { name: '22', exact: true }).click();
@@ -213,6 +223,9 @@ async function runPlaywright(url) {
       start: { date: { year: 2026, month: 8, day: 22 }, time: { hour: 0, minute: 15, second: 0, millisecond: 0 } },
       end: { date: { year: 2026, month: 8, day: 24 }, time: { hour: 0, minute: 45, second: 0, millisecond: 0 } },
     }]);
+    const combined = page.getByRole('textbox', { name: 'Start display' });
+    assert.equal(await combined.inputValue(), '2026-08-22 @ 00·15');
+    assert.equal(await combined.getAttribute('readonly'), '');
     report.results.push({ id: 'datetime-range-stage-time-before-dates', result: 'passed' });
 
     await page.evaluate(() => window.sectileProbe.composedTrigger('menu'));

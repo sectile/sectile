@@ -6,12 +6,14 @@ import {
   type TimePickerRootEmits, type TimePickerPart, type TimeValue, type TimePickerColumnProps,
 } from '@sectile/vue/temporal/time-picker';
 import { ListboxRoot, type ListboxRootProps } from '@sectile/vue/listbox';
+import { createTimeFieldFormat } from '@sectile/temporal/time-field';
 
 const time: TimeValue = { hour: 12, minute: 30, second: 0, millisecond: 0 };
 const props: TimePickerRootProps = { modelValue: time, name: undefined, form: undefined,
   disabled: undefined, readonly: undefined, required: undefined, precision: 'second',
   policies: { min: time }, side: 'bottom', tracking: 'events', unmountOnExit: true };
 h(TimePickerRoot, { ...props, 'onUpdate:modelValue': (value: TimeValue | null) => { void value; } });
+h(TimePickerRoot, { ...props, format: createTimeFieldFormat({ precision: 'second' }) });
 const rootSlots: TimePickerRootSlots = { default(state) {
   const value: TimeValue | null = state.value;
   const parts: readonly TimePickerPart[] = state.parts;

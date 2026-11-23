@@ -22,6 +22,10 @@ import { QuantityFieldRoot, QuantityFieldInput, createStandardQuantityPolicies }
 import { DateField } from '@sectile/vue/temporal/date-field';
 import { TimeField } from '@sectile/vue/temporal/time-field';
 import { DateTimeField } from '@sectile/vue/temporal/date-time-field';
+import { TimePickerRoot, TimePickerInput } from '@sectile/vue/temporal/time-picker';
+import { createDateFieldFormat } from '@sectile/temporal/date-field';
+import { createTimeFieldFormat } from '@sectile/temporal/time-field';
+import { createDateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } from '@sectile/vue/temporal/date-range-field';
 import { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } from '@sectile/vue/temporal/time-range-field';
 import { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, DatePickerGrid } from '@sectile/vue/temporal/date-picker';
@@ -32,7 +36,7 @@ import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue
 import { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } from '@sectile/vue/temporal/date-time-range-field';
 import {
   DateTimeRangePickerRoot, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger,
-  DateTimeRangePickerContent, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerTimeChoices,
+  DateTimeRangePickerContent, DateTimeRangePickerGrid, DateTimeRangePickerCell, DateTimeRangePickerTimeChoices, DateTimeRangePickerStartDateTimeInput,
 } from '@sectile/vue/temporal/date-time-range-picker';
 
 const host = document.querySelector('#probe');
@@ -117,17 +121,37 @@ window.sectileProbe = {
     app.mount(host);
     await settle();
   },
-  async dateTimeRangeChoices() {
+  async timePickerPrecision() {
+    reset();
+    const precision = ref('millisecond');
+    const errors = [];
+    let picker;
+    this.timePrecision = async next => { precision.value = next; await settle(); return errors; };
+    this.timePickerChoice = async () => { picker.selectChoice('minute', 45); await settle(); };
+    app = createApp({ render: () => h(TimePickerRoot, {
+      precision: precision.value, defaultValue: { hour: 9, minute: 30, second: 1, millisecond: 125 }, ref: instance => { picker = instance; },
+    }, () => h(TimePickerInput, { id: 'time-precision' })) });
+    app.config.errorHandler = error => errors.push(error.code);
+    app.mount(host);
+    this.timePrecisionInput = host.querySelector('#time-precision');
+    await settle();
+  },
+  async dateTimeRangeChoices(custom = false) {
     reset();
     const value = ref(null), proposals = [];
     const start = { year: 2026, month: 8, day: 22 }, end = { ...start, day: 24 };
+    const format = custom ? createDateTimeFieldFormat({
+      date: createDateFieldFormat({ order: ['year', 'month', 'day'] }),
+      time: createTimeFieldFormat({ precision: 'minute', literals: ['', '·', ''] }), separator: ' @ ',
+    }) : undefined;
     this.dateTimeRangeProposals = proposals;
     app = createApp({ render: () => h(DateTimeRangePickerRoot, {
-      modelValue: value.value, referenceDate: start, position: false,
+      modelValue: value.value, referenceDate: start, position: false, format,
       'onUpdate:modelValue': next => { proposals.push(next); value.value = next; },
     }, () => [
       h(DateTimeRangePickerStartTimeInput, { 'aria-label': 'Start input' }),
       h(DateTimeRangePickerEndTimeInput, { 'aria-label': 'End input' }),
+      ...(custom ? [h(DateTimeRangePickerStartDateTimeInput, { 'aria-label': 'Start display' })] : []),
       h(DateTimeRangePickerTrigger, null, () => 'Choose date and times'),
       h(DateTimeRangePickerContent, null, () => [
         h(DateTimeRangePickerGrid, null, () => h('div', { role: 'row' }, [start, end].map(date =>

@@ -122,6 +122,29 @@ For content that changes with interaction, use the slot state exposed by the com
 
 Slot contracts are component-specific and remain typed from the imported component.
 
+## Set the date and time editing format
+
+`DateTimePickerRoot` and `DateTimeRangePickerRoot` accept `precision="minute"` for values that have no seconds or milliseconds. With a `TemporalProvider`, this uses the provider's locale. Without a provider, the combined value uses an ISO-style date, a `T` separator, and a 24-hour clock.
+
+Pass an explicit Temporal format to choose the literals as well as the precision.
+
+```ts
+import { createDateFieldFormat } from '@sectile/temporal/date-field'
+import { createDateTimeFieldFormat } from '@sectile/temporal/date-time-field'
+import { createTimeFieldFormat } from '@sectile/temporal/time-field'
+
+const time = createTimeFieldFormat({ precision: 'minute', literals: ['', '·', ''] })
+const format = createDateTimeFieldFormat({
+  date: createDateFieldFormat({ order: ['year', 'month', 'day'] }),
+  time,
+  separator: ' @ ',
+})
+```
+
+Bind `:format="format"` to either picker root. The range picker's combined start and end inputs are read-only displays. Use its separate date and time inputs for editing or compose its calendar and endpoint time choices for selection.
+
+Use the same `format` on `DateTimeField` and `DateTimeRangeFieldRoot`. Pass `time` to `TimeField`, `TimeRangeFieldRoot`, or `TimePickerRoot`. An explicit format takes precedence over `precision` and the provider. With `native` on a scalar field, the browser owns its ISO value and localized display. TimePicker uses its accepted format for both the input and the choice columns. A live change that would lose precision rejects and retains the current input and value.
+
 ## Compose multi-part surfaces
 
 Compound components keep related behavior together without requiring one fixed HTML structure. Popover, Dialog, Select, Menu, Combobox, and similar families expose focused Root, Trigger, Content, and supporting parts.
