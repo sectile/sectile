@@ -215,7 +215,7 @@ for (const profile of ['data-table', 'data-grid', 'data-tree-grid']) {
               return String(slot.rowSelection.rowIDs.includes('0'));
             }),
             ...(profile === 'data-table' || row.id !== '0' ? [] : [
-              h(parts.RowSelectionControl, { key: 'cursor' }, slot => {
+              h(parts.RowSelectionControl, { key: 'cursor', as: 'div', name: 'selection' }, slot => {
                 cursor += 1;
                 return slot.cursor.current?.columnID ?? '';
               }),
