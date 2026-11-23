@@ -52,10 +52,11 @@ interface ClientQueryStage<RecordValue> {
 interface ClientProjectionStage<RecordValue> {
   readonly query: ClientQueryStage<RecordValue>;
   readonly expansionRevision: number;
-  readonly projection: ClientProjection;
+  readonly schema: TabularColumnSchema;
+  readonly rowCount: number;
   readonly matchingLeafCount: TabularCount;
   readonly visibleRowCount: TabularCount;
-  readonly readRows: (start: number, end: number) => readonly TabularResolvedRow[];
+  readonly readRows: (start: number, end: number) => TabularResult<readonly TabularResolvedRow[]>;
 }
 
 class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
@@ -132,18 +133,32 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
     if (retained !== null
       && retained.query === query
       && retained.expansionRevision === request.expansionRevision
-      && retained.projection.schema.revision >= request.columnSchemaRevision) {
+      && retained.schema.revision >= request.columnSchemaRevision) {
       return ok(retained);
     }
-    const projection = projectClientExpansion(query.prepared, request.expansion, this.limits);
-    if (!projection.ok) return projection;
+    const prepared = query.prepared;
+    let rowCount: number;
+    let readRows: ClientProjectionStage<RecordValue>['readRows'];
+    if (this.options.cellMaterialization === 'access-range' && prepared.query.groups.length === 0) {
+      rowCount = prepared.records.length;
+      readRows = createAccessRangeReader(prepared.schema, this.limits, (index) => (
+        createClientLeafRow(this, prepared.records[index]!, prepared.schema.columns)
+      ));
+    } else {
+      const projection = projectClientExpansion(prepared, request.expansion, this.limits);
+      if (!projection.ok) return projection;
+      rowCount = projection.value.rows.length;
+      const read = createVisibleRowReader(projection.value);
+      readRows = (start, end) => ok(read(start, end));
+    }
     const stage = Object.freeze({
       query,
       expansionRevision: request.expansionRevision,
-      projection: projection.value,
+      schema: prepared.schema,
+      rowCount,
       matchingLeafCount: Object.freeze({ kind: 'known' as const, value: query.filtered.length }),
-      visibleRowCount: Object.freeze({ kind: 'known' as const, value: projection.value.rows.length }),
-      readRows: createVisibleRowReader(projection.value),
+      visibleRowCount: Object.freeze({ kind: 'known' as const, value: rowCount }),
+      readRows,
     });
     this.#p = stage;
     return ok(stage);
@@ -167,6 +182,7 @@ function tryCreateClientTabularSource<RecordValue>(
   let columnSchema: TabularColumnSchema;
   let getRowID: TabularClientSourceOptions<RecordValue>['getRowID'];
   let getValue: TabularClientSourceOptions<RecordValue>['getValue'];
+  let cellMaterialization: TabularClientSourceOptions<RecordValue>['cellMaterialization'];
   let policies: TabularClientSourceOptions<RecordValue>['policies'];
   let limitsInput: TabularClientSourceOptions<RecordValue>['limits'];
   try {
@@ -174,6 +190,7 @@ function tryCreateClientTabularSource<RecordValue>(
     columnSchema = options.columnSchema;
     getRowID = options.getRowID;
     getValue = options.getValue;
+    cellMaterialization = options.cellMaterialization;
     policies = options.policies;
     limitsInput = options.limits;
     if (!Array.isArray(recordsInput) || typeof getRowID !== 'function' || typeof getValue !== 'function') {
@@ -182,6 +199,9 @@ function tryCreateClientTabularSource<RecordValue>(
     recordCount = recordsInput.length;
   } catch {
     return fail('construction', 'invalid-source', 'Client source options must be readable.');
+  }
+  if (cellMaterialization !== undefined && cellMaterialization !== 'eager' && cellMaterialization !== 'access-range') {
+    return fail('construction', 'invalid-source', 'Client source cell materialization must be eager or access-range.');
   }
   const schema = validateColumnSchema(columnSchema, limitsInput);
   if (!schema.ok) return schema;
@@ -203,6 +223,7 @@ function tryCreateClientTabularSource<RecordValue>(
     columnSchema: schema.value.schema,
     getRowID,
     getValue,
+    ...(cellMaterialization === undefined ? {} : { cellMaterialization }),
     ...(policies === undefined ? {} : { policies }),
   }), limits);
   return ok(source);
@@ -346,14 +367,15 @@ function resolveClient<RecordValue>(
   }
   const projected = source.resolveProjection(request);
   if (!projected.ok) return projected;
-  const projection = projected.value.projection;
   const access = request.access;
-  const total = projection.rows.length;
+  const total = projected.value.rowCount;
   const start = access.kind === 'page' ? deriveSafeTabularPageStart(access.page, access.itemsPerPage) : access.start;
   const count = access.kind === 'page' ? access.itemsPerPage : access.count;
   if (start === null || start > total || (access.kind === 'page' && access.page !== 1 && start >= total)) {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Requested access range starts outside the resolved projection.', { start, total });
   }
+  const rows = projected.value.readRows(start, Math.min(total, start + count));
+  if (!rows.ok) return rows;
   return ok(Object.freeze({
     protocolVersion: 1,
     requestID: request.requestID,
@@ -364,10 +386,44 @@ function resolveClient<RecordValue>(
     access: request.access,
     matchingLeafCount: projected.value.matchingLeafCount,
     visibleRowCount: projected.value.visibleRowCount,
-    rows: projected.value.readRows(start, Math.min(total, start + count)),
-    columnSchema: projection.schema,
+    rows: rows.value,
+    columnSchema: projected.value.schema,
     removedRowIDs: EMPTY_ROW_IDS,
   }));
+}
+
+/** Retain only the last successful access, with O(k) overlap reuse. */
+function createAccessRangeReader(
+  schema: TabularColumnSchema,
+  limits: TabularLimits,
+  materialize: (index: number) => TabularResult<TabularResolvedRow>,
+): (start: number, end: number) => TabularResult<readonly TabularResolvedRow[]> {
+  let previousStart = -1;
+  let previousRows: readonly TabularResolvedRow[] = [];
+  return (start, end) => {
+    const count = end - start;
+    if (start === previousStart && count === previousRows.length) return ok(previousRows);
+    if (count > limits.maxRows) {
+      return fail('resource-rejection', 'row-ceiling-exceeded', 'Response rows exceed the configured ceiling.');
+    }
+    if (count * schema.columns.length > limits.maxProjectedCells) {
+      return fail('resource-rejection', 'projected-cell-ceiling-exceeded', 'Response projected cells exceed the configured ceiling.');
+    }
+    const rows: TabularResolvedRow[] = [];
+    for (let index = start; index < end; index += 1) {
+      const previous = previousRows[index - previousStart];
+      if (previous !== undefined) {
+        rows.push(previous);
+        continue;
+      }
+      const row = materialize(index);
+      if (!row.ok) return row;
+      rows.push(row.value);
+    }
+    previousRows = Object.freeze(rows);
+    previousStart = start;
+    return ok(previousRows);
+  };
 }
 
 function normalizeClientRecords<RecordValue>(

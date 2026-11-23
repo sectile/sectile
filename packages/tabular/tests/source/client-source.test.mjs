@@ -83,6 +83,85 @@ test('one immutable row window is retained per current projection while response
   assert.deepEqual(first.rows.map(row => row.id), ['r1', 'r2']);
 });
 
+test('range materialization reads only requested cells and reuses the last successful window', () => {
+  const input = Array.from({ length: 5000 }, (_, i) => ({ id: String(i), i }));
+  const schema = { revision: 0, columns: Array.from('abcdefgh', id => ({ id })), headers: [] };
+  let ids = 0;
+  let reads = 0;
+  let failAt = -1;
+  const client = createClientTabularSource({
+    records: input,
+    columnSchema: schema,
+    cellMaterialization: 'access-range',
+    getRowID: row => { ids += 1; return row.id; },
+    getValue: row => {
+      reads += 1;
+      if (row.i === failAt) throw new Error('cell unavailable');
+      return row.i;
+    },
+  });
+  const page = request({ access: { kind: 'page', page: 1, itemsPerPage: 20 } });
+  const first = client.resolve(page);
+  assert.equal(first.ok, true);
+  assert.deepEqual([ids, reads, first.value.rows.length], [5000, 160, 20]);
+  assert.equal(first.value.visibleRowCount.value, 5000);
+  assert.equal(client.resolve(page).value.rows, first.value.rows);
+  assert.equal(reads, 160);
+
+  const late = request({ access: { kind: 'window', start: 4980, count: 20 } });
+  const last = client.resolve(late);
+  assert.equal(last.value.rows[0].id, '4980');
+  assert.deepEqual([ids, reads], [5000, 320]);
+  const overlap = request({ access: { kind: 'window', start: 4979, count: 20 } });
+  failAt = 4979;
+  assert.equal(client.resolve(overlap).error.code, 'source-policy-failed');
+  assert.equal(client.resolve(late).value.rows, last.value.rows);
+  failAt = -1;
+  const moved = client.resolve(overlap);
+  assert.equal(moved.value.rows[1], last.value.rows[0]);
+  assert.equal(reads, 329);
+
+  reads = 0;
+  assert.equal(client.resolve({ ...late, sourceGeneration: 1 }).ok, true);
+  assert.deepEqual([ids, reads], [10000, 160]);
+  assert.equal(client.resolve({ ...late, sourceGeneration: 1, queryRevision: 1 }).ok, true);
+  assert.deepEqual([ids, reads], [10000, 320]);
+});
+
+test('range materialization preflights bounds and preserves eager error discovery', () => {
+  let reads = 0;
+  const base = {
+    records,
+    columnSchema,
+    getRowID: record => record.id,
+    getValue: (record, column) => {
+      reads += 1;
+      return record.id === 'r2' ? NaN : record[column];
+    },
+  };
+  const first = request({ access: { kind: 'page', page: 1, itemsPerPage: 1 } });
+  const eager = createClientTabularSource(base);
+  assert.equal(eager.resolve(first).error.code, 'invalid-query-value');
+  const client = createClientTabularSource({ ...base, cellMaterialization: 'access-range' });
+  assert.equal(client.resolve(first).value.rows[0].id, 'r1');
+  assert.equal(client.resolve({ ...first, access: { ...first.access, page: 2 } }).error.code, 'invalid-query-value');
+
+  const duplicate = createClientTabularSource({
+    ...base, records: [...records, records[0]], cellMaterialization: 'access-range',
+  });
+  reads = 0;
+  assert.equal(duplicate.resolve(first).error.code, 'duplicate-identity');
+  assert.equal(client.resolve({ ...first, access: { kind: 'window', start: 5, count: 1 } }).error.code, 'response-envelope-mismatch');
+  for (const [limits, code] of [
+    [{ maxRows: 1 }, 'row-ceiling-exceeded'],
+    [{ maxProjectedCells: 7 }, 'projected-cell-ceiling-exceeded'],
+  ]) {
+    const limited = createClientTabularSource({ ...base, cellMaterialization: 'access-range', limits });
+    assert.equal(limited.resolve(request({ access: { kind: 'window', start: 0, count: 2 } })).error.code, code);
+  }
+  assert.equal(reads, 0);
+});
+
 test('ISSUE-121: request getter failures stay typed and accepted fields are read once', () => {
   const stable = request();
   const accepted = resolveClientTabularRequest(source(), stable).value;
