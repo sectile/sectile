@@ -107,7 +107,8 @@ export interface DataGridConnection {
   bindColumnResizeHandle(element: HTMLElement, options: DataGridColumnResizeHandleOptions): () => void;
   requestRevealCell(cell: TabularCellAddress, expectedProjectionGeneration?: number): boolean;
   focusCurrent(): void;
-  refresh(): void;
+  /** Reapply owned attributes, or apply projection changes only when force is false. */
+  refresh(force?: boolean): void;
   disconnect(): void;
 }
 
@@ -157,7 +158,7 @@ function createDataGridConnection(options: DataGridConnectionOptions, ownsContro
     bindColumnResizeHandle: (element: HTMLElement, value: DataGridColumnResizeHandleOptions) => base.bindColumnResizeHandle(element, value),
     requestRevealCell: (cell: TabularCellAddress, generation?: number) => base.requestRevealCell(cell, generation),
     focusCurrent: () => base.focusCurrent(),
-    refresh: () => base.refresh(),
+    refresh: (force?: boolean) => base.refresh(force),
     disconnect: () => base.disconnect(),
   });
 }

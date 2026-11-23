@@ -117,7 +117,8 @@ export interface DataTreeGridConnection {
   requestRevealCell(cell: TabularCellAddress, expectedProjectionGeneration?: number): boolean;
   requestRevealRow(rowID: TabularRowID, expectedProjectionGeneration?: number): boolean;
   focusCurrent(): void;
-  refresh(): void;
+  /** Reapply owned attributes, or apply projection changes only when force is false. */
+  refresh(force?: boolean): void;
   disconnect(): void;
 }
 
@@ -170,7 +171,7 @@ function createDataTreeGridConnection(options: DataTreeGridConnectionOptions, ow
     requestRevealCell: (cell: TabularCellAddress, generation?: number) => base.requestRevealCell(cell, generation),
     requestRevealRow: (rowID: TabularRowID, generation?: number) => base.requestRevealRow(rowID, generation),
     focusCurrent: () => base.focusCurrent(),
-    refresh: () => base.refresh(),
+    refresh: (force?: boolean) => base.refresh(force),
     disconnect: () => base.disconnect(),
   });
 }

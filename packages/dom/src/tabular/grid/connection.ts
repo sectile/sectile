@@ -104,6 +104,7 @@ export class DOMTabularGrid<
   readonly #columnSizes: ColumnSizeStore;
   readonly #rows = new Map<string, { readonly element: HTMLElement; readonly options: GridDOMRowOptions }>();
   readonly #cells = new Map<string, GridDOMCellRegistration>();
+  readonly #cellsByRow = new Map<TabularRowID, Set<GridDOMCellRegistration>>();
   readonly #cellOwners = new WeakMap<HTMLElement, GridDOMCellRegistration>();
   readonly #editors = new Map<string, GridDOMEditorRegistration>();
   readonly #projectedRowsByID = new Map<TabularRowID | TabularGroupID, GridDOMRowLookup>();
@@ -118,6 +119,9 @@ export class DOMTabularGrid<
   #pendingRow: GridRevealRowCommand | null = null;
   #projectionGeneration: number;
   #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
+  #appliedProjection: Projection | null;
+  #appliedColumnSizes: TabularDOMColumnSizeState | null;
+  #appliedView: ReturnType<typeof currentView>;
 
   public constructor(
     options: GridDOMConnectionOptions<GridDOMController<Event, Command, State, Projection>, Command>,
@@ -129,7 +133,10 @@ export class DOMTabularGrid<
     this.#tree = tree;
     this.#ownsController = ownsController;
     this.#columnSizes = new ColumnSizeStore(options);
-    this.#projectionGeneration = this.controller.getProjection().generation;
+    this.#appliedProjection = this.getProjection();
+    this.#appliedColumnSizes = this.getColumnSizeState();
+    this.#appliedView = currentView(this.#semanticSnapshot());
+    this.#projectionGeneration = this.#appliedProjection.generation;
     this.#unsubscribeCommands = this.controller.subscribeCommands((command) => options.onCommand?.(command));
     bindEvent(this.#scope, options.root, 'keydown', (event) => this.#keydown(event));
     bindEvent(this.#scope, options.root, 'focusin', (event) => this.#focusTarget(event.target));
@@ -252,9 +259,15 @@ export class DOMTabularGrid<
     const current = this.#cells.get(key);
     if (current !== undefined && current[1] !== element) return domFailure('profile-view-mismatch', 'Grid cell is already registered.', { cell: options.cell });
     const owner = this.#cellOwners.get(element);
-    if (owner !== undefined && owner[0] !== key && this.#cells.get(owner[0]) === owner) this.#cells.delete(owner[0]);
+    if (owner !== undefined) this.#removeCell(owner);
     const registration: GridDOMCellRegistration = [key, element, options];
     this.#cells.set(key, registration);
+    let rowCells = this.#cellsByRow.get(options.cell.rowID);
+    if (rowCells === undefined) {
+      rowCells = new Set();
+      this.#cellsByRow.set(options.cell.rowID, rowCells);
+    }
+    rowCells.add(registration);
     this.#cellOwners.set(element, registration);
     this.#setCellAttributes(element, options, projection, row, columnIndex);
     const pending = this.#pendingCell;
@@ -263,9 +276,18 @@ export class DOMTabularGrid<
       queueMicrotask(() => { if (this.#scope.active) element.focus({ preventScroll: true }); });
     }
     return ok(this.#scope.retain(() => {
-      if (this.#cells.get(key) === registration) this.#cells.delete(key);
-      if (this.#cellOwners.get(element) === registration) this.#cellOwners.delete(element);
+      this.#removeCell(registration);
     }));
+  }
+
+  #removeCell(registration: GridDOMCellRegistration): void {
+    const [key, element, options] = registration;
+    if (this.#cells.get(key) !== registration) return;
+    this.#cells.delete(key);
+    if (this.#cellOwners.get(element) === registration) this.#cellOwners.delete(element);
+    const cells = this.#cellsByRow.get(options.cell.rowID);
+    cells?.delete(registration);
+    if (cells?.size === 0) this.#cellsByRow.delete(options.cell.rowID);
   }
 
   public bindSortTrigger(element: HTMLElement, options: GridDOMSortTriggerOptions): () => void {
@@ -467,10 +489,13 @@ export class DOMTabularGrid<
     } else this.requestRevealCell(current);
   }
 
-  public refresh(): void {
+  public refresh(force = true): void {
     if (!this.#scope.active) return;
     const projection = this.getProjection();
     const snapshot = this.#semanticSnapshot();
+    const previous = this.#appliedProjection ?? projection;
+    const sizes = this.getColumnSizeState();
+    const view = currentView(snapshot);
     const generation = projection.generation;
     if (generation !== this.#projectionGeneration) {
       this.#projectionGeneration = generation;
@@ -478,12 +503,59 @@ export class DOMTabularGrid<
       this.#pendingRow = null;
       this.#selectionAnchor = null;
     }
+    const rowsChanged = previous.rows !== projection.rows;
+    const columnsChanged = previous.columns !== projection.columns || this.#appliedView?.columnSchema !== view?.columnSchema;
+    if (force || rowsChanged || columnsChanged || this.#appliedView !== view) this.setGridAttributes();
     this.#ensureProjectedRows(projection.rows);
     this.#ensureProjectedColumns(projection, snapshot);
-    this.setGridAttributes();
-    for (const registration of this.#rows.values()) this.#setRowAttributes(registration.element, registration.options, projection, this.#projectedRowsByID.get(registration.options.rowID));
-    for (const registration of this.#cells.values()) this.#setCellAttributes(registration[1], registration[2], projection, this.#projectedRowsByID.get(registration[2].cell.rowID), this.#projectedColumnIndexes.get(registration[2].cell.columnID));
+    if (force || rowsChanged) {
+      for (const registration of this.#rows.values()) this.#setRowAttributes(registration.element, registration.options, projection, this.#projectedRowsByID.get(registration.options.rowID), force);
+    }
+    const projectCells = force || rowsChanged || columnsChanged || sizes !== this.#appliedColumnSizes;
+    if (projectCells) {
+      for (const registration of this.#cells.values()) this.#setCellAttributes(registration[1], registration[2], projection, this.#projectedRowsByID.get(registration[2].cell.rowID), this.#projectedColumnIndexes.get(registration[2].cell.columnID), force);
+    } else {
+      this.#refreshCursor(previous.cursor.current, projection.cursor.current);
+    }
+    if (!force && !rowsChanged && previous.rowSelection !== projection.rowSelection) {
+      this.#refreshSelection(previous.rowSelection, projection.rowSelection, !projectCells);
+    }
+    this.#appliedProjection = projection;
+    this.#appliedColumnSizes = sizes;
+    this.#appliedView = view;
     for (const refresh of this.#refreshers) refresh();
+  }
+
+  #refreshCursor(previous: TabularCellAddress | null, next: TabularCellAddress | null): void {
+    if (previous === next || (previous !== null && next !== null
+      && previous.rowID === next.rowID && previous.columnID === next.columnID)) return;
+    const before = previous === null ? undefined : this.#cells.get(cellKey(previous));
+    const after = next === null ? undefined : this.#cells.get(cellKey(next));
+    if (before !== undefined) before[1].tabIndex = -1;
+    if (after !== undefined) after[1].tabIndex = 0;
+  }
+
+  #refreshSelection(previous: TabularRowSelection, next: TabularRowSelection, updateCells: boolean): void {
+    const update = (rowID: TabularRowID): void => {
+      if (this.#projectedRowsByID.get(rowID)?.[0].row.kind !== 'leaf') return;
+      const selected = rowSelected(next, rowID);
+      if (selected === rowSelected(previous, rowID)) return;
+      const value = String(selected);
+      this.#rows.get(rowID)?.element.setAttribute('aria-selected', value);
+      const cells = this.#cellsByRow.get(rowID);
+      if (updateCells && cells !== undefined) {
+        for (const registration of cells) registration[1].setAttribute('aria-selected', value);
+      }
+    };
+    if (previous.kind !== next.kind) {
+      for (const id of this.#rows.keys()) update(id);
+      if (updateCells) for (const id of this.#cellsByRow.keys()) if (!this.#rows.has(id)) update(id);
+      return;
+    }
+    const before = previous.kind === 'explicit-rows' ? previous.rowIDs : previous.excludedRowIDs;
+    const after = next.kind === 'explicit-rows' ? next.rowIDs : next.excludedRowIDs;
+    for (const id of before) update(id);
+    for (const id of after) if (rowSelected(next, id) !== rowSelected(previous, id)) update(id);
   }
 
   public disconnect(): void {
@@ -492,12 +564,16 @@ export class DOMTabularGrid<
     this.#unsubscribeCommands();
     this.#rows.clear();
     this.#cells.clear();
+    this.#cellsByRow.clear();
     this.#editors.clear();
     this.#projectedRowsByID.clear();
     this.#projectedColumnIndexes.clear();
     this.#projectedRows = null;
     this.#projectedColumnGeneration = null;
     this.#projectedColumnSchemaRevision = null;
+    this.#appliedProjection = null;
+    this.#appliedColumnSizes = null;
+    this.#appliedView = null;
     this.#refreshers.clear();
     this.#pendingCell = null;
     this.#pendingRow = null;
@@ -509,7 +585,7 @@ export class DOMTabularGrid<
   #updated(): void {
     const focused = this.#options.root.ownerDocument.activeElement;
     const ownsFocus = this.#ownsFocusTarget(focused);
-    this.refresh();
+    this.refresh(false);
     this.#options.onSnapshotChange?.(this.getSnapshot());
     if (ownsFocus) this.focusCurrent();
   }
@@ -519,11 +595,14 @@ export class DOMTabularGrid<
     options: GridDOMRowOptions,
     projection: Projection,
     lookup: GridDOMRowLookup | undefined,
+    identity = true,
   ): void {
     const row = lookup?.[0];
-    element.setAttribute('role', 'row');
-    element.setAttribute('data-part', 'row');
-    element.setAttribute('data-row-id', options.rowID);
+    if (identity) {
+      element.setAttribute('role', 'row');
+      element.setAttribute('data-part', 'row');
+      element.setAttribute('data-row-id', options.rowID);
+    }
     if (lookup === undefined) element.removeAttribute('aria-rowindex');
     else element.setAttribute('aria-rowindex', String(lookup[1] + 1));
     element.setAttribute('aria-disabled', String(options.disabled === true));
@@ -546,14 +625,17 @@ export class DOMTabularGrid<
     projection: Projection,
     rowLookup: GridDOMRowLookup | undefined,
     columnIndex: number | undefined,
+    identity = true,
   ): void {
     const row = rowLookup?.[0];
     const selected = row?.row.kind === 'leaf' && rowSelected(projection.rowSelection, row.row.id);
     const current = projection.cursor.current;
-    element.setAttribute('role', 'gridcell');
-    element.setAttribute('data-part', 'cell');
-    element.setAttribute('data-row-id', options.cell.rowID);
-    element.setAttribute('data-column-id', options.cell.columnID);
+    if (identity) {
+      element.setAttribute('role', 'gridcell');
+      element.setAttribute('data-part', 'cell');
+      element.setAttribute('data-row-id', options.cell.rowID);
+      element.setAttribute('data-column-id', options.cell.columnID);
+    }
     if (rowLookup === undefined) element.removeAttribute('aria-rowindex');
     else element.setAttribute('aria-rowindex', String(rowLookup[1] + 1));
     if (columnIndex === undefined) element.removeAttribute('aria-colindex');

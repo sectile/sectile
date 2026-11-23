@@ -161,7 +161,8 @@ export interface DataTableConnection {
   bindDisclosure(element: HTMLElement, options: DataTableDisclosureOptions): () => void;
   bindEditor(element: DataTableEditorElement, options: DataTableEditorOptions): () => void;
   bindColumnResizeHandle(element: HTMLElement, options: DataTableColumnResizeHandleOptions): () => void;
-  refresh(): void;
+  /** Reapply owned attributes, or apply projection changes only when force is false. */
+  refresh(force?: boolean): void;
   disconnect(): void;
 }
 
@@ -202,13 +203,19 @@ class DOMDataTable implements DataTableConnection {
   readonly #unsubscribeCommands: () => void;
   #projectionGeneration: number;
   #selectionAnchor: TabularDOMRowSelectionAnchor | null = null;
+  #appliedProjection: DataTableProjection | null;
+  #appliedColumnSizes: TabularDOMColumnSizeState | null;
+  #appliedSchemaRevision: number;
 
   public constructor(options: DataTableConnectionOptions, ownsController: boolean) {
     this.#options = options;
     this.controller = options.controller;
     this.#ownsController = ownsController;
     this.#columnSizes = new ColumnSizeStore(options);
-    this.#projectionGeneration = this.controller.getProjection().generation;
+    this.#appliedProjection = this.getProjection();
+    this.#appliedColumnSizes = this.getColumnSizeState();
+    this.#appliedSchemaRevision = this.getSnapshot().state.columnSchemaRevision;
+    this.#projectionGeneration = this.#appliedProjection.generation;
     this.#unsubscribeCommands = this.controller.subscribeCommands((command) => options.onCommand?.(command));
     this.setTableAttributes();
   }
@@ -456,28 +463,35 @@ class DOMDataTable implements DataTableConnection {
     return bindColumnResizeHandle(this.#scope, element, this.#columnSizes, options, this.#refreshers, () => this.#updated());
   }
 
-  public refresh(): void {
+  public refresh(force = true): void {
     if (!this.#scope.active) return;
     const projection = this.getProjection();
     const snapshot = this.getSnapshot();
+    const previous = this.#appliedProjection ?? projection;
+    const sizes = this.getColumnSizeState();
+    const schemaRevision = snapshot.state.columnSchemaRevision;
     const generation = projection.generation;
     if (generation !== this.#projectionGeneration) {
       this.#projectionGeneration = generation;
       this.#selectionAnchor = null;
     }
-    this.setTableAttributes();
-    if (this.#rows.size > 0) {
+    if (force) this.setTableAttributes();
+    if (this.#rows.size > 0 && (force || previous.rows !== projection.rows)) {
       this.#ensureProjectedRows(projection.rows);
       for (const registration of this.#rows.values()) {
-        this.#setRowAttributes(registration.element, registration.options, this.#projectedRowsByID.get(registration.options.rowID));
+        this.#setRowAttributes(registration.element, registration.options, this.#projectedRowsByID.get(registration.options.rowID), force);
       }
     }
-    if (this.#cells.size > 0) {
+    if (this.#cells.size > 0 && (force || previous.columns !== projection.columns
+      || schemaRevision !== this.#appliedSchemaRevision || sizes !== this.#appliedColumnSizes)) {
       this.#ensureProjectedColumns(projection, snapshot);
       for (const registration of this.#cells.values()) {
-        this.#setCellAttributes(registration.element, registration.options, this.#leafHeaderIDsByColumnID.get(registration.options.cell.columnID));
+        this.#setCellAttributes(registration.element, registration.options, this.#leafHeaderIDsByColumnID.get(registration.options.cell.columnID), force);
       }
     }
+    this.#appliedProjection = projection;
+    this.#appliedColumnSizes = sizes;
+    this.#appliedSchemaRevision = schemaRevision;
     for (const refresh of this.#refreshers) refresh();
   }
 
@@ -496,6 +510,8 @@ class DOMDataTable implements DataTableConnection {
     this.#projectedRows = null;
     this.#projectedColumns = null;
     this.#projectedColumnSchemaRevision = null;
+    this.#appliedProjection = null;
+    this.#appliedColumnSizes = null;
     this.#refreshers.clear();
     this.#selectionAnchor = null;
     clearAttributes(this.#options.table, ['data-scope', 'data-part']);
@@ -503,23 +519,27 @@ class DOMDataTable implements DataTableConnection {
   }
 
   #updated(): void {
-    this.refresh();
+    this.refresh(false);
     this.#options.onSnapshotChange?.(this.getSnapshot());
   }
 
-  #setRowAttributes(element: HTMLTableRowElement, options: DataTableRowOptions, row: TabularRow | undefined): void {
-    element.setAttribute('data-part', 'row');
-    element.setAttribute('data-row-id', options.rowID);
+  #setRowAttributes(element: HTMLTableRowElement, options: DataTableRowOptions, row: TabularRow | undefined, identity = true): void {
+    if (identity) {
+      element.setAttribute('data-part', 'row');
+      element.setAttribute('data-row-id', options.rowID);
+    }
     if (row?.kind === 'group') {
       element.setAttribute('aria-level', String(row.depth + 1));
       element.setAttribute('aria-expanded', String(row.expanded));
     } else clearAttributes(element, ['aria-level', 'aria-expanded']);
   }
 
-  #setCellAttributes(element: HTMLTableCellElement, options: DataTableCellOptions, headerID: string | undefined): void {
-    element.setAttribute('data-part', 'cell');
-    element.setAttribute('data-row-id', options.cell.rowID);
-    element.setAttribute('data-column-id', options.cell.columnID);
+  #setCellAttributes(element: HTMLTableCellElement, options: DataTableCellOptions, headerID: string | undefined, identity = true): void {
+    if (identity) {
+      element.setAttribute('data-part', 'cell');
+      element.setAttribute('data-row-id', options.cell.rowID);
+      element.setAttribute('data-column-id', options.cell.columnID);
+    }
     if (headerID === undefined) element.removeAttribute('headers');
     else element.setAttribute('headers', headerID);
     setColumnInlineSize(element, options.cell.columnID, this.#columnSizes.getState());

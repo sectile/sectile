@@ -570,6 +570,20 @@ test('DOM DataGrid projects ARIA, emits one reveal, restores focus, and tears do
   assert.equal(second.tabIndex, 0);
   assert.equal(connection.requestRevealCell({ rowID: 'r1', columnID: 'name' }, connection.getProjection().generation - 1), false);
 
+  const writes = [];
+  for (const [element, id] of [[first, 'r1'], [second, 'r2']]) {
+    const set = element.setAttribute.bind(element);
+    element.setAttribute = (key, value) => { writes.push([id, key]); set(key, value); };
+  }
+  assert.equal(connection.handleEvent({ type: 'focus-cell', cell: { rowID: 'r1', columnID: 'name' } }), true);
+  assert.equal(first.tabIndex, 0);
+  assert.equal(second.tabIndex, -1);
+  assert.deepEqual(writes.filter(([, key]) => key !== 'tabindex'), []);
+  writes.length = 0;
+  assert.equal(connection.handleEvent({ type: 'toggle-row-selection', rowID: 'r1' }), true);
+  assert.deepEqual(writes, [['r1', 'aria-selected']]);
+  assert.equal(connection.handleEvent({ type: 'toggle-row-selection', rowID: 'r1' }), true);
+
   const bulkSelection = document.createElement('button');
   const styledSelection = document.createElement('button');
   root.append(styledSelection);

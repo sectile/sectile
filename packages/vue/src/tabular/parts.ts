@@ -29,7 +29,7 @@ type BulkTarget = { readonly kind: 'all-matching' } | { readonly kind: 'group-le
 
 export interface HostConnection {
   disconnect(): void;
-  refresh(): void;
+  refresh(force?: boolean): void;
   getProjection(): { readonly generation: number };
   getColumnSizeState(): DataTableColumnSizeState;
   setHeaderCellAttributes?(element: HTMLTableCellElement, options: HeaderReference): void;
@@ -165,7 +165,14 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         : Object.keys(props).map(key => () => (runtimeProps as Readonly<Record<string, unknown>>)[key]);
       watch([context.connection, ...reads,
         ...(rowAware ? [() => inheritedRow?.value.id] : []),
-        ...(suffix === 'ColumnHeader' ? [context.snapshot] : []),
+        ...(suffix === 'ColumnHeader' ? [
+          context.columnState,
+          () => context.query.value.sort,
+          () => {
+            const view = context.acceptedViewState.value;
+            return view.kind === 'none' ? null : view.view.columnSchema;
+          },
+        ] : []),
       ], rebind, { flush: 'post' });
       if (suffix === 'BulkSelectionControl') {
         watch(() => values()['groupSelection'], () => context.connection.value?.refresh(), { flush: 'post' });
@@ -216,10 +223,18 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     setup(props, { attrs, expose, slots }) {
       const context = usePrivate('Root');
       let element: HTMLElement | null = null;
+      let applied: { readonly connection: HostConnection; readonly snapshot: State } | null = null;
       // External controlled values and accepted source responses publish through
       // Vue; refresh registered DOM recipients after their render has committed.
-      watch(context.snapshot, () => context.connection.value?.refresh(), { flush: 'post' });
+      watch(context.snapshot, (snapshot) => {
+        const connection = context.connection.value;
+        if (connection !== null && (applied?.connection !== connection || applied.snapshot !== snapshot)) {
+          connection.refresh(false);
+        }
+        applied = null;
+      }, { flush: 'post' });
       const connect = (): void => {
+        applied = null;
         config.connectionChanged?.(context.controller, null);
         context.connection.value?.disconnect();
         context.connection.value = null;
@@ -228,6 +243,8 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
           context.connection.value = config.connect(element, context.controller, {
             ...(props.onCommand === undefined ? {} : { onCommand: props.onCommand }),
             onSnapshotChange: () => {
+              const connection = context.connection.value;
+              if (connection !== null) applied = { connection, snapshot: context.controller.getSnapshot() };
               config.connectionChanged?.(context.controller, context.connection.value);
               refreshVueProfileController(context.controller);
             },
@@ -239,7 +256,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         }
       };
       onMounted(connect);
-      onBeforeUnmount(() => { config.connectionChanged?.(context.controller, null); context.connection.value?.disconnect(); context.connection.value = null; });
+      onBeforeUnmount(() => { applied = null; config.connectionChanged?.(context.controller, null); context.connection.value?.disconnect(); context.connection.value = null; });
       expose({ controller: context.controller, refresh: () => context.connection.value?.refresh() });
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as,
