@@ -5,7 +5,7 @@ import { createTree, type TreeNodeInput } from '@sectile/core/tree';
 import { unwrap } from '@sectile/core/result';
 import { connectCheckboxTree, createCheckboxTreeController, type CheckboxTreeController, type CheckboxTreeConnection } from '@sectile/dom/checkbox-tree';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { captureCollectionSlot, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { createTreeGroup, createTreeItem, createTreeDisclosure, provideTreeParts } from './internal/tree-parts.js';
 import { useHostActive } from './host-provider.js';
@@ -143,12 +143,13 @@ const CheckboxTreeRootImplementation = /* @__PURE__ */ defineComponent({
       value: accepted.value?.state.selection.selected ?? empty, expandedValues: accepted.value?.state.expansion.ids ?? empty,
       highlightedValue: accepted.value?.state.cursor.current ?? null, disabled: props.disabled || !active.value, readonly: props.readonly,
     }));
-    provideTreeParts({ scope: 'checkbox-tree', state,
-      selectedItems: computed(() => accepted.value?.state.selection ?? noItems),
-      expandedItems: computed(() => accepted.value?.state.expansion ?? noItems), disabledItems: computed(() => noItems),
+    const slot = captureCollectionSlot(() => state.value);
+    const selection = computed(() => accepted.value?.state.selection);
+    const rootTabIndex = computed(() => slot.value.disabled || slot.value.highlightedValue !== null ? -1 : 0);
+    provideTreeParts({ scope: 'checkbox-tree', state, slot: () => slot.value, disabledItems: computed(() => noItems),
       checking: {
-        getChecked: (id) => { accepted.value; return controller.value?.getChecked(id) ?? null; },
-        isDisabled: (id) => { accepted.value; return controller.value?.isDisabled(id) ?? null; },
+        getChecked: (id) => { void selection.value; return controller.value?.getChecked(id) ?? null; },
+        isDisabled: (id) => controller.value?.isDisabled(id) ?? null,
         levelOf: (id) => (controller.value?.tree.depthOf(id) ?? 0) + 1,
         isLeaf: (id) => controller.value?.tree.isLeaf(id) !== false,
       },
@@ -178,10 +179,10 @@ const CheckboxTreeRootImplementation = /* @__PURE__ */ defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => { element.value = typeof HTMLElement !== 'undefined' && node instanceof HTMLElement ? node : undefined; },
-      role: 'tree', 'aria-label': props.label, 'aria-multiselectable': 'true', 'aria-disabled': state.value.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
-      tabindex: state.value.disabled || state.value.highlightedValue !== null ? -1 : 0,
+      role: 'tree', 'aria-label': props.label, 'aria-multiselectable': 'true', 'aria-disabled': slot.value.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
+      tabindex: rootTabIndex.value,
       'data-scope': 'checkbox-tree', 'data-part': 'root',
-    }), { default: () => slots.default?.(state.value) });
+    }), { default: () => slots.default?.(slot.live) });
   },
 });
 

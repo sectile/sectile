@@ -27,7 +27,7 @@ import {
   type ConditionalPresenceProps,
   type ConditionalPresenceRegistry,
 } from './presence/conditional-presence.js';
-import { reconcileCollectionState } from './internal/collection.js';
+import { captureCollectionSlot, projectActiveItem, reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePopupPresentation } from './internal/popup-presentation.js';
 
@@ -70,6 +70,9 @@ interface RootContext {
   readonly active: Readonly<ShallowRef<boolean>>;
   readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   readonly state: ComputedRef<SelectRootSlotProps>;
+  slot(): SelectRootSlotProps;
+  isSelected(id: string): boolean;
+  isHighlighted(id: string): boolean;
   readonly unmountOnExit: ComputedRef<boolean>;
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<PositionStrategy>;
@@ -146,6 +149,7 @@ export const SelectRoot = defineComponent({
       highlightedValue: highlighted.value, open: props.open ?? localOpen.value,
       disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
+    const slot = captureCollectionSlot(() => state.value);
     const disabledIDs = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
     const renderedItems = computed<readonly string[] | undefined>(() => {
       const ids = props.renderedItems;
@@ -256,6 +260,9 @@ export const SelectRoot = defineComponent({
       formControl,
       resetRevision,
       state, active, presentation, unmountOnExit, position, strategy, label: computed(() => props.label), textValue: computed(() => props.textValue ?? ((id: string) => id)), contentID, itemID,
+      slot: () => slot.live,
+      isSelected: projectActiveItem(() => state.value.value),
+      isHighlighted: projectActiveItem(() => highlighted.value),
       disabledItems: disabledIDs,
       isItemRendered: id => renderedItems.value?.includes(id) ?? true,
       indicatorPresence,
@@ -306,15 +313,15 @@ export const SelectRoot = defineComponent({
           if (!availability.value) lifecycle.invalidate();
           else scheduleConnect();
         },
-        'data-scope': 'select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
-      }), { default: () => slots['default']?.(state.value) });
+        'data-scope': 'select', 'data-part': 'root', 'data-state': slot.value.open ? 'open' : 'closed',
+      }), { default: () => slots['default']?.(slot.live) });
       if (fieldDefaults === undefined && props.name === undefined && props.form === undefined && !props.required) return visual;
       return [visual, h('select', {
         ref: submissionElement,
         ...submissionProps.value,
-        value: state.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
-      }, [h('option', { value: '', selected: state.value.value === null }), ...(props.formOptions === 'selected' ? selectedFormItems.value : props.items).map((id) => h('option', {
-        value: id, selected: state.value.value === id, disabled: disabledIDs.value.has(id),
+        value: slot.value.value ?? '', tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
+      }, [h('option', { value: '', selected: slot.value.value === null }), ...(props.formOptions === 'selected' ? selectedFormItems.value : props.items).map((id) => h('option', {
+        value: id, selected: slot.value.value === id, disabled: disabledIDs.value.has(id),
       }, props.textValue?.(id) ?? id))])];
     };
   },
@@ -361,13 +368,22 @@ export const SelectContent = defineComponent({
   name: 'SectileSelectContent', inheritAttrs: false,
   props: { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } },
   slots: Object as SlotsType<{ default: (props: SelectRootSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.state.value.open);
+  setup(props, { attrs, slots }) { const root = useRoot('SelectContent'); const element = shallowRef<HTMLElement>(); const open = computed(() => root.slot().open);
     provideHostLayerParent({ element, open, presentation: root.presentation, active: root.active });
     const present = usePresence(open, element, undefined, root.active);
+    const descendant = computed(() => {
+      const highlighted = root.slot().highlightedValue;
+      return highlighted === null || !root.isItemRendered(highlighted) ? undefined : root.itemID(highlighted);
+    });
+    const initialDescendant = descendant.value;
+    watch([element, descendant], ([content, id]) => {
+      if (id === undefined) content?.removeAttribute('aria-activedescendant');
+      else content?.setAttribute('aria-activedescendant', id);
+    }, { flush: 'post' });
     onBeforeUnmount(root.registerPresence(present));
     watch(present, async () => { await nextTick(); root.refresh(); }, { flush: 'post' }); return (): VNodeChild => {
     if (root.unmountOnExit.value && !present.value) return null;
-    const exiting = !root.state.value.open && present.value;
+    const exiting = !open.value && present.value;
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
       id: root.contentID, role: 'listbox', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
@@ -375,9 +391,9 @@ export const SelectContent = defineComponent({
       style: root.position.value
         ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
         : undefined,
-      'aria-activedescendant': root.state.value.highlightedValue === null || !root.isItemRendered(root.state.value.highlightedValue) ? undefined : root.itemID(root.state.value.highlightedValue),
-      'data-scope': 'select', 'data-part': 'content', 'data-state': root.state.value.open ? 'open' : 'closed',
-    }), { default: () => slots['default']?.(root.state.value) });
+      'aria-activedescendant': initialDescendant,
+      'data-scope': 'select', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
+    }), { default: () => slots['default']?.(root.slot()) });
   }; },
 });
 
@@ -387,8 +403,8 @@ export const SelectItem = defineComponent({
   slots: Object as SlotsType<{ default: (props: SelectItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('SelectItem'); const state = computed<SelectItemSlotProps>(() => ({
-      value: props.value, selected: root.state.value.value === props.value, highlighted: root.state.value.highlightedValue === props.value,
-      disabled: root.state.value.disabled || props.disabled || root.disabledItems.value.has(props.value),
+      value: props.value, selected: root.isSelected(props.value), highlighted: root.isHighlighted(props.value),
+      disabled: root.slot().disabled || props.disabled || root.disabledItems.value.has(props.value),
     }));
     provide<ItemContext>(itemKey, { state });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {

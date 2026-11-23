@@ -21,15 +21,21 @@ const { createApp, h, nextTick, ref, shallowRef, KeepAlive } = await import('vue
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
 const { CarouselRoot, CarouselPause, CarouselIndicatorGroup } = await import('../.verification-dist/carousel.js');
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
+const { CheckboxTreeItem, CheckboxTreeRoot } = await import('../.verification-dist/checkbox-tree.js');
+const { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } = await import('../.verification-dist/combobox.js');
 const { FeedRoot } = await import('../.verification-dist/feed.js');
 const { GridCell, GridRoot, GridRow } = await import('../.verification-dist/grid.js');
 const { ListboxItem, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { MenuItem, MenuRoot, MenuSubContent, MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenubarRoot, NavigationMenuRoot } = await import('../.verification-dist/menu.js');
 const { ContextMenuRoot, ContextMenuTrigger, ContextMenuContent, ContextMenuItem } = await import('../.verification-dist/context-menu.js');
 const { PaginationRoot, PaginationItem } = await import('../.verification-dist/pagination.js');
+const { RadioGroupItem, RadioGroupRoot } = await import('../.verification-dist/radio-group.js');
 const { SelectContent, SelectItem, SelectRoot, SelectTrigger } = await import('../.verification-dist/select.js');
 const { ToolbarItem, ToolbarRoot, ToolbarSeparator } = await import('../.verification-dist/toolbar.js');
-const { TreeGridRoot } = await import('../.verification-dist/tree-grid.js');
+const { ToggleGroupItem, ToggleGroupRoot } = await import('../.verification-dist/toggle-group.js');
+const { TreeGridCell, TreeGridRoot, TreeGridRow } = await import('../.verification-dist/tree-grid.js');
+const { TreeSelectContent, TreeSelectInput, TreeSelectItem, TreeSelectRoot } = await import('../.verification-dist/tree-select.js');
+const { TreeViewItem, TreeViewRoot } = await import('../.verification-dist/tree-view.js');
 const { SequenceReorderRoot, SequenceReorderItem, SequenceReorderHandle, TreeReorderRoot, TreeReorderItem, TreeReorderHandle, TreeReorderDropTarget } = await import('../.verification-dist/reorder.js');
 
 const boardNodes = [{ id: 'left', parentID: null }, { id: 'right', parentID: null }, { id: 'a', parentID: 'left' }, { id: 'b', parentID: 'left' }];
@@ -456,6 +462,60 @@ test('Vue collection cursor deltas execute only changed item consumer slots at 1
       await settle();
       assert.equal(menuSlots, 2, `${size} Menu items should execute only the old/new highlight slots`);
     } finally { unmount(menu.app, menu.host); }
+  }
+});
+
+test('Vue choice and tree cursor changes run only the old and new item slots', async () => {
+  for (const size of [100, 1_000]) {
+    const ids = Array.from({ length: size }, (_, i) => `item-${i}`);
+    const items = ids.map(id => ({ id, label: id }));
+    const nodes = ids.map(id => ({ id, parentID: null }));
+    const gridRows = ids.map(id => ({ id, parentID: null, cells: [`cell:${id}`] }));
+    let executions = 0;
+    const label = (id) => { executions += 1; return id; };
+    const options = (Part) => ids.map(id => h(Part, { key: id, value: id }, () => label(id)));
+    const cases = [
+      ['Select', () => h(SelectRoot, { items: ids, defaultValue: ids[0], defaultOpen: true, position: false }, {
+        default: () => [h(SelectTrigger), h(SelectContent, null, () => options(SelectItem))],
+      }), '[role=option]'],
+      ['Combobox', () => h(ComboboxRoot, { items, defaultOpen: true, position: false }, {
+        default: () => [h(ComboboxInput), h(ComboboxContent, null, () => options(ComboboxItem))],
+      }), 'input', 'prime'],
+      ['TreeView', () => h(TreeViewRoot, { nodes, defaultHighlightedValue: ids[0] }, () => options(TreeViewItem)), '[role=treeitem]'],
+      ['TreeSelect', () => h(TreeSelectRoot, { nodes, defaultOpen: true, position: false }, {
+        default: () => [h(TreeSelectInput), h(TreeSelectContent, null, () => options(TreeSelectItem))],
+      }), 'input', 'prime'],
+      ['CheckboxTree', () => h(CheckboxTreeRoot, { nodes, defaultHighlightedValue: ids[0] }, () => options(CheckboxTreeItem)), '[role=treeitem]'],
+      ['TreeGrid', () => h(TreeGridRoot, { rows: gridRows, defaultHighlightedValue: gridRows[0].cells[0], getCellValue: () => '', setCellValue: () => undefined }, {
+        default: () => gridRows.map((row, index) => h(TreeGridRow, { key: row.id, value: row.id, rowIndex: index + 1 }, () => (
+          h(TreeGridCell, { value: row.cells[0], columnIndex: 1 }, () => label(row.id))
+        ))),
+      }), '[role=gridcell]'],
+      ['RadioGroup', () => h(RadioGroupRoot, { items: ids, defaultValue: ids[0] }, () => options(RadioGroupItem)), '[role=radio]', 'focus'],
+      ['ToggleGroup', () => h(ToggleGroupRoot, { items: ids, defaultValue: [ids[0]] }, () => options(ToggleGroupItem)), '[data-toggle-group-id]', 'focus'],
+    ];
+    for (const [name, render, selector, move] of cases) {
+      const fixture = mount(render);
+      try {
+        await settle();
+        const target = fixture.host.querySelector(selector);
+        assert.ok(target, name);
+        target.focus();
+        await settle();
+        if (move === 'prime') {
+          gridKey(target, 'ArrowDown');
+          await settle();
+        }
+        executions = 0;
+        if (move === 'focus') fixture.host.querySelectorAll(selector)[1].focus();
+        else gridKey(target, 'ArrowDown');
+        await settle();
+        assert.equal(fixture.host.querySelector('[data-highlighted]')?.textContent, ids[1], name);
+        assert.ok(executions <= 2, `${name} ran ${executions} of ${size} item slots`);
+      } finally {
+        unmount(fixture.app, fixture.host);
+      }
+    }
   }
 });
 

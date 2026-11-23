@@ -14,7 +14,7 @@ import { usePartContract, type PartContract } from './internal/part-contract.js'
 import { provideFormControlOwner } from './form/control.js';
 import { hiddenInputSubmissionCapabilities, useCompositeFormControl, useFormSubmissionProps, useFormControlFlags } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
-import { reconcileCollectionState } from './internal/collection.js';
+import { captureCollectionSlot, projectActiveItem, reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   conditionalPresenceProps,
@@ -42,8 +42,8 @@ export interface RadioGroupItemSlotProps { readonly value: string; readonly chec
 export interface RadioGroupIndicatorProps extends ConditionalPresenceProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
 
 interface RootContext {
-  readonly value: ComputedRef<string>;
-  readonly highlighted: ComputedRef<string | null>;
+  isSelected(id: string): boolean;
+  isHighlighted(id: string): boolean;
   readonly disabled: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
   readonly partContract: PartContract;
@@ -167,12 +167,14 @@ export const RadioGroupRoot = defineComponent({
     };
     const part = usePartContract('radio-group', 'root');
     provide<RootContext>(rootKey, {
-      value, highlighted, disabled, disabledItems, partContract: part,
+      isSelected: projectActiveItem(() => value.value),
+      isHighlighted: projectActiveItem(() => highlighted.value),
+      disabled, disabledItems, partContract: part,
       focus: syncHighlight,
       select: (id, target) => apply(controller.value.handleEvent({ type: 'activate', id }), target.closest('[role="radiogroup"]') as HTMLElement | undefined),
     });
     const rootAttributes = computed(() => getRadioGroupRootAttributes({ orientation: props.orientation, direction: direction.value, disabled: flags.value.disabled, readOnly: flags.value.readonly }));
-    const slotProps = computed<RadioGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
+    const slotProps = captureCollectionSlot<RadioGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, rootAttributes.value as Record<string, unknown>, {
         'aria-label': attrs['aria-label'],
@@ -189,7 +191,7 @@ export const RadioGroupRoot = defineComponent({
           if (!apply(controller.value.handleKeyboardInput(event), root)) return;
           event.preventDefault();
         },
-      }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.value) });
+      }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.live) });
       if (!participation.participating && props.name === undefined && props.form === undefined && !props.required) return root;
       return [root, ...props.items.map((id, index) => h('input', mergeProps(getRadioGroupInputAttributes({
         ...(props.name === undefined ? {} : { name: props.name }),
@@ -227,8 +229,8 @@ export const RadioGroupItem = defineComponent({
     const part = { scope: root.partContract.scope, part: root.partContract.parts['item'] ?? 'item' };
     const state = computed<RadioGroupItemSlotProps>(() => ({
       value: props.value,
-      checked: root.value.value === props.value,
-      highlighted: root.highlighted.value === props.value,
+      checked: root.isSelected(props.value),
+      highlighted: root.isHighlighted(props.value),
       disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value),
     }));
     provide<ItemContext>(itemKey, { state, partContract: root.partContract });

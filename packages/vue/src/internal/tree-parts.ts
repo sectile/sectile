@@ -4,12 +4,12 @@ import type { CheckboxValue } from '@sectile/core/checkbox';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import type { TreeViewRootSlotProps, TreeViewItemSlotProps } from '../tree-view.js';
 import { conditionalPresenceProps, useConditionalPresence } from '../presence/conditional-presence.js';
+import { projectActiveItem, projectItemMembership } from './collection.js';
 
 export interface TreePartContext {
   readonly scope: 'tree-view' | 'checkbox-tree' | 'tree-select';
   readonly state: ComputedRef<TreeViewRootSlotProps>;
-  readonly selectedItems: ComputedRef<Pick<ReadonlySet<string>, 'has'>>;
-  readonly expandedItems: ComputedRef<Pick<ReadonlySet<string>, 'has'>>;
+  slot(): TreeViewRootSlotProps;
   readonly disabledItems: ComputedRef<Pick<ReadonlySet<string>, 'has'>>;
   readonly checking?: {
     getChecked(id: string): CheckboxValue | null;
@@ -31,21 +31,52 @@ export interface TreePartContext {
 
 const key = /* @__PURE__ */ Symbol('SectileTreeParts');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
-export function provideTreeParts(context: TreePartContext): void { provide(key, context); }
-function useRoot(part: string, scope: TreePartContext['scope']): TreePartContext {
-  const root = inject<TreePartContext>(key);
+interface ProjectedTreeParts extends TreePartContext {
+  isHighlighted(id: string): boolean;
+  isSelected(id: string): boolean;
+  isExpanded(id: string): boolean;
+}
+export function provideTreeParts(context: TreePartContext): void {
+  provide<ProjectedTreeParts>(key, {
+    ...context,
+    isHighlighted: projectActiveItem(() => context.state.value.highlightedValue),
+    isSelected: projectItemMembership(() => context.state.value.value),
+    isExpanded: projectItemMembership(() => context.state.value.expandedValues),
+  });
+}
+function useRoot(part: string, scope: TreePartContext['scope']): ProjectedTreeParts {
+  const root = inject<ProjectedTreeParts>(key);
   if (!root || root.scope !== scope) throw new TypeError(`${part.replace(/^Sectile/u, '')} must be used inside ${scope === 'tree-view' ? 'TreeViewRoot' : scope === 'checkbox-tree' ? 'CheckboxTreeRoot' : 'TreeSelectRoot'}.`);
   return root;
 }
-function itemState(root: TreePartContext, id: string, disabled = false): TreeViewItemSlotProps & { readonly checked?: CheckboxValue } {
-  const state = root.state.value;
+function itemState(root: ProjectedTreeParts, id: string, disabled = false) {
   return {
-    expandedValues: state.expandedValues, highlightedValue: state.highlightedValue, readonly: state.readonly,
-    value: id, selectedValues: state.value, selected: root.selectedItems.value.has(id),
-    expanded: root.expandedItems.value.has(id), highlighted: state.highlightedValue === id,
-    disabled: state.disabled || (root.checking ? root.checking.isDisabled(id) !== false : disabled || root.disabledItems.value.has(id)),
+    value: id, selected: root.isSelected(id),
+    expanded: root.isExpanded(id), highlighted: root.isHighlighted(id),
+    disabled: root.slot().disabled || (root.checking ? root.checking.isDisabled(id) !== false : disabled || root.disabledItems.value.has(id)),
     ...(root.checking ? { checked: root.checking.getChecked(id) ?? false } : {}),
   };
+}
+
+function itemSlot(root: ProjectedTreeParts, local: ReturnType<typeof itemState>): TreeViewItemSlotProps {
+  const state = root.slot();
+  return {
+    get expandedValues() { return state.expandedValues; },
+    get highlightedValue() { return state.highlightedValue; },
+    get readonly() { return state.readonly; },
+    get selectedValues() { return state.value; },
+    ...local,
+  };
+}
+
+function projectTreeItem(root: ProjectedTreeParts, id: () => string, disabled: () => boolean = () => false) {
+  return computed<ReturnType<typeof itemState>>((previous) => {
+    const next = itemState(root, id(), disabled());
+    return previous !== undefined
+      && previous.value === next.value && previous.selected === next.selected && previous.expanded === next.expanded
+      && previous.highlighted === next.highlighted && previous.disabled === next.disabled && previous.checked === next.checked
+      ? previous : next;
+  });
 }
 
 export function createTreeGroup(name: string, scope: TreePartContext['scope']) {
@@ -55,14 +86,14 @@ export function createTreeGroup(name: string, scope: TreePartContext['scope']) {
     slots: Object as SlotsType<{ default: (props: TreeViewRootSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
       const root = useRoot(name, scope);
-      const expanded = computed(() => root.expandedItems.value.has(props.for));
+      const expanded = computed(() => root.isExpanded(props.for));
       const presence = useConditionalPresence(expanded, computed(() => props.forcePresent));
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: presence.register,
         role: 'group', hidden: presence.hidden.value,
         ...(!expanded.value && presence.present.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         'data-scope': scope, 'data-part': 'group', 'data-state': expanded.value ? 'open' : 'closed',
-      }), { default: () => slots['default']?.(root.state.value) });
+      }), { default: () => slots['default']?.(root.slot()) });
     },
   });
 }
@@ -73,7 +104,7 @@ export function createTreeItem(name: string, scope: TreePartContext['scope']) {
     props: { value: { type: String, required: true }, disabled: { type: Boolean, default: false }, ...partProps },
     slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
-      const root = useRoot(name, scope), state = computed(() => itemState(root, props.value, props.disabled));
+      const root = useRoot(name, scope), state = projectTreeItem(root, () => props.value, () => props.disabled);
       let element: HTMLElement | undefined, registeredID: string | undefined;
       const release = (): void => {
         if (element && registeredID !== undefined) root.unregisterItem?.(element, registeredID);
@@ -99,7 +130,7 @@ export function createTreeItem(name: string, scope: TreePartContext['scope']) {
           tabindex: !root.selecting && state.value.highlighted && !state.value.disabled ? 0 : -1,
           ...(root.checking ? { 'data-state': state.value.checked === 'mixed' ? 'indeterminate' : state.value.checked ? 'checked' : 'unchecked' } : {}),
         } : {}),
-      }), { default: () => slots['default']?.(state.value) });
+      }), { default: () => slots['default']?.(itemSlot(root, state.value)) });
     },
   });
 }
@@ -110,7 +141,7 @@ export function createTreeDisclosure(name: string, scope: TreePartContext['scope
     props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } },
     slots: Object as SlotsType<{ default: (props: TreeViewItemSlotProps) => VNodeChild }>,
     setup(props, { attrs, slots }) {
-      const root = useRoot(name, scope), state = computed(() => itemState(root, props.for));
+      const root = useRoot(name, scope), state = projectTreeItem(root, () => props.for);
       let element: HTMLElement | undefined, registeredID: string | undefined;
       const release = (): void => {
         if (element && registeredID !== undefined) root.unregisterDisclosure?.(element, registeredID);
@@ -131,7 +162,7 @@ export function createTreeDisclosure(name: string, scope: TreePartContext['scope
         ...(root.checking || root.selecting ? { 'aria-expanded': props.as === 'button' ? state.value.expanded : undefined,
           'aria-disabled': props.as === 'button' && state.value.disabled ? 'true' : undefined,
           'aria-hidden': props.as === 'button' ? undefined : 'true' } : {}),
-      }), { default: () => slots['default']?.(state.value) });
+      }), { default: () => slots['default']?.(itemSlot(root, state.value)) });
     },
   });
 }

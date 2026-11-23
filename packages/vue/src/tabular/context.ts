@@ -1,6 +1,7 @@
-import { computed, inject, provide, shallowReactive, shallowRef, watch, type ComputedRef, type InjectionKey, type ShallowRef } from 'vue';
+import { computed, inject, provide, shallowRef, type ComputedRef, type InjectionKey, type ShallowRef } from 'vue';
 import type { TabularAcceptedViewState, TabularAccessState, TabularColumnState, TabularQuery, TabularRequestState, TabularRow, TabularRowSelection } from '@sectile/tabular';
 import { stateOf, type VueProfileController } from './controller.js';
+import { captureCollectionSlot } from '../internal/collection.js';
 
 const NO_ROWS: readonly TabularRow[] = Object.freeze([]);
 
@@ -57,7 +58,8 @@ export function provideProfile<State, Event, Command, Connection>(
 }
 
 function createProfileSlots<State, Event, Command>(controller: VueProfileController<State, Event, Command>): ProfileSlots {
-  const fields = (snapshot: State) => {
+  const slot = captureCollectionSlot(() => {
+    const snapshot = controller.snapshot.value;
     const state = stateOf(snapshot);
     const profile = snapshot as { readonly cursor?: unknown; readonly edit?: unknown };
     return {
@@ -74,40 +76,11 @@ function createProfileSlots<State, Event, Command>(controller: VueProfileControl
       ...(profile.cursor === undefined ? {} : { cursor: profile.cursor }),
       ...(profile.edit === undefined ? {} : { editState: profile.edit }),
     };
-  };
-  let published = fields(controller.snapshot.value);
-  const tracked = shallowReactive({ ...published });
-  let descriptors: PropertyDescriptorMap | undefined;
-  let root: Readonly<Record<string, unknown>> | undefined;
-  watch(controller.snapshot, (snapshot) => {
-    published = fields(snapshot);
-    descriptors = undefined;
-    root = undefined;
-    Object.assign(tracked, published);
-  }, { flush: 'sync' });
-
-  const createProps = () => {
-    if (descriptors === undefined) {
-      const captured = published;
-      descriptors = {};
-      for (const key of Object.keys(captured) as (keyof typeof captured)[]) {
-        descriptors[key] = {
-          enumerable: true,
-          get: () => {
-            // Track the field independently while keeping retained slot arguments
-            // tied to the snapshot for which they were created.
-            void tracked[key];
-            return captured[key];
-          },
-        };
-      }
-    }
-    return Object.defineProperties({}, descriptors);
-  };
+  });
   return {
-    get rows() { return tracked.rows; },
-    root: () => root ??= Object.freeze(createProps()),
-    row: (local) => Object.freeze(Object.assign(createProps(), local)),
+    get rows() { return slot.value.rows; },
+    root: () => slot.value,
+    row: (local) => slot.with(local),
   };
 }
 

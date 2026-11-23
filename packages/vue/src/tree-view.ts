@@ -9,7 +9,7 @@ import {
   type TreeViewSelectionMode,
 } from '@sectile/dom/tree-view';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { captureCollectionSlot, collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { createTreeGroup, createTreeItem, createTreeDisclosure, provideTreeParts } from './internal/tree-parts.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
@@ -138,15 +138,10 @@ export const TreeViewRoot = defineComponent({
       connection.value.setTreeAttributes(nextOwner.label); refreshParts(); refresh();
     };
     const disabledItems = computed<ReadonlySet<string>>(() => new Set(props.disabledItems));
-    const selectedItems = computed<ReadonlySet<string>>(
-      () => new Set(state.value.value),
-    );
-    const expandedItems = computed<ReadonlySet<string>>(
-      () => new Set(state.value.expandedValues),
-    );
+    const slot = captureCollectionSlot(() => state.value);
     provideTreeParts({
       scope: 'tree-view',
-      state, selectedItems, expandedItems, disabledItems,
+      state, slot: () => slot.value, disabledItems,
       registerItem: (node, id, disabled) => connection.value?.setItemAttributes(node, { id, disabled }),
       registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       unregisterItem: (node, id) => connection.value?.releaseItem?.(node, id),
@@ -161,7 +156,7 @@ export const TreeViewRoot = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
       'data-scope': 'tree-view', 'data-part': 'root',
-    }), { default: () => slots['default']?.(state.value) });
+    }), { default: () => slots['default']?.(slot.live) });
   },
 });
 

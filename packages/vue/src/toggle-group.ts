@@ -14,7 +14,7 @@ import {
   useFormControlFlags,
 } from './form/control.js';
 import { useHostDirection } from './host-provider.js';
-import { reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { captureCollectionSlot, projectActiveItem, projectItemMembership, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 
 export interface ToggleGroupRootProps {
@@ -39,8 +39,8 @@ export interface ToggleGroupItemProps { readonly value: string; readonly disable
 export interface ToggleGroupItemSlotProps { readonly value: string; readonly pressed: boolean; readonly highlighted: boolean; readonly disabled: boolean; readonly: boolean }
 
 interface RootContext {
-  readonly value: ComputedRef<readonly string[]>;
-  readonly highlighted: ComputedRef<string | null>;
+  isPressed(id: string): boolean;
+  isHighlighted(id: string): boolean;
   readonly disabled: ComputedRef<boolean>;
   readonly readonly: ComputedRef<boolean>;
   readonly disabledItems: ComputedRef<ReadonlySet<string>>;
@@ -140,17 +140,19 @@ export const ToggleGroupRoot = defineComponent({
       return true;
     };
     provide<RootContext>(rootKey, {
-      value, highlighted, disabled, readonly, disabledItems,
+      isPressed: projectItemMembership(() => value.value),
+      isHighlighted: projectActiveItem(() => highlighted.value),
+      disabled, readonly, disabledItems,
       focus: (id) => { if (snapshot.value.state.cursor.current !== id) apply(controller.value.handleEvent({ type: 'focus', id })); },
       press: (id, target) => apply(controller.value.handleEvent({ type: 'toggle', id }), target.closest('[data-scope="toggle-group"][data-part="root"]') as HTMLElement | undefined),
     });
-    const slotProps = computed<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
+    const slotProps = captureCollectionSlot<ToggleGroupRootSlotProps>(() => ({ value: value.value, highlightedValue: highlighted.value, disabled: flags.value.disabled, readonly: flags.value.readonly }));
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(attrs, getToggleGroupRootAttributes({ orientation: props.orientation, direction: direction.value, ...(props.label === undefined ? {} : { label: props.label }), disabled: flags.value.disabled, readOnly: flags.value.readonly }) as Record<string, unknown>, {
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { rootElement.value = element as HTMLElement | null; },
       onKeydown: (event: KeyboardEvent) => { if (apply(controller.value.handleKeyboardInput(event), event.currentTarget as HTMLElement)) event.preventDefault(); },
-      }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.value) });
+      }, participation.controlProps.value), { default: () => slots['default']?.(slotProps.live) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return root;
       return [root, ...value.value.map((selected, index) => h('input', {
         ref: (element: unknown) => {
@@ -176,7 +178,7 @@ export const ToggleGroupItem = defineComponent({
   setup(props, { attrs, slots }) {
     const root = useRoot();
     const state = computed<ToggleGroupItemSlotProps>(() => ({
-      value: props.value, pressed: root.value.value.includes(props.value), highlighted: root.highlighted.value === props.value,
+      value: props.value, pressed: root.isPressed(props.value), highlighted: root.isHighlighted(props.value),
       disabled: root.disabled.value || props.disabled || root.disabledItems.value.has(props.value), readonly: root.readonly.value,
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, getToggleGroupItemAttributes({ id: props.value, pressed: state.value.pressed, highlighted: state.value.highlighted, disabled: state.value.disabled }) as Record<string, unknown>, {

@@ -10,7 +10,7 @@ import {
   type TreeGridRowInput,
 } from '@sectile/dom/tree-grid';
 import { Primitive, type PrimitiveAs } from './primitive.js';
-import { collectionBranchIDs, reconcileCollectionState, sameIDs } from './internal/collection.js';
+import { captureCollectionSlot, collectionBranchIDs, projectActiveItem, projectItemMembership, reconcileCollectionState, sameIDs } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import {
   conditionalPresenceProps,
@@ -51,8 +51,10 @@ export interface TreeGridGroupProps extends TreeGridPartProps, ConditionalPresen
 export interface TreeGridEditorProps extends ConditionalPresenceProps { readonly for: string; readonly label?: string }
 
 interface Context {
-  readonly state: ComputedRef<TreeGridRootSlotProps>;
-  readonly expandedRows: ComputedRef<ReadonlySet<string>>;
+  readonly slot: ReturnType<typeof captureCollectionSlot<TreeGridRootSlotProps>>;
+  isSelected(id: string): boolean;
+  isHighlighted(id: string): boolean;
+  isExpanded(id: string): boolean;
   readonly headers: ComputedRef<readonly string[]>;
   readonly headerCount: ComputedRef<number>;
   registerRow(element: HTMLElement, rowIndex: number, level: number, expanded: boolean | undefined): void;
@@ -118,9 +120,7 @@ export const TreeGridRoot = defineComponent({
       highlightedValue: props.highlightedValue !== undefined ? props.highlightedValue : localHighlight.value,
       editMode: props.editMode ?? localEditMode.value, disabled: props.disabled, readonly: props.readonly,
     }));
-    const expandedRows = computed<ReadonlySet<string>>(
-      () => new Set(state.value.expandedValue),
-    );
+    const slot = captureCollectionSlot(() => state.value);
     const refreshParts = (): void => {
       if (element.value === undefined || connection.value === undefined) return;
       connection.value.setGridAttributes(
@@ -224,7 +224,10 @@ export const TreeGridRoot = defineComponent({
       schedulePendingConnect();
     };
     provide<Context>(key, {
-      state, expandedRows, headers, headerCount,
+      slot, headers, headerCount,
+      isSelected: projectActiveItem(() => state.value.value),
+      isHighlighted: projectActiveItem(() => state.value.highlightedValue),
+      isExpanded: projectItemMembership(() => state.value.expandedValue),
       registerRow: (node, rowIndex, level, expanded) => connection.value?.setRowAttributes(node, { rowIndex: rowIndex + headerCount.value, level, ...(expanded === undefined ? {} : { expanded }) }),
       registerCell: (node, id, columnIndex) => connection.value?.setCellAttributes(node, { id, columnIndex }), registerDisclosure: (node, id) => connection.value?.setDisclosureAttributes(node, id),
       registerEditor: (node, id, label) => connection.value?.bindEditor(node, { id, ...(label === undefined ? {} : { label }) }),
@@ -263,8 +266,8 @@ export const TreeGridRoot = defineComponent({
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
       role: 'treegrid', 'aria-rowcount': props.rows.length + headerCount.value, 'aria-colcount': columnCount.value, 'data-column-count': columnCount.value,
-      'data-scope': 'tree-grid', 'data-part': 'root', 'data-edit-mode': state.value.editMode,
-    }), { default: () => slots['default']?.(state.value) });
+      'data-scope': 'tree-grid', 'data-part': 'root', 'data-edit-mode': slot.value.editMode,
+    }), { default: () => slots['default']?.(slot.live) });
   },
 });
 
@@ -307,13 +310,13 @@ export const TreeGridRow = defineComponent({
   name: 'SectileTreeGridRow', inheritAttrs: false,
   props: { value: { type: String, required: true }, rowIndex: { type: Number, required: true }, level: { type: Number, default: 1 }, expandable: { type: Boolean, default: false }, ...partProps },
   slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeGridRow'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.value, expanded: root.expandedRows.value.has(props.value) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
-    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerRow(node, props.rowIndex, props.level, props.expandable ? state.value.expanded : undefined); },
+  setup(props, { attrs, slots }) { const root = useRoot('TreeGridRow'); const expanded = computed(() => root.isExpanded(props.value)); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+    as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerRow(node, props.rowIndex, props.level, props.expandable ? expanded.value : undefined); },
     role: 'row', 'aria-rowindex': props.rowIndex + root.headerCount.value, 'aria-level': props.level,
-    'aria-expanded': props.expandable ? state.value.expanded : undefined,
+    'aria-expanded': props.expandable ? expanded.value : undefined,
     'data-sectile-tree-grid-row': props.value, 'data-row-index': props.rowIndex, 'data-level': props.level, 'data-expandable': props.expandable ? '' : undefined,
-    'data-expanded': props.expandable && state.value.expanded ? '' : undefined, 'data-scope': 'tree-grid', 'data-part': 'row',
-  }), { default: () => slots['default']?.(state.value) }); },
+    'data-expanded': props.expandable && expanded.value ? '' : undefined, 'data-scope': 'tree-grid', 'data-part': 'row',
+  }), { default: () => slots['default']?.(root.slot.with({ value: props.value, expanded: expanded.value })) }); },
 });
 
 /** Rowgroup visibility borrows the root expansion owner and the shared Presence lifecycle. */
@@ -322,13 +325,13 @@ export const TreeGridGroup = defineComponent({
   props: { for: { type: String, required: true }, ...partProps, ...conditionalPresenceProps },
   slots: Object as SlotsType<{ default: (props: TreeGridRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
-    const root = useRoot('TreeGridGroup'), expanded = computed(() => root.expandedRows.value.has(props.for));
+    const root = useRoot('TreeGridGroup'), expanded = computed(() => root.isExpanded(props.for));
     const presence = useConditionalPresence(expanded, computed(() => props.forcePresent));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: presence.register, role: 'rowgroup', hidden: presence.hidden.value,
       ...(!expanded.value && presence.present.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       'data-scope': 'tree-grid', 'data-part': 'group', 'data-state': expanded.value ? 'open' : 'closed',
-    }), { default: () => slots['default']?.(root.state.value) });
+    }), { default: () => slots['default']?.(root.slot.value) });
   },
 });
 
@@ -336,22 +339,44 @@ export const TreeGridCell = defineComponent({
   name: 'SectileTreeGridCell', inheritAttrs: false,
   props: { value: { type: String, required: true }, columnIndex: { type: Number, required: true }, ...partProps },
   slots: Object as SlotsType<{ default: (props: TreeGridCellSlotProps) => VNodeChild }>,
-  setup(props, { attrs, slots }) { const root = useRoot('TreeGridCell'); const state = computed<TreeGridCellSlotProps>(() => ({ ...root.state.value, value: props.value, selected: root.state.value.value === props.value, highlighted: root.state.value.highlightedValue === props.value, editing: root.state.value.highlightedValue === props.value && root.state.value.editMode === 'editing' })); return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeGridCell');
+    const state = computed(() => {
+      const highlighted = root.isHighlighted(props.value);
+      return { value: props.value, selected: root.isSelected(props.value), highlighted, editing: highlighted && root.slot.value.editMode === 'editing' };
+    });
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerCell(node, props.value, props.columnIndex); },
     role: 'gridcell', 'aria-colindex': props.columnIndex, 'aria-selected': state.value.selected,
     'data-sectile-tree-grid-cell': props.value, 'data-column-index': props.columnIndex, 'data-scope': 'tree-grid', 'data-part': 'cell',
     'data-selected': state.value.selected ? '' : undefined, 'data-highlighted': state.value.highlighted ? '' : undefined, 'data-editing': state.value.editing ? '' : undefined,
-  }), { default: () => slots['default']?.(state.value) }); },
+    }), { default: () => slots['default']?.(root.slot.with(state.value)) });
+  },
 });
 
-export const TreeGridDisclosure = defineComponent({ name: 'SectileTreeGridDisclosure', inheritAttrs: false, props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } }, slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>, setup(props, { attrs, slots }) { const root = useRoot('TreeGridDisclosure'); const state = computed<TreeGridRowSlotProps>(() => ({ ...root.state.value, value: props.for, expanded: root.expandedRows.value.has(props.for) })); return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined, disabled: props.as === 'button' ? root.state.value.disabled : undefined, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); }, 'data-sectile-tree-grid-disclosure': props.for, 'data-scope': 'tree-grid', 'data-part': 'disclosure', 'data-state': state.value.expanded ? 'open' : 'closed' }), { default: () => slots['default']?.(state.value) }); } });
+export const TreeGridDisclosure = defineComponent({
+  name: 'SectileTreeGridDisclosure', inheritAttrs: false,
+  props: { for: { type: String, required: true }, as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'span' }, asChild: { type: Boolean, default: false } },
+  slots: Object as SlotsType<{ default: (props: TreeGridRowSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeGridDisclosure');
+    const expanded = computed(() => root.isExpanded(props.for));
+    return (): VNodeChild => h(Primitive, mergeProps(attrs, {
+      as: props.as, asChild: props.asChild, type: props.as === 'button' ? 'button' : undefined,
+      disabled: props.as === 'button' ? root.slot.value.disabled : undefined,
+      elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerDisclosure(node, props.for); },
+      'data-sectile-tree-grid-disclosure': props.for, 'data-scope': 'tree-grid', 'data-part': 'disclosure',
+      'data-state': expanded.value ? 'open' : 'closed',
+    }), { default: () => slots['default']?.(root.slot.with({ value: props.for, expanded: expanded.value })) });
+  },
+});
 
 export const TreeGridEditor = defineComponent({
   name: 'SectileTreeGridEditor', inheritAttrs: false,
   props: { for: { type: String, required: true }, label: { type: String, default: undefined }, ...conditionalPresenceProps },
   setup(props, { attrs }) {
     const root = useRoot('TreeGridEditor');
-    const editing = computed(() => root.state.value.highlightedValue === props.for && root.state.value.editMode === 'editing');
+    const editing = computed(() => root.isHighlighted(props.for) && root.slot.value.editMode === 'editing');
     const forcePresent = computed(() => props.forcePresent);
     const presence = useConditionalPresence(editing, forcePresent);
     let registeredInput: HTMLInputElement | undefined;
@@ -384,8 +409,8 @@ export const TreeGridEditor = defineComponent({
         onCompositionstart: () => setComposing(true),
         onCompositionend: () => setComposing(false),
         ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
-        disabled: root.state.value.disabled,
-        readonly: root.state.value.readonly,
+        disabled: root.slot.value.disabled,
+        readonly: root.slot.value.readonly,
         'aria-label': props.label,
         'data-sectile-tree-grid-editor': props.for,
         'data-scope': 'tree-grid',

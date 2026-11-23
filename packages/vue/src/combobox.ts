@@ -14,7 +14,7 @@ import { createTextState, type TextState } from '@sectile/dom/text';
 import { Primitive, type PrimitiveAs } from './primitive.js';
 import { positionProps, positionSources, readPositionOptions } from './internal/position-options.js';
 import { useFormControlFlags, useNativeInputFormControl } from './form/control.js';
-import { reconcileCollectionState } from './internal/collection.js';
+import { captureCollectionSlot, projectActiveItem, reconcileCollectionState } from './internal/collection.js';
 import { useControlledStateInvariant } from './internal/controlled-state.js';
 import { usePopupPresentation } from './internal/popup-presentation.js';
 import { provideHostLayerParent } from './host-provider.js';
@@ -59,6 +59,9 @@ interface Context {
   readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   registerPresence(present: ShallowRef<boolean>): () => void;
   readonly state: ComputedRef<ComboboxRootSlotProps>;
+  readonly slot: ReturnType<typeof captureCollectionSlot<ComboboxRootSlotProps>>;
+  isSelected(id: string): boolean;
+  isHighlighted(id: string): boolean;
   readonly position: ComputedRef<boolean>;
   readonly strategy: ComputedRef<PositionStrategy>;
   readonly label: ComputedRef<string | undefined>;
@@ -127,6 +130,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
       inputValue: props.inputValue ?? localInput.value, highlightedValue: highlighted.value,
       open: props.open ?? localOpen.value, disabled: flags.value.disabled, readonly: flags.value.readonly,
     }));
+    const slot = captureCollectionSlot(() => state.value);
     const lifecycle = usePopupPresentation({ connection, open: computed(() => state.value.open), connect: () => connect(), refresh: () => refresh(), trackLayerHost: true });
     const itemLabels = computed(() => new Map(props.items.map((item) => [item.id, item.label] as const)));
     const renderedItems = computed<ReadonlySet<string> | undefined>(() => {
@@ -143,7 +147,7 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     const matchingQuery = computed(() => {
       const text = matchingText.value;
       return text === undefined
-        ? state.value.inputValue
+        ? slot.value.inputValue
         : text.composition === null
           ? text.snapshot.text
           : text.composition.baseline.text;
@@ -297,7 +301,9 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
           lifecycle.reconnect();
         });
       },
-      state, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+      state, slot, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
+      isSelected: projectActiveItem(() => state.value.value),
+      isHighlighted: projectActiveItem(() => highlighted.value),
       position: computed(() => !inline.value && props.position), strategy: computed(() => props.strategy),
       label: computed(() => props.label), connection: computed(() => connection.value),
       matchesItem, hasMatches, matchingItems,
@@ -353,9 +359,9 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
     };
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, 'data-scope': 'combobox', 'data-part': 'root',
-      'data-state': state.value.open ? 'open' : 'closed', 'data-disabled': flags.value.disabled ? '' : undefined,
+      'data-state': slot.value.open ? 'open' : 'closed', 'data-disabled': flags.value.disabled ? '' : undefined,
       'data-readonly': flags.value.readonly ? '' : undefined,
-    }), { default: () => slots['default']?.(state.value) });
+    }), { default: () => slots['default']?.(slot.live) });
   },
 });
 
@@ -370,7 +376,8 @@ export const ComboboxResults = /* @__PURE__ */ defineComponent({
   slots: Object as SlotsType<{ default: (props: ComboboxResultsSlotProps) => VNodeChild }>,
   setup(_props, { slots }) {
     const root = useRoot('ComboboxResults');
-    return (): VNodeChild => slots['default']?.({ ...root.state.value, items: root.matchingItems.value, active: root.active.value });
+    const results = captureCollectionSlot(() => ({ items: root.matchingItems.value, active: root.active.value }));
+    return (): VNodeChild => slots['default']?.(root.slot.with(results.value));
   },
 });
 
@@ -445,7 +452,7 @@ export const ComboboxContent = /* @__PURE__ */ defineComponent({
           ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }
           : undefined,
         'data-scope': 'combobox', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
-      }), { default: () => slots['default']?.(root.state.value) });
+      }), { default: () => slots['default']?.(root.slot.live) });
     };
   },
 });
@@ -456,8 +463,8 @@ export const ComboboxItem = /* @__PURE__ */ (() => defineComponent({
   slots: Object as SlotsType<{ default: (props: ComboboxItemSlotProps) => VNodeChild }>,
   setup(props, { attrs, slots }) {
     const root = useRoot('ComboboxItem'); const state = computed<ComboboxItemSlotProps>(() => ({
-      value: props.value, selected: root.state.value.value === props.value,
-      highlighted: root.state.value.highlightedValue === props.value, disabled: root.state.value.disabled || props.disabled,
+      value: props.value, selected: root.isSelected(props.value),
+      highlighted: root.isHighlighted(props.value), disabled: root.slot.value.disabled || props.disabled,
     }));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { if (node instanceof HTMLElement) root.registerItem(node, props.value, state.value.disabled); },
