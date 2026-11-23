@@ -3891,10 +3891,11 @@
           ]
         },
         "tabular-context": {
-          "reason": "Injection scopes and connection refs over the lower controller contract.",
+          "reason": "Injection scopes and connection refs over the lower controller contract, using shared Vue foundations for slot subscriptions.",
           "allows": [
             "tabular-controller",
-            "tabular-context"
+            "tabular-context",
+            "foundation"
           ]
         },
         "tabular-source": {

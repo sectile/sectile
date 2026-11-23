@@ -12,6 +12,7 @@ Accepted decisions are derived from Sectile ownership, invariants, and cost cont
 - [DOM date-range-picker consumer-bundle baseline ratchet](dom-date-range-picker-bundle-baseline-ratchet.md) advances the focused Temporal fixture reference to the already-published `@sectile/dom@0.18.0` artifact.
 - [DOM range-calendar consumer-bundle baseline ratchet](dom-range-calendar-bundle-baseline-ratchet.md) advances the focused Temporal fixture reference to the already-published `@sectile/dom@0.18.0` artifact.
 - [Tabular Virtual consumer-bundle baseline ratchet](tabular-virtual-bundle-baseline-ratchet.md) advances the focused Virtual fixture reference to the already-published `@sectile/tabular@0.15.2` package combination.
+- [Tabular package and Vue grid bundle budgets](tabular-source-and-vue-grid-budgets.md) records the delivery cost of range materialization and granular grid updates.
 - [Terminal publication baseline repair](terminal-source-map-baseline.md) repairs the source-map publication reference against the already-published `@sectile/terminal@0.14.7` artifact.
 - [Virtual surface framing](virtual-surface-framing.md) defines the coordinate and host-composition contract for headers, footers, sticky insets, empty content, and virtual item surfaces. Its runtime migration is pending.
 - [Virtual publication baseline repair](virtual-source-map-baseline.md) records the publication-footprint baseline repair against the already-published `@sectile/virtual@0.15.2` artifact.

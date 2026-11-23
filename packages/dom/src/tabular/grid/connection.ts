@@ -555,7 +555,7 @@ export class DOMTabularGrid<
     const before = previous.kind === 'explicit-rows' ? previous.rowIDs : previous.excludedRowIDs;
     const after = next.kind === 'explicit-rows' ? next.rowIDs : next.excludedRowIDs;
     for (const id of before) update(id);
-    for (const id of after) if (rowSelected(next, id) !== rowSelected(previous, id)) update(id);
+    for (const id of after) update(id);
   }
 
   public disconnect(): void {

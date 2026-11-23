@@ -1,5 +1,5 @@
-import { nextRevision, ok } from '../foundation.js';
-import type { TabularRequest, TabularResolvedRow, TabularResult, TabularRowID, TabularView, TabularViewResponse } from '../contracts.js';
+import { fail, nextRevision, ok } from '../foundation.js';
+import type { TabularLimits, TabularRequest, TabularResolvedRow, TabularResult, TabularRowID, TabularView, TabularViewResponse } from '../contracts.js';
 
 export interface VisibleRowIndex {
   readonly indexes: ReadonlyMap<TabularRowID, number>;
@@ -72,37 +72,70 @@ export function createContextParentIndexes(rows: readonly ({ readonly kind: 'lea
   return parents;
 }
 
-export function sliceVisibleRows(
-  projection: { readonly rows: readonly TabularResolvedRow[]; readonly contextParentIndexes: Int32Array | null },
-  start: number,
-  end: number,
-): readonly TabularResolvedRow[] {
-  const rows = projection.rows;
-  if (start === 0 || start === end || projection.contextParentIndexes === null) {
-    return Object.freeze(rows.slice(start, end));
-  }
-  const context: TabularResolvedRow[] = [];
-  for (let index = projection.contextParentIndexes[start] ?? -1; index >= 0; index = projection.contextParentIndexes[index] ?? -1) {
-    context.push(Object.freeze({ ...rows[index]!, contextOnly: true as const }));
-  }
-  context.reverse();
-  return Object.freeze([...context, ...rows.slice(start, end)]);
+/** Retain only the last successful access and its context ancestors. */
+export function createClientWindowReader(
+  source: readonly TabularResolvedRow[] | ((index: number) => TabularResult<TabularResolvedRow>),
+  parents: Int32Array | null,
+  bounds?: { readonly limits: TabularLimits; readonly columns: number },
+): (start: number, end: number) => TabularResult<readonly TabularResolvedRow[]> {
+  let previous: {
+    readonly start: number;
+    readonly end: number;
+    readonly context: ReadonlyMap<number, TabularResolvedRow> | null;
+    readonly rows: readonly TabularResolvedRow[];
+  } | null = null;
+  const read = (index: number): TabularResult<TabularResolvedRow> => {
+    if (typeof source !== 'function') return ok(source[index]!);
+    if (previous !== null) {
+      if (index >= previous.start && index < previous.end) {
+        return ok(previous.rows[(previous.context?.size ?? 0) + index - previous.start]!);
+      }
+      const contextRow = previous.context?.get(index);
+      if (contextRow !== undefined) return ok(contextRow);
+    }
+    return source(index);
+  };
+  return (start, end) => {
+    if (previous?.start === start && previous.end === end) return ok(previous.rows);
+    const ancestors: number[] = [];
+    if (parents !== null && start < end) {
+      for (let index = parents[start] ?? -1; index >= 0; index = parents[index] ?? -1) ancestors.push(index);
+    }
+    if (typeof source !== 'function') {
+      const range = source.slice(start, end);
+      const context = ancestors.reverse().map<TabularResolvedRow>((index) => Object.freeze({ ...source[index]!, contextOnly: true as const }));
+      const rows = Object.freeze(context.length === 0 ? range : context.concat(range));
+      previous = { start, end, context: null, rows };
+      return ok(rows);
+    }
+    if (bounds !== undefined) {
+      const exceeded = checkResponseRowBudget(end - start + ancestors.length, bounds.columns, bounds.limits);
+      if (exceeded !== null) return exceeded;
+    }
+    const rows: TabularResolvedRow[] = [];
+    const context = ancestors.length === 0 ? null : new Map<number, TabularResolvedRow>();
+    for (let i = ancestors.length - 1; i >= 0; i -= 1) {
+      const index = ancestors[i]!;
+      const row = read(index);
+      if (!row.ok) return row;
+      context?.set(index, row.value);
+      rows.push(Object.freeze({ ...row.value, contextOnly: true as const }));
+    }
+    for (let index = start; index < end; index += 1) {
+      const row = read(index);
+      if (!row.ok) return row;
+      rows.push(row.value);
+    }
+    const frozen = Object.freeze(rows);
+    previous = { start, end, context, rows: frozen };
+    return ok(frozen);
+  };
 }
 
-/** A projection owns one immutable access window, including context ancestors. */
-export function createVisibleRowReader(
-  projection: Parameters<typeof sliceVisibleRows>[0],
-): (start: number, end: number) => readonly TabularResolvedRow[] {
-  let previousStart = -1;
-  let previousEnd = -1;
-  let previousRows: readonly TabularResolvedRow[] | null = null;
-  return (start, end) => {
-    if (previousRows !== null && start === previousStart && end === previousEnd) return previousRows;
-    previousRows = sliceVisibleRows(projection, start, end);
-    previousStart = start;
-    previousEnd = end;
-    return previousRows;
-  };
+export function checkResponseRowBudget(rows: number, columns: number, limits: TabularLimits): TabularResult<never> | null {
+  if (rows > limits.maxRows) return fail('resource-rejection', 'row-ceiling-exceeded', 'Response rows exceed the configured ceiling.');
+  if (rows * columns > limits.maxProjectedCells) return fail('resource-rejection', 'projected-cell-ceiling-exceeded', 'Response projected cells exceed the configured ceiling.');
+  return null;
 }
 
 export function createPreparedViewResponse(

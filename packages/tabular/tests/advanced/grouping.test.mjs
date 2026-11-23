@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
-import { createContextParentIndexes, sliceVisibleRows } from '../../.verification-dist/source/view.js';
+import { createClientWindowReader, createContextParentIndexes } from '../../.verification-dist/source/view.js';
 
 const records = [
   { id: 'r1', name: 'Beta', team: 'A', score: 2 },
@@ -243,7 +243,9 @@ test('ISSUE-050: warm window slicing reads only output rows and retained ancesto
       return Reflect.get(target, key, receiver);
     },
   });
-  const flatSlice = sliceVisibleRows({ rows: observedFlat, contextParentIndexes: null }, 9_990, 10_000);
+  const flatWindow = createClientWindowReader(observedFlat, null)(9_990, 10_000);
+  assert.equal(flatWindow.ok, true);
+  const flatSlice = flatWindow.value;
   assert.equal(flatSlice.length, 10);
   assert.ok(flatReads <= 10, `late flat window read ${flatReads} rows`);
 
@@ -260,7 +262,9 @@ test('ISSUE-050: warm window slicing reads only output rows and retained ancesto
       return Reflect.get(target, key, receiver);
     },
   });
-  const nestedSlice = sliceVisibleRows({ rows: observedNested, contextParentIndexes: parents }, 9_999, 10_000);
+  const nestedWindow = createClientWindowReader(observedNested, parents)(9_999, 10_000);
+  assert.equal(nestedWindow.ok, true);
+  const nestedSlice = nestedWindow.value;
   assert.deepEqual(nestedSlice.map(({ id, contextOnly }) => [id, contextOnly ?? false]), [
     ['g0', true], ['g1', true], ['leaf-9997', false],
   ]);
