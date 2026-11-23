@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, provide, shallowRef,
+  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, provide, shallowRef, watch,
   type ComponentObjectPropsOptions, type ComputedRef, type DefineSetupFnComponent,
   type EmitsToProps, type PropType, type PublicProps, type SlotsType, type VNodeChild,
 } from 'vue';
@@ -9,7 +9,7 @@ import {
   type TimePickerColumn as ChoiceColumn, type TimePickerState,
 } from '@sectile/temporal/time-picker';
 import {
-  tryCreateTimeFieldState, type TimeFieldFormatPart, type TimeFieldPolicies,
+  tryCreateTimeFieldState, type TimeFieldFormat, type TimeFieldFormatPart, type TimeFieldPolicies,
   type TimeFieldPrecision, type TimeValue,
 } from '@sectile/temporal/time-field';
 import type { InteractOutsideEvent, PopupCloseReason } from '@sectile/dom/popover';
@@ -40,6 +40,7 @@ export interface TimePickerRootProps extends Omit<PopoverRootProps, 'disabled'> 
   readonly defaultValue?: TimeValue | null;
   readonly policies?: TimeFieldPolicies;
   readonly precision?: TimeFieldPrecision;
+  readonly format?: TimeFieldFormat;
   readonly name?: string | undefined;
   readonly form?: string | undefined;
   readonly disabled?: boolean | undefined;
@@ -179,26 +180,34 @@ function createTimePickerRoot() {
       const active = useHostActive(), inherited = useFormFieldDefaults(), explicit = useFormMetadataPresence();
       const presentation = useTimePresentation(props, format => format);
       const minimum = computed(() => props.policies?.min), maximum = computed(() => props.policies?.max);
-      const model = computed(() => createTimePicker({
+      const requestedModel = computed(() => createTimePicker({
         ...(presentation.value === undefined ? {} : { format: presentation.value }),
         ...(minimum.value === undefined ? {} : { min: minimum.value }),
         ...(maximum.value === undefined ? {} : { max: maximum.value }),
       }));
-      const initial = unwrap(tryCreateTimeFieldState((controlled ? props.modelValue : props.defaultValue) ?? null, undefined, model.value.format)).value;
-      const local = shallowRef<TimeValue | null>(initial);
-      const value = computed(() => unwrap(tryCreateTimeFieldState((controlled ? props.modelValue : local.value) ?? null, undefined, model.value.format)).value);
+      const initial = unwrap(tryCreateTimeFieldState((controlled ? props.modelValue : props.defaultValue) ?? null, undefined, requestedModel.value.format)).value;
+      const accepted = shallowRef({ model: requestedModel.value, value: initial, policies: props.policies });
+      const model = computed(() => accepted.value.model);
+      const value = computed(() => accepted.value.value);
       const effective = (key: 'disabled' | 'readonly' | 'required'): boolean =>
         explicit.value.includes(key) ? props[key] === true : inherited?.value[key] ?? props[key] === true;
       const disabled = computed(() => !active.value || effective('disabled'));
       const readonly = computed(() => effective('readonly')), required = computed(() => effective('required'));
       const input = shallowRef<NativeFieldValueControl<TimeValue> | null>(null);
       const composing = computed(() => input.value?.composing.value ?? false);
+      watch([() => presentation.value, () => props.policies, () => props.modelValue, composing], () => {
+        if (composing.value) return;
+        const next = requestedModel.value;
+        const candidate = controlled ? props.modelValue ?? null : accepted.value.value;
+        const admitted = unwrap(tryCreateTimeFieldState(candidate, undefined, next.format)).value;
+        accepted.value = { model: next, value: admitted, policies: props.policies };
+      });
       const state = computed(() => unwrap(model.value.resolve(value.value)));
       let popup: PopoverRootExpose | null = null, inputs = 0, disposed = false;
       const handle = createComponentHandle<LivePicker, TimePickerExpose>(projectView);
       const publish = (next: TimeValue | null): boolean => {
         if (disposed || disabled.value || readonly.value || composing.value) return false;
-        if (!controlled) local.value = next;
+        if (!controlled) accepted.value = { ...accepted.value, value: next };
         emit('update:modelValue', next);
         return true;
       };
@@ -212,14 +221,19 @@ function createTimePickerRoot() {
         },
       });
       expose(handle.view);
-      provideFormControlReset(() => { if (!controlled && !disposed) local.value = initial; });
+      provideFormControlReset(() => {
+        if (!controlled && !disposed) {
+          unwrap(tryCreateTimeFieldState(initial, undefined, model.value.format));
+          accepted.value = { ...accepted.value, value: initial };
+        }
+      });
       const submission = useFormSubmissionProps({
         element: () => input.value?.element ?? null, capabilities: hiddenInputSubmissionCapabilities,
       });
       const inputProps = computed(() => {
         const result: Record<string, unknown> = {
           ...submission.value,
-          modelValue: value.value, policies: props.policies, precision: props.precision ?? 'minute',
+          modelValue: value.value, policies: accepted.value.policies, format: model.value.format,
           disabled: disabled.value, readonly: readonly.value, required: required.value, label: props.label,
         };
         for (const key of ['name', 'form'] as const) if (explicit.value.includes(key)) result[key] = props[key];
@@ -264,6 +278,7 @@ function createTimePickerRoot() {
         defaultValue: { type: Object as PropType<TimeValue | null>, default: null },
         policies: { type: Object as PropType<TimeFieldPolicies>, default: undefined },
         precision: { type: String as PropType<TimeFieldPrecision>, default: 'minute' },
+        format: { type: Object as PropType<TimeFieldFormat>, default: undefined },
         name: { type: String as PropType<string | undefined>, default: undefined },
         form: { type: String as PropType<string | undefined>, default: undefined },
         disabled: { type: Boolean, default: undefined }, readonly: { type: Boolean, default: undefined },

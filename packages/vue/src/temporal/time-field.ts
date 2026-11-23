@@ -23,6 +23,7 @@ export interface TimeFieldProps {
   readonly native?: boolean;
   /** Custom editing precision; Provider defaults to lossless milliseconds. Native mode retains ISO behavior. */
   readonly precision?: TimeFieldPrecision;
+  readonly format?: TimeFieldFormat;
 }
 
 type TimeFieldPolicies = NonNullable<TimeFieldOptions['policies']>;
@@ -31,7 +32,7 @@ function rebase(value: TimeValue | null, inputState: Parameters<typeof createTim
   return unwrap(reformatTimeFieldState(createTimeFieldState(value, inputState, previousFormat), format)).inputState;
 }
 
-export const TimeField = /* @__PURE__ */ createNativeFieldComponent<TimeValue, TimeFieldPolicies, TimeFieldFormat, Pick<TimeFieldProps, 'precision'>>({
+export const TimeField = /* @__PURE__ */ createNativeFieldComponent<TimeValue, TimeFieldPolicies, TimeFieldFormat, Pick<TimeFieldProps, 'precision' | 'format'>>({
   name: 'SectileTimeField',
   scope: 'time-field',
   inputMode: 'numeric',
@@ -41,7 +42,10 @@ export const TimeField = /* @__PURE__ */ createNativeFieldComponent<TimeValue, T
   valueType: Object as PropType<TimeValue | null>,
   create: createTimeField,
   commitValue: (connection, value) => (connection as TimeFieldConnection).handleEvent({ type: 'set-value', value }),
-  presentationProps: { precision: { type: String as PropType<TimeFieldPrecision>, default: undefined } },
+  presentationProps: {
+    precision: { type: String as PropType<TimeFieldPrecision>, default: undefined },
+    format: { type: Object as PropType<TimeFieldFormat>, default: undefined },
+  },
   rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
   usePresentation(props) {
     return useTimePresentation<NativeFieldPresentation<TimeValue, TimeFieldPolicies, TimeFieldFormat>>(props, format => {

@@ -23,6 +23,7 @@ export interface DateTimeFieldProps {
   readonly native?: boolean;
   /** Custom editing precision; Provider defaults to lossless milliseconds. Native mode retains ISO behavior. */
   readonly precision?: TimeFieldPrecision;
+  readonly format?: DateTimeFieldFormat;
 }
 
 type DateTimeFieldPolicies = NonNullable<DateTimeFieldOptions['policies']>;
@@ -31,7 +32,7 @@ function rebase(value: DateTimeValue | null, inputState: Parameters<typeof creat
   return unwrap(reformatDateTimeFieldState(createDateTimeFieldState(value, inputState, previousFormat), format)).inputState;
 }
 
-export const DateTimeField = /* @__PURE__ */ createNativeFieldComponent<DateTimeValue, DateTimeFieldPolicies, DateTimeFieldFormat, Pick<DateTimeFieldProps, 'precision'>>({
+export const DateTimeField = /* @__PURE__ */ createNativeFieldComponent<DateTimeValue, DateTimeFieldPolicies, DateTimeFieldFormat, Pick<DateTimeFieldProps, 'precision' | 'format'>>({
   name: 'SectileDateTimeField',
   scope: 'date-time-field',
   inputMode: 'text',
@@ -40,7 +41,10 @@ export const DateTimeField = /* @__PURE__ */ createNativeFieldComponent<DateTime
   formatValue: formatDateTimeValue,
   valueType: Object as PropType<DateTimeValue | null>,
   create: createDateTimeField,
-  presentationProps: { precision: { type: String as PropType<TimeFieldPrecision>, default: undefined } },
+  presentationProps: {
+    precision: { type: String as PropType<TimeFieldPrecision>, default: undefined },
+    format: { type: Object as PropType<DateTimeFieldFormat>, default: undefined },
+  },
   rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
   usePresentation(props) {
     return useDateTimePresentation<NativeFieldPresentation<DateTimeValue, DateTimeFieldPolicies, DateTimeFieldFormat>>(props,

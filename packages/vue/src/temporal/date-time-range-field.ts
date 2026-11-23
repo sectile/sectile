@@ -1,6 +1,7 @@
 import { defineComponent, type PropType, type SlotsType, type VNodeChild } from 'vue';
 import { createDateTimeRangeField, tryCreateDateTimeRangeFieldState, type DateTimeRangeFieldPolicies, type DateTimeRangeFieldState, type DateTimeRange } from '@sectile/dom/temporal/date-time-range-field';
 import { reformatDateTimeRangeFieldState } from '@sectile/temporal/date-time-range-field';
+import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { TimeFieldPrecision } from '@sectile/temporal/time-field';
 import { getDateTimeFieldPlaceholder } from '@sectile/dom/temporal/date-time-field';
 import { setupNativeRangeField, createNativeRangeFieldInput, type NativeRangeFieldConfig, type NativeRangePresentation } from '../input/native-range-field.js';
@@ -14,6 +15,7 @@ export interface DateTimeRangeFieldRootProps {
   readonly defaultValue?: DateTimeRange | null;
   readonly policies?: DateTimeRangeFieldPolicies;
   readonly precision?: TimeFieldPrecision;
+  readonly format?: DateTimeFieldFormat;
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly required?: boolean;
@@ -45,6 +47,7 @@ export const DateTimeRangeFieldRoot = /* @__PURE__ */ defineComponent({
     defaultValue: { type: Object as PropType<DateTimeRange | null>, default: null },
     policies: { type: Object as PropType<DateTimeRangeFieldPolicies>, default: undefined },
     precision: { type: String as PropType<TimeFieldPrecision>, default: undefined },
+    format: { type: Object as PropType<DateTimeFieldFormat>, default: undefined },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     startLabel: { type: String, default: undefined }, endLabel: { type: String, default: undefined },

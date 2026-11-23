@@ -32,6 +32,11 @@ const {
   QuantityFieldUnitSelect,
 } = await import('../.verification-dist/quantity-field.js');
 const { TimeField } = await import('../.verification-dist/temporal/time-field.js');
+const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/temporal/time-range-field.js');
+const { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } = await import('../.verification-dist/temporal/date-time-range-field.js');
+const { createTimeFieldFormat } = await import('@sectile/temporal/time-field');
+const { createDateFieldFormat } = await import('@sectile/temporal/date-field');
+const { createDateTimeFieldFormat } = await import('@sectile/temporal/date-time-field');
 const { TemporalProvider, useTemporalFormatter, useTemporalReferenceDate } = await import('../.verification-dist/temporal/temporal-provider.js');
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
 const { RadioGroupRoot, RadioGroupItem } = await import('../.verification-dist/radio-group.js');
@@ -47,6 +52,63 @@ function timeChoiceColumns(parts) {
     default: state => state.choices.map(choice => h(TimePickerItem, { key: choice.id, value: choice.id })),
   }));
 }
+
+test('standalone temporal formats apply to fields and choices, with native mode using ISO', async () => {
+  const value = { hour: 9, minute: 30, second: 1, millisecond: 125 };
+  const end = { ...value, hour: 10 };
+  const date = { year: 2026, month: 8, day: 22 };
+  const time = createTimeFieldFormat({ precision: 'millisecond', literals: ['', '·', '·', '.', ''] });
+  const format = createDateTimeFieldFormat({ date: createDateFieldFormat({ order: ['year', 'month', 'day'] }), time, separator: ' @ ' });
+  const host = document.createElement('div');
+  document.body.append(host);
+  const app = createApp({ render: () => h('div', [
+    h(TimeField, { id: 'time', format: time, precision: 'minute', defaultValue: value }),
+    h(TimeField, { id: 'native-time', native: true, format: time, defaultValue: value }),
+    h(DateTimeField, { id: 'date-time', format, defaultValue: { date, time: value } }),
+    h(DateTimeField, { id: 'native-date-time', native: true, format, defaultValue: { date, time: value } }),
+    h(TimeRangeFieldRoot, { format: time, defaultValue: { start: value, end } }, () => [h(TimeRangeFieldStartInput, { id: 'time-range' }), h(TimeRangeFieldEndInput)]),
+    h(DateTimeRangeFieldRoot, { format, defaultValue: { start: { date, time: value }, end: { date, time: end } } },
+      () => [h(DateTimeRangeFieldStartInput, { id: 'date-time-range' }), h(DateTimeRangeFieldEndInput)]),
+    h(TimePickerRoot, { format: time, defaultValue: value }, () => h(TimePickerInput, { id: 'picker' })),
+  ]) });
+  app.mount(host);
+  try {
+    await nextTick();
+    for (const id of ['time', 'time-range', 'picker']) assert.equal(host.querySelector(`#${id}`).value, '09·30·01.125', id);
+    for (const id of ['date-time', 'date-time-range']) assert.equal(host.querySelector(`#${id}`).value, '2026-08-22 @ 09·30·01.125', id);
+    assert.equal(host.querySelector('#native-time').value, '09:30:01.125');
+    assert.equal(host.querySelector('#native-date-time').value, '2026-08-22T09:30:01.125');
+  } finally { app.unmount(); host.remove(); }
+});
+
+test('a mounted TimePicker keeps its input and choice model on precision rejection and recovers', async () => {
+  const value = { hour: 9, minute: 30, second: 1, millisecond: 125 };
+  const precision = ref('millisecond'), errors = [];
+  const host = document.createElement('div'); document.body.append(host);
+  let picker, parts;
+  const app = createApp({ render: () => h(TimePickerRoot, { defaultValue: value, precision: precision.value, ref: instance => { picker = instance; } }, {
+    default: state => { parts = state.parts; return h(TimePickerInput); },
+  }) });
+  app.config.errorHandler = error => errors.push(error);
+  app.mount(host);
+  try {
+    await nextTick();
+    const input = host.querySelector('input');
+    precision.value = 'minute';
+    await nextTick();
+    assert.equal(errors[0]?.code, 'time-field-format-precision-loss');
+    assert.equal(host.querySelector('input'), input);
+    assert.equal(input.value, '09:30:01.125');
+    assert.ok(parts.includes('millisecond'));
+    precision.value = 'millisecond';
+    await nextTick();
+    assert.equal(host.querySelector('input'), input);
+    assert.equal(picker.selectChoice('minute', 45), true);
+    await nextTick();
+    assert.equal(input.value, '09:45:01.125');
+    assert.equal(errors.length, 1);
+  } finally { app.unmount(); host.remove(); }
+});
 
 test('ComboboxResults reuses matching publication across windows and preserves the canonical IME baseline', async () => {
   const items = shallowRef([{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }, { id: 'k', label: '한글' }]);
@@ -492,8 +554,6 @@ test('time picker delegates popup open and close while closed content stays unmo
   } finally { app.unmount(); host.remove(); }
 });
 const { DateRangeFieldRoot, DateRangeFieldStartInput, DateRangeFieldEndInput } = await import('../.verification-dist/temporal/date-range-field.js');
-const { TimeRangeFieldRoot, TimeRangeFieldStartInput, TimeRangeFieldEndInput } = await import('../.verification-dist/temporal/time-range-field.js');
-const { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } = await import('../.verification-dist/temporal/date-time-range-field.js');
 
 test('date-time range Provider presentation keeps both dates and defers locale changes until drafts settle', async () => {
   const formatting = shallowRef({ locale: 'en-US', timeZone: 'UTC' }), proposals = [];
