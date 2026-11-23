@@ -51,19 +51,31 @@ export function rowSelectionContains(selection: TabularRowSelection, rowID: Tabu
   return expressionOf(selection).contains(rowID);
 }
 
+export function rowSelectionScopeError(
+  selection: TabularRowSelection,
+  sourceGeneration: number,
+  queryRevision: number,
+): 'stale-source-generation' | 'stale-query-revision' | null {
+  if (selection.kind !== 'all-matching') return null;
+  if (selection.sourceGeneration !== sourceGeneration) return 'stale-source-generation';
+  return selection.queryRevision === queryRevision ? null : 'stale-query-revision';
+}
+
 /**
  * All-matching control state for a normalized snapshot, including retained stale views.
  * Explicit selections require selected visible leaves; checked requires the complete
  * known matching result. All-matching selections use query-wide exclusions.
  */
 export function getAllMatchingSelectionState(snapshot: TabularSnapshot): TabularBulkSelectionState {
-  const accepted = snapshot.state.acceptedViewState;
-  const view = accepted.kind === 'none' ? null : accepted.view;
+  const { acceptedViewState, rowSelection: selection, sourceGeneration, queryRevision } = snapshot.state;
+  const view = acceptedViewState.kind !== 'none'
+    && acceptedViewState.view.sourceGeneration === sourceGeneration
+    && acceptedViewState.view.queryRevision === queryRevision ? acceptedViewState.view : null;
   const count = view?.matchingLeafCount;
   const total = count?.kind === 'known' ? count.value : null;
   if (total === 0) return 'unchecked';
-  const selection = snapshot.state.rowSelection;
   if (selection.kind === 'all-matching') {
+    if (rowSelectionScopeError(selection, sourceGeneration, queryRevision) !== null) return 'unchecked';
     if (selection.excludedRowIDs.length === 0) return 'checked';
     return total !== null && selection.excludedRowIDs.length >= total ? 'unchecked' : 'indeterminate';
   }

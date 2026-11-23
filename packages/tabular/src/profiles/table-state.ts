@@ -2,8 +2,9 @@ import { canonicalizeTabularAccessState } from '../model/access.js';
 import { canonicalizeTabularColumnState, projectTabularColumnPartitions, type TabularColumnPartitions } from '../model/columns.js';
 import { canonicalizeTabularExpansion } from '../model/expansion.js';
 import { fail, nextRevision, ok } from '../foundation.js';
-import { canonicalizeRowSelection, reconcileRowSelectionBinding } from '../model/selection.js';
+import { canonicalizeRowSelection, reconcileRowSelectionBinding, rowSelectionScopeError } from '../model/selection.js';
 import { canonicalizeTabularStateQuery } from '../model/state.js';
+import { sameTabularQuery } from '../source/query.js';
 import type {
   TabularAccessState,
   TabularCommand,
@@ -53,21 +54,25 @@ export function prepareControlledDataTableState(
   if (values.query !== undefined && values.query !== current.query) {
     const query = canonicalizeTabularStateQuery(model, values.query, current);
     if (!query.ok) return query;
-    const queryRevision = nextRevision(next.queryRevision);
-    if (!queryRevision.ok) return queryRevision;
-    next = Object.freeze({
-      ...next,
-      query: query.value,
-      queryRevision: queryRevision.value,
-      rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, queryRevision.value, false),
-      ...(!model.controlled.accessState ? { accessState: resetAccessForQuery(next.accessState) } : {}),
-    });
-    requestNeeded = true;
+    if (!sameTabularQuery(current.query, query.value)) {
+      const queryRevision = nextRevision(next.queryRevision);
+      if (!queryRevision.ok) return queryRevision;
+      next = Object.freeze({
+        ...next,
+        query: query.value,
+        queryRevision: queryRevision.value,
+        rowSelection: reconcileRowSelectionBinding(next.rowSelection, next.sourceGeneration, queryRevision.value, false),
+        ...(!model.controlled.accessState ? { accessState: resetAccessForQuery(next.accessState) } : {}),
+      });
+      requestNeeded = true;
+    }
   }
   if (values.rowSelection !== undefined) {
     const selection = canonicalizeRowSelection(values.rowSelection, model.limits);
     if (!selection.ok) return selection;
-    next = Object.freeze({ ...next, rowSelection: selection.value });
+    if (rowSelectionScopeError(selection.value, next.sourceGeneration, next.queryRevision) === null) {
+      next = Object.freeze({ ...next, rowSelection: selection.value });
+    }
   }
   if (values.columnState !== undefined) {
     const schema = current.acceptedViewState.kind === 'none' ? model : current.acceptedViewState.view.columnSchema;

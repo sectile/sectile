@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyDataTableEvent, createDataTable, tryCreateDataTable } from '../../.verification-dist/profiles/table.js';
+import { applyDataTableEvent, createDataTable, getAllMatchingSelectionState, tryCreateDataTable } from '../../.verification-dist/profiles/table.js';
 import { prepareControlledDataTableState } from '../../.verification-dist/profiles/table-state.js';
 import { createTabularModel, tryCreateTabularState } from '../../.verification-dist/model/state.js';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
@@ -11,6 +11,45 @@ const source = createClientTabularSource({
   columnSchema: { revision: 0, columns, headers: [] },
   getRowID: (record) => record.id,
   getValue: (record, columnID) => record[columnID],
+});
+
+test('controlled selection updates preserve an equivalent query and reject obsolete scope', () => {
+  const filter = { id: 'name', scope: 'column', columnID: 'name', predicate: 'contains', value: { a: ['x'], b: 1 } };
+  const query = { sort: [], filters: [filter], groups: [], aggregates: [], pivots: [] };
+  const empty = { kind: 'explicit-rows', rowIDs: [] };
+  const selected = { kind: 'all-matching', sourceGeneration: 0, queryRevision: 0, excludedRowIDs: [] };
+  const table = createDataTable({ columns, controlled: { query: true, rowSelection: true }, initialValues: { query, rowSelection: empty } });
+  try {
+    const before = table.getSnapshot().state;
+    const equivalentlyAuthored = { ...query, filters: [{ ...filter, value: { b: 1, a: ['x'] } }] };
+    assert.equal(table.syncControlledValues({ query: equivalentlyAuthored, rowSelection: selected }).ok, true);
+    assert.equal(table.getSnapshot().state.query, before.query);
+    assert.equal(table.getSnapshot().state.queryRevision, before.queryRevision);
+    assert.equal(table.getSnapshot().state.requestState, before.requestState);
+    const changed = { ...query, filters: [] };
+    assert.equal(table.syncControlledValues({ query: changed, rowSelection: selected }).ok, true);
+    assert.equal(table.getSnapshot().state.queryRevision, 1);
+    assert.deepEqual(table.getSnapshot().state.rowSelection, empty);
+    assert.equal(table.dispatch({ type: 'set-row-selection', selection: selected }).error.code, 'stale-query-revision');
+  } finally { table.dispose(); }
+});
+
+test('new all-matching scope ignores a retained zero count from the prior query', () => {
+  const table = createDataTable({ columns });
+  try {
+    const pending = table.getSnapshot().state.requestState.pendingRequest;
+    assert.equal(table.synchronizeView({ ...pending, viewRevision: 1, rows: [], removedRowIDs: [],
+      matchingLeafCount: { kind: 'known', value: 0 }, visibleRowCount: { kind: 'known', value: 0 },
+      columnSchema: { revision: pending.columnSchemaRevision, columns, headers: [] },
+    }).ok, true);
+    const state = table.getSnapshot().state;
+    assert.equal(table.dispatch({ type: 'set-query', query: { ...state.query } }).ok, true);
+    assert.equal(table.getSnapshot().state.queryRevision, state.queryRevision);
+    const filters = [{ id: 'name', scope: 'column', columnID: 'name', predicate: 'contains', value: 'Alpha' }];
+    assert.equal(table.dispatch({ type: 'set-query', query: { ...state.query, filters } }).ok, true);
+    assert.equal(table.dispatch({ type: 'select-all-matching' }).ok, true);
+    assert.equal(getAllMatchingSelectionState(table.getSnapshot()), 'checked');
+  } finally { table.dispose(); }
 });
 
 test('controlled columns reconcile against the accepted source schema', () => {
@@ -231,7 +270,7 @@ test('TAB-TBL-09: unchanged projection reads retain column partitions across dom
 
 test('TAB-TBL-08: request-basis and projection counters stop at the safe-integer ceiling', () => {
   const maximum = Number.MAX_SAFE_INTEGER;
-  const query = { sort: [], filters: [], groups: [], aggregates: [], pivots: [] };
+  const query = { sort: [], filters: [{ id: 'name', scope: 'column', columnID: 'name', predicate: 'contains', value: 'a', enabled: false }], groups: [], aggregates: [], pivots: [] };
   const model = createTabularModel({ columns });
   const initial = tryCreateTabularState(model);
   assert.equal(initial.ok, true);
@@ -279,7 +318,7 @@ test('TAB-TBL-08: request-basis and projection counters stop at the safe-integer
     {
       counter: 'queryRevision',
       model: createTabularModel({ columns, controlled: { query: true }, initialValues: { query } }),
-      values: { query: { ...query } },
+      values: { query: { ...query, filters: [] } },
     },
     {
       counter: 'expansionRevision',

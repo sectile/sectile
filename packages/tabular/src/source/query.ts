@@ -43,6 +43,22 @@ type QueryLimits = typeof DEFAULT_QUERY_LIMITS;
 const queryLimits = new WeakMap<object, QueryLimits>();
 type CanonicalQuery = TabularQuery;
 
+/** Compare admitted descriptors without serializing or retaining caller input. */
+export function sameTabularQuery(left: TabularQuery, right: TabularQuery): boolean {
+  return sameQueryValue(left, right);
+}
+
+function sameQueryValue(left: unknown, right: unknown): boolean {
+  if (Object.is(left, right)) return true;
+  if (left === null || right === null || typeof left !== 'object' || typeof right !== 'object'
+    || Array.isArray(left) !== Array.isArray(right)) return false;
+  const leftRecord = left as Readonly<Record<string, unknown>>;
+  const rightRecord = right as Readonly<Record<string, unknown>>;
+  const keys = Object.keys(leftRecord);
+  return keys.length === Object.keys(rightRecord).length && keys.every(key =>
+    Object.hasOwn(rightRecord, key) && sameQueryValue(leftRecord[key], rightRecord[key]));
+}
+
 export function createTabularQuery(
   input: TabularQueryInput = {},
   limits: QueryLimits = DEFAULT_QUERY_LIMITS,

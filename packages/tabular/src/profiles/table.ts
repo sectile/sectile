@@ -17,12 +17,14 @@ import {
   createGroupLeafSelectionTarget,
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
+  rowSelectionScopeError,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
 } from '../model/selection.js';
 import { canonicalizeTabularStateQuery, tryCreateTabularModel, tryCreateTabularState } from '../model/state.js';
 import { synchronizeTabularView } from '../source/client.js';
+import { sameTabularQuery } from '../source/query.js';
 import type {
   TabularAccessState,
   TabularCellAddress,
@@ -115,6 +117,8 @@ export function tryCreateDataTable(options: DataTableOptions): TabularResult<Dat
   if (!model.ok) return model;
   const state = tryCreateTabularState(model.value);
   if (!state.ok) return state;
+  const scopeError = rowSelectionScopeError(state.value.rowSelection, state.value.sourceGeneration, state.value.queryRevision);
+  if (scopeError !== null) return fail('construction', scopeError, 'Initial row selection does not match the initial source and query.');
   const requested = issueDataTableRequest(state.value);
   if (!requested.ok) return requested;
   return ok(new DataTableRuntime(options, model.value, Object.freeze({ revision: 0, state: requested.value.state })));
@@ -387,6 +391,8 @@ function reduceDataTableEvent(
   if (event.type === 'set-row-selection') {
     const valid = canonicalizeRowSelection(event.selection, model.limits);
     if (!valid.ok) return valid;
+    const scopeError = rowSelectionScopeError(valid.value, state.sourceGeneration, state.queryRevision);
+    if (scopeError !== null) return fail('transition-rejection', scopeError, 'Row selection does not match the active source and query.');
     return ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: valid.value }), commands: Object.freeze([]) }));
   }
   if (event.type === 'toggle-row-selection') {
@@ -436,6 +442,7 @@ function reduceDataTableEvent(
   if (event.type === 'set-query') {
     const query = canonicalizeTabularStateQuery(model, event.query, state);
     if (!query.ok) return query;
+    if (sameTabularQuery(state.query, query.value)) return ok(Object.freeze({ state, commands: Object.freeze([]) }));
     const queryRevision = nextRevision(state.queryRevision);
     if (!queryRevision.ok) return queryRevision;
     return requestAfter(Object.freeze({
