@@ -18,12 +18,14 @@ import {
   type VNodeChild,
 } from 'vue';
 import type { TabularCellAddress, TabularColumnID, TabularGroupID, TabularHeaderNodeID, TabularRow, TabularRowID, TabularSnapshot } from '@sectile/tabular';
-import { getAllMatchingSelectionState, rowSelectionContains } from '@sectile/tabular/data-table';
+import { getAllMatchingSelectionState, getGroupSelectionState, rowSelectionContains, type TabularGroupSelectionAggregate } from '@sectile/tabular/data-table';
 import type { DataGridState } from '@sectile/tabular/data-grid';
 import type { DataTableConnectionOptions, DataTableColumnSizeState } from '@sectile/dom/tabular';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { provideProfile, useProfile, type ProfileContext } from './context.js';
 import { refreshVueProfileController, snapshotOf, stateOf, type VueProfileController } from './controller.js';
+
+type BulkTarget = { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: string };
 
 export interface HostConnection {
   disconnect(): void;
@@ -151,16 +153,24 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         release = bind(context.connection.value, element, values());
       };
       const elementRef = (value: unknown): void => {
-        element = value instanceof HTMLElement ? value : null;
+        const next = value instanceof HTMLElement ? value : null;
+        if (element === next) return;
+        element = next;
         rebind();
       };
       // Children mount before Root connects. Reconfigure only when the host,
       // identity or authored binding options change, not on every row snapshot.
-      watch([context.connection,
-        ...Object.keys(props).map(key => () => (runtimeProps as Readonly<Record<string, unknown>>)[key]),
+      const reads = suffix === 'BulkSelectionControl'
+        ? [() => { const target = values()['target'] as BulkTarget; return target.kind === 'all-matching' ? null : target.groupID; },
+          () => values()['disabled'], () => values()['groupSelection'] === undefined]
+        : Object.keys(props).map(key => () => (runtimeProps as Readonly<Record<string, unknown>>)[key]);
+      watch([context.connection, ...reads,
         ...(rowAware ? [() => inheritedRow?.value.id] : []),
         ...(suffix === 'ColumnHeader' ? [context.snapshot] : []),
       ], rebind, { flush: 'post' });
+      if (suffix === 'BulkSelectionControl') {
+        watch(() => values()['groupSelection'], () => context.connection.value?.refresh(), { flush: 'post' });
+      }
       onBeforeUnmount(() => { element = null; release?.(); release = undefined; });
       // Seed SSR/hydration semantics without per-row selection subscriptions.
       // The existing DOM connection publishes live control state.
@@ -335,14 +345,21 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     form: props['form'], disabled: props['disabled'] === true,
   }));
   const BulkSelectionControl = boundPart('BulkSelectionControl', 'bulk-selection-control', 'button', {
-    target: { type: Object as PropType<{ readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: string }>, required: true }, disabled: { type: Boolean, default: false },
-  }, (connection, element, props) => connection.bindBulkSelectionControl(element, { target: props['target'], disabled: props['disabled'] === true }), false,
+    target: { type: Object as PropType<BulkTarget>, required: true },
+    groupSelection: { type: Object as PropType<TabularGroupSelectionAggregate | null>, default: undefined },
+    disabled: { type: Boolean, default: false },
+  }, (connection, element, props) => connection.bindBulkSelectionControl(element, {
+    target: props['target'], disabled: props['disabled'] === true,
+    ...(props['groupSelection'] === undefined ? {} : { groupSelection: () => (props['groupSelection'] ?? null) as TabularGroupSelectionAggregate | null }),
+  }), false,
   (props, snapshot, as) => {
-    const state = (props['target'] as { readonly kind: string }).kind === 'all-matching'
-      ? getAllMatchingSelectionState(snapshot) : 'unchecked';
-    const disabled = props['disabled'] === true;
-    return { role: 'checkbox', 'aria-checked': state === 'indeterminate' ? 'mixed' : String(state === 'checked'),
-      'aria-disabled': String(disabled), 'data-state': state,
+    const target = props['target'] as BulkTarget;
+    const aggregate = props['groupSelection'] as TabularGroupSelectionAggregate | null | undefined;
+    const group = target.kind === 'group-leaves' && aggregate !== undefined ? getGroupSelectionState(snapshot, target.groupID, aggregate) : null;
+    const state = target.kind === 'all-matching' ? getAllMatchingSelectionState(snapshot) : group?.state ?? 'unchecked';
+    const disabled = props['disabled'] === true || group?.disabled === true;
+    return { role: 'checkbox', 'aria-checked': state === 'unavailable' ? undefined : state === 'indeterminate' ? 'mixed' : String(state === 'checked'),
+      'aria-disabled': String(disabled), 'aria-busy': group?.pending ? 'true' : undefined, 'data-state': state,
       ...(as === 'input' ? { type: 'checkbox', checked: state === 'checked', indeterminate: state === 'indeterminate', disabled }
         : as === 'button' ? { type: 'button', disabled } : as === undefined ? { disabled } : { tabindex: disabled ? -1 : 0 }),
     };

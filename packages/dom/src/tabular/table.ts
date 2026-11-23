@@ -63,9 +63,8 @@ import {
   rowSelected,
   rowSelectionActivation,
   bindRowSelectionActivation,
-  setBulkSelectionControlAttributes,
-  allMatchingSelectionState,
-  bindCheckboxActivation,
+  prepareBulkSelectionBinding,
+  type BulkSelectionBindingOptions,
 } from './bindings/selection.js';
 import {
   setEditorAttributes,
@@ -122,9 +121,7 @@ export interface DataTableSelectionControlOptions {
   readonly disabled?: boolean;
 }
 
-export type DataTableBulkSelectionControlOptions =
-  | { readonly target: { readonly kind: 'all-matching' }; readonly disabled?: boolean }
-  | { readonly target: { readonly kind: 'group-leaves'; readonly groupID: TabularGroupID }; readonly disabled?: boolean };
+export type DataTableBulkSelectionControlOptions = BulkSelectionBindingOptions;
 
 export interface DataTableDisclosureOptions {
   readonly rowID: TabularGroupID;
@@ -401,28 +398,10 @@ class DOMDataTable implements DataTableConnection {
   }
 
   public bindBulkSelectionControl(element: HTMLElement, options: DataTableBulkSelectionControlOptions): () => void {
-    element.setAttribute('data-part', 'bulk-selection-control');
-    const update = (): void => {
-      if (options.target.kind !== 'all-matching') {
-        setBulkSelectionControlAttributes(element, 'unchecked', options.disabled === true);
-        return;
-      }
-      setBulkSelectionControlAttributes(element, allMatchingSelectionState(this.getSnapshot()), options.disabled === true);
-    };
-    const activate = (): void => {
-      if (options.disabled === true) return;
-      if (options.target.kind === 'all-matching') {
-        const event: DataTableEvent = allMatchingSelectionState(this.getSnapshot()) === 'checked'
-          ? { type: 'set-row-selection', selection: { kind: 'explicit-rows', rowIDs: [] } }
-          : { type: 'select-all-matching' };
-        this.handleEvent(event);
-      }
-      else this.handleEvent({ type: 'request-group-leaf-selection', groupID: options.target.groupID });
-    };
-    const disposers = bindCheckboxActivation(this.#scope, element, activate);
+    const { update, dispose } = prepareBulkSelectionBinding(this.#scope, element, options, () => this.getSnapshot(), event => this.handleEvent(event));
     this.#refreshers.add(update);
     update();
-    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
+    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
   }
 
   public bindDisclosure(element: HTMLElement, options: DataTableDisclosureOptions): () => void {

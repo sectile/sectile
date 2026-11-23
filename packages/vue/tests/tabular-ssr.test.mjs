@@ -3,7 +3,7 @@ import test from 'node:test';
 import { createTestWindow } from './happy-dom.mjs';
 const browserWindow = createTestWindow({ url: 'https://sectile.dev/' });
 Object.assign(globalThis, { window: browserWindow, document: browserWindow.document, Node: browserWindow.Node, Element: browserWindow.Element, HTMLElement: browserWindow.HTMLElement, HTMLTableElement: browserWindow.HTMLTableElement, HTMLTableCellElement: browserWindow.HTMLTableCellElement, HTMLInputElement: browserWindow.HTMLInputElement, HTMLSelectElement: browserWindow.HTMLSelectElement, HTMLTextAreaElement: browserWindow.HTMLTextAreaElement, SVGElement: browserWindow.SVGElement, Event: browserWindow.Event, MutationObserver: browserWindow.MutationObserver, ResizeObserver: browserWindow.ResizeObserver });
-const { createSSRApp, h, nextTick } = await import('vue');
+const { createSSRApp, h, nextTick, shallowRef } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { useDataTable, createDataTableComponents } = await import('../.verification-dist/tabular/data-table.js');
 
@@ -72,6 +72,56 @@ for (const [kind, name] of [['data-table', 'DataTable'], ['data-grid', 'DataGrid
     } finally { client?.unmount(); host.remove(); for (const controller of controllers) controller.dispose(); }
   });
 }
+
+test('remote group controls hydrate and keep a live native binding through aggregate changes', async () => {
+  const { useDataTreeGrid, createDataTreeGridComponents } = await import('../.verification-dist/tabular/data-tree-grid.js');
+  const instances = [];
+  const component = { setup() {
+    const controller = useDataTreeGrid({ defaultRowSelection: { kind: 'explicit-rows', rowIDs: ['a', 'outside'] } });
+    const state = () => controller.getSnapshot().tabular.state;
+    controller.dispatch({ type: 'sync-group-membership-revision', sourceGeneration: 0, queryRevision: 0, membershipRevision: 1 });
+    const makeAggregate = selectedLeafCount => ({ totalLeafCount: 2, selectedLeafCount, scope: {
+      groupID: 'g', sourceGeneration: state().sourceGeneration, queryRevision: state().queryRevision,
+      rowSelectionRevision: state().rowSelectionRevision, membershipRevision: state().groupSelection.membershipRevision,
+    } });
+    const aggregate = shallowRef(makeAggregate(1));
+    const commands = [];
+    instances.push({ controller, aggregate, makeAggregate, commands });
+    const Grid = createDataTreeGridComponents(controller);
+    return () => h(Grid.Provider, null, () => h(Grid.Root, { onCommand: command => commands.push(command) }, () => h(Grid.BulkSelectionControl, {
+      asChild: true, target: { kind: 'group-leaves', groupID: 'g' }, groupSelection: aggregate.value,
+    }, () => h('input', { type: 'checkbox' }))));
+  } };
+  const host = document.createElement('div');
+  try {
+    host.innerHTML = await renderToString(createSSRApp(component));
+    assert.equal(host.querySelector('input').getAttribute('aria-checked'), 'mixed');
+    document.body.append(host);
+    const app = createSSRApp(component);
+    app.mount(host);
+    try {
+      await nextTick();
+      const control = host.querySelector('input');
+      const { controller, aggregate, makeAggregate, commands } = instances.at(-1);
+      assert.equal(control.indeterminate, true);
+      control.click();
+      const intent = commands.find(command => command.type === 'request-bulk-selection').target.intent;
+      assert.equal(intent.selected, true);
+      assert.equal(control.disabled, true);
+      assert.equal(control.getAttribute('aria-busy'), 'true');
+      assert.equal(controller.dispatch({ type: 'resolve-group-leaf-selection', requestID: intent.requestID, scope: intent.scope, changedRowIDs: ['b'] }).ok, true);
+      await nextTick();
+      assert.equal(control.dataset.state, 'unavailable');
+      aggregate.value = makeAggregate(2);
+      await nextTick();
+      assert.equal(host.querySelector('input'), control);
+      assert.equal(control.disabled, false);
+      assert.equal(control.checked, true);
+      assert.equal(control.indeterminate, false);
+      assert.deepEqual(controller.getSnapshot().tabular.state.rowSelection.rowIDs, ['a', 'outside', 'b']);
+    } finally { app.unmount(); }
+  } finally { host.remove(); for (const { controller } of instances) controller.dispose(); }
+});
 
 test('native Tabular selection has successful form controls before and after hydration', async () => {
   const controllers = [];

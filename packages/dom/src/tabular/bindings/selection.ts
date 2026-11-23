@@ -3,8 +3,13 @@ import type {
   TabularRowID,
 } from '@sectile/tabular';
 import {
+  getAllMatchingSelectionState,
+  getGroupSelectionState,
   rowSelectionContains,
+  type DataTableEvent,
+  type TabularGroupSelectionAggregate,
 } from '@sectile/tabular/data-table';
+import type { TabularSnapshot } from '@sectile/tabular';
 import type {
   TabularDOMRowSelectionAnchor,
   TabularDOMRowSelectionActivation,
@@ -15,7 +20,10 @@ import {
   bindEvent,
 } from './scope.js';
 
-export { getAllMatchingSelectionState as allMatchingSelectionState } from '@sectile/tabular/data-table';
+export type BulkSelectionBindingOptions =
+  | { readonly target: { readonly kind: 'all-matching' }; readonly disabled?: boolean }
+  | { readonly target: { readonly kind: 'group-leaves'; readonly groupID: string }; readonly disabled?: boolean;
+      readonly groupSelection?: () => TabularGroupSelectionAggregate | null };
 
 export function rowSelected(selection: TabularRowSelection, rowID: TabularRowID): boolean {
   return rowSelectionContains(selection, rowID);
@@ -63,10 +71,11 @@ export function setRowSelectionControlAttributes(
   element.setAttribute('data-state', checked ? 'checked' : 'unchecked');
 }
 
-export function setBulkSelectionControlAttributes(
+function setBulkSelectionControlAttributes(
   element: HTMLElement,
-  state: TabularDOMBulkSelectionState,
+  state: TabularDOMBulkSelectionState | 'unavailable',
   disabled: boolean,
+  pending: boolean,
 ): void {
   if (element.tagName === 'INPUT') {
     const input = element as HTMLInputElement;
@@ -80,9 +89,48 @@ export function setBulkSelectionControlAttributes(
     element.tabIndex = disabled ? -1 : 0;
   }
   element.setAttribute('role', 'checkbox');
-  element.setAttribute('aria-checked', state === 'indeterminate' ? 'mixed' : String(state === 'checked'));
+  if (state === 'unavailable') element.removeAttribute('aria-checked');
+  else element.setAttribute('aria-checked', state === 'indeterminate' ? 'mixed' : String(state === 'checked'));
   element.setAttribute('aria-disabled', String(disabled));
   element.setAttribute('data-state', state);
+  if (pending) element.setAttribute('aria-busy', 'true');
+  else element.removeAttribute('aria-busy');
+}
+
+type BulkSelectionEvent = Extract<DataTableEvent, { type: 'set-row-selection' | 'select-all-matching' | 'request-group-leaf-selection' }>;
+
+export function prepareBulkSelectionBinding(
+  scope: BindingScope, element: HTMLElement, options: BulkSelectionBindingOptions,
+  snapshot: () => TabularSnapshot, dispatch: (event: BulkSelectionEvent) => boolean,
+): { readonly update: () => void; readonly dispose: () => void } {
+  element.setAttribute('data-part', 'bulk-selection-control');
+  const target = options.target;
+  const read = 'groupSelection' in options ? options.groupSelection : undefined;
+  const disabled = options.disabled === true;
+  const update = (): void => {
+    if (target.kind === 'all-matching') {
+      setBulkSelectionControlAttributes(element, getAllMatchingSelectionState(snapshot()), disabled, false);
+    } else if (read === undefined) {
+      setBulkSelectionControlAttributes(element, 'unchecked', disabled, false);
+    } else {
+      const group = getGroupSelectionState(snapshot(), target.groupID, read());
+      setBulkSelectionControlAttributes(element, group.state, disabled || group.disabled, group.pending);
+    }
+  };
+  const activate = (): void => {
+    if (disabled) { update(); return; }
+    if (target.kind === 'all-matching') {
+      if (!dispatch(getAllMatchingSelectionState(snapshot()) === 'checked'
+        ? { type: 'set-row-selection', selection: { kind: 'explicit-rows', rowIDs: [] } }
+        : { type: 'select-all-matching' })) update();
+      return;
+    }
+    const aggregate = read?.();
+    if (read !== undefined && (aggregate == null || getGroupSelectionState(snapshot(), target.groupID, aggregate).disabled)) { update(); return; }
+    if (!dispatch({ type: 'request-group-leaf-selection', groupID: target.groupID, ...(aggregate == null ? {} : { aggregate }) })) update();
+  };
+  const disposers = bindCheckboxActivation(scope, element, activate);
+  return { update, dispose: () => { for (const dispose of disposers) dispose(); element.removeAttribute('aria-busy'); } };
 }
 
 export function bindRowSelectionActivation(
@@ -102,7 +150,7 @@ export function bindRowSelectionActivation(
   ]);
 }
 
-export function bindCheckboxActivation(
+function bindCheckboxActivation(
   scope: BindingScope,
   element: HTMLElement,
   activate: () => void,

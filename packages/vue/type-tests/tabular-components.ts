@@ -76,6 +76,13 @@ grid.columnSizes.value = {};
 grid.columnSizes.value.name = 100;
 void acceptedGridSizes;
 const TreeGrid = createDataTreeGridComponents(tree);
+const remoteGroup: InstanceType<typeof TreeGrid.BulkSelectionControl>['$props'] = {
+  target: { kind: 'group-leaves', groupID: 'g' },
+  groupSelection: { totalLeafCount: 2, selectedLeafCount: 1, scope: {
+    groupID: 'g', sourceGeneration: 0, queryRevision: 0, rowSelectionRevision: 0, membershipRevision: 1,
+  } },
+};
+void remoteGroup;
 const acceptedTableSizes: Readonly<Record<string, number>> = table.columnSizes.value;
 const acceptedTreeSizes: Readonly<Record<string, number>> = tree.columnSizes.value;
 // @ts-expect-error accepted size publication is readonly

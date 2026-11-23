@@ -230,7 +230,7 @@ export type DataTableFilterControlProps<Column extends string = string> = DataTa
 export interface DataTableColumnResizeHandleProps<Column extends string = string> extends DataTablePartProps { readonly column: Column; readonly minSize?: number; readonly maxSize?: number }
 export interface DataTableRowProps extends DataTablePartProps { readonly rowID: DataTableRowID | DataTableGroupID }
 export interface DataTableSelectionControlProps extends DataTablePartProps { readonly rowID?: DataTableRowID; readonly name: string; readonly value?: string; readonly form?: string; readonly disabled?: boolean }
-export interface DataTableBulkSelectionControlProps extends DataTablePartProps { readonly target: { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: DataTableGroupID }; readonly disabled?: boolean }
+export interface DataTableBulkSelectionControlProps extends DataTablePartProps { readonly target: { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: DataTableGroupID }; readonly disabled?: boolean; readonly groupSelection?: import('@sectile/tabular/data-table').TabularGroupSelectionAggregate | null }
 export interface DataTableDisclosureProps extends DataTablePartProps { readonly rowID?: DataTableGroupID; readonly disabled?: boolean }
 export interface DataTableCellProps<Column extends string = string> extends DataTablePartProps { readonly rowID?: DataTableRowID | DataTableGroupID; readonly column: Column }
 export interface DataTableEditorProps<Column extends string = string> extends DataTableCellProps<Column> { readonly parseValue?: (value: string) => TabularResult<TabularWireValue>; readonly commitOnChange?: boolean }

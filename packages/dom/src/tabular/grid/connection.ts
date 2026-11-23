@@ -67,9 +67,7 @@ import {
   rowSelected,
   rowSelectionActivation,
   bindRowSelectionActivation,
-  setBulkSelectionControlAttributes,
-  allMatchingSelectionState,
-  bindCheckboxActivation,
+  prepareBulkSelectionBinding,
 } from '../bindings/selection.js';
 
 interface GridDOMEditorRegistration {
@@ -90,7 +88,6 @@ type BaseGridEvent =
   | { readonly type: 'set-row-selection-range'; readonly anchorRowID: TabularRowID; readonly rowID: TabularRowID; readonly selected: boolean }
   | { readonly type: 'set-row-selection'; readonly selection: TabularRowSelection }
   | { readonly type: 'select-all-matching' }
-  | { readonly type: 'request-group-leaf-selection'; readonly groupID: TabularGroupID }
   | { readonly type: 'set-query'; readonly query: TabularSnapshot['state']['query'] };
 
 export class DOMTabularGrid<
@@ -342,27 +339,10 @@ export class DOMTabularGrid<
   }
 
   public bindBulkSelectionControl(element: HTMLElement, options: GridDOMBulkSelectionControlOptions): () => void {
-    element.setAttribute('data-part', 'bulk-selection-control');
-    const update = (): void => {
-      if (options.target.kind !== 'all-matching') {
-        setBulkSelectionControlAttributes(element, 'unchecked', options.disabled === true);
-        return;
-      }
-      setBulkSelectionControlAttributes(element, allMatchingSelectionState(this.#semanticSnapshot()), options.disabled === true);
-    };
-    const activate = (): void => {
-      if (options.disabled === true) return;
-      const event: BaseGridEvent = options.target.kind === 'all-matching'
-        ? allMatchingSelectionState(this.#semanticSnapshot()) === 'checked'
-          ? { type: 'set-row-selection', selection: { kind: 'explicit-rows', rowIDs: [] } }
-          : { type: 'select-all-matching' }
-        : { type: 'request-group-leaf-selection', groupID: options.target.groupID };
-      this.handleEvent(event as Event);
-    };
-    const disposers = bindCheckboxActivation(this.#scope, element, activate);
+    const { update, dispose } = prepareBulkSelectionBinding(this.#scope, element, options, () => this.#semanticSnapshot(), event => this.handleEvent(event as Event));
     this.#refreshers.add(update);
     update();
-    return this.#scope.retain(() => { for (const dispose of disposers) dispose(); this.#refreshers.delete(update); });
+    return this.#scope.retain(() => { dispose(); this.#refreshers.delete(update); });
   }
 
   public bindRowDisclosure(element: HTMLElement, options: GridDOMDisclosureOptions): () => void {
