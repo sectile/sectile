@@ -22,6 +22,7 @@ export interface TreeSelectConnectionOptions<ID extends StableID = StableID> ext
   readonly position?: boolean;
   readonly manageVisibility?: boolean;
   readonly getItemElementID?: (id: NoInfer<ID>) => string;
+  readonly onInputEditingChange?: (editing: boolean) => void;
   readonly onUpdate?: () => void;
 }
 export type TreeSelectOptions<ID extends StableID = StableID> = Omit<TreeSelectControllerOptions<ID>, 'tree'>
@@ -99,6 +100,7 @@ interface Presentation<ID extends StableID> {
   readonly position: PositionConnection; readonly layer: DOMLayerBinding;
   readonly onUpdate: (() => void) | undefined;
   readonly generatedPopupID: string | undefined;
+  readonly editing?: { readonly publish: (value: boolean) => void; interaction: boolean; published: boolean; open: boolean };
   active: boolean; composing: boolean; nativeQuery: string | undefined;
 }
 let nextPopupID = 0;
@@ -108,8 +110,11 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
   #snapshot: RevisionSnapshot<TreeSelectState<ID>>;
   #nativeGeneration = 0;
   readonly #keydown = (event: Event): void => { if (this.handleKeyboardEvent(event as KeyboardEvent)) event.preventDefault(); };
+  readonly #beginInputEditing = (): void => { if (this.#scope) this.#setInputEditing(this.#scope, true); };
+  readonly #endInputEditing = (): void => { if (this.#scope) this.#setInputEditing(this.#scope, false); };
   readonly #input = (): void => {
     const scope = this.#scope; if (!scope || !this.getActive() || scope.composing) return;
+    if (scope.editing !== undefined && scope.input.matches(':focus')) this.#setInputEditing(scope, true);
     const query = scope.input.value;
     if (scope.nativeQuery === query) return;
     const pending = scope.nativeQuery !== undefined; scope.nativeQuery = query;
@@ -125,8 +130,17 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
       }
     }
   };
-  readonly #compositionStart = (): void => { if (this.#scope) this.#scope.composing = true; };
-  readonly #compositionEnd = (): void => { if (this.#scope) this.#scope.composing = false; this.#input(); };
+  readonly #compositionStart = (): void => {
+    const scope = this.#scope; if (scope === undefined) return;
+    scope.composing = true;
+    this.#publishInputEditing(scope);
+  };
+  readonly #compositionEnd = (): void => {
+    const scope = this.#scope; if (scope === undefined) return;
+    scope.composing = false;
+    this.#input();
+    this.#publishInputEditing(scope);
+  };
   readonly #click = (event: Event): void => {
     const scope = this.#scope; if (!scope || !this.getActive() || event.defaultPrevented) return;
     const disclosure = findDelegatedStableID(event.target, scope.popup, 'treeSelectDisclosureId') as ID | null;
@@ -155,7 +169,9 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
       const prefix = options.popup.id;
       this.#scope = { controller: options.controller, owned, input: options.input, popup: options.popup, rows: new Map(), owners: new WeakMap(),
         elementID: options.getItemElementID ?? (id => `${prefix}-${stableIDElementToken(id)}`),
-        visibility, position, layer, onUpdate: options.onUpdate, generatedPopupID, active: true, composing: false, nativeQuery: undefined };
+        visibility, position, layer, onUpdate: options.onUpdate, generatedPopupID, active: true, composing: false, nativeQuery: undefined,
+        ...(options.onInputEditingChange === undefined ? {} : { editing: { publish: options.onInputEditingChange,
+          interaction: options.input.matches(':focus'), published: false, open: this.#snapshot.state.open } }) };
       this.#bind(); this.render();
     } catch (error) {
       if (this.#scope) { try { this.disconnect(); } catch { /* Preserve construction error. */ } }
@@ -192,6 +208,10 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
   public handleKeyboardEvent(event: KeyboardEvent): boolean {
     const scope = this.#scope; if (!scope || !this.getActive() || event.defaultPrevented || scope.composing) return false;
     const state = scope.controller.getSnapshot().state;
+    if (scope.editing !== undefined && event.target === scope.input
+      && (event.key.length === 1 || ['ArrowLeft', 'ArrowRight', 'Home', 'End', 'Backspace', 'Delete'].includes(event.key))) {
+      this.#setInputEditing(scope, true);
+    }
     // Native caret movement and form submission stay native in an editable input.
     if (event.target === scope.input && [' ', 'ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return false;
     if ((event.key === 'Escape' && !state.open) || (event.key === 'Enter' && (!state.open || state.pending || state.view.cursor.current === null))) return false;
@@ -244,9 +264,26 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
   #projectQuery(scope: Presentation<ID>, query: string): void {
     if (!scope.composing && scope.nativeQuery === undefined && scope.input.value !== query) scope.input.value = query;
   }
+  #setInputEditing(scope: Presentation<ID>, interaction: boolean): void {
+    if (scope.editing === undefined) return;
+    scope.editing.interaction = interaction;
+    this.#publishInputEditing(scope);
+  }
+  #publishInputEditing(scope: Presentation<ID>): void {
+    const editing = scope.editing;
+    if (editing === undefined) return;
+    const value = scope.active && (editing.interaction || scope.composing);
+    if (editing.published !== value) { editing.published = value; editing.publish(value); }
+  }
   public render(): void {
     const scope = this.#scope; if (!scope) return;
     const state = scope.controller.getSnapshot().state;
+    if (scope.editing !== undefined) {
+      if (scope.editing.open && !state.open) scope.editing.interaction = false;
+      scope.editing.open = state.open;
+      this.#publishInputEditing(scope);
+      if (this.#scope !== scope) return;
+    }
     this.#projectQuery(scope, state.request.query);
     this.setInputAttributes(); this.setPopupAttributes();
     for (const [id, element] of scope.rows) { if (this.#scope !== scope) return; this.#projectRow(scope, element, id); }
@@ -258,6 +295,11 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
   public resume(): void { this.#scope?.layer.resume(); }
   #bind(): void {
     const scope = this.#scope; if (!scope) return;
+    if (scope.editing !== undefined) {
+      scope.input.addEventListener('focus', this.#beginInputEditing);
+      scope.input.addEventListener('pointerdown', this.#beginInputEditing);
+      scope.input.addEventListener('blur', this.#endInputEditing);
+    }
     scope.input.addEventListener('keydown', this.#keydown); scope.input.addEventListener('input', this.#input);
     scope.input.addEventListener('compositionstart', this.#compositionStart); scope.input.addEventListener('compositionend', this.#compositionEnd);
     scope.popup.addEventListener('keydown', this.#keydown); scope.popup.addEventListener('click', this.#click); scope.popup.addEventListener('pointerdown', this.#pointerdown);
@@ -274,6 +316,13 @@ class DOMTreeSelectConnection<ID extends StableID> implements TreeSelectConnecti
     scope.input.removeEventListener('keydown', this.#keydown); scope.input.removeEventListener('input', this.#input);
     scope.input.removeEventListener('compositionstart', this.#compositionStart); scope.input.removeEventListener('compositionend', this.#compositionEnd);
     scope.popup.removeEventListener('keydown', this.#keydown); scope.popup.removeEventListener('click', this.#click); scope.popup.removeEventListener('pointerdown', this.#pointerdown);
+    if (scope.editing !== undefined) {
+      scope.input.removeEventListener('focus', this.#beginInputEditing);
+      scope.input.removeEventListener('pointerdown', this.#beginInputEditing);
+      scope.input.removeEventListener('blur', this.#endInputEditing);
+      scope.composing = false;
+      this.#setInputEditing(scope, false);
+    }
   }
   public disconnect(): void {
     const scope = this.#scope; if (!scope) return;

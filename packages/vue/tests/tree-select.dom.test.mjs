@@ -6,7 +6,7 @@ for (const name of ['window', 'document']) globalThis[name] = name === 'window' 
 for (const name of ['Node','Element','HTMLElement','HTMLInputElement','HTMLSelectElement','HTMLFormElement','HTMLButtonElement','SVGElement','Event','MouseEvent','KeyboardEvent','MutationObserver','FormData']) globalThis[name] = browserWindow[name];
 const { createApp, createSSRApp, h, nextTick, shallowRef, KeepAlive } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
-const { TreeSelectRoot: Root, TreeSelectInput: Input, TreeSelectContent: Content, TreeSelectItem: Item, TreeSelectGroup: Group, TreeSelectDisclosure: Disclosure } = await import('../.verification-dist/tree-select.js');
+const { TreeSelectRoot: Root, TreeSelectInput: Input, TreeSelectContent: Content, TreeSelectItem: Item, TreeSelectGroup: Group, TreeSelectDisclosure: Disclosure, TreeSelectValue: Value } = await import('../.verification-dist/tree-select.js');
 const { HostProvider } = await import('../.verification-dist/host-provider.js');
 const { FormRoot, FormField, FormLabel } = await import('../.verification-dist/form.js');
 const nodes = [{ id: 'root', parentID: null }, { id: 'a', parentID: 'root' }, { id: 'b', parentID: 'root' }];
@@ -17,6 +17,57 @@ const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(
 const row = (host, id) => host.querySelector(`[data-sectile-tree-select-item="${id}"]`);
 const click = node => node.dispatchEvent(new MouseEvent('click', { bubbles: true }));
 function mount(render) { const host = document.createElement('div'); document.body.append(host); const app = createApp({ render }); app.mount(host); return { host, app, close() { app.unmount(); host.remove(); } }; }
+
+test('TreeSelect hydrates the accepted label without overwriting an adopted search input', async () => {
+  let calls = 0;
+  const labels = selected => { calls++; return selected[0] === 'a' ? '<Oak>' : 'Birch'; };
+  const render = () => h('form', null, [h(Root, { nodes, defaultValue: ['a'], defaultQuery: 'search', matches: ['a', 'b'],
+    defaultExpandedValues: ['root'], selectedLabel: labels, position: false, name: 'tree', label: 'Tree',
+  }, () => [h(Value, { id: 'selection' }), h(Input, { asChild: true, 'aria-describedby': 'hint selection' }, () => h('input')),
+    h('span', { id: 'hint' }, 'Search trees'), h(Content, null, { default: rows })])]);
+  const host = document.createElement('div');
+  host.innerHTML = await renderToString(createSSRApp({ render }));
+  document.body.append(host);
+  const input = host.querySelector('input'), label = host.querySelector('#selection');
+  const app = createSSRApp({ render });
+  try {
+    assert.equal(label.textContent, '<Oak>');
+    assert.equal(label.hidden, false);
+    app.mount(host);
+    await drain();
+    assert.equal(host.querySelector('input'), input);
+    assert.equal(input.value, 'search');
+    assert.equal(input.getAttribute('aria-describedby'), 'hint selection');
+    assert.equal(input.getAttribute('aria-label'), 'Tree');
+    input.focus();
+    await drain();
+    assert.equal(label.hidden, true);
+    input.setSelectionRange(2, 2);
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true }));
+    await drain();
+    assert.equal(input.getAttribute('aria-expanded'), 'true');
+    click(row(host, 'b'));
+    await drain();
+    assert.equal(document.activeElement, input);
+    assert.equal(input.value, 'search');
+    assert.equal(input.selectionStart, 2);
+    assert.equal(label.textContent, 'Birch');
+    assert.equal(label.hidden, false);
+    assert.equal(new FormData(host.querySelector('form')).get('tree'), 'b');
+    const selectedCalls = calls;
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    await drain();
+    assert.equal(label.hidden, true);
+    input.dispatchEvent(new Event('compositionstart', { bubbles: true }));
+    input.blur();
+    await drain();
+    assert.equal(label.hidden, true);
+    input.dispatchEvent(new Event('compositionend', { bubbles: true }));
+    await drain();
+    assert.equal(label.hidden, false);
+    assert.equal(calls, selectedCalls);
+  } finally { app.unmount(); host.remove(); }
+});
 
 test('TreeSelect SSR projects initial hierarchy and selected form IDs without running search transport', async () => {
   let searched = 0;

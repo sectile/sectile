@@ -1,6 +1,11 @@
-import { TreeSelectRoot, type TreeSelectSearchRequest, type TreeSelectExpose, type TreeSelectRootSlotProps } from '@sectile/vue/tree-select';
+import { TreeSelectRoot, TreeSelectValue, type TreeSelectValueSlotProps, type TreeSelectSearchRequest, type TreeSelectExpose, type TreeSelectRootSlotProps } from '@sectile/vue/tree-select';
 const nodes = [{ id: 'root', parentID: null }, { id: 'leaf', parentID: 'root' }] as const;
 new TreeSelectRoot({ nodes, modelValue: ['leaf'], 'onUpdate:modelValue': values => { const exact: readonly ('root' | 'leaf')[] = values; void exact; } });
+new TreeSelectRoot({ nodes, selectedLabel: ids => { const exact: readonly ('root' | 'leaf')[] = ids; return exact.join(', '); } });
+declare const display: TreeSelectValueSlotProps;
+const text: string | null = display.label;
+const visible: boolean = display.visible;
+void [TreeSelectValue, text, visible];
 declare const slot: TreeSelectRootSlotProps<'root' | 'leaf'>;
 const children: readonly ('root' | 'leaf')[] = slot.getChildren('root'); void children;
 // @ts-expect-error Rendering ports retain the source ID domain.

@@ -24,6 +24,7 @@ export interface TreeSelectRootProps<ID extends string = string> extends TreeVie
   readonly nodes: readonly TreeNodeInput<ID>[];
   readonly selectionMode?: 'single' | 'multiple';
   readonly modelValue?: readonly NoInfer<ID>[]; readonly defaultValue?: readonly NoInfer<ID>[];
+  readonly selectedLabel?: (selected: readonly NoInfer<ID>[]) => string | null;
   readonly expandedValues?: readonly NoInfer<ID>[]; readonly defaultExpandedValues?: readonly NoInfer<ID>[];
   readonly highlightedValue?: NoInfer<ID> | null; readonly defaultHighlightedValue?: NoInfer<ID> | null;
   readonly query?: string; readonly defaultQuery?: string; readonly open?: boolean; readonly defaultOpen?: boolean;
@@ -55,11 +56,14 @@ export interface TreeSelectItemProps extends TreeViewPartProps { readonly value:
 export type TreeSelectGroupProps = TreeViewGroupProps;
 export interface TreeSelectDisclosureProps extends TreeViewPartProps { readonly for: string }
 export type TreeSelectPartProps = TreeViewPartProps;
+export interface TreeSelectValueSlotProps { readonly label: string | null; readonly visible: boolean }
 interface Context {
   readonly state: ComputedRef<TreeSelectRootSlotProps>;
   readonly snapshot: ComputedRef<TreeSelectState<string>>;
   readonly inputID: string; readonly popupID: string; readonly position: ComputedRef<boolean>;
   readonly label: ComputedRef<string | undefined>; readonly controlProps: ComputedRef<Readonly<Record<string, unknown>>>;
+  readonly selectedLabel: ComputedRef<string | null>;
+  readonly display: ComputedRef<'selection' | 'query' | undefined>;
   readonly connection: ShallowRef<TreeSelectConnection<string> | undefined>;
   readonly active: Readonly<ShallowRef<boolean>>; readonly presentation: Readonly<ShallowRef<DOMLayerPresentationSnapshot | undefined>>;
   registerPresence(present: ShallowRef<boolean>): () => void;
@@ -77,6 +81,7 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
   props: {
     nodes: { type: Array as PropType<readonly TreeNodeInput<string>[]>, required: true }, selectionMode: { type: String as PropType<'single' | 'multiple'>, default: 'single' },
     modelValue: { type: Array as PropType<readonly string[]>, default: undefined }, defaultValue: { type: Array as PropType<readonly string[]>, default: () => empty },
+    selectedLabel: { type: Function as PropType<(selected: readonly string[]) => string | null>, default: undefined },
     expandedValues: { type: Array as PropType<readonly string[]>, default: undefined }, defaultExpandedValues: { type: Array as PropType<readonly string[]>, default: () => empty },
     highlightedValue: { type: String as PropType<string | null>, default: undefined }, defaultHighlightedValue: { type: String as PropType<string | null>, default: null },
     query: { type: String, default: undefined }, defaultQuery: { type: String, default: '' }, open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: false },
@@ -94,6 +99,8 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     const input = shallowRef<HTMLInputElement>(), popup = shallowRef<HTMLElement>(), submission = shallowRef<HTMLSelectElement>();
     const controller = shallowRef<TreeSelectController<string>>(), accepted = shallowRef<RevisionSnapshot<TreeSelectState<string>>>();
     const connection = shallowRef<TreeSelectConnection<string>>();
+    const editing = shallowRef(false);
+    const hasSelectedLabel = computed(() => props.selectedLabel !== undefined);
     const flags = useFormControlFlags(props);
     const disabled = computed(() => flags.value.disabled), readonly = computed(() => flags.value.readonly);
     const required = computed(() => flags.value.required);
@@ -112,6 +119,11 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     };
     const initial = { value: props.defaultValue, expansion: props.defaultExpandedValues, cursor: props.defaultHighlightedValue, query: props.defaultQuery, open: props.defaultOpen };
     const snapshot = computed(() => accepted.value!.state);
+    const selectedIDs = computed<readonly string[]>((previous) => {
+      const ids = snapshot.value.selection.selected;
+      return previous !== undefined && (previous === ids || sameIDs(previous, ids)) ? previous : ids;
+    });
+    const selectedLabel = computed(() => !hasSelectedLabel.value || selectedIDs.value.length === 0 ? null : props.selectedLabel?.(selectedIDs.value) || null);
     const navigation = computed(() => (snapshot.value.results?.tree ?? controller.value!.tree).visible(snapshot.value.view.expansion.ids));
     const publish = (): void => { if (alive && controller.value) accepted.value = controller.value.getSnapshot(); };
     const refreshParts = (): void => {
@@ -127,10 +139,12 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
       if (!alive || !mounted || !input.value || !popup.value || !controller.value) return;
       connection.value = connectTreeSelect({ controller: controller.value, input: input.value, popup: popup.value, position: props.position, manageVisibility: false,
         ...(lifecycle.layerHost.value === undefined ? {} : { layerHost: lifecycle.layerHost.value }),
+        ...(hasSelectedLabel.value ? { onInputEditingChange: (value: boolean) => { editing.value = value; } } : {}),
         getItemElementID: elementID, onUpdate: () => { publish(); refreshParts(); lifecycle.update(); } });
       refresh();
     };
     const open = computed(() => accepted.value?.state.open ?? props.open ?? props.defaultOpen);
+    const display = computed(() => !hasSelectedLabel.value ? undefined : !open.value && !editing.value && selectedLabel.value !== null ? 'selection' : 'query');
     const lifecycle = usePopupPresentation({ connection, open, connect: attach, refresh, trackLayerHost: true });
     const attachmentTask = useNextTickTask(() => { if (alive && mounted) lifecycle.reconnect(); });
     const scheduleAttach = (): void => { if (alive && mounted) attachmentTask.schedule(); };
@@ -190,6 +204,7 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
     });
     provideFormControlOwner();
     provide<Context>(key, { state, snapshot, inputID, popupID, elementID, position: computed(() => props.position), label: computed(() => props.label), controlProps: participation.controlProps,
+      selectedLabel, display,
       connection, active: lifecycle.active, presentation: lifecycle.presentation, registerPresence: lifecycle.registerPresence,
       setInputComposing: composing => {
         if (!alive) return;
@@ -233,13 +248,15 @@ const RootImplementation = /* @__PURE__ */ defineComponent({
       } else unwrap(result);
     }, { flush: 'post' });
     watch(() => props.position, scheduleAttach);
+    watch(hasSelectedLabel, scheduleAttach);
     const selected = computed(() => snapshot.value.selection), sourceIDs = computed(() => controller.value!.tree.preorder().ids);
     const encoding = computed(() => h('select', { ref: (node: unknown) => { submission.value = typeof HTMLSelectElement !== 'undefined' && node instanceof HTMLSelectElement ? node : undefined; },
       ...submissionProps.value, required: required.value, disabled: disabled.value, multiple: props.selectionMode === 'multiple',
       tabindex: -1, 'aria-hidden': 'true', style: visuallyHiddenInputStyle,
     }, [ ...(props.selectionMode === 'single' ? [h('option', { value: '', selected: selected.value.size === 0 })] : []),
       ...sourceIDs.value.map(id => h('option', { key: id, value: id, selected: selected.value.has(id) }, id)) ]));
-    return (): VNodeChild => [h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'tree-select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed' }),
+    return (): VNodeChild => [h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, 'data-scope': 'tree-select', 'data-part': 'root', 'data-state': state.value.open ? 'open' : 'closed',
+      ...(display.value === undefined ? {} : { 'data-display': display.value }) }),
       { default: () => slots.default?.(state.value) }), ...(participation.participating || props.name !== undefined || props.form !== undefined || required.value ? [encoding.value] : [])];
   },
 });
@@ -261,7 +278,22 @@ export const TreeSelectInput = /* @__PURE__ */ defineComponent({
     'aria-activedescendant': element.value ? element.value.getAttribute('aria-activedescendant') ?? undefined
       : root.active.value && root.state.value.open && !root.state.value.pending && root.state.value.highlightedValue !== null ? root.elementID(root.state.value.highlightedValue) : undefined,
     'aria-label': root.label.value ?? attrs['aria-label'], disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'data-scope': 'tree-select', 'data-part': 'input',
+    ...(root.display.value === undefined ? {} : { 'data-display': root.display.value }),
   }), slots); },
+});
+export const TreeSelectValue = /* @__PURE__ */ defineComponent({
+  name: 'SectileTreeSelectValue', inheritAttrs: false,
+  props: { ...partProps, as: { ...partProps.as, default: 'span' } },
+  slots: Object as SlotsType<{ default?: (state: TreeSelectValueSlotProps) => VNodeChild }>,
+  setup(props, { attrs, slots }) {
+    const root = useRoot('TreeSelectValue');
+    return (): VNodeChild => {
+      const label = root.selectedLabel.value, visible = root.display.value === 'selection';
+      return h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, hidden: !visible,
+        'data-scope': 'tree-select', 'data-part': 'value', 'data-state': visible ? 'visible' : 'hidden' }),
+      { default: () => slots.default?.({ label, visible }) ?? label });
+    };
+  },
 });
 export const TreeSelectContent = /* @__PURE__ */ defineComponent({
   name: 'SectileTreeSelectContent', inheritAttrs: false, props: partProps, slots: Object as SlotsType<TreeSelectSlots>,
