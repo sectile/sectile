@@ -52,7 +52,10 @@ export function visibleRowIndexOf(view: TabularView): VisibleRowIndex {
   return indexes.size === 0 ? emptyVisibleRowIndex : Object.freeze({ indexes });
 }
 
-export function createContextParentIndexes(rows: readonly TabularResolvedRow[]): Int32Array {
+export function createContextParentIndexes(rows: readonly ({ readonly kind: 'leaf' } | {
+  readonly kind: 'group';
+  readonly depth: number;
+})[]): Int32Array {
   const parents = new Int32Array(rows.length);
   parents.fill(-1);
   const groups: number[] = [];

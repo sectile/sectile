@@ -28,6 +28,7 @@ import type {
 } from '../contracts.js';
 
 const EMPTY_ROW_IDS: readonly string[] = Object.freeze([]);
+const VISITED_ROW = Object.freeze(ok(true as const));
 
 interface ClientSource<RecordValue> extends TabularSource {
   readonly options: TabularClientSourceOptions<RecordValue>;
@@ -139,11 +140,24 @@ class ClientSourceRuntime<RecordValue> implements ClientSource<RecordValue> {
     const prepared = query.prepared;
     let rowCount: number;
     let readRows: ClientProjectionStage<RecordValue>['readRows'];
-    if (this.options.cellMaterialization === 'access-range' && prepared.query.groups.length === 0) {
-      rowCount = prepared.records.length;
-      readRows = createAccessRangeReader(prepared.schema, this.limits, (index) => (
-        createClientLeafRow(this, prepared.records[index]!, prepared.schema.columns)
-      ));
+    if (this.options.cellMaterialization === 'access-range') {
+      if (prepared.groups.length === 0) {
+        rowCount = prepared.records.length;
+        readRows = createAccessRangeReader(prepared.schema, this.limits, (index) => (
+          createClientLeafRow(this, prepared.records[index]!, prepared.schema.columns)
+        ));
+      } else {
+        const indexed = indexClientExpansion(prepared, request.expansion, this.limits);
+        if (!indexed.ok) return indexed;
+        rowCount = indexed.value.length;
+        const rows = indexed.value;
+        readRows = createAccessRangeReader(prepared.schema, this.limits, (index) => {
+          const row = rows[index]!;
+          return row.kind === 'leaf'
+            ? createClientLeafRow(this, row.item, prepared.schema.columns)
+            : materializeClientGroup(prepared, row.group, row.parentGroupID, row.expanded);
+        }, createContextParentIndexes(rows));
+      }
     } else {
       const projection = projectClientExpansion(prepared, request.expansion, this.limits);
       if (!projection.ok) return projection;
@@ -392,17 +406,36 @@ function resolveClient<RecordValue>(
   }));
 }
 
-/** Retain only the last successful access, with O(k) overlap reuse. */
+/** Retain only the last successful access and its context ancestors. */
 function createAccessRangeReader(
   schema: TabularColumnSchema,
   limits: TabularLimits,
   materialize: (index: number) => TabularResult<TabularResolvedRow>,
+  parents: Int32Array | null = null,
 ): (start: number, end: number) => TabularResult<readonly TabularResolvedRow[]> {
-  let previousStart = -1;
-  let previousRows: readonly TabularResolvedRow[] = [];
+  let previous: {
+    readonly start: number;
+    readonly end: number;
+    readonly context: ReadonlyMap<number, TabularResolvedRow> | null;
+    readonly rows: readonly TabularResolvedRow[];
+  } | null = null;
+  const read = (index: number): TabularResult<TabularResolvedRow> => {
+    if (previous !== null) {
+      if (index >= previous.start && index < previous.end) {
+        return ok(previous.rows[(previous.context?.size ?? 0) + index - previous.start]!);
+      }
+      const contextRow = previous.context?.get(index);
+      if (contextRow !== undefined) return ok(contextRow);
+    }
+    return materialize(index);
+  };
   return (start, end) => {
-    const count = end - start;
-    if (start === previousStart && count === previousRows.length) return ok(previousRows);
+    if (previous?.start === start && previous.end === end) return ok(previous.rows);
+    const ancestors: number[] = [];
+    if (parents !== null && start < end) {
+      for (let index = parents[start] ?? -1; index >= 0; index = parents[index] ?? -1) ancestors.push(index);
+    }
+    const count = end - start + ancestors.length;
     if (count > limits.maxRows) {
       return fail('resource-rejection', 'row-ceiling-exceeded', 'Response rows exceed the configured ceiling.');
     }
@@ -410,19 +443,22 @@ function createAccessRangeReader(
       return fail('resource-rejection', 'projected-cell-ceiling-exceeded', 'Response projected cells exceed the configured ceiling.');
     }
     const rows: TabularResolvedRow[] = [];
+    const context = ancestors.length === 0 ? null : new Map<number, TabularResolvedRow>();
+    for (let i = ancestors.length - 1; i >= 0; i -= 1) {
+      const index = ancestors[i]!;
+      const row = read(index);
+      if (!row.ok) return row;
+      context?.set(index, row.value);
+      rows.push(Object.freeze({ ...row.value, contextOnly: true as const }));
+    }
     for (let index = start; index < end; index += 1) {
-      const previous = previousRows[index - previousStart];
-      if (previous !== undefined) {
-        rows.push(previous);
-        continue;
-      }
-      const row = materialize(index);
+      const row = read(index);
       if (!row.ok) return row;
       rows.push(row.value);
     }
-    previousRows = Object.freeze(rows);
-    previousStart = start;
-    return ok(previousRows);
+    const frozen = Object.freeze(rows);
+    previous = { start, end, context, rows: frozen };
+    return ok(frozen);
   };
 }
 
@@ -538,12 +574,15 @@ interface ClientPreparedProjection<RecordValue> {
   readonly groupCells: Map<string, Readonly<Record<string, TabularWireValue>>>;
 }
 
-interface ClientGroupProjectionBuild<RecordValue> {
-  readonly rows: TabularResolvedRow[];
-  readonly leafRows: Map<string, TabularResolvedRow>;
-  readonly groupCells: Map<string, Readonly<Record<string, TabularWireValue>>>;
-  readonly maxRows: number;
-}
+type ClientIndexedRow<RecordValue> =
+  | { readonly kind: 'leaf'; readonly item: ClientRecordItem<RecordValue> }
+  | {
+      readonly kind: 'group';
+      readonly group: ClientGroupNode<RecordValue>;
+      readonly depth: number;
+      readonly parentGroupID: string | null;
+      readonly expanded: boolean;
+    };
 
 function prepareClientProjection<RecordValue>(
   source: ClientSource<RecordValue>,
@@ -568,6 +607,13 @@ function prepareClientProjection<RecordValue>(
       leafRows: new Map<string, TabularResolvedRow>(),
       groupCells: new Map<string, Readonly<Record<string, TabularWireValue>>>(),
     }));
+  }
+  if (source.options.cellMaterialization === 'access-range') {
+    for (const descriptor of query.aggregates) {
+      if (getOwnPolicy(source.options.policies?.aggregation, descriptor.policy) === undefined) {
+        return fail('construction', 'missing-policy-key', 'Aggregation policy is not registered.', { policy: descriptor.policy });
+      }
+    }
   }
   const groupIDs = new Set<string>();
   const leafIDs = new Set(records.map((item) => item.rowID));
@@ -600,30 +646,45 @@ function projectClientExpansion<RecordValue>(
     }
     return ok(Object.freeze({ rows: Object.freeze(rows), schema: prepared.schema, contextParentIndexes: null }));
   }
-  const requestedExpansion = new Set(expansion);
-  for (const groupID of requestedExpansion) {
-    if (!prepared.groupIDs.has(groupID)) {
-      return fail('transition-rejection', 'response-envelope-mismatch', 'Expansion identifies an unknown group.', { groupID });
-    }
-  }
-  const build: ClientGroupProjectionBuild<RecordValue> = {
-    rows: [],
-    leafRows: new Map(),
-    groupCells: new Map(),
-    maxRows: limits.maxRows,
-  };
-  for (const group of prepared.groups) {
-    const appended = appendClientGroup(prepared, group, requestedExpansion, null, build);
-    if (!appended.ok) return appended;
-  }
-  for (const [id, row] of build.leafRows) prepared.leafRows.set(id, row);
-  for (const [id, cells] of build.groupCells) prepared.groupCells.set(id, cells);
-  const rows = Object.freeze(build.rows);
+  const output: TabularResolvedRow[] = [];
+  const leafRows = new Map<string, TabularResolvedRow>();
+  const groupCells = new Map<string, Readonly<Record<string, TabularWireValue>>>();
+  const visited = visitClientExpansion(prepared, expansion, limits.maxRows, (group, parentID, expanded) => {
+    const row = materializeClientGroup(prepared, group, parentID, expanded, groupCells);
+    if (!row.ok) return row;
+    output.push(row.value);
+    return VISITED_ROW;
+  }, (item) => {
+    const row = clientLeafRow(prepared, item, leafRows);
+    if (!row.ok) return row;
+    output.push(row.value);
+    return VISITED_ROW;
+  });
+  if (!visited.ok) return visited;
+  for (const [id, row] of leafRows) prepared.leafRows.set(id, row);
+  for (const [id, cells] of groupCells) prepared.groupCells.set(id, cells);
+  const rows = Object.freeze(output);
   return ok(Object.freeze({
     rows,
     schema: prepared.schema,
     contextParentIndexes: createContextParentIndexes(rows),
   }));
+}
+
+function indexClientExpansion<RecordValue>(
+  prepared: ClientPreparedProjection<RecordValue>,
+  expansion: readonly string[],
+  limits: TabularLimits,
+): TabularResult<readonly ClientIndexedRow<RecordValue>[]> {
+  const rows: ClientIndexedRow<RecordValue>[] = [];
+  const visited = visitClientExpansion(prepared, expansion, limits.maxRows, (group, parentGroupID, expanded) => {
+    rows.push({ kind: 'group', group, parentGroupID, expanded, depth: group.depth });
+    return VISITED_ROW;
+  }, (item) => {
+    rows.push({ kind: 'leaf', item });
+    return VISITED_ROW;
+  });
+  return visited.ok ? ok(rows) : visited;
 }
 
 function resolveClientPivots<RecordValue>(
@@ -744,52 +805,67 @@ function buildClientGroups<RecordValue>(
   return ok(Object.freeze(result));
 }
 
-function appendClientGroup<RecordValue>(
+function visitClientExpansion<RecordValue>(
+  prepared: ClientPreparedProjection<RecordValue>,
+  expansion: readonly string[],
+  maxRows: number,
+  groupRow: (group: ClientGroupNode<RecordValue>, parent: string | null, expanded: boolean) => TabularResult<true>,
+  leafRow: (item: ClientRecordItem<RecordValue>) => TabularResult<true>,
+): TabularResult<true> {
+  const expandedIDs = new Set(expansion);
+  for (const groupID of expandedIDs) {
+    if (!prepared.groupIDs.has(groupID)) {
+      return fail('transition-rejection', 'response-envelope-mismatch', 'Expansion identifies an unknown group.', { groupID });
+    }
+  }
+  let remaining = maxRows;
+  const ceiling = () => fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
+  const visitGroup = (group: ClientGroupNode<RecordValue>, parentID: string | null): TabularResult<true> => {
+    if (remaining-- <= 0) return ceiling();
+    const expanded = expandedIDs.has(group.id);
+    const head = groupRow(group, parentID, expanded);
+    if (!head.ok || !expanded) return head;
+    if (group.children.length > 0) {
+      for (const child of group.children) {
+        const nested = visitGroup(child, group.id);
+        if (!nested.ok) return nested;
+      }
+    } else {
+      for (const item of group.records) {
+        if (remaining-- <= 0) return ceiling();
+        const leaf = leafRow(item);
+        if (!leaf.ok) return leaf;
+      }
+    }
+    return VISITED_ROW;
+  };
+  for (const group of prepared.groups) {
+    const result = visitGroup(group, null);
+    if (!result.ok) return result;
+  }
+  return VISITED_ROW;
+}
+
+function materializeClientGroup<RecordValue>(
   prepared: ClientPreparedProjection<RecordValue>,
   group: ClientGroupNode<RecordValue>,
-  expansion: ReadonlySet<string>,
   parentGroupID: string | null,
-  build: ClientGroupProjectionBuild<RecordValue>,
-): TabularResult<true> {
-  if (build.rows.length >= build.maxRows) {
-    return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
-  }
-  const cells = clientGroupCells(prepared, group, build.groupCells);
+  expanded: boolean,
+  pending?: Map<string, Readonly<Record<string, TabularWireValue>>>,
+): TabularResult<TabularResolvedRow> {
+  const cells = clientGroupCells(prepared, group, pending);
   if (!cells.ok) return cells;
-  const expanded = expansion.has(group.id);
-  build.rows.push(Object.freeze({
-    kind: 'group',
-    id: group.id,
-    parentGroupID,
-    depth: group.depth,
-    expanded,
-    cells: cells.value,
+  return ok(Object.freeze({
+    kind: 'group', id: group.id, parentGroupID, depth: group.depth, expanded, cells: cells.value,
   }));
-  if (!expanded) return ok(true);
-  if (group.children.length > 0) {
-    for (const child of group.children) {
-      const appended = appendClientGroup(prepared, child, expansion, group.id, build);
-      if (!appended.ok) return appended;
-    }
-  } else {
-    for (const item of group.records) {
-      if (build.rows.length >= build.maxRows) {
-        return fail('resource-rejection', 'row-ceiling-exceeded', 'Grouped visible rows exceed the configured ceiling.');
-      }
-      const leaf = clientLeafRow(prepared, item, build.leafRows);
-      if (!leaf.ok) return leaf;
-      build.rows.push(leaf.value);
-    }
-  }
-  return ok(true);
 }
 
 function clientGroupCells<RecordValue>(
   prepared: ClientPreparedProjection<RecordValue>,
   group: ClientGroupNode<RecordValue>,
-  pending: Map<string, Readonly<Record<string, TabularWireValue>>>,
+  pending?: Map<string, Readonly<Record<string, TabularWireValue>>>,
 ): TabularResult<Readonly<Record<string, TabularWireValue>>> {
-  const cached = prepared.groupCells.get(group.id) ?? pending.get(group.id);
+  const cached = pending === undefined ? undefined : prepared.groupCells.get(group.id) ?? pending.get(group.id);
   if (cached !== undefined) return ok(cached);
   const source = prepared.source;
   const cells: Record<string, TabularWireValue> = {};
@@ -834,7 +910,7 @@ function clientGroupCells<RecordValue>(
   const groupDescriptor = prepared.query.groups[group.depth]!;
   Object.defineProperty(cells, groupDescriptor.columnID, { value: group.label, enumerable: true, writable: false, configurable: true });
   Object.freeze(cells);
-  pending.set(group.id, cells);
+  pending?.set(group.id, cells);
   return ok(cells);
 }
 

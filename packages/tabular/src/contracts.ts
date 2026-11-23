@@ -362,9 +362,11 @@ export interface TabularClientSourceOptions<RecordValue> {
   readonly getRowID: (record: RecordValue, index: number) => TabularRowID;
   readonly getValue: TabularAccessorPolicy<RecordValue>;
   /**
-   * Defaults to 'eager'. 'access-range' reads flat projection values only for
-   * the requested page or window. Values must be stable within a source
-   * generation. Query policies may read values outside the requested rows.
+   * Defaults to 'eager'. 'access-range' materializes cells for the requested
+   * rows and their context ancestors. Values must be stable within a source
+   * generation. Query policies may still read values outside those rows.
+   * Cell errors surface when a row is materialized. Only the last successful
+   * window and its context are retained for reuse.
    */
   readonly cellMaterialization?: 'eager' | 'access-range';
   readonly policies?: TabularClientPolicies<RecordValue>;

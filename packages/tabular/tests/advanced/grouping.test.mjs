@@ -78,6 +78,55 @@ test('TAB-ADV-02: expansion inserts ordered leaf rows without changing matching 
   assert.deepEqual(result.value.matchingLeafCount, { kind: 'known', value: 3 });
 });
 
+test('range materialization builds only requested group values and preserves context ancestors', () => {
+  const input = Array.from({ length: 100 }, (_, index) => ({
+    id: String(index), team: index < 50 ? 'A' : 'B', score: index, name: `Row ${index}`,
+  }));
+  const aggregates = [];
+  const values = [];
+  const local = createClientTabularSource({
+    records: input,
+    columnSchema: schema,
+    cellMaterialization: 'access-range',
+    getRowID: record => record.id,
+    getValue: (record, column) => { values.push(record.id); return record[column]; },
+    policies: {
+      grouping: { team: record => ({ groupID: record.team, label: record.team }) },
+      aggregation: {
+        sum: records => {
+          aggregates.push(records[0].team);
+          return records.reduce((total, record) => total + record.score, 0);
+        },
+      },
+    },
+  });
+  const initial = request(['B']);
+  const page = {
+    ...initial, query: { ...initial.query, sort: [] },
+    access: { kind: 'page', page: 1, itemsPerPage: 1 },
+  };
+  const early = local.resolve(page);
+  assert.equal(early.ok, true);
+  assert.deepEqual(early.value.rows.map(row => row.id), ['A']);
+  assert.equal(early.value.visibleRowCount.value, 52);
+  assert.equal(early.value.matchingLeafCount.value, 100);
+  assert.deepEqual(aggregates, ['A']);
+  assert.deepEqual(values, []);
+
+  const late = { ...page, access: { kind: 'window', start: 50, count: 1 } };
+  const result = local.resolve(late);
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.value.rows.map(row => [row.id, row.contextOnly ?? false]), [['B', true], ['98', false]]);
+  assert.equal(result.value.rows[0].cells.score, 3725);
+  assert.deepEqual(aggregates, ['A', 'B']);
+  assert.deepEqual(values, ['98', '98', '98']);
+  assert.equal(local.resolve(late).value.rows, result.value.rows);
+  const next = local.resolve({ ...late, access: { ...late.access, start: 51 } });
+  assert.deepEqual(next.value.rows.map(row => row.id), ['B', '99']);
+  assert.deepEqual(aggregates, ['A', 'B']);
+  assert.deepEqual(values, ['98', '98', '98', '99', '99', '99']);
+});
+
 test('TAB-ADV-03: synthetic group identities cannot collide with records or another path', () => {
   const collision = resolveClientTabularRequest(makeSource(() => 'r1'), request());
   assert.equal(collision.ok, false);
@@ -106,7 +155,7 @@ test('TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only agg
     { id: 'r2', name: 'Alpha', team: 'B', score: 4, quarter: 'Q1' },
     { id: 'r3', name: 'Gamma', team: 'A', score: 3, quarter: 'Q1' },
   ];
-  const pivotSource = createClientTabularSource({
+  const pivotOptions = {
     records: pivotRecords,
     columnSchema: {
       revision: 0,
@@ -134,7 +183,8 @@ test('TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only agg
         })),
       },
     },
-  });
+  };
+  const pivotSource = createClientTabularSource(pivotOptions);
   const pivotRequest = {
     ...request(),
     queryRevision: 2,
@@ -155,6 +205,8 @@ test('TAB-ADV-05: pivot columns keep policy order, stable IDs, and read-only agg
     ['team:A', 3, 2],
   ]);
   assert.deepEqual(result.value.columnSchema.columns.slice(-2).map((column) => column.capabilities), [[], []]);
+  const bounded = createClientTabularSource({ ...pivotOptions, cellMaterialization: 'access-range' });
+  assert.deepEqual(resolveClientTabularRequest(bounded, pivotRequest), result);
 });
 
 test('TAB-ADV-06: sliced descendants retain context-only ancestors outside the access range', () => {

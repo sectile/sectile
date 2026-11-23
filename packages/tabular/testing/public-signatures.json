@@ -35,11 +35,11 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "0d8e6582199a371bfcafa713f02705d47cbb43aa743ce2d76d600507fe71976d",
+  "fingerprint": "354192eb61baf5e3d60c07ef8ee927718c99260d1b207b8d6681358dfe1296d4",
   "files": [
     {
       "path": "dist/contracts.d.ts",
-      "sha256": "3926f4dd317d85d604bfd28b4d53b7983390589965f5a3113c1346901772345a"
+      "sha256": "2d49fd4c963679e8f14809b47cd83dfac2de224fd771eb463a9cbf58f61afd18"
     },
     {
       "path": "dist/index.d.ts",
