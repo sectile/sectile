@@ -1,5 +1,20 @@
 # @sectile/vue
 
+## 0.23.0
+
+### Changes
+
+- chore(verification): record scoped public contract and package budgets (f4de504e1)
+- perf(temporal): keep date-time format admission out of calendar bundles (e61747952)
+- fix(interactions): resolve selection and precision review findings (212e741f6)
+- docs(tree-select): document and exercise the selection display (3e55772b1)
+- feat(tree-select): show accepted selection labels in idle inputs (c0f3151e7)
+- docs(temporal): verify and document explicit Vue field formats (35220753b)
+- feat(vue): share explicit temporal field formats with time choices (27d6eabd4)
+- feat(temporal): admit explicit date-time picker formats (acb5715b9)
+- docs(tabular): document and exercise the remote group adapter (67e38cf8c)
+- feat(tabular): bind remote group selection controls across hosts (67bee8c76)
+
 ## 0.22.0
 
 ### Changes

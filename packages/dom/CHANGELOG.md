@@ -1,5 +1,15 @@
 # @sectile/dom
 
+## 0.23.0
+
+### Changes
+
+- chore(verification): record scoped public contract and package budgets (f4de504e1)
+- fix(interactions): resolve selection and precision review findings (212e741f6)
+- feat(tree-select): show accepted selection labels in idle inputs (c0f3151e7)
+- feat(temporal): admit explicit date-time picker formats (acb5715b9)
+- feat(tabular): bind remote group selection controls across hosts (67bee8c76)
+
 ## 0.22.0
 
 ### Changes

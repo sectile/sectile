@@ -1,5 +1,14 @@
 # @sectile/tabular
 
+## 0.18.0
+
+### Changes
+
+- chore(verification): record scoped public contract and package budgets (f4de504e1)
+- fix(interactions): resolve selection and precision review findings (212e741f6)
+- feat(tabular): resolve versioned remote group selection deltas (b788d5802)
+- fix(tabular): keep all-matching selection scoped to the active query (e7b69bbf7)
+
 ## 0.17.1
 
 ### Changes
