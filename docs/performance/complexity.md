@@ -12,11 +12,11 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | chart | 80 | 0 | 15 |
 | dom | 490 | 177 | 62 |
 | form | 26 | 0 | 9 |
-| tabular | 37 | 0 | 11 |
+| tabular | 37 | 0 | 12 |
 | temporal | 137 | 14 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 843 | 351 | 17 |
+| vue | 843 | 351 | 18 |
 
 ## Variables
 
@@ -214,6 +214,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | tabular:source.resolve-cold | external | `O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | tabular:source.resolve-invalidation | external | `O(nRecord*(1+fFilter+cColumn+gGroup*(1+cColumn+aAggregate+cPivotColumn)) + nRecord*log(nRecord)*sSort + pPivot + kRow + dContext)` worst-case | `O(nRecord*(1+gGroup) + kRow + dContext)` | `O(kRow + dContext)` | `O(nRecord*(1+gGroup+cColumn) + cPivotColumn)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | tabular:source.resolve-warm | trusted | `O(kRow + dContext)` worst-case | `O(kRow + dContext)` | `O(kRow + dContext)` | `O(nProjected)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| tabular:source.resolve-window-values | external | `O(qWork + vRow + (kRow + dContext) * (1 + cColumn) + aWork)` worst-case | `O(nRecord * (1 + gGroup) + vRow + kRow + dContext + cColumn)` | `O((kRow + dContext) * (1 + cColumn) + aWork)` | `O(nRecord * (1 + gGroup) + vRow + (kRow + dContext) * (1 + cColumn) + aWork)` | allowed | packages/tabular/tests/source/client-source.test.mjs, packages/tabular/tests/advanced/grouping.test.mjs |
 | tabular:virtual.locate | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(nRow + nColumn)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | tabular:virtual.projection-preflight | external | `O(nRow)` worst-case | `O(1)` | `O(1)` | `O(1)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | tabular:virtual.reconcile-table | trusted | `O(nRow + j)` worst-case | `O(nRow)` | `O(nRow + j)` | `O(nRow)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -272,6 +273,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | vue:checkbox-tree.bridge | connected | `O(n * log(n + 1) + m)` expected | `O(n + m)` | `O(n)` | `O(n + m)` | allowed | packages/vue/tests/checkbox-tree.dom.test.mjs, packages/vue/type-tests/checkbox-tree.ts, packages/vue/type-tests/fixtures/checkbox-tree.vue |
 | vue:collection.external-reconcile | external | `O(nOption + sSelected + dDisabled)` expected | `O(nOption + sSelected + dDisabled)` | `O(sSelected)` | `O(sSelected)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:collection.item-slot-invalidation | mounted | `O(j + h + s)` expected | `O(h + s)` | `O(j)` | `O(r)` | forbidden | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/listbox.test.mjs |
+| vue:collection.tabular-slot-invalidation | mounted | `O(f + j)` expected | `O(f)` | `O(j * f)` | `O(f + r)` | allowed | packages/vue/tests/tabular-body.test.mjs |
 | vue:form.selector-bridge | mounted | `O(sForm + sField)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | vue:grid.cell-projection | mounted | `O(j)` expected | `O(r)` | `O(r)` | `O(r)` | allowed | packages/vue/tests/dynamic-collections.dom.test.mjs, packages/vue/tests/structural-controls.test.mjs |
 | vue:primitive.element | mounted | `O(d)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/vue/tests/primitive.dom.test.mjs, packages/vue/tests/presence.dom.test.mjs |

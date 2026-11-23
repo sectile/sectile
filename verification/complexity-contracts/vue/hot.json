@@ -216,6 +216,27 @@
       }
     },
     {
+      "id": "collection.tabular-slot-invalidation",
+      "inherits": "linear-v1",
+      "source": "packages/vue/src/tabular/context.ts",
+      "benchmarkIDs": ["GH-247:vue-tabular-slot-executions"],
+      "specificationCeiling": "O(f + j)",
+      "contract": {
+        "variables": [
+          { "name": "f", "meaning": "properties of the root slot publication", "ceiling": "fixed by the Tabular profile" },
+          { "name": "r", "meaning": "mounted consumers of published slot fields", "ceiling": "mounted profile parts" },
+          { "name": "j", "meaning": "mounted slot effects that read changed properties", "ceiling": "consumer-authored dependencies within the mounted parts" }
+        ],
+        "time": { "bound": "O(f + j)", "kind": "expected", "runtimeState": "mounted" },
+        "space": { "auxiliary": "O(f)", "output": "O(j * f)", "retained": "O(f + r)" },
+        "resources": { "allocations": "one captured set of field descriptors per read publication and one argument per invoked row slot", "cacheEntries": "one current slot publication per provider", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "one publication watcher per provider and Vue-owned field dependencies" },
+        "proof": "One shallow publication assigns each canonical reference only through its field. Captured slot accessors track only consumed fields and return their own publication values. Body iterates when accepted rows or authored inputs change and retains keyed row hosts.",
+        "adversarialWitness": "With 100 mounted rows in each Tabular profile, selection and cursor changes execute zero value-only row/cell slots and update the subscribed selection and cursor slots. A retained slot argument continues to report its original selection.",
+        "evidence": ["packages/vue/tests/tabular-body.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "A new accepted row array or authored Body input can require row reconciliation. An unrelated root publication does not iterate the existing rows." }
+      }
+    },
+    {
       "id": "form.selector-bridge",
       "inherits": "lifecycle-v1",
       "source": "packages/vue/src/form/context.ts",

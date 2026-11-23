@@ -320,6 +320,7 @@
       ],
       "specificationCeiling": "O(kRow + dContext)",
       "contract": {
+        "assumptions": ["This contract describes eager cell materialization. Access-range materialization is governed by source.resolve-window-values."],
         "variables": [
           { "name": "nProjected", "meaning": "rows in the retained projection", "ceiling": "ungrouped <= maxScanRecords; grouped <= maxRows" },
           { "name": "kRow", "meaning": "requested page/window rows", "ceiling": "requested access capacity" },
@@ -350,6 +351,32 @@
           "allowed": false,
           "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
         }
+      }
+    },
+    {
+      "id": "source.resolve-window-values",
+      "inherits": "linear-v1",
+      "source": "packages/tabular/src/source/client.ts",
+      "benchmarkIDs": ["GH-246:tabular-access-range-value-reads"],
+      "specificationCeiling": "O(qWork + vRow + (kRow + dContext) * (1 + cColumn) + aWork)",
+      "contract": {
+        "variables": [
+          { "name": "qWork", "meaning": "cold normalization, filtering, sorting, grouping and pivot schema work", "ceiling": "source.resolve-cold descriptor limits" },
+          { "name": "nRecord", "meaning": "records in the current source", "ceiling": "maxScanRecords" },
+          { "name": "gGroup", "meaning": "group descriptor depth", "ceiling": "maxGroupDescriptors" },
+          { "name": "vRow", "meaning": "lightweight visible entries visited on a grouped projection rebuild", "ceiling": "maxRows; zero on warm access and flat projections" },
+          { "name": "kRow", "meaning": "rows in the requested range", "ceiling": "requested capacity and maxRows" },
+          { "name": "dContext", "meaning": "context ancestors at the start of a grouped range", "ceiling": "maxGroupDepth" },
+          { "name": "cColumn", "meaning": "columns in the resolved schema", "ceiling": "maxColumns" },
+          { "name": "aWork", "meaning": "materialization work in requested group aggregates, pivot matches and wire-value normalization", "ceiling": "selected group membership and registered policy and wire-value limits" }
+        ],
+        "time": { "bound": "O(qWork + vRow + (kRow + dContext) * (1 + cColumn) + aWork)", "kind": "worst-case", "runtimeState": "external" },
+        "space": { "auxiliary": "O(nRecord * (1 + gGroup) + vRow + kRow + dContext + cColumn)", "output": "O((kRow + dContext) * (1 + cColumn) + aWork)", "retained": "O(nRecord * (1 + gGroup) + vRow + (kRow + dContext) * (1 + cColumn) + aWork)" },
+        "resources": { "allocations": "one output window and its context; grouped index on projection invalidation", "cacheEntries": "one successful access window per current projection", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Flat access indexes the filtered ordered records. Group access indexes visible group and leaf identities and retains parent links. Resolve checks actual output admission before materializing any new cells and publishes the window only after success. Repeated windows return the same rows; overlapping windows reuse their retained rows and context.",
+        "adversarialWitness": "A 20-row request over 5000 records and eight columns reads 160 values at both early and late offsets. A rejected overlapping access leaves the previous window reusable. A one-row request over an expanded group reads one leaf and its context aggregate, with no off-window aggregate or leaf materialization.",
+        "evidence": ["packages/tabular/tests/source/client-source.test.mjs", "packages/tabular/tests/advanced/grouping.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Source, query, and grouped topology changes may scan identities and policy inputs. Warm access reads only requested rows and their ancestry." }
       }
     },
     {

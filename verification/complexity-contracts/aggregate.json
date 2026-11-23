@@ -35489,8 +35489,7 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "hash lookup is expected O(1)",
-          "external input is validated exactly once at its boundary"
+          "This contract describes eager cell materialization. Access-range materialization is governed by source.resolve-window-values."
         ],
         "ceilings": [
           "operation item and output ceilings"
@@ -35513,6 +35512,104 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Warm resolution is output-sensitive and cannot rescan the retained source or projection."
+        }
+      }
+    },
+    {
+      "package": "tabular",
+      "surface": "hot",
+      "id": "source.resolve-window-values",
+      "source": "packages/tabular/src/source/client.ts",
+      "benchmarkIDs": [
+        "GH-246:tabular-access-range-value-reads"
+      ],
+      "specificationCeiling": "O(qWork + vRow + (kRow + dContext) * (1 + cColumn) + aWork)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "qWork",
+            "meaning": "cold normalization, filtering, sorting, grouping and pivot schema work",
+            "ceiling": "source.resolve-cold descriptor limits"
+          },
+          {
+            "name": "nRecord",
+            "meaning": "records in the current source",
+            "ceiling": "maxScanRecords"
+          },
+          {
+            "name": "gGroup",
+            "meaning": "group descriptor depth",
+            "ceiling": "maxGroupDescriptors"
+          },
+          {
+            "name": "vRow",
+            "meaning": "lightweight visible entries visited on a grouped projection rebuild",
+            "ceiling": "maxRows; zero on warm access and flat projections"
+          },
+          {
+            "name": "kRow",
+            "meaning": "rows in the requested range",
+            "ceiling": "requested capacity and maxRows"
+          },
+          {
+            "name": "dContext",
+            "meaning": "context ancestors at the start of a grouped range",
+            "ceiling": "maxGroupDepth"
+          },
+          {
+            "name": "cColumn",
+            "meaning": "columns in the resolved schema",
+            "ceiling": "maxColumns"
+          },
+          {
+            "name": "aWork",
+            "meaning": "materialization work in requested group aggregates, pivot matches and wire-value normalization",
+            "ceiling": "selected group membership and registered policy and wire-value limits"
+          }
+        ],
+        "time": {
+          "bound": "O(qWork + vRow + (kRow + dContext) * (1 + cColumn) + aWork)",
+          "kind": "worst-case",
+          "runtimeState": "external"
+        },
+        "space": {
+          "auxiliary": "O(nRecord * (1 + gGroup) + vRow + kRow + dContext + cColumn)",
+          "output": "O((kRow + dContext) * (1 + cColumn) + aWork)",
+          "retained": "O(nRecord * (1 + gGroup) + vRow + (kRow + dContext) * (1 + cColumn) + aWork)"
+        },
+        "resources": {
+          "allocations": "one output window and its context; grouped index on projection invalidation",
+          "cacheEntries": "one successful access window per current projection",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "0"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "Flat access indexes the filtered ordered records. Group access indexes visible group and leaf identities and retains parent links. Resolve checks actual output admission before materializing any new cells and publishes the window only after success. Repeated windows return the same rows; overlapping windows reuse their retained rows and context.",
+        "adversarialWitness": "A 20-row request over 5000 records and eight columns reads 160 values at both early and late offsets. A rejected overlapping access leaves the previous window reusable. A one-row request over an expanded group reads one leaf and its context aggregate, with no off-window aggregate or leaf materialization.",
+        "evidence": [
+          "packages/tabular/tests/source/client-source.test.mjs",
+          "packages/tabular/tests/advanced/grouping.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "Source, query, and grouped topology changes may scan identities and policy inputs. Warm access reads only requested rows and their ancestry."
         }
       }
     },
@@ -39588,6 +39685,78 @@
         "fullScan": {
           "allowed": false,
           "rationale": "Ordinary item-state publication must not scan or invalidate all mounted identities. Domain replacement and genuinely global root-disabled changes are explicit owner-reconfiguration branches outside this ordinary publication contract."
+        }
+      }
+    },
+    {
+      "package": "vue",
+      "surface": "hot",
+      "id": "collection.tabular-slot-invalidation",
+      "source": "packages/vue/src/tabular/context.ts",
+      "benchmarkIDs": [
+        "GH-247:vue-tabular-slot-executions"
+      ],
+      "specificationCeiling": "O(f + j)",
+      "reviewedWeakening": null,
+      "contract": {
+        "variables": [
+          {
+            "name": "f",
+            "meaning": "properties of the root slot publication",
+            "ceiling": "fixed by the Tabular profile"
+          },
+          {
+            "name": "r",
+            "meaning": "mounted consumers of published slot fields",
+            "ceiling": "mounted profile parts"
+          },
+          {
+            "name": "j",
+            "meaning": "mounted slot effects that read changed properties",
+            "ceiling": "consumer-authored dependencies within the mounted parts"
+          }
+        ],
+        "time": {
+          "bound": "O(f + j)",
+          "kind": "expected",
+          "runtimeState": "mounted"
+        },
+        "space": {
+          "auxiliary": "O(f)",
+          "output": "O(j * f)",
+          "retained": "O(f + r)"
+        },
+        "resources": {
+          "allocations": "one captured set of field descriptors per read publication and one argument per invoked row slot",
+          "cacheEntries": "one current slot publication per provider",
+          "listeners": "0",
+          "observers": "0",
+          "timers": "0",
+          "subscriptions": "one publication watcher per provider and Vue-owned field dependencies"
+        },
+        "assumptions": [
+          "hash lookup is expected O(1)",
+          "external input is validated exactly once at its boundary"
+        ],
+        "ceilings": [
+          "operation item and output ceilings"
+        ],
+        "benchmarkIDs": [
+          "VAL-017:linear-work"
+        ],
+        "deterministicWork": [
+          "visited entries do not exceed the declared input/state cardinality",
+          "emitted and retained entries do not exceed the declared output cardinality"
+        ],
+        "resourceRationale": "Linear construction/projection may allocate one bounded entry per visited or emitted item.",
+        "proof": "One shallow publication assigns each canonical reference only through its field. Captured slot accessors track only consumed fields and return their own publication values. Body iterates when accepted rows or authored inputs change and retains keyed row hosts.",
+        "adversarialWitness": "With 100 mounted rows in each Tabular profile, selection and cursor changes execute zero value-only row/cell slots and update the subscribed selection and cursor slots. A retained slot argument continues to report its original selection.",
+        "evidence": [
+          "packages/vue/tests/tabular-body.test.mjs"
+        ],
+        "fullScan": {
+          "allowed": true,
+          "rationale": "A new accepted row array or authored Body input can require row reconciliation. An unrelated root publication does not iterate the existing rows."
         }
       }
     },
