@@ -2,7 +2,7 @@ import { canonicalizeTabularAccessState } from '../model/access.js';
 import { canonicalizeTabularColumnState, projectTabularColumnPartitions, type TabularColumnPartitions } from '../model/columns.js';
 import { canonicalizeTabularExpansion } from '../model/expansion.js';
 import { fail, nextRevision, ok } from '../foundation.js';
-import { canonicalizeRowSelection, reconcileRowSelectionBinding, rowSelectionScopeError } from '../model/selection.js';
+import { canonicalizeRowSelection, reconcileRowSelectionBinding, rowSelectionScopeError, sameRowSelection } from '../model/selection.js';
 import { canonicalizeTabularStateQuery } from '../model/state.js';
 import { sameTabularQuery } from '../source/query.js';
 import type {
@@ -70,7 +70,8 @@ export function prepareControlledDataTableState(
   if (values.rowSelection !== undefined) {
     const selection = canonicalizeRowSelection(values.rowSelection, model.limits);
     if (!selection.ok) return selection;
-    if (rowSelectionScopeError(selection.value, next.sourceGeneration, next.queryRevision) === null) {
+    if (rowSelectionScopeError(selection.value, next.sourceGeneration, next.queryRevision) === null
+      && !sameRowSelection(next.rowSelection, selection.value)) {
       next = Object.freeze({ ...next, rowSelection: selection.value });
     }
   }

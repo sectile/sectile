@@ -174,6 +174,41 @@ export type TabularRowSelection =
 
 export type TabularBulkSelectionState = 'unchecked' | 'indeterminate' | 'checked';
 
+export interface TabularGroupSelectionScope {
+  readonly groupID: TabularGroupID;
+  readonly sourceGeneration: number;
+  readonly queryRevision: number;
+  readonly rowSelectionRevision: number;
+  readonly membershipRevision: number;
+}
+
+export interface TabularGroupSelectionAggregate {
+  readonly scope: TabularGroupSelectionScope;
+  readonly totalLeafCount: number;
+  readonly selectedLeafCount: number;
+}
+
+export interface TabularGroupSelectionIntent {
+  readonly requestID: number;
+  readonly scope: TabularGroupSelectionScope;
+  readonly selected: boolean;
+  readonly rowSelection: TabularRowSelection;
+  readonly changedRowCount: number;
+}
+
+export interface TabularGroupSelectionProjection {
+  readonly state: TabularBulkSelectionState | 'unavailable';
+  readonly disabled: boolean;
+  readonly pending: boolean;
+}
+
+export interface TabularGroupSelectionState {
+  readonly membershipRevision: number | null;
+  readonly requestRevision: number;
+  readonly pending: TabularGroupSelectionIntent | null;
+  readonly error: TabularError | null;
+}
+
 export interface TabularColumnState {
   readonly order: readonly TabularColumnID[];
   readonly hidden: readonly TabularColumnID[];
@@ -342,6 +377,8 @@ export type TabularAcceptedViewState<Row extends TabularRow = TabularRow> =
 export interface TabularState {
   readonly query: TabularQuery;
   readonly rowSelection: TabularRowSelection;
+  readonly rowSelectionRevision: number;
+  readonly groupSelection: TabularGroupSelectionState;
   readonly columnState: TabularColumnState;
   readonly accessState: TabularAccessState;
   readonly expansion: readonly TabularGroupID[];
@@ -404,6 +441,7 @@ export type TabularSelectionTarget =
       readonly queryRevision: number;
       readonly groupID: TabularGroupID;
       readonly excludedRowIDs: readonly TabularRowID[];
+      readonly intent?: TabularGroupSelectionIntent;
     };
 
 export type TabularCommand =
@@ -461,6 +499,10 @@ export type TabularErrorCode =
   | 'stale-query-revision'
   | 'stale-view-revision'
   | 'invalid-selection-range'
+  | 'group-selection-unavailable'
+  | 'group-selection-pending'
+  | 'invalid-group-selection-delta'
+  | 'group-selection-failed'
   | 'invalid-edit-target'
   | 'duplicate-source-executor';
 

@@ -61,6 +61,17 @@ export function rowSelectionScopeError(
   return selection.queryRevision === queryRevision ? null : 'stale-query-revision';
 }
 
+export function sameRowSelection(left: TabularRowSelection, right: TabularRowSelection): boolean {
+  if (left === right) return true;
+  if (left.kind !== right.kind) return false;
+  if (left.kind === 'all-matching' && right.kind === 'all-matching') {
+    if (rowSelectionScopeError(left, right.sourceGeneration, right.queryRevision) !== null) return false;
+  }
+  const a = left.kind === 'all-matching' ? left.excludedRowIDs : left.rowIDs;
+  const b = right.kind === 'all-matching' ? right.excludedRowIDs : right.rowIDs;
+  return a.length === b.length && a.every((id, index) => id === b[index]);
+}
+
 /**
  * All-matching control state for a normalized snapshot, including retained stale views.
  * Explicit selections require selected visible leaves; checked requires the complete
@@ -119,7 +130,7 @@ export function setVisibleRowSelectionRange(
   const anchorIndex = visibleRowIDs.indexOf(anchorRowID);
   const rowIndex = visibleRowIDs.indexOf(rowID);
   if (anchorIndex === -1 || rowIndex === -1) return invalidRange(anchorRowID, rowID);
-  return applyRangeSelection(
+  return applyRowSelectionIDs(
     selection,
     visibleRowIDs.slice(Math.min(anchorIndex, rowIndex), Math.max(anchorIndex, rowIndex) + 1),
     selected,
@@ -150,7 +161,7 @@ export function setIndexedVisibleRowSelectionRange(
     const row = rows[index]!;
     if (row.kind === 'leaf') range.push(row.id);
   }
-  return applyRangeSelection(selection, range, selected, limits);
+  return applyRowSelectionIDs(selection, range, selected, limits);
 }
 
 function validateRangeInput(
@@ -172,7 +183,7 @@ function invalidRange(anchorRowID: TabularRowID, rowID: TabularRowID): TabularRe
   return fail('transition-rejection', 'invalid-selection-range', 'Range selection endpoints must be visible leaf rows.', { anchorRowID, rowID });
 }
 
-function applyRangeSelection(
+export function applyRowSelectionIDs(
   selection: TabularRowSelection,
   rangeIDs: readonly TabularRowID[],
   selected: boolean,
@@ -240,7 +251,7 @@ export function createGroupLeafSelectionTarget(
   sourceGeneration: number,
   queryRevision: number,
   limits: TabularLimits,
-): TabularResult<TabularSelectionTarget> {
+): TabularResult<Extract<TabularSelectionTarget, { kind: 'group-leaves' }>> {
   const error = validateID(groupID, 'groupID', limits);
   if (error !== null) return { ok: false, error };
   if (!validGeneration(sourceGeneration) || !validGeneration(queryRevision)) {

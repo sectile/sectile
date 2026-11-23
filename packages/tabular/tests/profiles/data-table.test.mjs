@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { applyDataTableEvent, createDataTable, getAllMatchingSelectionState, tryCreateDataTable } from '../../.verification-dist/profiles/table.js';
+import { applyDataTableEvent, createDataTable, getAllMatchingSelectionState, getGroupSelectionState, tryCreateDataTable } from '../../.verification-dist/profiles/table.js';
 import { prepareControlledDataTableState } from '../../.verification-dist/profiles/table-state.js';
 import { createTabularModel, tryCreateTabularState } from '../../.verification-dist/model/state.js';
 import { createClientTabularSource, resolveClientTabularRequest } from '../../.verification-dist/source/client.js';
@@ -49,6 +49,88 @@ test('new all-matching scope ignores a retained zero count from the prior query'
     assert.equal(table.dispatch({ type: 'set-query', query: { ...state.query, filters } }).ok, true);
     assert.equal(table.dispatch({ type: 'select-all-matching' }).ok, true);
     assert.equal(getAllMatchingSelectionState(table.getSnapshot()), 'checked');
+  } finally { table.dispose(); }
+});
+
+function groupSelectionFixture(table) {
+  const state = () => table.getSnapshot().state;
+  const membership = membershipRevision => table.dispatch({ type: 'sync-group-membership-revision', membershipRevision,
+    sourceGeneration: state().sourceGeneration, queryRevision: state().queryRevision });
+  const aggregate = (selectedLeafCount, totalLeafCount = 2) => ({ totalLeafCount, selectedLeafCount, scope: {
+    groupID: 'g', sourceGeneration: state().sourceGeneration, queryRevision: state().queryRevision,
+    membershipRevision: state().groupSelection.membershipRevision, rowSelectionRevision: state().rowSelectionRevision,
+  } });
+  const request = (selected, total) => {
+    const result = table.dispatch({ type: 'request-group-leaf-selection', groupID: 'g', aggregate: aggregate(selected, total) });
+    assert.equal(result.ok, true, JSON.stringify(result));
+    return result.value.commands[0].target.intent;
+  };
+  const resolve = ({ requestID, scope }, changedRowIDs) => table.dispatch({ type: 'resolve-group-leaf-selection', requestID, scope, changedRowIDs });
+  assert.equal(membership(1).ok, true);
+  return { state, membership, aggregate, request, resolve };
+}
+
+test('remote group deltas keep outside selection and reject obsolete responses', () => {
+  for (const allMatching of [false, true]) {
+    const rowSelection = allMatching
+      ? { kind: 'all-matching', sourceGeneration: 0, queryRevision: 0, excludedRowIDs: ['b', 'z'] }
+      : { kind: 'explicit-rows', rowIDs: ['a', 'z'] };
+    const table = createDataTable({ columns, initialValues: { rowSelection } });
+    try {
+      const { state, membership, aggregate, request, resolve } = groupSelectionFixture(table);
+      const firstAggregate = aggregate(1);
+      assert.equal(getGroupSelectionState(table.getSnapshot(), 'g', firstAggregate).state, 'indeterminate');
+      const select = request(1);
+      assert.equal(select.selected, true);
+      assert.equal(select.rowSelection, state().rowSelection);
+      assert.equal(getGroupSelectionState(table.getSnapshot(), 'g', firstAggregate).pending, true);
+      assert.equal(table.dispatch({ type: 'request-group-leaf-selection', groupID: 'g', aggregate: firstAggregate }).error.code, 'group-selection-pending');
+      assert.equal(table.requestView().ok, true);
+      assert.equal(state().groupSelection.pending, select);
+      assert.equal(resolve(select, ['b']).ok, true);
+      assert.deepEqual(allMatching ? state().rowSelection.excludedRowIDs : state().rowSelection.rowIDs, allMatching ? ['z'] : ['a', 'z', 'b']);
+      assert.equal(getGroupSelectionState(table.getSnapshot(), 'g', firstAggregate).state, 'unavailable');
+      const clear = request(2);
+      assert.equal(clear.selected, false);
+      assert.equal(resolve(select, ['b']).ok, true);
+      assert.equal(state().groupSelection.pending, clear);
+      assert.equal(resolve(clear, ['a', 'b']).ok, true);
+      assert.deepEqual(allMatching ? new Set(state().rowSelection.excludedRowIDs) : state().rowSelection.rowIDs,
+        allMatching ? new Set(['a', 'b', 'z']) : ['z']);
+      const stale = request(0);
+      assert.equal(membership(2).ok, true);
+      assert.equal(membership(1).ok, true);
+      assert.equal(state().groupSelection.membershipRevision, 2);
+      const before = state().rowSelection;
+      assert.equal(resolve(stale, ['a', 'b']).ok, true);
+      assert.equal(state().rowSelection, before);
+    } finally { table.dispose(); }
+  }
+});
+
+test('remote group failures and controlled proposals use the accepted selection revision', () => {
+  const rowSelection = { kind: 'explicit-rows', rowIDs: ['outside'] };
+  let proposed;
+  const table = createDataTable({ columns, limits: { maxSelectionIDs: 2 }, controlled: { rowSelection: true },
+    initialValues: { rowSelection }, onRowSelectionChange: value => { proposed = value; } });
+  try {
+    const { state, request, resolve } = groupSelectionFixture(table);
+    assert.equal(resolve(request(0), ['a', 'a']).ok, true);
+    assert.equal(state().groupSelection.error.code, 'invalid-group-selection-delta');
+    assert.equal(resolve(request(0), ['a', 'b']).ok, true);
+    assert.equal(state().groupSelection.error.code, 'selection-id-ceiling-exceeded');
+    const selected = request(0, 1);
+    assert.equal(table.syncControlledValues({ rowSelection }).ok, true);
+    assert.equal(state().groupSelection.pending, selected);
+    assert.equal(resolve(selected, ['a']).ok, true);
+    assert.equal(state().rowSelectionRevision, 0);
+    assert.deepEqual(proposed.rowIDs, ['outside', 'a']);
+    assert.equal(table.syncControlledValues({ rowSelection: proposed }).ok, true);
+    assert.equal(state().rowSelectionRevision, 1);
+    const clear = request(1, 1);
+    assert.equal(table.dispatch({ type: 'fail-group-leaf-selection', requestID: clear.requestID, scope: clear.scope }).ok, true);
+    assert.equal(state().groupSelection.error.code, 'group-selection-failed');
+    assert.deepEqual(state().rowSelection.rowIDs, ['outside', 'a']);
   } finally { table.dispose(); }
 });
 

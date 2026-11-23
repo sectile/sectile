@@ -148,6 +148,8 @@ export function tryCreateTabularState(
   if (!reconciled.ok) return reconciled;
   return ok(Object.freeze({
     ...reconciled.value,
+    rowSelectionRevision: 0,
+    groupSelection: EMPTY_GROUP_SELECTION,
     queryRevision: 0,
     expansionRevision: 0,
     sourceGeneration: 0,
@@ -158,6 +160,8 @@ export function tryCreateTabularState(
     acceptedViewState: Object.freeze({ kind: 'none' }),
   }));
 }
+
+const EMPTY_GROUP_SELECTION = Object.freeze({ membershipRevision: null, requestRevision: 0, pending: null, error: null });
 
 export function applyTabularEvent(
   model: TabularModel,

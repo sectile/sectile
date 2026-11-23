@@ -3,6 +3,7 @@ import { unwrap } from '@sectile/core/result';
 import { canonicalizeTabularColumnState, projectTabularColumnPartitions, reconcileTabularColumns } from '../model/columns.js';
 import { canonicalizeTabularAccessState } from '../model/access.js';
 import { canonicalizeTabularExpansion } from '../model/expansion.js';
+import { reconcileGroupSelection, requestGroupSelection, updateGroupSelection, type GroupSelectionEvent } from '../model/group-selection.js';
 import { fail, nextRevision, ok } from '../foundation.js';
 import {
   issueDataTableRequest,
@@ -18,6 +19,7 @@ import {
   reconcileAuthoritativeRowRemoval,
   reconcileRowSelectionBinding,
   rowSelectionScopeError,
+  sameRowSelection,
   selectAllMatchingRows,
   setIndexedVisibleRowSelectionRange,
   toggleExplicitRowSelection,
@@ -32,6 +34,7 @@ import type {
   TabularCommand,
   TabularControlledValues,
   TabularGroupID,
+  TabularGroupSelectionAggregate,
   TabularModel,
   TabularOptions,
   TabularQuery,
@@ -47,7 +50,11 @@ import type {
 } from '../contracts.js';
 
 export { rowSelectionContains, getAllMatchingSelectionState } from '../model/selection.js';
-export type { TabularBulkSelectionState } from '../contracts.js';
+export { getGroupSelectionState } from '../model/group-selection.js';
+export type {
+  TabularBulkSelectionState, TabularGroupSelectionAggregate, TabularGroupSelectionIntent, TabularGroupSelectionProjection,
+  TabularGroupSelectionScope, TabularGroupSelectionState,
+} from '../contracts.js';
 
 export type DataTableState = TabularState;
 
@@ -65,7 +72,8 @@ export type DataTableEvent =
   | { readonly type: 'toggle-row-selection'; readonly rowID: TabularRowID }
   | { readonly type: 'set-row-selection-range'; readonly anchorRowID: TabularRowID; readonly rowID: TabularRowID; readonly selected: boolean }
   | { readonly type: 'select-all-matching' }
-  | { readonly type: 'request-group-leaf-selection'; readonly groupID: TabularGroupID }
+  | { readonly type: 'request-group-leaf-selection'; readonly groupID: TabularGroupID; readonly aggregate?: TabularGroupSelectionAggregate }
+  | GroupSelectionEvent
   | { readonly type: 'set-column-state'; readonly columnState: TabularColumnState }
   | { readonly type: 'set-access'; readonly accessState: TabularAccessState }
   | { readonly type: 'set-expansion'; readonly expansion: readonly TabularGroupID[] }
@@ -130,6 +138,19 @@ export function applyDataTableEvent(
   event: DataTableEvent,
   expectedRevision: number = snapshot.revision,
 ): TabularResult<DataTableUpdate> {
+  const proposed = proposeDataTableEvent(model, snapshot, event, expectedRevision);
+  if (!proposed.ok) return proposed;
+  const state = reconcileGroupSelection(snapshot.state, proposed.value.snapshot.state, event.type === 'reset');
+  if (!state.ok || state.value === proposed.value.snapshot.state) return state.ok ? proposed : state;
+  return ok(Object.freeze({ snapshot: Object.freeze({ revision: proposed.value.snapshot.revision, state: state.value }), commands: proposed.value.commands }));
+}
+
+function proposeDataTableEvent(
+  model: TabularModel,
+  snapshot: TabularSnapshot,
+  event: DataTableEvent,
+  expectedRevision: number,
+): TabularResult<DataTableUpdate> {
   if (expectedRevision !== snapshot.revision || !Number.isSafeInteger(expectedRevision)) {
     return fail('transition-rejection', 'stale-revision', 'Expected DataTable revision is stale.', {
       expectedRevision,
@@ -167,7 +188,7 @@ class DataTableRuntime implements DataTableController {
 
   public dispatch(event: DataTableEvent, expectedRevision: number = this.#snapshot.revision): TabularResult<DataTableUpdate> {
     if (this.#disposed) return dataTableDisposed('dispatch events');
-    const proposed = applyDataTableEvent(this.#model, this.#snapshot, event, expectedRevision);
+    const proposed = proposeDataTableEvent(this.#model, this.#snapshot, event, expectedRevision);
     if (!proposed.ok) return proposed;
     const before = this.#snapshot.state;
     const proposedState = proposed.value.snapshot.state;
@@ -195,7 +216,9 @@ class DataTableRuntime implements DataTableController {
     const candidateCommands = controlledRequestProposal
       ? proposed.value.commands.filter((command) => command.type !== 'request-view')
       : proposed.value.commands;
-    const snapshot = Object.freeze({ revision: proposed.value.snapshot.revision, state: committedState });
+    const state = reconcileGroupSelection(before, committedState, event.type === 'reset');
+    if (!state.ok) return state;
+    const snapshot = Object.freeze({ revision: proposed.value.snapshot.revision, state: state.value });
     this.#snapshot = snapshot;
     const commands = Object.freeze(candidateCommands.filter((command) => (
       command.type !== 'request-view'
@@ -314,7 +337,9 @@ class DataTableRuntime implements DataTableController {
   #replaceState(state: TabularState): TabularResult<TabularSnapshot> {
     const revision = nextRevision(this.#snapshot.revision);
     if (!revision.ok) return revision;
-    this.#snapshot = Object.freeze({ revision: revision.value, state });
+    const prepared = reconcileGroupSelection(this.#snapshot.state, state);
+    if (!prepared.ok) return prepared;
+    this.#snapshot = Object.freeze({ revision: revision.value, state: prepared.value });
     return ok(this.#snapshot);
   }
 
@@ -385,15 +410,20 @@ function reduceDataTableEvent(
   }
   if (event.type === 'request-value-commit') return ok(Object.freeze({ state, commands: Object.freeze([event]) }));
   if (event.type === 'request-group-leaf-selection') {
+    if (event.aggregate !== undefined) return requestGroupSelection(state, event.groupID, event.aggregate, model.limits);
     const target = createGroupLeafSelectionTarget(state.rowSelection, event.groupID, state.sourceGeneration, state.queryRevision, model.limits);
     return target.ok ? ok(Object.freeze({ state, commands: Object.freeze([{ type: 'request-bulk-selection' as const, target: target.value }]) })) : target;
+  }
+  if (event.type === 'sync-group-membership-revision' || event.type === 'resolve-group-leaf-selection' || event.type === 'fail-group-leaf-selection') {
+    return ok(Object.freeze({ state: updateGroupSelection(state, event, model.limits), commands: Object.freeze([]) }));
   }
   if (event.type === 'set-row-selection') {
     const valid = canonicalizeRowSelection(event.selection, model.limits);
     if (!valid.ok) return valid;
     const scopeError = rowSelectionScopeError(valid.value, state.sourceGeneration, state.queryRevision);
     if (scopeError !== null) return fail('transition-rejection', scopeError, 'Row selection does not match the active source and query.');
-    return ok(Object.freeze({ state: Object.freeze({ ...state, rowSelection: valid.value }), commands: Object.freeze([]) }));
+    const next = sameRowSelection(state.rowSelection, valid.value) ? state : Object.freeze({ ...state, rowSelection: valid.value });
+    return ok(Object.freeze({ state: next, commands: Object.freeze([]) }));
   }
   if (event.type === 'toggle-row-selection') {
     const selection = toggleExplicitRowSelection(state.rowSelection, event.rowID, model.limits);
