@@ -105,7 +105,7 @@ test('Vue Tabular lower owners and schema stay below public profiles', async () 
   for (const edge of graph.edges) if (edge.target !== null) dependencies.get(edge.source).push(edge.target);
   for (const [entry, allowed] of [
     ['controller', ['tabular-controller']],
-    ['context', ['tabular-context', 'tabular-controller']],
+    ['context', ['tabular-context', 'tabular-controller', 'foundation']],
     ['source', ['tabular-source', 'tabular-controller']],
     ['schema', ['tabular-schema', 'tabular-source', 'tabular-controller']],
     ['components', ['tabular-components', 'tabular-controller']],
