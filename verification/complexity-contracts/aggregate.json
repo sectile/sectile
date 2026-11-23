@@ -9453,6 +9453,15 @@
       "inherits": "public-callable-v1"
     },
     {
+      "key": "tabular:./data-table:getGroupSelectionState",
+      "package": "tabular",
+      "subpath": "./data-table",
+      "exportName": "getGroupSelectionState",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
       "key": "tabular:./data-table:rowSelectionContains",
       "package": "tabular",
       "subpath": "./data-table",
@@ -9592,6 +9601,15 @@
       "package": "tabular",
       "subpath": "./query",
       "exportName": "createTabularQuery",
+      "kind": "function",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "tabular:./query:sameTabularQuery",
+      "package": "tabular",
+      "subpath": "./query",
+      "exportName": "sameTabularQuery",
       "kind": "function",
       "aliasOf": null,
       "inherits": "public-callable-v1"
@@ -20185,6 +20203,15 @@
       "package": "vue",
       "subpath": "./tree-select",
       "exportName": "TreeSelectRoot",
+      "kind": "object",
+      "aliasOf": null,
+      "inherits": "public-callable-v1"
+    },
+    {
+      "key": "vue:./tree-select:TreeSelectValue",
+      "package": "vue",
+      "subpath": "./tree-select",
+      "exportName": "TreeSelectValue",
       "kind": "object",
       "aliasOf": null,
       "inherits": "public-callable-v1"

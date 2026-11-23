@@ -34,6 +34,7 @@ assert.deepEqual(benchmark.generationChurn, {
 
 const consumer = JSON.parse(await readFile(join(root, 'verification/consumer-install/tabular.json'), 'utf8'));
 assert.equal(consumer.status, 'passed');
+const installBaseline = JSON.parse(await readFile(join(root, 'verification/consumer-install/baseline.json'), 'utf8'));
 const footprint = { javascriptBytes: 0, declarationBytes: 0, sourceMapBytes: 0 };
 for (const path of await files(join(packageRoot, 'dist'))) {
   const bytes = (await stat(path)).size;
@@ -67,7 +68,7 @@ const implementation = {
   },
   footprint: {
     ...footprint,
-    packedBytes: consumer.packedFootprint['@sectile/tabular'].bytes,
+    packedBytes: installBaseline.packages.tabular.tarballBytes,
     declarationFiles: (await files(join(packageRoot, 'dist'))).filter((path) => path.endsWith('.d.ts')).length,
     publicSubpaths: Object.keys(manifest.exports).length,
   },

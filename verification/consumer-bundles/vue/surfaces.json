@@ -1974,7 +1974,8 @@
         "TreeSelectGroup",
         "TreeSelectInput",
         "TreeSelectItem",
-        "TreeSelectRoot"
+        "TreeSelectRoot",
+        "TreeSelectValue"
       ],
       "typeBearing": true,
       "optionalPeer": null,

@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "6f01318d3c42f8f7b6ea2e032565d40fb4232991bdcf0c0a2b58db88d89a8f68",
+  "fingerprint": "e7d42f14744994ef4346a53915cb3defa48759a5c6b8466b7ffe8acfa653fec4",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -703,7 +703,7 @@
     },
     {
       "path": "dist/tabular/contracts.d.ts",
-      "sha256": "04a5177ba197887b556eb0cfbdf66f4f3c5dcc0a888eaf540d7315144e7cb10f"
+      "sha256": "eb8c593000f86d342789c0b5cb90cf398d63e71f87bff9d3d0f85567768019ce"
     },
     {
       "path": "dist/tabular/grid.d.ts",
@@ -711,11 +711,11 @@
     },
     {
       "path": "dist/tabular/grid/contracts.d.ts",
-      "sha256": "9c48e57090e259672714c1c0d177581dae45f04c5a4b38c763a22e8cc1b231c0"
+      "sha256": "15eaa68516f8b273ef9d68c5547dfb6b2347112d42f3411c2127120b75d4b977"
     },
     {
       "path": "dist/tabular/table.d.ts",
-      "sha256": "86622f866bb975de6f494dda2480b2630b83f5be4e0275171bb7b738f926aa92"
+      "sha256": "c542ab873f49abe0ae3b64273cec1b29f13a60ef47098c6db3c058580b0b5ccd"
     },
     {
       "path": "dist/tabular/tree-grid.d.ts",
@@ -759,7 +759,7 @@
     },
     {
       "path": "dist/temporal/date-time-range-picker.d.ts",
-      "sha256": "7a329a8e5e731276eef967ca312b997115c668868e47eb4ea2fce0f53aa5b7a2"
+      "sha256": "2524a43d77f5390008f11f608131fcb6b90d92de594a5d10b7785b61babf34ed"
     },
     {
       "path": "dist/temporal/format.d.ts",
@@ -859,7 +859,7 @@
     },
     {
       "path": "dist/tree-select/connection.d.ts",
-      "sha256": "7bfa424ccd50d27ecec6bab42a5d1051a356055bfeb5724d528524acc3b04079"
+      "sha256": "c00db649a3b3cafeef8ffe947a894320569b8545122afd8859567d2cdcfaa2b9"
     },
     {
       "path": "dist/tree-select/controller.d.ts",

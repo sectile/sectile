@@ -35,11 +35,11 @@
       "types": "dist/virtual.d.ts"
     }
   ],
-  "fingerprint": "27f177c63d74c366737c674b0fc6833657a9ff5c4cc8ae98b28c1a5d1f1448f7",
+  "fingerprint": "64113515c0b4f3a05875c6b80e8798da59be933840ca8c35b79ac379169af59d",
   "files": [
     {
       "path": "dist/contracts.d.ts",
-      "sha256": "13650856af4024f7db81401b8809c56e4e8cc86fccaa3887ef81556c24903794"
+      "sha256": "7007a34ecbe0906b12bfd3fcdd260db33cda09e2c53a3b18235b01e1c349c940"
     },
     {
       "path": "dist/index.d.ts",
@@ -50,8 +50,12 @@
       "sha256": "1bdb324ef0c08251c710c0a7337af65f8a934e98c3021821e4bdd6d2ea806429"
     },
     {
+      "path": "dist/model/group-selection.d.ts",
+      "sha256": "43e5aa77218d1382ca70801328ff9ad51dffdb193d6b0b5fbd0337b3a56f800d"
+    },
+    {
       "path": "dist/model/selection.d.ts",
-      "sha256": "338fe6dc176df1271b2f82cd4329e13f0529e17c9046988bdba2d6a0be054b78"
+      "sha256": "3ad7721fccedc9f2a8984b64b03262de7f0a66d6a0bbd53182813dba01ad2f75"
     },
     {
       "path": "dist/model/state.d.ts",
@@ -71,7 +75,7 @@
     },
     {
       "path": "dist/profiles/table.d.ts",
-      "sha256": "4d878b3168af800649c5d6cd4a80ea4c1b1da5368f61ed0e98dcf8d315c0abbc"
+      "sha256": "d2e839a7d5d423130fdd25ab17ef3c8680d447f24449e1e6e04ee6cf0e6c9598"
     },
     {
       "path": "dist/source/client.d.ts",
@@ -79,7 +83,7 @@
     },
     {
       "path": "dist/source/query.d.ts",
-      "sha256": "a2c18973ccfb51fafa72c6fd41e97ae97bb38411fa4f65022098a9ae1cc7d0a5"
+      "sha256": "46c08c69a144fd4f76120148f65a20d1ea6199eaef83c0d20690359ec813065b"
     },
     {
       "path": "dist/virtual.d.ts",

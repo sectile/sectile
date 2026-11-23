@@ -1,5 +1,42 @@
 # Package boundary
 
+## November 2026 remote selection and temporal formats
+
+Remote group selection raises the Tabular JavaScript ceiling from 165,000 to
+174,000 bytes. The previous install baseline contained 161,497 JavaScript bytes.
+The build measures 173,253 bytes and leaves 747 bytes below the new ceiling. The
+versioned group contract, stale response checks, bounded delta application, and
+query-scope reconciliation account for the added runtime. The implementation
+uses the existing Core selection algebra and accepts only changed IDs from the
+adapter, so the host retains neither the remote membership list nor a second
+selection index.
+
+The measured Tabular payload grows from 322,764 to 346,947 bytes, including
+declarations and source maps. Its packed tarball grows from 70,916 to 76,197
+bytes. The existing 5% allowance and 32-byte margin give a replacement payload
+ceiling of 364,327 bytes, up from 338,935. The absolute declaration and source-map
+ceilings continue to apply. The isolated npm and pnpm runs used the candidate
+tarballs and reported the same dependency names as the existing baseline.
+
+The focused named imports below exceeded the existing bundle allowances.
+The measurements are raw, gzip, and Brotli bytes, respectively.
+
+| Entry point | esbuild before → after | Vite before → after |
+| --- | --- | --- |
+| DOM Tabular | 28,871 / 8,665 / 7,809 → 30,447 / 9,136 / 8,256 | 28,548 / 8,490 / 7,647 → 30,038 / 8,930 / 8,063 |
+| Tabular DataTable | 33,619 / 8,801 / 7,883 → 39,184 / 10,067 / 9,028 | 33,539 / 8,754 / 7,828 → 39,162 / 10,028 / 8,983 |
+| Vue DataTable | 37,570 / 11,534 / 10,430 → 39,689 / 12,160 / 11,018 | 36,723 / 11,145 / 10,087 → 38,759 / 11,751 / 10,633 |
+| Vue DataTreeGrid | 44,929 / 13,344 / 12,074 → 47,073 / 13,976 / 12,697 | 44,137 / 12,945 / 11,714 → 46,202 / 13,569 / 12,320 |
+| Vue DateTimePicker | 165,190 / 46,349 / 39,146 → 175,214 / 49,887 / 42,081 | 165,733 / 46,159 / 39,002 → 175,720 / 49,682 / 41,849 |
+| Vue DateTimeRangePicker | 155,050 / 44,951 / 38,142 → 165,998 / 48,808 / 41,315 | 155,486 / 44,764 / 37,977 → 166,408 / 48,533 / 41,110 |
+
+Date-time format resolution and admission live in the two date-time picker
+capabilities. Moving them out of the common picker reduced the esbuild Calendar
+fixture from 62,244 to 46,362 bytes and kept it within its original allowance.
+The six listed fixtures use the measured replacement baselines. The dependency
+closure, unused-import erasure, and remaining fixture budgets use their existing
+checks.
+
 The October 25 input command addition raises Core's JavaScript package ceiling
 from 467,000 to 468,000 bytes. The complete production artifact measures 467,600
 JavaScript bytes before strict decimal-text admission, and 467,635 bytes after

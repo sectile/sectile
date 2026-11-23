@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "d9f1a8deca2d5853a5b3fed926c93e04fa116f801b6097fc1b67b081567074b8",
+  "fingerprint": "078c8bc81c007675a98d0975e95845ffa3f7ea6f67a1c6ee23ef5bd392da95b0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -507,7 +507,7 @@
     },
     {
       "path": "dist/input/native-field.d.ts",
-      "sha256": "f225bc6ac6993976987db63afa555c4e7e724ef162912250cde949fc34da5e11"
+      "sha256": "90e52edf42bbe645b57ee17d9003610d57c75cb90f9f0b2547bcecd2b5f422e3"
     },
     {
       "path": "dist/internal/cascade-choice.d.ts",
@@ -651,15 +651,15 @@
     },
     {
       "path": "dist/tabular/data-grid.d.ts",
-      "sha256": "afac69bf683a7fdc02aad0e56b41ac79ef94f20c9a1b89d3e6f75b6e4ee1803f"
+      "sha256": "eca84d5b0a48b319fdfa8897a93341f39ce1fc982b7efc022c150be2cd59eb3c"
     },
     {
       "path": "dist/tabular/data-table.d.ts",
-      "sha256": "1e0303f1456b9e9c9c2a51d5f5b059b9b71cb9c51c9997b4f65727ab095c2d4f"
+      "sha256": "9ea3f093ba82fc0012dd9491f0fea42883ebfb34b90c9401eec94457b31cab11"
     },
     {
       "path": "dist/tabular/data-tree-grid.d.ts",
-      "sha256": "883c7a299bb41d2d904270dae6141568a08071d6abdc5e9d0c4349f92f211dec"
+      "sha256": "c70f5a9c388f76c5f48767b02f06e305416662439245e44a11908fce5723975c"
     },
     {
       "path": "dist/tabular/parts.d.ts",
@@ -683,7 +683,7 @@
     },
     {
       "path": "dist/temporal/capability.d.ts",
-      "sha256": "f78b31729c7ef9fde3f6c87399367f55c27e3a43ae6600c7a0f53ef962f1b20a"
+      "sha256": "4e8bf5f0a6721c76d33744b29f598c26406781d9c373a4545a9b4869681140df"
     },
     {
       "path": "dist/temporal/date-field.d.ts",
@@ -703,19 +703,19 @@
     },
     {
       "path": "dist/temporal/date-time-field.d.ts",
-      "sha256": "6fca1109024c395277f788626497a2c4704ba726aa5a7c28d8e7a4bb95057460"
+      "sha256": "58fa4f2267a522f996b2f47794ffe1d0146ffd45a78b204ebbe8366da589ae67"
     },
     {
       "path": "dist/temporal/date-time-picker.d.ts",
-      "sha256": "41ec091c99c145057e010cecd9b1ff180311faadf31f89dd2148ee8456a9d8bb"
+      "sha256": "9c4b76b0230e094bc9764e0f440a8e69833642c89ea55c66ae359642a76d0ddb"
     },
     {
       "path": "dist/temporal/date-time-range-field.d.ts",
-      "sha256": "ff5d8440245ae4def5640a476a4ad0aa78d40cf9a2bbc4c73197794094206209"
+      "sha256": "c65c558fef813de0d1163066ef21d0ee6d4ed0f4f89e1dc11f89db97e6ee9fad"
     },
     {
       "path": "dist/temporal/date-time-range-picker.d.ts",
-      "sha256": "5829c0dfe5f574851e01631ec6c83016cff8f20df99c75ad647dc42ae9805d5e"
+      "sha256": "b39ecbb41d2b13ef87fc1f7d7d05a6598c1e4159d8a44e34eda851804c3a1039"
     },
     {
       "path": "dist/temporal/date-time-time-choices.d.ts",
@@ -731,7 +731,7 @@
     },
     {
       "path": "dist/temporal/picker.d.ts",
-      "sha256": "27c9fa0d57e11bd6338ea33e1c5d8d1baf87d5733024195a4fb65f8fed2a0f4b"
+      "sha256": "02ffdc4cd0710e05474226d7f50b930ac87f6982f88a3f6aa5053d3e792c1716"
     },
     {
       "path": "dist/temporal/range-calendar.d.ts",
@@ -743,15 +743,15 @@
     },
     {
       "path": "dist/temporal/time-field.d.ts",
-      "sha256": "ab592daf3e30dc21ebd36111cc76ef21f1886f8a970f17b051373b833b6c4471"
+      "sha256": "23b72d0b7b68b82db2935eef99796447eaadd48c9e19f014ed2784504fc2ab2a"
     },
     {
       "path": "dist/temporal/time-picker.d.ts",
-      "sha256": "d5a7405065077a17e1dea665dd7d55fe141f70d2bd3d98ab5ad01fcb26da7487"
+      "sha256": "297440821924d9f9b34c626c48936c63c6b7e286e7d269b35c34e840ef8041e2"
     },
     {
       "path": "dist/temporal/time-range-field.d.ts",
-      "sha256": "64dcf9ab5e467a72254f746d4aa888a71ce384038b5bf9dffcfa687ae0c59403"
+      "sha256": "db17f02a195a4449bc48b40325e79c3f868ecf90eda7866df672ca486da4e8a6"
     },
     {
       "path": "dist/temporal/year-picker.d.ts",
@@ -795,7 +795,7 @@
     },
     {
       "path": "dist/tree-select.d.ts",
-      "sha256": "7ec5888858e97d1e94a5795db7a38f27255248bc58bc80890ae001db5e0d19e5"
+      "sha256": "65880e0f821688942c1968b8901ed6c6d2f25c4d10127e9f907949d6cc3ffd39"
     },
     {
       "path": "dist/tree-view.d.ts",

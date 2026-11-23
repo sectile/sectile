@@ -38,6 +38,7 @@
         "applyDataTableEvent",
         "createDataTable",
         "getAllMatchingSelectionState",
+        "getGroupSelectionState",
         "rowSelectionContains",
         "tryCreateDataTable"
       ],
@@ -102,6 +103,7 @@
       "runtimeExports": [
         "applyTabularQueryEvent",
         "createTabularQuery",
+        "sameTabularQuery",
         "tryCreateTabularQuery"
       ],
       "typeBearing": true,

@@ -32,7 +32,7 @@
     {
       "group": "profiles",
       "tests": 24,
-      "sha256": "e8e64d85e8072ebf0cdfdceaf3714df91fca780cd0eeb7cfd7c6d186b037d9fa"
+      "sha256": "8343d3fb2959305728970709ab4873d4821a4e2d36d0fccaa24d096f7e123e3f"
     },
     {
       "group": "virtual",
@@ -78,11 +78,11 @@
     }
   },
   "footprint": {
-    "javascriptBytes": 162980,
-    "declarationBytes": 45939,
-    "sourceMapBytes": 117113,
-    "packedBytes": 70059,
-    "declarationFiles": 17,
+    "javascriptBytes": 173253,
+    "declarationBytes": 49978,
+    "sourceMapBytes": 123716,
+    "packedBytes": 76197,
+    "declarationFiles": 18,
     "publicSubpaths": 9
   },
   "consumerScenarios": [
