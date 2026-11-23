@@ -23,7 +23,7 @@ import type { DataGridState } from '@sectile/tabular/data-grid';
 import type { DataTableConnectionOptions, DataTableColumnSizeState } from '@sectile/dom/tabular';
 import { Primitive, type PrimitiveAs } from '../primitive.js';
 import { provideProfile, useProfile, type ProfileContext } from './context.js';
-import { refreshVueProfileController, snapshotOf, stateOf, type VueProfileController } from './controller.js';
+import { refreshVueProfileController, snapshotOf, type VueProfileController } from './controller.js';
 
 type BulkTarget = { readonly kind: 'all-matching' } | { readonly kind: 'group-leaves'; readonly groupID: string };
 
@@ -105,21 +105,20 @@ const identityProps = {
 
 export function createTabularParts<State, Event, Command>(config: PartConfig<State, Event, Command>): Readonly<Record<string, Component>> {
   const rowKey: InjectionKey<ComputedRef<TabularRow>> = Symbol(`Sectile${config.prefix}Row`);
-  const usePublic = (name: string) => useProfile(config.publicKey, `${config.prefix}${name}`);
   const usePrivate = (name: string) => useProfile(config.privateKey, `${config.prefix}${name}`);
   const structural = (suffix: string, part: string, tag: string): Component => defineComponent({
     name: `Sectile${config.prefix}${suffix}`,
     inheritAttrs: false,
     props: { as: { ...asProp, default: tag }, asChild: asChildProp },
     setup(props, { attrs, slots }) {
-      const context = usePublic(suffix);
+      const context = usePrivate(suffix);
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as,
         asChild: props.asChild,
         'data-scope': config.profile,
         'data-part': part,
         role: config.profile === 'data-table' ? undefined : part === 'header' || part === 'body' ? 'rowgroup' : undefined,
-      }), { default: () => slots['default']?.(rootSlot(context)) });
+      }), { default: () => slots['default']?.(context.slots.root()) });
     },
   });
   const boundPart = (
@@ -186,7 +185,12 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
           'data-scope': config.profile,
           'data-part': part,
           role: suffix === 'BulkSelectionControl' ? 'checkbox' : config.profile === 'data-table' ? undefined : part === 'row' ? 'row' : part === 'column-header' ? 'columnheader' : part === 'cell' ? 'gridcell' : undefined,
-        }), { default: () => slots['default']?.(partSlot(context, inheritedRow)) });
+        }), { default: () => {
+          if (slots['default'] === undefined) return undefined;
+          if (inheritedRow === null) return slots['default'](context.slots.root());
+          const row = inheritedRow.value;
+          return slots['default'](context.slots.row({ row, isGroup: row.kind === 'group' }));
+        } });
       };
     },
   });
@@ -196,7 +200,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
     props: { controller: { type: Object as PropType<VueProfileController<State, Event, Command>>, required: true } },
     setup(props, { slots }) {
       const context = provideProfile(config.publicKey, config.privateKey, props.controller);
-      return (): VNodeChild => slots['default']?.(rootSlot(context));
+      return (): VNodeChild => slots['default']?.(context.slots.root());
     },
   });
   const rootTag = config.profile === 'data-table' ? 'table' : 'div';
@@ -244,7 +248,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         'data-scope': config.profile,
         'data-part': 'root',
         role: config.profile === 'data-grid' ? 'grid' : config.profile === 'data-tree-grid' ? 'treegrid' : undefined,
-      }), { default: () => slots['default']?.(rootSlot(context)) });
+      }), { default: () => slots['default']?.(context.slots.root()) });
     },
   });
 
@@ -254,7 +258,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   const HeaderRow = defineComponent({
     name: `Sectile${config.prefix}HeaderRow`, inheritAttrs: false,
     props: { as: { ...asProp, default: table ? 'tr' : 'div' }, asChild: asChildProp },
-    setup(props, { attrs, slots }) { const context = usePublic('HeaderRow'); return () => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: table ? undefined : 'row', 'data-scope': config.profile, 'data-part': 'header-row' }), { default: () => slots['default']?.(rootSlot(context)) }); },
+    setup(props, { attrs, slots }) { const context = usePrivate('HeaderRow'); return () => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild, role: table ? undefined : 'row', 'data-scope': config.profile, 'data-part': 'header-row' }), { default: () => slots['default']?.(context.slots.root()) }); },
   });
   const ColumnHeader = boundPart('ColumnHeader', 'column-header', table ? 'th' : 'div', {
     column: { type: String, default: undefined },
@@ -279,17 +283,27 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   const AutomaticRow = defineComponent({
     name: `Sectile${config.prefix}AutomaticRow`,
     inheritAttrs: false,
-    props: { row: { type: Object as PropType<TabularRow>, required: true } },
-    setup(props, { attrs, slots }) {
+    props: {
+      row: { type: Object as PropType<TabularRow>, required: true },
+      rowIndex: { type: Number, required: true },
+      rowAttributes: { type: Object as PropType<Readonly<Record<string, unknown>>>, default: undefined },
+      renderRow: { type: Function as PropType<(props: TabularAutomaticBodySlotProps) => VNodeChild>, default: undefined },
+    },
+    setup(props) {
+      const context = usePrivate('Body');
       provide(rowKey, computed(() => props.row));
-      return (): VNodeChild => h(Row, mergeProps(attrs, {
+      const render = () => {
+        const row = props.row;
+        return props.renderRow?.(context.slots.row({ row, rowIndex: props.rowIndex, isGroup: row.kind === 'group' }));
+      };
+      return (): VNodeChild => h(Row, mergeProps(props.rowAttributes ?? {}, {
         as: table ? 'tr' : 'div',
         asChild: false,
         rowID: props.row.id,
         'data-row-id': props.row.id,
         'data-row-kind': props.row.kind,
         'data-context-only': props.row.kind === 'group' && props.row.contextOnly === true ? '' : undefined,
-      }), { default: () => slots['default']?.() });
+      }), { default: render });
     },
   });
   const Body = defineComponent({
@@ -301,7 +315,7 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
       empty: (props: Readonly<Record<string, unknown>>) => VNodeChild;
     }>,
     setup(props, { attrs, slots }) {
-      const context = usePublic('Body');
+      const context = usePrivate('Body');
       return (): VNodeChild => h(Primitive, mergeProps(attrs, {
         as: props.as,
         asChild: props.asChild,
@@ -309,12 +323,14 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
         'data-part': 'body',
         role: table ? undefined : 'rowgroup',
       }), { default: () => {
-        const root = rootSlot(context);
-        if (props.manual) return (slots['default'] as ((props: Readonly<Record<string, unknown>>) => VNodeChild) | undefined)?.(root);
-        const rows = root['rows'] as readonly TabularRow[];
-        if (rows.length === 0) return slots['empty']?.(root);
-        return rows.map((row, rowIndex) => h(AutomaticRow, { ...props.rowAttributes, key: row.id, row }, {
-          default: () => slots['default']?.(Object.freeze({ ...root, row, rowIndex, isGroup: row.kind === 'group' })),
+        if (props.manual) return (slots['default'] as ((props: Readonly<Record<string, unknown>>) => VNodeChild) | undefined)?.(context.slots.root());
+        const rows = context.slots.rows;
+        if (rows.length === 0) return slots['empty']?.(context.slots.root());
+        const renderRow = slots['default'];
+        const rowAttributes = props.rowAttributes;
+        return rows.map((row, rowIndex) => h(AutomaticRow, {
+          key: row.id, row, rowIndex, renderRow,
+          ...(rowAttributes === undefined ? {} : { rowAttributes }),
         }));
       } });
     },
@@ -378,31 +394,4 @@ export function createTabularParts<State, Event, Command>(config: PartConfig<Sta
   });
 
   return Object.freeze({ Provider, Root, Caption, Header, HeaderRow, ColumnHeader, SortTrigger, FilterControl, ColumnResizeHandle, Body, Row, SelectionControl, BulkSelectionControl, Disclosure, Cell, Editor });
-}
-
-function rootSlot<State, Event, Command, Connection>(context: ProfileContext<State, Event, Command, Connection>): Readonly<Record<string, unknown>> {
-  const state = stateOf(context.snapshot.value);
-  const profile = context.snapshot.value as { readonly cursor?: unknown; readonly edit?: unknown };
-  return Object.freeze({
-    controller: context.controller,
-    snapshot: context.snapshot.value,
-    acceptedViewState: state.acceptedViewState,
-    requestState: state.requestState,
-    query: state.query,
-    rowSelection: state.rowSelection,
-    columnState: state.columnState,
-    accessState: state.accessState,
-    expansion: state.expansion,
-    rows: state.acceptedViewState.kind === 'none' ? Object.freeze([]) : state.acceptedViewState.view.rows,
-    ...(profile.cursor === undefined ? {} : { cursor: profile.cursor }),
-    ...(profile.edit === undefined ? {} : { editState: profile.edit }),
-  });
-}
-
-function partSlot<State, Event, Command, Connection>(
-  context: ProfileContext<State, Event, Command, Connection>,
-  row: ComputedRef<TabularRow> | null,
-): Readonly<Record<string, unknown>> {
-  const root = rootSlot(context);
-  return row === null ? root : Object.freeze({ ...root, row: row.value, isGroup: row.value.kind === 'group' });
 }

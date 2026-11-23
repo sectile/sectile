@@ -173,6 +173,93 @@ test('Tabular selection parts adopt the reusable Checkbox component', async () =
 for (const profile of ['data-table', 'data-grid', 'data-tree-grid']) {
   const name = profile.split('-').map(part => part[0].toUpperCase() + part.slice(1)).join('');
   const api = profile === 'data-table' ? { useDataTable, createDataTableComponents } : profile === 'data-grid' ? gridAPI : treeGridAPI;
+  test(`${name} automatic Body and cells track only their consumed slot fields`, async () => {
+    const rows = Array.from({ length: 100 }, (_, index) => ({
+      kind: 'leaf', id: String(index), cells: { name: `Name ${index}`, role: 'Engineer' },
+    }));
+    const count = { kind: 'known', value: rows.length };
+    let controller;
+    let retained;
+    let sourceCalls = 0;
+    let bodies = 0;
+    let values = 0;
+    let selection = 0;
+    let cursor = 0;
+    const app = createApp({ setup() {
+      controller = api[`use${name}`]({
+        defaultAccessState: { kind: 'page', page: 1, itemsPerPage: rows.length, visibleRowCount: null, pagination: null },
+        source: request => {
+          sourceCalls += 1;
+          return {
+            ...request, viewRevision: sourceCalls, matchingLeafCount: count, visibleRowCount: count, rows,
+            columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [],
+          };
+        },
+      });
+      const parts = api[`create${name}Components`](controller);
+      return () => h(parts.Provider, null, { default: () => h(parts.Root, null, {
+        default: () => h(parts.Body, null, { default: ({ row }) => {
+          bodies += 1;
+          return [
+            h(parts.Cell, { key: 'name', column: 'name' }, slot => {
+              values += 1;
+              return slot.row.cells.name;
+            }),
+            h(parts.Cell, { key: 'role', column: 'role' }, slot => {
+              if (row.id !== '0') {
+                values += 1;
+                return slot.row.cells.role;
+              }
+              retained ??= slot;
+              selection += 1;
+              return String(slot.rowSelection.rowIDs.includes('0'));
+            }),
+            ...(profile === 'data-table' || row.id !== '0' ? [] : [
+              h(parts.RowSelectionControl, { key: 'cursor' }, slot => {
+                cursor += 1;
+                return slot.cursor.current?.columnID ?? '';
+              }),
+            ]),
+          ];
+        } }),
+      }) });
+    } });
+    const host = document.createElement('div'); document.body.append(host);
+    try {
+      app.mount(host);
+      await waitFor(() => controller.status.value, 'success');
+      await nextTick();
+      assert.equal(host.querySelectorAll('[data-part="cell"]').length, 200);
+      const initialCalls = sourceCalls;
+      bodies = values = selection = cursor = 0;
+
+      assert.equal(controller.dispatch({ type: 'toggle-row-selection', rowID: '0' }).ok, true);
+      await nextTick();
+      assert.deepEqual([bodies, values, selection], [0, 0, 1]);
+      assert.equal(host.querySelector('[data-row-id="0"][data-column-id="role"]').textContent, 'true');
+      assert.equal(Object.isFrozen(retained), true);
+      assert.deepEqual(retained.rowSelection.rowIDs, []);
+      assert.equal(Object.hasOwn({ ...retained }, 'rowSelection'), true);
+
+      if (profile !== 'data-table') {
+        selection = cursor = 0;
+        assert.equal(controller.dispatch({ type: 'focus-cell', cell: { rowID: '0', columnID: 'role' } }).ok, true);
+        await nextTick();
+        assert.deepEqual([bodies, values, selection, cursor], [0, 0, 0, 1]);
+      }
+      selection = cursor = 0;
+      assert.equal(controller.dispatch({ type: 'set-column-state', columnState: {
+        order: ['role', 'name'], hidden: [], pinnedStart: [], pinnedEnd: [],
+      } }).ok, true);
+      await nextTick();
+      assert.deepEqual([bodies, values, selection], [0, 0, 0]);
+      assert.equal(sourceCalls, initialCalls);
+    } finally {
+      app.unmount();
+      host.remove();
+    }
+  });
+
   for (const controlled of [false, true]) test(`${name} publishes accepted column sizes across connection churn (${controlled ? 'controlled' : 'default'})`, async () => {
     const sizes = shallowRef({ name: 100 });
     const visible = shallowRef(true);
