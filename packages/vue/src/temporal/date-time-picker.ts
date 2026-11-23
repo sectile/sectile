@@ -3,19 +3,19 @@ import type { DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeValue } from '@sectile/dom/temporal/date-time-field';
 import {
   PickerAnchor, PickerCell, PickerContent, PickerGrid, PickerMonthCell, PickerPortal, PickerTrigger, createPickerInput, createPickerMove, createPickerViewTrigger, type PickerRootPartComponent,
-  createPickerRoot, dateTimeSubmissionLayout, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
+  createPickerRoot, dateTimeSubmissionLayout, type DateTimePickerPresentationProps, type PickerCellSlotProps, type PickerMonthCellSlotProps, type PickerPartProps, type PickerPortalProps, type PickerPositionProps, type PickerRootSlotProps,
 } from './picker.js';
 import { dateTimePickerCapability } from './capabilities/date-time-picker.js';
 import type { PickerContentPartComponent, PickerContentSlotProps } from './picker.js';
 
-export interface DateTimePickerRootProps extends PickerPartProps, PickerPositionProps {
+export interface DateTimePickerRootProps extends PickerPartProps, PickerPositionProps, DateTimePickerPresentationProps {
   readonly modelValue?: DateTimeValue | null; readonly defaultValue?: DateTimeValue | null;
   readonly highlightedValue?: DateValue; readonly defaultHighlightedValue?: DateValue; readonly referenceDate?: DateValue;
   readonly defaultView?: PickerRootSlotProps['viewMode'];
   readonly open?: boolean; readonly defaultOpen?: boolean; readonly disabled?: boolean; readonly?: boolean;
   readonly required?: boolean; readonly label?: string; readonly policies?: DateTimePickerOptions['policies'];
 }
-export const DateTimePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimePickerCapability, 'SectileDateTimePickerRoot', { formLayout: dateTimeSubmissionLayout, fieldFirst: true });
+export const DateTimePickerRoot = /* @__PURE__ */ createPickerRoot(dateTimePickerCapability, 'SectileDateTimePickerRoot', { formLayout: dateTimeSubmissionLayout, fieldFirst: true, dateTimeFormat: true });
 export { DateTimePickerTimeChoices, type DateTimePickerTimeChoicesProps, type DateTimeTimeChoicesSlotProps } from './date-time-time-choices.js';
 export type DateTimePickerRootSlotProps = PickerRootSlotProps<DateTimeValue | null>;
 export type DateTimePickerContentSlotProps = PickerContentSlotProps<DateTimeValue | null>;

@@ -11,9 +11,11 @@ import type { DateTimePickerOptions } from '@sectile/dom/temporal/date-time-pick
 import type { DateTimeRangePickerOptions } from '@sectile/dom/temporal/date-time-range-picker';
 import { formatDateValue, parseDateValue, type DateFieldFormat, type DateRange, type DateValue } from '@sectile/dom/temporal/date-field';
 import type { DateTimeRange, DateTimeValue } from '@sectile/dom/temporal/date-time-field';
+import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { DateTimeChoiceLimits, DateTimePickerState } from '@sectile/temporal/date-time-picker';
 import type { DateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
-import type { TimeValue } from '@sectile/temporal/time-field';
+import { tryCreateTimeFieldState, type TimeFieldPrecision, type TimeValue } from '@sectile/temporal/time-field';
+import { unwrap } from '@sectile/core/result';
 import { createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable } from '@sectile/temporal/calendar';
 import { compareDateValues as compare, createDateValue, daysInMonth, tryCreateDateValue } from '@sectile/temporal/date-field';
 import type { FormSubmissionRegistration } from '../form/control.js';
@@ -38,6 +40,7 @@ import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
 import { useTemporalReferenceDate, useTemporalFormatter } from './temporal-provider.js';
 import { useHostLayer } from '../host-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';
+import { resolveDateTimeFormat } from './internal/time-presentation.js';
 
 export type PickerKind = 'calendar' | 'date' | 'date-range' | 'date-time' | 'date-time-range';
 export type PickerValue = DateValue | DateRange | DateTimeValue | DateTimeRange | null;
@@ -78,6 +81,7 @@ export interface PickerPositionProps extends Omit<PickerPositionOptions, 'anchor
 
 export interface PickerRootConfig {
   readonly dateFormat?: boolean;
+  readonly dateTimeFormat?: boolean;
   readonly fieldFirst?: boolean;
   readonly scope?: string;
   readonly granularity?: 'day' | 'month' | 'year';
@@ -86,6 +90,11 @@ export interface PickerRootConfig {
   readonly yearPageSize?: number;
   readonly inline?: boolean;
   readonly formLayout?: { inspect(children: VNodeChild): number; includes(layout: number, part: PickerInputPart): boolean };
+}
+
+export interface DateTimePickerPresentationProps {
+  readonly precision?: TimeFieldPrecision;
+  readonly format?: DateTimeFieldFormat;
 }
 
 export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue, Policies = Readonly<Record<string, unknown>>> extends PickerPositionProps {
@@ -107,7 +116,8 @@ export interface PickerRootRuntimeProps<Value extends PickerValue = PickerValue,
 }
 
 interface ResolvedPickerRootProps<Kind extends PickerKind> extends ResolvedPositionProps {
-  readonly format?: DateFieldFormat;
+  readonly format?: DateFieldFormat | DateTimeFieldFormat;
+  readonly precision?: TimeFieldPrecision;
   readonly modelValue?: PickerValueFor<Kind>;
   readonly defaultValue: PickerValueFor<Kind>;
   readonly open?: boolean;
@@ -204,6 +214,7 @@ const noPendingPickerValue = Symbol('no-pending-picker-value');
 const partProps = { as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false } };
 
 export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig & { readonly dateFormat: true }): PickerRootComponent<Kind, { readonly format?: DateFieldFormat }>;
+export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig & { readonly dateTimeFormat: true }): PickerRootComponent<Kind, DateTimePickerPresentationProps>;
 export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config?: PickerRootConfig): PickerRootComponent<Kind>;
 export function createPickerRoot<Kind extends PickerKind>(capability: PickerFamilyCapability<Kind>, name: string, config: PickerRootConfig = {}): PickerRootComponent<Kind> {
   const kind = capability.kind;
@@ -214,6 +225,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
   const yearPageSize = config.yearPageSize ?? 12;
   const inline = config.inline ?? false;
   const fieldFirst = config.fieldFirst === true;
+  const dateTimeFormat = config.dateTimeFormat === true;
   const compositeConstraint = granularity !== 'day' || kind === 'calendar' || kind === 'date-range' || kind === 'date-time-range';
   const selectionEventType = kind === 'calendar' || kind === 'date' || kind === 'date-range' ? 'select' : 'select-date';
   const component = defineComponent({
@@ -221,6 +233,10 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
     name, inheritAttrs: false,
     props: {
       ...(config.dateFormat === true ? { format: { type: Object as PropType<DateFieldFormat>, default: undefined } } : {}),
+      ...(dateTimeFormat ? {
+        format: { type: Object as PropType<DateTimeFieldFormat>, default: undefined },
+        precision: { type: String as PropType<TimeFieldPrecision>, default: undefined },
+      } : {}),
       modelValue: { type: Object as PropType<PickerValueFor<Kind>>, default: undefined }, defaultValue: { type: Object as PropType<PickerValueFor<Kind>>, default: null },
       open: { type: Boolean, default: undefined }, defaultOpen: { type: Boolean, default: defaultOpen },
       highlightedValue: { type: Object as PropType<DateValue>, default: undefined }, defaultHighlightedValue: { type: Object as PropType<DateValue>, default: undefined },
@@ -243,11 +259,20 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const hostReferenceDate = useTemporalReferenceDate();
       const formatter = useTemporalFormatter();
       const layerHost = useHostLayer();
-      const inputPresentation = computed(() => granularity === 'day' ? capability.presentation?.(formatter.value, runtimeProps.format) : undefined);
+      const requestedPresentation = computed(() => {
+        if (granularity !== 'day') return undefined;
+        const explicit = dateTimeFormat ? (runtimeProps.format as DateTimeFieldFormat | undefined)
+          ?? (runtimeProps.precision === undefined ? undefined : resolveDateTimeFormat(formatter.value, runtimeProps.precision)) : undefined;
+        return capability.presentation?.(formatter.value, dateTimeFormat ? undefined : runtimeProps.format as DateFieldFormat | undefined, explicit);
+      });
+      const acceptedPresentation = dateTimeFormat ? shallowRef(requestedPresentation.value) : undefined;
+      const inputPresentation = acceptedPresentation ?? requestedPresentation;
       const referenceDate = computed(() => runtimeProps.referenceDate ?? hostReferenceDate.value);
-      const initialInputs = computed(() => capability.initialInputValues?.(referenceDate.value, runtimeProps.policies, formatter.value));
+      const initialInputs = computed(() => capability.initialInputValues?.(referenceDate.value, runtimeProps.policies, inputPresentation.value));
       const inlineTrigger = typeof document === 'undefined' || !inline || kind === 'calendar' ? undefined : document.createElement('button');
       const localValue = shallowRef<PickerValue>(runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : runtimeProps.defaultValue);
+      const acceptedModel = dateTimeFormat ? shallowRef(runtimeProps.modelValue) : undefined;
+      const controlledModel = () => acceptedModel === undefined ? runtimeProps.modelValue : acceptedModel.value;
       const rangeAnchor = shallowRef<DateValue | null>(null);
       const dateTimeState = shallowRef<DateTimePickerState | DateTimeRangePickerState>();
       const localOpen = shallowRef(runtimeProps.open ?? runtimeProps.defaultOpen);
@@ -285,7 +310,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         const highlighted = runtimeProps.highlightedValue ?? localHighlight.value;
         const value = controlled.value && pendingValue.value !== noPendingPickerValue
           ? pendingValue.value
-          : runtimeProps.modelValue !== undefined ? runtimeProps.modelValue : localValue.value;
+          : controlledModel() ?? (controlled.value ? null : localValue.value);
         return Object.freeze({
           value,
           highlightedValue: highlighted, open: runtimeProps.open ?? localOpen.value, dates: dates.value, months: months.value, years: years.value,
@@ -379,6 +404,16 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         lifecycle.reconnect();
       });
       const connect = (): void => {
+        const requested = requestedPresentation.value;
+        if (acceptedPresentation !== undefined && acceptedPresentation.value !== requested) {
+          const format = requested?.timeFormat;
+          const current = dateTimeState.value;
+          if (format !== undefined && current !== undefined) {
+            const times = 'time' in current ? [current.time] : [current.startTime, current.endTime];
+            for (const time of times) unwrap(tryCreateTimeFieldState(time, undefined, format));
+          }
+          acceptedPresentation.value = requested;
+        }
         if (!restoringInitial) {
           retainedState = connection.value?.getSnapshot().state ?? retainedState;
           retainedFieldStates = connection.value?.getFieldStates?.() ?? retainedFieldStates;
@@ -390,7 +425,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         if (restoringInitial && retainedState !== undefined) {
           const initial = extractState(kind, retainedState);
           rangeAnchor.value = initial.anchor;
-          localValue.value = controlled.value ? runtimeProps.modelValue ?? null : initial.value;
+          localValue.value = controlled.value ? controlledModel() ?? null : initial.value;
           localHighlight.value = controlled.highlighted ? runtimeProps.highlightedValue ?? initial.highlighted : initial.highlighted;
           localOpen.value = controlled.open ? runtimeProps.open ?? initial.open : initial.open;
           localViewMode.value = initial.viewMode;
@@ -406,7 +441,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           ...(hasPopup ? { root: content, grid } : {}), disabled: flags.value.disabled, readOnly: flags.value.readonly, required: flags.value.required,
           referenceDate: referenceDate.value,
           ...(runtimeProps.label === undefined ? {} : { label: runtimeProps.label }), ...(runtimeProps.policies === undefined ? {} : { policies: runtimeProps.policies }),
-          ...(controlled.value ? { value: runtimeProps.modelValue } : { defaultValue: localValue.value }),
+          ...(controlled.value ? { value: controlledModel() } : { defaultValue: localValue.value }),
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : { defaultHighlightedValue: localHighlight.value }),
           onValueChange: (value: PickerValue) => {
             localValue.value = value;
@@ -532,7 +567,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           calendarPolicies(),
         ),
         periodAvailable, formatInput: (granularity, part, inputValue) => {
-          const value = !isEditable(part as PickerInputPart) && controlled.value ? runtimeProps.modelValue ?? null : inputValue;
+          const value = !isEditable(part as PickerInputPart) && controlled.value ? controlledModel() ?? null : inputValue;
           return value === null ? initialInputs.value?.[part] ?? ''
             : inputPresentation.value?.formatInput(part, value) ?? capability.formatInput(granularity, part, value);
         },
@@ -668,7 +703,7 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
         () => flags.value.disabled, () => flags.value.readonly, () => flags.value.required, () => runtimeProps.label, () => runtimeProps.policies,
         ...positionSources(runtimeProps),
         () => kind !== 'calendar' ? layerHost.value : undefined,
-        () => inputPresentation.value,
+        () => requestedPresentation.value,
       ], requestConnect);
       watch(referenceDate, (value) => {
         if (
@@ -686,12 +721,14 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
           ...(controlled.value ? { value: runtimeProps.modelValue } : {}), ...(kind !== 'calendar' && controlled.open ? { open: runtimeProps.open } : {}),
           ...(controlled.highlighted ? { highlightedValue: runtimeProps.highlightedValue } : {}),
         });
-        if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.'); refresh();
+        if (!result.ok) throw new TypeError(result.error?.message ?? 'Could not synchronize picker values.');
+        if (acceptedModel !== undefined) acceptedModel.value = runtimeProps.modelValue;
+        refresh();
       });
       return (): VNodeChild => {
         const children: VNodeChild[] = [slots['default']?.(slotState.value as RootSlotFor<Kind>)];
         if (config.formLayout !== undefined) submissionLayout!.value = config.formLayout.inspect(children);
-        const constraintValue = controlled.value && kind !== 'calendar' ? runtimeProps.modelValue ?? null : state.value.value;
+        const constraintValue = controlled.value && kind !== 'calendar' ? controlledModel() ?? null : state.value.value;
         if (compositeConstraint) children.push(h('select', {
           ...constraintAttributes.value, ref: constraint,
           required: flags.value.required,

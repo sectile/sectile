@@ -29,6 +29,9 @@ const { PopoverRoot, PopoverContent, PopoverPortal } = await import('../.verific
 const { DialogRoot, DialogContent, DialogPortal } = await import('../.verification-dist/overlay/dialog.js');
 const { renderToString } = await import('@vue/server-renderer');
 const { TemporalProvider } = await import('../.verification-dist/temporal/temporal-provider.js');
+const { createDateTimeFieldFormat } = await import('@sectile/temporal/date-time-field');
+const { createDateFieldFormat } = await import('@sectile/temporal/date-field');
+const { createTimeFieldFormat } = await import('@sectile/temporal/time-field');
 const { FormRoot, FormField } = await import('../.verification-dist/form.js');
 const { CalendarCell, CalendarContent, CalendarGrid, CalendarNextMonth, CalendarRoot } = await import('../.verification-dist/temporal/calendar.js');
 const {
@@ -96,6 +99,55 @@ const start = Object.freeze({
 const end = Object.freeze({
   date: Object.freeze({ year: 2026, month: 8, day: 21 }),
   time: Object.freeze({ hour: 17, minute: 30 }),
+});
+
+test('date-time picker formats share literals and reject precision loss before replacing the mounted editors', async () => {
+  const host = document.createElement('div');
+  document.body.append(host);
+  const value = shallowRef(start), precision = ref('minute'), format = shallowRef(undefined);
+  const errors = [];
+  const app = createApp({ render: () => h('div', [
+    h(DateTimePickerRoot, { modelValue: value.value, precision: precision.value, format: format.value }, () => [
+      h(DateTimePickerDateTimeInput, { id: 'combined' }), h(DateTimePickerTimeInput, { id: 'single-time' }),
+    ]),
+    h(DateTimeRangePickerRoot, { defaultValue: { start, end }, precision: precision.value, format: format.value }, () => [
+      h(DateTimeRangePickerStartDateTimeInput, { id: 'range-display' }), h(DateTimeRangePickerStartTimeInput, { id: 'range-time' }),
+    ]),
+  ]) });
+  app.config.errorHandler = error => errors.push(error);
+  app.mount(host);
+  try {
+    await settle();
+    const combined = host.querySelector('#combined');
+    const rangeDisplay = host.querySelector('#range-display');
+    assert.equal(combined.value, '2026-08-18T09:30');
+    assert.equal(rangeDisplay.value, '2026-08-18T09:30');
+    assert.equal(rangeDisplay.readOnly, true);
+    format.value = createDateTimeFieldFormat({
+      date: createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] }),
+      time: createTimeFieldFormat({ precision: 'second', literals: ['', '·', '·', ''] }), separator: ' @ ',
+    });
+    await settle();
+    assert.equal(host.querySelector('#single-time').value, '09·30·00');
+    assert.equal(host.querySelector('#range-time').value, '09·30·00');
+    assert.equal(combined.value, '18/08/2026 @ 09·30·00');
+    assert.equal(rangeDisplay.value, combined.value);
+    value.value = { ...start, time: { ...start.time, second: 12 } };
+    await settle();
+    format.value = undefined;
+    await settle();
+    assert.equal(host.querySelector('#combined'), combined);
+    assert.equal(combined.value, '18/08/2026 @ 09·30·12');
+    assert.equal(errors[0]?.code, 'time-field-format-precision-loss');
+    value.value = { ...start, time: { ...start.time, second: 12, millisecond: 1 } };
+    await settle();
+    assert.equal(combined.value, '18/08/2026 @ 09·30·12');
+    assert.match(errors[1]?.message ?? '', /precision/i);
+    precision.value = 'millisecond';
+    await settle();
+    assert.equal(host.querySelector('#combined'), combined);
+    assert.equal(combined.value, '2026-08-18T09:30:12.000');
+  } finally { app.unmount(); host.remove(); }
 });
 
 test('range picker families retain their first endpoint through live and inactive configuration replacement', async () => {

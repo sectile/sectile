@@ -28,7 +28,7 @@ import { currentReferenceDate } from './internal/reference-date.js';
 import type { PickerPositionOptions } from '../overlay/position/picker.js';
 import { calendarFocusEvent, PickerPopup, pickerPopupElements, type PickerPopupElements } from './internal/picker-popup.js';
 import { detachedFieldState } from '../text/controlled-input.js';
-import { pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
+import { admitPickerTimes, pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
 import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
 import { tryCreateTimeFieldState, reformatTimeFieldState, type TimeFieldState, type TimeFieldFormat } from '@sectile/temporal/time-field';
 import { tryCreateDateTimeFieldState, reformatDateTimeFieldState, type DateTimeFieldState, type DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
@@ -149,8 +149,12 @@ function construct(options: DateTimePickerOptions): DOMTemporalResult<DateTimePi
     DateTimePickerCommand,
     DateTimePickerCommand
   >({
-    initial,
-    reducer: (state, event) => applyDateTimePickerEvent(state, event, policies),
+    initial: admitSinglePickerTime(options, initial, state => state.time),
+    reducer: (state, event) => {
+      const result = applyDateTimePickerEvent(state, event, policies);
+      return result.ok && compareTimeValues(state.time, result.value.state.time) !== 0
+        ? admitSinglePickerTime(options, result, update => update.state.time) : result;
+    },
     reconcile: (previous, proposed) => tryCreateDateTimePickerState({
       value: controls.value ? previous.value : proposed.value,
       time: controls.value ? previous.time : proposed.time,
@@ -186,6 +190,12 @@ function construct(options: DateTimePickerOptions): DOMTemporalResult<DateTimePi
   return runtime.ok
     ? { ok: true, value: new DOMDateTimePicker(options, runtime.value, controls) }
     : runtime;
+}
+
+function admitSinglePickerTime<T>(options: DateTimePickerOptions, result: DOMTemporalResult<T>, project: (value: T) => TimeValue): DOMTemporalResult<T> {
+  const times = (value: T) => [project(value)];
+  return admitPickerTimes(admitPickerTimes(result, options.timeFormat, times),
+    options.format?.time === options.timeFormat ? undefined : options.format?.time, times);
 }
 
 class DOMDateTimePicker implements DateTimePickerConnection {
@@ -350,7 +360,7 @@ class DOMDateTimePicker implements DateTimePickerConnection {
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(tryCreateDateTimePickerState({
+    const next = tryCreateDateTimePickerState({
       value: this.controls.value ? values.value as DateTimeValue | null : state.value,
       time: state.time,
       calendar: {
@@ -359,7 +369,8 @@ class DOMDateTimePicker implements DateTimePickerConnection {
         viewMode: state.calendar.viewMode,
         open: this.controls.open ? values.open as boolean : state.calendar.open,
       },
-    }));
+    });
+    const result = this.runtime.replace(admitSinglePickerTime(this.options, next, value => value.time));
     if (result.ok) {
       this.refresh();
       this.options.onUpdate?.();

@@ -2,7 +2,7 @@ import { unwrap, type Result } from '@sectile/core/result';
 import { createDOMTemporalController, createDOMTemporalFacadeConnection, type DOMTemporalController, type DOMTemporalResult } from './internal/result.js';
 import type { RevisionSnapshot } from '@sectile/core/revision';
 import { compareDateValues, type DateValue } from '@sectile/temporal/date-field';
-import { formatDateTimeRange, formatDateTimeValue, type DateTimeRange } from '@sectile/temporal/date-time-field';
+import { formatDateTimeRange, formatDateTimeFieldValue, type DateTimeFieldFormat, type DateTimeRange } from '@sectile/temporal/date-time-field';
 import { calendarID, createCalendarMonth, createCalendarWeek, createCalendarYear, isCalendarValueAvailable, type CalendarMonthValue } from '@sectile/temporal/calendar';
 import {
   applyDateTimeRangePickerEvent,
@@ -28,7 +28,7 @@ import { currentReferenceDate } from './internal/reference-date.js';
 import type { PickerPositionOptions } from '../overlay/position/picker.js';
 import { calendarFocusEvent, PickerPopup, pickerPopupElements, type PickerPopupElements } from './internal/picker-popup.js';
 import { detachedFieldState } from '../text/controlled-input.js';
-import { pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
+import { admitPickerTimes, pickerFieldFormat, preparePickerFieldState } from './internal/picker-field-options.js';
 import { tryCreateDateFieldState, reformatDateFieldState, type DateFieldState, type DateFieldFormat } from '@sectile/temporal/date-field';
 import { tryCreateTimeFieldState, reformatTimeFieldState, type TimeFieldState, type TimeFieldFormat } from '@sectile/temporal/time-field';
 
@@ -42,6 +42,7 @@ export interface DateTimeRangePickerOptions extends PickerPositionOptions, Parti
   readonly endDateInput?: HTMLInputElement;
   readonly startTimeInput?: HTMLInputElement;
   readonly endTimeInput?: HTMLInputElement;
+  readonly format?: DateTimeFieldFormat | undefined;
   readonly dateFormat?: DateFieldFormat | undefined;
   readonly timeFormat?: TimeFieldFormat | undefined;
   readonly policies?: DateTimeRangePickerPolicies;
@@ -149,8 +150,13 @@ function construct(options: DateTimeRangePickerOptions): DOMTemporalResult<DateT
     DateTimeRangePickerCommand,
     DateTimeRangePickerCommand
   >({
-    initial,
-    reducer: (state, event) => applyDateTimeRangePickerEvent(state, event, policies),
+    initial: admitRangePickerTimes(options, initial, state => state),
+    reducer: (state, event) => {
+      const result = applyDateTimeRangePickerEvent(state, event, policies);
+      return result.ok && (compareTimeValues(state.startTime, result.value.state.startTime) !== 0
+        || compareTimeValues(state.endTime, result.value.state.endTime) !== 0)
+        ? admitRangePickerTimes(options, result, update => update.state) : result;
+    },
     reconcile: (previous, proposed) => {
       const times = controls.value && (previous.value !== null || proposed.value !== null) ? previous : proposed;
       return tryCreateDateTimeRangePickerState({
@@ -189,6 +195,12 @@ function construct(options: DateTimeRangePickerOptions): DOMTemporalResult<DateT
   return runtime.ok
     ? { ok: true, value: new DOMDateTimeRangePicker(options, runtime.value, controls) }
     : runtime;
+}
+
+function admitRangePickerTimes<T>(options: DateTimeRangePickerOptions, result: DOMTemporalResult<T>, project: (value: T) => DateTimeRangePickerState): DOMTemporalResult<T> {
+  const times = (value: T) => { const state = project(value); return [state.startTime, state.endTime]; };
+  return admitPickerTimes(admitPickerTimes(result, options.timeFormat, times),
+    options.format?.time === options.timeFormat ? undefined : options.format?.time, times);
 }
 
 class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
@@ -362,7 +374,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
     const highlighted = this.controls.highlighted
       ? values.highlightedValue as DateValue
       : state.calendar.highlighted;
-    const result = this.runtime.replace(tryCreateDateTimeRangePickerState({
+    const next = tryCreateDateTimeRangePickerState({
       value: this.controls.value ? values.value as DateTimeRange | null : state.value,
       anchor: state.anchor,
       startTime: state.startTime,
@@ -373,7 +385,8 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
         viewMode: state.calendar.viewMode,
         open: this.controls.open ? values.open as boolean : state.calendar.open,
       },
-    }));
+    });
+    const result = this.runtime.replace(admitRangePickerTimes(this.options, next, value => value));
     if (result.ok) {
       this.refresh();
       this.options.onUpdate?.();
@@ -416,7 +429,7 @@ class DOMDateTimeRangePicker implements DateTimeRangePickerConnection {
       [this.options.endDateTimeInput, state.value?.end],
     ] as const) {
       if (input !== undefined) {
-        input.value = value === undefined ? '' : formatDateTimeValue(value);
+        input.value = value === undefined ? '' : formatDateTimeFieldValue(value, this.options.format);
         setInteractionAttributes(input, this.options, true);
         input.readOnly = true;
         input.setAttribute('aria-readonly', 'true');

@@ -1,5 +1,17 @@
 import type { TextEditingState } from '@sectile/core/text';
 import type { DOMTemporalResult } from './result.js';
+import { tryCreateTimeFieldState, type TimeFieldFormat, type TimeValue } from '@sectile/temporal/time-field';
+
+export function admitPickerTimes<T>(result: DOMTemporalResult<T>, format: TimeFieldFormat | undefined,
+  project: (value: T) => readonly TimeValue[],
+): DOMTemporalResult<T> {
+  if (!result.ok || format === undefined) return result;
+  for (const time of project(result.value)) {
+    const admitted = tryCreateTimeFieldState(time, undefined, format);
+    if (!admitted.ok) return admitted;
+  }
+  return result;
+}
 
 /** A restored editor keeps its format until an explicit presentation replaces it. */
 export function preparePickerFieldState<Value, Format, State extends {

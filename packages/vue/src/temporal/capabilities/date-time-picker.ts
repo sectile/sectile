@@ -12,10 +12,10 @@ import { definePickerFamilyCapability } from '../capability.js';
 export const dateTimePickerCapability = definePickerFamilyCapability({
   kind: 'date-time' as const,
   connect: (options) => createDateTimePicker(options as never),
-  presentation: formatter => {
-    const format = formatter === undefined ? undefined : unwrap(formatter.dateTimeFieldFormat('millisecond'));
+  presentation: (formatter, _date, explicit) => {
+    const format = explicit ?? (formatter === undefined ? undefined : unwrap(formatter.dateTimeFieldFormat('millisecond')));
     const dateFormat = format?.date, timeFormat = format?.time;
-    return { options: { format, dateFormat, timeFormat }, attributes: {
+    return { timeFormat, options: { format, dateFormat, timeFormat }, attributes: {
       'date-time-input': { placeholder: getDateTimeFieldPlaceholder(format), inputmode: 'text' },
       'date-input': { placeholder: getDateFieldPlaceholder(dateFormat), inputmode: 'numeric' },
       'time-input': { placeholder: getTimeFieldPlaceholder(timeFormat), inputmode: timeFormat?.dayPeriods === undefined ? 'numeric' : 'text' },
@@ -25,10 +25,10 @@ export const dateTimePickerCapability = definePickerFamilyCapability({
         : part === 'date-input' ? formatDateFieldValue(dateTime.date, dateFormat) : formatDateTimeFieldValue(dateTime, format);
     } };
   },
-  initialInputValues: (referenceDate, policies, formatter) => {
+  initialInputValues: (referenceDate, policies, presentation) => {
     const time = (policies as DateTimePickerPolicies | undefined)?.defaultTime;
     const state = createDateTimePickerState({ referenceDate, ...(time === undefined ? {} : { time }) });
-    return Object.freeze({ 'time-input': formatter === undefined ? formatTimeValue(state.time) : formatTimeFieldValue(state.time, unwrap(formatter.dateTimeFieldFormat('millisecond')).time) });
+    return Object.freeze({ 'time-input': formatTimeFieldValue(state.time, presentation?.timeFormat) });
   },
   formatInput: (_granularity, part, value) => {
     const dateTime = value as DateTimeValue;

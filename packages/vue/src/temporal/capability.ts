@@ -1,9 +1,11 @@
 import type { TemporalFormatter } from '@sectile/dom/temporal/format';
 import type { DateFieldFormat } from '@sectile/temporal/date-field';
-import type { TimeValue } from '@sectile/temporal/time-field';
+import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
+import type { TimeFieldFormat, TimeValue } from '@sectile/temporal/time-field';
 export type PickerCapabilityGranularity = 'day' | 'month' | 'year';
 
 export interface PickerInputPresentation {
+  readonly timeFormat?: TimeFieldFormat | undefined;
   readonly options: Readonly<Record<string, unknown>>;
   readonly attributes: Readonly<Record<string, Readonly<{ placeholder: string; inputmode: 'text' | 'numeric' }>>>;
   formatInput(part: string, value: unknown): string | undefined;
@@ -28,8 +30,8 @@ export interface PickerFamilyCapability<Kind extends string> {
   readonly kind: Kind;
   connect(options: Record<string, unknown>): PickerCapabilityConnection;
   formatInput(granularity: PickerCapabilityGranularity, part: string, value: unknown): string;
-  presentation?(formatter: TemporalFormatter | undefined, format?: DateFieldFormat): PickerInputPresentation;
-  initialInputValues?(referenceDate: DateValue, policies: unknown, formatter?: TemporalFormatter): Readonly<Record<string, string>>;
+  presentation?(formatter: TemporalFormatter | undefined, format?: DateFieldFormat, dateTimeFormat?: DateTimeFieldFormat): PickerInputPresentation;
+  initialInputValues?(referenceDate: DateValue, policies: unknown, presentation?: PickerInputPresentation): Readonly<Record<string, string>>;
 }
 
 export function definePickerFamilyCapability<Kind extends string>(
