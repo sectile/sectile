@@ -145,6 +145,53 @@ Bind `:format="format"` to either picker root. The range picker's combined start
 
 Use the same `format` on `DateTimeField` and `DateTimeRangeFieldRoot`. Pass `time` to `TimeField`, `TimeRangeFieldRoot`, or `TimePickerRoot`. An explicit format takes precedence over `precision` and the provider. With `native` on a scalar field, the browser owns its ISO value and localized display. TimePicker uses its accepted format for both the input and the choice columns. A live change that would lose precision rejects and retains the current input and value.
 
+## Show a TreeSelect selection beside its query
+
+`TreeSelectValue` displays the label for the accepted selection while the TreeSelect is closed and idle. Provide a `selectedLabel` function that accepts all selected IDs. In single-select mode it receives one ID. In multiple-select mode you can join the names or display a count. Returning `null` or an empty string hides the label.
+
+```vue
+<script setup lang="ts">
+import { useId } from 'vue'
+import { TreeSelectContent, TreeSelectInput, TreeSelectItem, TreeSelectRoot, TreeSelectValue } from '@sectile/vue/tree-select'
+
+const nodes = [{ id: 'oak', parentID: null }, { id: 'birch', parentID: null }] as const
+const names = { oak: 'Oak', birch: 'Birch' }
+const queryHelp = useId()
+const selection = useId()
+</script>
+
+<template>
+  <TreeSelectRoot
+    :nodes="nodes"
+    :default-value="['oak']"
+    :selected-label="ids => ids.map(id => names[id]).join(', ')"
+    selection-mode="multiple"
+    label="Trees"
+    name="trees"
+  >
+    <div class="tree-select-input">
+      <TreeSelectInput :aria-describedby="`${queryHelp} ${selection}`" />
+      <TreeSelectValue :id="selection" class="tree-select-value" />
+    </div>
+    <small :id="queryHelp">Type to search or press Down Arrow to open.</small>
+    <TreeSelectContent>
+      <TreeSelectItem v-for="node in nodes" :key="node.id" :value="node.id">
+        {{ names[node.id] }}
+      </TreeSelectItem>
+    </TreeSelectContent>
+  </TreeSelectRoot>
+</template>
+
+<style scoped>
+.tree-select-input { display: grid; }
+.tree-select-input > * { grid-area: 1 / 1; padding-inline: 0.5rem; }
+.tree-select-input > [data-display='selection'] { color: transparent; }
+.tree-select-value { align-self: center; pointer-events: none; }
+</style>
+```
+
+The input keeps its native query and caret when the label is visible. Focus, typing, or reopening reveals the query. The form submits the selected IDs under `trees`. The input's name is `Trees`, and its description references both the existing help and the selected value.
+
 ## Compose multi-part surfaces
 
 Compound components keep related behavior together without requiring one fixed HTML structure. Popover, Dialog, Select, Menu, Combobox, and similar families expose focused Root, Trigger, Content, and supporting parts.

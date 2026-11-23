@@ -47,6 +47,53 @@ const format = createDateTimeFieldFormat({
 
 `DateTimeField`와 `DateTimeRangeFieldRoot`에는 같은 `format`을 쓸 수 있습니다. `TimeField`, `TimeRangeFieldRoot`, `TimePickerRoot`에는 `time`을 전달합니다. 명시한 형식이 `precision`과 제공자 설정보다 우선합니다. 단일 필드에 `native`를 지정하면 브라우저가 ISO 값과 화면에 표시할 형식을 관리합니다. TimePicker는 확정된 형식을 입력과 선택 목록에 함께 적용합니다. 정밀도를 잃는 형식 변경은 거부하고 현재 입력과 값을 유지합니다.
 
+## TreeSelect에서 선택한 항목의 이름 표시하기
+
+`TreeSelectValue`는 목록이 닫혀 있고 검색 입력을 편집하지 않을 때 확정된 선택의 이름을 표시합니다. `selectedLabel` 함수는 단일 선택과 다중 선택 모두에서 확정된 ID 배열을 받습니다. 이름을 이어 붙이거나 선택한 개수를 표시할 수 있습니다. 빈 문자열이나 `null`을 반환하면 이름을 숨깁니다.
+
+```vue
+<script setup lang="ts">
+import { useId } from 'vue'
+import { TreeSelectContent, TreeSelectInput, TreeSelectItem, TreeSelectRoot, TreeSelectValue } from '@sectile/vue/tree-select'
+
+const nodes = [{ id: 'oak', parentID: null }, { id: 'birch', parentID: null }] as const
+const names = { oak: '참나무', birch: '자작나무' }
+const queryHelp = useId()
+const selection = useId()
+</script>
+
+<template>
+  <TreeSelectRoot
+    :nodes="nodes"
+    :default-value="['oak']"
+    :selected-label="ids => ids.map(id => names[id]).join(', ')"
+    selection-mode="multiple"
+    label="나무"
+    name="trees"
+  >
+    <div class="tree-select-input">
+      <TreeSelectInput :aria-describedby="`${queryHelp} ${selection}`" />
+      <TreeSelectValue :id="selection" class="tree-select-value" />
+    </div>
+    <small :id="queryHelp">검색어를 입력하거나 아래쪽 화살표로 목록을 여세요.</small>
+    <TreeSelectContent>
+      <TreeSelectItem v-for="node in nodes" :key="node.id" :value="node.id">
+        {{ names[node.id] }}
+      </TreeSelectItem>
+    </TreeSelectContent>
+  </TreeSelectRoot>
+</template>
+
+<style scoped>
+.tree-select-input { display: grid; }
+.tree-select-input > * { grid-area: 1 / 1; padding-inline: 0.5rem; }
+.tree-select-input > [data-display='selection'] { color: transparent; }
+.tree-select-value { align-self: center; pointer-events: none; }
+</style>
+```
+
+선택한 이름을 표시하는 동안에도 검색어와 커서 위치는 유지됩니다. 입력에 포커스를 주거나 글자를 입력하거나 목록을 다시 열면 검색어가 보입니다. 폼은 선택한 ID를 `trees`로 제출합니다. 입력의 접근 가능한 이름은 `나무`이며 도움말과 선택 값은 설명으로 연결됩니다.
+
 ## 제어 상태 컴포넌트 구성하기
 
 `Root`는 하위 구성 요소가 함께 쓰는 상호작용 상태를 소유합니다. 최종 값을 애플리케이션 상태가 결정한다면 `v-model`을 사용합니다. 아래 체크박스는 `name`과 `required`도 지정했으므로 브라우저 폼 제출에도 참여합니다.

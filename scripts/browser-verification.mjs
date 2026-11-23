@@ -128,6 +128,37 @@ async function runPlaywright(url) {
     report.results.push({ id, undoRedo: 'passed' });
   }
   if (!nativeIME) {
+    await page.evaluate(() => window.sectileProbe.treeSelectLabel());
+    const treeInput = page.getByRole('combobox', { name: 'Tree' });
+    const treeValue = page.locator('#tree-value');
+    assert.equal(await treeValue.textContent(), 'Oak');
+    assert.equal(await treeValue.isVisible(), true);
+    assert.equal(await treeInput.getAttribute('aria-describedby'), 'tree-help tree-value');
+    await treeInput.focus();
+    assert.equal(await treeValue.isVisible(), false);
+    await treeInput.press('End');
+    await treeInput.press('ArrowDown');
+    await page.getByRole('treeitem', { name: 'Birch' }).click();
+    assert.equal(await treeValue.isVisible(), true);
+    assert.equal(await treeValue.textContent(), 'Birch');
+    assert.deepEqual(await treeInput.evaluate(element => [element.value, element.selectionStart, element.ownerDocument.activeElement === element]), ['o', 1, true]);
+    await treeInput.press('ArrowDown');
+    assert.equal(await treeValue.isVisible(), false);
+    await treeInput.fill('bir');
+    assert.equal(await treeInput.inputValue(), 'bir');
+    await treeInput.fill('');
+    await treeInput.press('Escape');
+    assert.equal(await treeValue.isVisible(), true);
+    assert.equal(await treeValue.textContent(), 'Birch');
+    assert.equal(await treeInput.evaluate(element => new FormData(element.closest('form')).get('tree')), 'birch');
+    await page.evaluate(() => window.sectileProbe.treeSelectLabel(true));
+    await treeInput.press('ArrowDown');
+    await page.getByRole('treeitem', { name: 'Birch' }).click();
+    assert.equal(await treeInput.getAttribute('aria-expanded'), 'true');
+    assert.equal(await treeValue.isVisible(), false);
+    assert.equal(await treeValue.textContent(), 'Oak');
+    report.results.push({ id: 'tree-select-idle-selection-label', result: 'passed' });
+
     await page.evaluate(() => window.sectileProbe.remoteGroupSelection());
     const group = page.getByRole('checkbox', { name: 'Remote group' });
     assert.equal(await group.getAttribute('aria-checked'), 'mixed');
@@ -331,6 +362,13 @@ async function runPlaywright(url) {
       if (id === 'pin') assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, '한');
       if (id === 'tags') assert.deepEqual((await page.evaluate(() => window.sectileProbe.nativeState())).tags, ['한글']);
       if (id.startsWith('tree-select')) assert.equal((await page.evaluate(() => window.sectileProbe.nativeState())).value, expected);
+      if (id === 'tree-select-uncontrolled') {
+        assert.equal(await page.locator(`#${id}`).getAttribute('data-display'), 'query');
+        await page.locator(`#${id}`).blur();
+        assert.equal(await page.locator('[data-scope=tree-select][data-part=value]').textContent(), 'Selected root');
+        assert.equal(await page.locator('[data-scope=tree-select][data-part=value]').isVisible(), true);
+        await page.locator(`#${id}`).focus();
+      }
       if (family === 'tags') {
         // OS setup must not hide a same-input continuation defect. Match
         // the token's accepted clear with the same write on its plain HTML peer.

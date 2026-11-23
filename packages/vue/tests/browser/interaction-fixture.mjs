@@ -32,7 +32,7 @@ import { DatePickerRoot, DatePickerInput, DatePickerTrigger, DatePickerContent, 
 import { TreeGridRoot, TreeGridRow, TreeGridCell, TreeGridEditor } from '@sectile/vue/tree-grid';
 import { useDataGrid, createDataGridComponents } from '@sectile/vue/data-grid';
 import { useDataTreeGrid, createDataTreeGridComponents } from '@sectile/vue/data-tree-grid';
-import { TreeSelectRoot, TreeSelectInput, TreeSelectContent } from '@sectile/vue/tree-select';
+import { TreeSelectRoot, TreeSelectInput, TreeSelectContent, TreeSelectItem, TreeSelectValue } from '@sectile/vue/tree-select';
 import { DateTimeRangeFieldRoot, DateTimeRangeFieldStartInput, DateTimeRangeFieldEndInput } from '@sectile/vue/temporal/date-time-range-field';
 import {
   DateTimeRangePickerRoot, DateTimeRangePickerStartTimeInput, DateTimeRangePickerEndTimeInput, DateTimeRangePickerTrigger,
@@ -83,6 +83,24 @@ Object.defineProperty(prototype, 'value', { ...value, set(next) {
 }
 
 window.sectileProbe = {
+  async treeSelectLabel(refuse = false) {
+    reset();
+    const nodes = [{ id: 'oak', parentID: null }, { id: 'birch', parentID: null }];
+    const names = { oak: 'Oak', birch: 'Birch' };
+    const open = ref(false);
+    const selectedLabel = ids => ids.map(id => names[id]).join(', ');
+    app = createApp({ render: () => h('form', null, h(TreeSelectRoot, {
+      nodes, name: 'tree', position: false, label: 'Tree', defaultQuery: 'o', matches: ['oak', 'birch'], selectedLabel,
+      ...(refuse ? { modelValue: ['oak'], open: open.value, 'onUpdate:open': next => { if (next) open.value = next; } } : { defaultValue: ['oak'] }),
+    }, () => [
+      h(TreeSelectInput, { asChild: true, 'aria-describedby': 'tree-help tree-value' }, () => h('input')),
+      h(TreeSelectValue, { id: 'tree-value' }),
+      h('span', { id: 'tree-help' }, 'Type to search'),
+      h(TreeSelectContent, null, () => nodes.map(node => h(TreeSelectItem, { value: node.id }, () => names[node.id]))),
+    ])) });
+    app.mount(host);
+    await settle();
+  },
   async remoteGroupSelection() {
     reset();
     const controller = useDataTreeGrid({ defaultRowSelection: { kind: 'explicit-rows', rowIDs: ['a', 'outside'] } });
@@ -294,7 +312,8 @@ window.sectileProbe = {
       setCellValue:(_id,next)=>update(next),defaultHighlightedValue:'name',defaultEditMode:'editing'},
       {default:()=>h(TreeGridRow,{value:'root',rowIndex:1},{default:()=>h(TreeGridCell,{value:'name',columnIndex:1},{default:()=>h(TreeGridEditor,{for:'name',id})})})});
     else if(id.startsWith('tree-select')) render=()=>h(TreeSelectRoot,{nodes:treeNodes.value,position:false,...config.value,
-      ...(id==='tree-select'?{query:value.value}:{}),'onUpdate:query':update},()=>[input(TreeSelectInput),h(TreeSelectContent)]);
+      ...(id==='tree-select'?{query:value.value}:{defaultValue:['root'],selectedLabel:()=> 'Selected root'}),
+      'onUpdate:query':update},()=>[input(TreeSelectInput),h(TreeSelectContent),...(id==='tree-select-uncontrolled'?[h(TreeSelectValue)]:[])]);
     else if(id.startsWith('tabular')) {
       app=createApp({setup(){
         const response=request=>({protocolVersion:1,requestID:request.requestID,sourceGeneration:request.sourceGeneration,queryRevision:request.queryRevision,
