@@ -18,7 +18,7 @@
     "@sectile/virtual": "workspace:*",
     "@sectile/vue": "workspace:*",
     "shiki": "4.5.0",
-    "vue": "^3.5.22"
+    "vue": "3.5.46"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",
