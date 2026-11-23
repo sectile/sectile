@@ -115,7 +115,7 @@ async function pinnedScenario() {
     adapter.value = reconciled.value.adapter; rebuildCells(); for (const mutation of reconciled.value.mutations) root.value.mutate(mutation); root.value.flush(); await settle();
     const pinnedOverlap = root.value.plan.placements.some((placement) => (placement.zIndex ?? 0) > 0);
     const measurementSurvived = root.value.state.rows.toArray().find((track) => track.id === 'r0')?.extent.value === 43 && root.value.state.columns.toArray().find((track) => track.id === 'name')?.extent.value === 137;
-    const first = host.querySelector('[data-part="cell"]'); first?.dispatchEvent(new MouseEvent('click', { bubbles: true })); await settle();
+    const first = host.querySelector('[data-part="cell"]'); first?.focus({ preventScroll: true }); await settle();
     for (let index = 0; index < 8; index += 1) { (document.activeElement ?? first)?.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })); await settle(); root.value.flush(); await settle(); }
     (document.activeElement ?? host.querySelector('[data-part="cell"]'))?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })); await settle();
     const editingFocus = document.activeElement?.getAttribute('data-part') === 'editor';
