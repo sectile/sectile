@@ -4,7 +4,7 @@ import type { VirtualCollectionPartAttributes } from './virtual-collection.js';
 import { createSpatialLayout, spatialLayoutStrategy, type SpatialItem, type SpatialLayoutState, type SpatialMeasurement, type SpatialMutation, type SpatialPlacement } from '@sectile/virtual/spatial-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
-import { createVirtualCollectionExpose, prepareVirtualCollection, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
+import { createVirtualCollectionExpose, renderHighLevelItems, updatePreparedVirtualCollection, useVirtualCollectionInitialization, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export type VirtualSpatialRectResolver<Value> = {
   bivarianceHack(value: Value, index: number): VirtualRect;
@@ -19,6 +19,8 @@ export interface VirtualSpatialProps<Value = unknown, ID extends StableID = Stab
   readonly getRect: VirtualSpatialRectResolver<Value>;
   readonly getZIndex?: VirtualSpatialZIndexResolver<Value>;
   readonly sizeOwnership: VirtualSpatialSizeOwnership;
+  /** Initialize after mount when no initial viewport is supplied. */
+  readonly deferInitialLayout?: boolean;
 }
 
 export type VirtualSpatialPublicProps<Value = unknown, ID extends StableID = StableID> =
@@ -64,6 +66,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     viewportInsets: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: undefined },
     maxItems: { type: Number, default: 1_000_000 },
     initialViewport: { type: Object as PropType<VirtualRect>, default: undefined },
+    deferInitialLayout: { type: Boolean, default: false },
     as: { type: String, default: 'div' },
     contentAs: { type: String, default: 'div' },
     itemAs: { type: String, default: 'div' },
@@ -86,8 +89,11 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       ? undefined
       : Object.freeze({ ...props.initialViewport });
     const sizeOwnership = props.sizeOwnership;
-    const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
-    const initialState = createVirtualSpatialState(prepared.value, props.items, props);
+    const { pending, prepared, initialState, activeState } = useVirtualCollectionInitialization(
+      props,
+      props.deferInitialLayout && initialViewport === undefined,
+      (collection, items) => createVirtualSpatialState(collection, items, props),
+    );
     const root = shallowRef<VirtualizerRootExpose>();
     const measure = sizeOwnership === 'mounted'
       ? (({ element, placement, state }) => {
@@ -114,6 +120,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
     watch(
       () => [props.items, props.getID, props.getRect, props.getZIndex] as const,
       (current, previous) => {
+        if (pending.value) return;
         const exposed = root.value;
         if (exposed === undefined) return;
         const next = updatePreparedVirtualCollection(prepared.value, props.items, props.getID);
@@ -183,17 +190,17 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       { flush: 'sync' },
     );
 
-    expose(createVirtualCollectionExpose(
-      root,
-      initialState,
-      () => prepared.value.domain.size === 0 ? 'empty' : 'ready',
-    ));
+    const phase = () => (pending.value ? props.items.length : prepared.value.domain.size) === 0
+      ? 'empty' as const
+      : pending.value ? 'bootstrap' as const : 'ready' as const;
+    expose(createVirtualCollectionExpose(root, initialState, phase));
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
       style: virtualCollectionRootStyle(attrs),
       ref: root,
-      defaultState: initialState,
+      defaultState: activeState.value,
+      ...(pending.value ? { scrollport: null } : {}),
       strategy: spatialLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,
       overscan: props.overscan,
       ...(props.viewportInsets === undefined ? {} : { viewportInsets: props.viewportInsets }),
@@ -203,7 +210,7 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
       }),
       as: props.as,
       'data-virtual-layout': 'virtual-spatial',
-      'data-phase': prepared.value.domain.size === 0 ? 'empty' : 'ready',
+      'data-phase': phase(),
       onStateChange: (state: object) => emit('stateChange', state as SpatialLayoutState<StableID>),
       onPlanChange: (plan: VirtualLayoutPlan<StableID>) => emit('planChange', plan),
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
@@ -213,26 +220,29 @@ const VirtualSpatialRuntime = /* @__PURE__ */ defineComponent({
           ? null
           : h(VirtualizerHeader, props.partAttributes?.header ?? {}, { default: () => slots['header']?.() }),
         h(VirtualizerSurface, { ...props.partAttributes?.surface, as: props.contentAs }, {
-          default: () => renderHighLevelItems(
-            'virtual-spatial',
-            placements,
-            prepared.value,
-            props.items,
-            props.itemAs,
-            props.itemAttributes,
-            sizeOwnership === 'mounted' ? 'none' : 'both',
-            (value, id, index, placement) => {
-              const spatialPlacement = placement as SpatialPlacement<StableID>;
-              return slots['item']?.({
-                value,
-                id,
-                index,
-                placement: spatialPlacement,
-                zIndex: spatialPlacement.zIndex,
-              });
-            },
-            slots['empty'],
-          ),
+          default: () => {
+            if (pending.value) return props.items.length === 0 ? slots['empty']?.() : undefined;
+            return renderHighLevelItems(
+              'virtual-spatial',
+              placements,
+              prepared.value,
+              props.items,
+              props.itemAs,
+              props.itemAttributes,
+              sizeOwnership === 'mounted' ? 'none' : 'both',
+              (value, id, index, placement) => {
+                const spatialPlacement = placement as SpatialPlacement<StableID>;
+                return slots['item']?.({
+                  value,
+                  id,
+                  index,
+                  placement: spatialPlacement,
+                  zIndex: spatialPlacement.zIndex,
+                });
+              },
+              slots['empty'],
+            );
+          },
         }),
         slots['footer'] === undefined
           ? null

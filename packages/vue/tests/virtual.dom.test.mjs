@@ -37,7 +37,7 @@ Object.assign(globalThis, {
   MutationObserver: browserWindow.MutationObserver,
 });
 
-const { createApp, effectScope, h, nextTick, ref, shallowRef, watch } = await import('vue');
+const { createApp, createSSRApp, effectScope, h, nextTick, ref, shallowRef, watch } = await import('vue');
 const { renderToString } = await import('@vue/server-renderer');
 const { VirtualGrid } = await import('../.verification-dist/virtual/virtual-grid.js');
 const { VirtualList } = await import('../.verification-dist/virtual-list.js');
@@ -252,6 +252,193 @@ test('high-level virtual collections share SSR scrollport defaults and caller st
         assert.equal(root.style.height, style === undefined ? '' : '100px');
       }
     }
+  }
+});
+
+test('deferred spatial, list, and grid initialization preserves the hydrated shell', async () => {
+  const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => 200 });
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get: () => 100 });
+  try {
+    for (const component of [VirtualSpatial, VirtualList, VirtualGrid]) {
+      const items = Array.from({ length: 1_000 }, (_, id) => ({ id }));
+      const exposed = ref();
+      const calls = { id: 0, extent: 0, zIndex: 0, item: 0, empty: 0 };
+      const getID = (value) => { calls.id += 1; return value.id; };
+      const getRect = (_value, index) => {
+        calls.extent += 1;
+        return { x: 0, y: index * 20, width: 20, height: 20 };
+      };
+      const estimate = () => { calls.extent += 1; return 20; };
+      const getZIndex = () => { calls.zIndex += 1; return 0; };
+      const fixture = (overrides = {}) => ({
+        render: () => h(component, {
+          ref: exposed, items, getID, deferInitialLayout: true, overscan: 0,
+          ...(component === VirtualSpatial ? { getRect, getZIndex, sizeOwnership: 'declared' }
+            : { sizePolicy: { kind: 'estimated', estimate }, lanePolicy: { kind: 'fixed', count: 1 } }),
+          ...overrides,
+        }, {
+          header: () => 'Header',
+          footer: () => 'Footer',
+          empty: () => { calls.empty += 1; return 'Empty'; },
+          item: ({ id }) => { calls.item += 1; return String(id); },
+        }),
+      });
+      const html = await renderToString(createSSRApp(fixture()));
+      assert.deepEqual(calls, { id: 0, extent: 0, zIndex: 0, item: 0, empty: 0 });
+      assert.match(html, /data-phase="bootstrap"/u);
+      assert.match(html, /Header.*data-part="surface".*Footer/su);
+
+      const host = document.createElement('div');
+      host.innerHTML = html;
+      document.body.append(host);
+      const root = host.firstElementChild;
+      const surface = host.querySelector('[data-part="surface"]');
+      const warnings = [];
+      const app = createSSRApp(fixture());
+      app.config.warnHandler = (message) => warnings.push(message);
+      try {
+        app.mount(host);
+        await settle();
+        assert.equal(host.firstElementChild, root);
+        assert.equal(host.querySelector('[data-part="surface"]'), surface);
+        assert.equal(calls.id, items.length);
+        assert.ok(calls.extent >= items.length);
+        assert.equal(calls.zIndex, component === VirtualSpatial ? items.length : 0);
+        assert.ok(calls.item > 0);
+        assert.equal(calls.empty, 0);
+        assert.deepEqual(warnings, []);
+        assert.equal(exposed.value.phase, 'ready');
+        assert.equal(exposed.value.scrollToID(90).ok, true);
+      } finally {
+        app.unmount();
+        host.remove();
+      }
+
+      calls.id = calls.extent = calls.zIndex = calls.item = 0;
+      const eager = await renderToString(createSSRApp(fixture({ deferInitialLayout: false })));
+      assert.match(eager, /data-phase="ready"/u);
+      assert.equal(calls.id, items.length);
+      assert.equal(calls.extent, items.length);
+      assert.equal(calls.zIndex, component === VirtualSpatial ? items.length : 0);
+      assert.equal(calls.item, 0);
+
+      const empty = await renderToString(createSSRApp(fixture({ items: [] })));
+      assert.match(empty, /data-phase="empty"[^]*Empty/u);
+
+      calls.id = calls.item = 0;
+      const viewport = { x: 0, y: 0, width: 200, height: 100 };
+      await renderToString(createSSRApp(fixture({ initialViewport: viewport })));
+      assert.equal(calls.id, items.length);
+      assert.ok(calls.item > 0);
+      if (component !== VirtualSpatial) {
+        calls.id = calls.item = 0;
+        const measured = await renderToString(createSSRApp(fixture({ sizePolicy: { kind: 'measured' } })));
+        assert.match(measured, /data-phase="bootstrap"/u);
+        assert.equal(calls.id, items.length);
+        assert.equal(calls.item, 1);
+      }
+    }
+  } finally {
+    if (width === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', width);
+    if (height === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', height);
+  }
+});
+
+test('Spatial validates deferred item IDs at mount and eager item IDs during SSR', async () => {
+  const fixture = (deferInitialLayout) => ({
+    render: () => h(VirtualSpatial, {
+      items: ['duplicate', 'duplicate'],
+      getID: (value) => value,
+      getRect: () => ({ x: 0, y: 0, width: 20, height: 20 }),
+      sizeOwnership: 'declared',
+      deferInitialLayout,
+    }),
+  });
+  const eager = createSSRApp(fixture(false));
+  eager.config.warnHandler = () => {};
+  await assert.rejects(renderToString(eager), /identities must be unique/u);
+
+  const host = document.createElement('div');
+  host.innerHTML = await renderToString(createSSRApp(fixture(true)));
+  document.body.append(host);
+  const app = createSSRApp(fixture(true));
+  const errors = [];
+  app.config.errorHandler = (error) => errors.push(error.message);
+  try {
+    app.mount(host);
+    await settle();
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /identities must be unique/u);
+  } finally {
+    app.unmount();
+    host.remove();
+  }
+});
+
+test('Masonry hydrates without a seeded viewport and preserves its layout through zero width', async () => {
+  const width = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientWidth');
+  const height = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'clientHeight');
+  let physicalWidth = 0;
+  Object.defineProperty(HTMLElement.prototype, 'clientWidth', { configurable: true, get: () => physicalWidth });
+  Object.defineProperty(HTMLElement.prototype, 'clientHeight', { configurable: true, get: () => 100 });
+  const items = [{ id: 'a' }, { id: 'b' }];
+  const exposed = ref();
+  const errors = [];
+  const contentWidths = [];
+  const fixture = { render: () => h(VirtualMasonry, {
+    ref: exposed, items, getID: (value) => value.id,
+    sizePolicy: { kind: 'fixed', extent: 20 },
+    lanePolicy: { kind: 'fixed', count: 2, gap: 12 },
+    onPlanChange: ({ contentSize }) => contentWidths.push(contentSize.width),
+    onError: (error) => errors.push(error.code),
+  }, { item: ({ id }) => id }) };
+  const host = document.createElement('div');
+  const app = createSSRApp(fixture);
+  let mounted = false;
+  try {
+    host.innerHTML = await renderToString(createSSRApp(fixture));
+    document.body.append(host);
+    const root = host.firstElementChild;
+    const surface = host.querySelector('[data-part="surface"]');
+    assert.equal(root?.getAttribute('data-phase'), 'bootstrap');
+    app.mount(host);
+    mounted = true;
+    await settle();
+    assert.equal(exposed.value.plan, null);
+    assert.deepEqual(contentWidths, []);
+    assert.equal(exposed.value.scrollToID('a').error.code, 'virtualizer-not-connected');
+    assert.equal(host.querySelectorAll('[data-part="item"]').length, 0);
+
+    physicalWidth = 160;
+    exposed.value.refresh();
+    await new Promise(resolve => browserWindow.requestAnimationFrame(resolve));
+    await settle();
+    assert.equal(host.firstElementChild, root);
+    assert.equal(host.querySelector('[data-part="surface"]'), surface);
+    assert.equal(exposed.value.phase, 'ready');
+    assert.equal(exposed.value.state.laneExtent, 74);
+    assert.deepEqual(contentWidths, [160]);
+    assert.equal(host.querySelectorAll('[data-part="item"]').length, 2);
+
+    for (const nextWidth of [0, 12, 200]) {
+      physicalWidth = nextWidth;
+      exposed.value.refresh();
+      assert.equal(exposed.value.flush().ok, true);
+      await settle();
+      assert.equal(exposed.value.state.laneExtent, nextWidth === 200 ? 94 : 74);
+    }
+    assert.deepEqual(errors, []);
+  } finally {
+    if (mounted) app.unmount();
+    host.remove();
+    if (width === undefined) delete HTMLElement.prototype.clientWidth;
+    else Object.defineProperty(HTMLElement.prototype, 'clientWidth', width);
+    if (height === undefined) delete HTMLElement.prototype.clientHeight;
+    else Object.defineProperty(HTMLElement.prototype, 'clientHeight', height);
   }
 });
 

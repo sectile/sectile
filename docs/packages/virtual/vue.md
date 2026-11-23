@@ -71,6 +71,8 @@ Here `viewportInsets.top` accounts for a 64 px fixed or sticky page header. Sect
 
 The selected document's own browser realm is used. Page-level virtualization therefore works with an iframe-owned `Document` through the same low-level host contract.
 
+When `initialViewport` is omitted or too narrow for the lane gaps, Masonry renders its root and surface while it measures the scrollport. Once the viewport is wide enough, Masonry initializes the layout and renders any samples needed for `sizePolicy`. If the viewport later becomes too narrow, Masonry keeps the last usable lane geometry until the width recovers.
+
 ## Use an external element
 
 Pass an element when scrolling is owned by a container outside the Virtual component root.
@@ -142,6 +144,12 @@ Document scrolling uses the layout viewport. `Window` is not a parallel target t
 ## A grid large on both axes
 
 `VirtualGrid` derives a dense lane layout and flows along the main axis. For a table or schedule with hundreds of independent rows and columns, connect `VirtualizerRoot` to `trackGridLayoutStrategy`. The [300 × 300 grid example](layouts.md#track-grid) contains the complete code.
+
+## Defer the first layout
+
+Set `deferInitialLayout` on `VirtualSpatial`, `VirtualList`, or `VirtualGrid` to resolve item IDs and build the first layout after mount. While waiting, the server and the first client render produce the same root, surface, and any header or footer. An empty collection still renders the `empty` slot.
+
+Choose this option when creating the component. Item validation also moves to mount. A supplied `initialViewport` takes precedence. List and Grid still render their first measurement samples when the size policy needs them to determine the initial size.
 
 ## Low-level building blocks
 

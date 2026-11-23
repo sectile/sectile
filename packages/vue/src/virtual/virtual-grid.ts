@@ -14,13 +14,15 @@ import { createExtentIndex, createUniformExtentIndex, type Extent, type ExtentIn
 import { createDenseTrackGridLayout, trackGridLayoutStrategy, type GridTrackMeasurement, type TrackGridLayoutState, type TrackGridMutation } from '@sectile/virtual/track-grid-layout';
 import { type VirtualInsets, type VirtualLayoutPlan, type VirtualLayoutStrategy, type VirtualMeasurementResolver, type VirtualRect, type VirtualizerErrorHandler } from '@sectile/dom/virtual';
 import { asHTMLElement, VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, VirtualizerSurface, type VirtualizerRootExpose, type VirtualizerRootSlotProps } from './virtual-core.js';
-import { createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
+import { createVirtualCollectionExpose, nearlyEqual, prepareVirtualCollection, renderCollectionBootstrapItems, renderHighLevelItems, updatePreparedVirtualCollection, useVirtualCollectionInitialization, virtualCollectionRootStyle, type PreparedVirtualCollection, type VirtualCollectionBaseProps, type VirtualCollectionIDResolver, type VirtualCollectionItemAttributes, type VirtualCollectionItemSlotProps } from './virtual-collection.js';
 
 export interface VirtualGridProps<Value = unknown, ID extends StableID = StableID>
   extends VirtualCollectionBaseProps<Value, ID> {
   readonly sizePolicy: VirtualSizePolicy<Value>;
   readonly lanePolicy: VirtualLanePolicy;
   readonly rowGap?: number;
+  /** Initialize after mount when no initial viewport or measurement bootstrap is needed. */
+  readonly deferInitialLayout?: boolean;
 }
 
 export type VirtualGridPublicProps<Value = unknown, ID extends StableID = StableID> =
@@ -66,6 +68,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     viewportInsets: { type: [Number, Object] as PropType<number | Partial<VirtualInsets>>, default: undefined },
     maxItems: { type: Number, default: 1_000_000 },
     initialViewport: { type: Object as PropType<VirtualRect>, default: undefined },
+    deferInitialLayout: { type: Boolean, default: false },
     as: { type: String, default: 'div' },
     contentAs: { type: String, default: 'div' },
     itemAs: { type: String, default: 'div' },
@@ -87,25 +90,21 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
-    const initialGeometry = resolveVirtualLaneGeometry(
-      initialViewport?.width ?? 0,
-      props.lanePolicy,
-    );
     const automaticEstimate = shallowRef<number>();
+    const measured = virtualSizePolicyRequiresMeasurement(props.sizePolicy);
+    const { pending, prepared, initialState, activeState } = useVirtualCollectionInitialization(
+      props,
+      props.deferInitialLayout && initialViewport === undefined && !measured,
+      (collection, items) => {
+        const geometry = resolveVirtualLaneGeometry(initialViewport?.width ?? 0, props.lanePolicy);
+        return measured
+          ? createVirtualGridState(prepareVirtualCollection([], props.getID, props.maxItems), [], props, geometry, 0)
+          : createVirtualGridState(collection, items, props, geometry);
+      },
+    );
     const isBootstrapping = (): boolean => virtualSizePolicyRequiresMeasurement(props.sizePolicy)
       && automaticEstimate.value === undefined
       && prepared.value.domain.size > 0;
-    const initialState = virtualSizePolicyRequiresMeasurement(props.sizePolicy)
-      ? createVirtualGridState(
-          prepareVirtualCollection([], props.getID, props.maxItems),
-          [],
-          props,
-          initialGeometry,
-          0,
-        )
-      : createVirtualGridState(prepared.value, props.items, props, initialGeometry);
-    const activeState = shallowRef(initialState);
     const root = shallowRef<VirtualizerRootExpose>();
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
     const measuredHeights = new Map<StableID, number>();
@@ -193,6 +192,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
         }) satisfies VirtualMeasurementResolver<TrackGridLayoutState<StableID>, StableID, GridTrackMeasurement>;
 
     const sync = (): void => {
+      if (pending.value) return;
       if (virtualSizePolicyRequiresMeasurement(props.sizePolicy) && automaticEstimate.value === undefined) {
         prepared.value = updatePreparedVirtualCollection(prepared.value, props.items, props.getID);
         scheduleBootstrap();
@@ -239,21 +239,19 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
       sync,
       { flush: 'post' },
     );
-    expose(createVirtualCollectionExpose(
-      root,
-      initialState,
-      () => prepared.value.domain.size === 0
-        ? 'empty'
-        : isBootstrapping()
-          ? 'bootstrap'
-          : 'ready',
-    ));
+    const phase = () => (pending.value ? props.items.length : prepared.value.domain.size) === 0
+      ? 'empty' as const
+      : pending.value || isBootstrapping()
+        ? 'bootstrap' as const
+        : 'ready' as const;
+    expose(createVirtualCollectionExpose(root, initialState, phase));
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
       style: virtualCollectionRootStyle(attrs),
       ref: root,
       defaultState: activeState.value,
+      ...(pending.value ? { scrollport: null } : {}),
       strategy: trackGridLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,
       overscan: props.overscan,
       ...(props.viewportInsets === undefined ? {} : { viewportInsets: props.viewportInsets }),
@@ -263,11 +261,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
       }),
       as: props.as,
       'data-virtual-layout': 'virtual-grid',
-      'data-phase': prepared.value.domain.size === 0
-        ? 'empty'
-        : isBootstrapping()
-          ? 'bootstrap'
-          : 'ready',
+      'data-phase': phase(),
       onStateChange: (state: object) => emit('stateChange', state as TrackGridLayoutState<StableID>),
       onPlanChange: (plan: VirtualLayoutPlan<StableID>) => {
         viewportWidth.value = plan.viewport.width;
@@ -280,8 +274,10 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
           ? null
           : h(VirtualizerHeader, props.partAttributes?.header ?? {}, { default: () => slots['header']?.() }),
         h(VirtualizerSurface, { ...props.partAttributes?.surface, as: props.contentAs }, {
-          default: () => isBootstrapping()
-            ? renderCollectionBootstrapItems(
+          default: () => {
+            if (pending.value) return props.items.length === 0 ? slots['empty']?.() : undefined;
+            return isBootstrapping()
+              ? renderCollectionBootstrapItems(
                 'virtual-grid',
                 prepared.value,
                 props.items,
@@ -308,7 +304,7 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
                 }),
                 bootstrapItemRef,
               )
-            : renderHighLevelItems(
+              : renderHighLevelItems(
                 'virtual-grid',
                 placements,
                 prepared.value,
@@ -329,7 +325,8 @@ const VirtualGridRuntime = /* @__PURE__ */ defineComponent({
                   });
                 },
                 slots['empty'],
-              ),
+              );
+          },
         }),
         slots['footer'] === undefined
           ? null

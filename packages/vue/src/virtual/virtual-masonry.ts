@@ -91,13 +91,20 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(prepareVirtualCollection(props.items, props.getID, props.maxItems));
     const initialGeometry = resolveVirtualLaneGeometry(
       initialViewport?.width ?? 0,
       props.lanePolicy,
     );
+    const waitingForGeometry = shallowRef(initialGeometry.extent === 0);
+    const prepared = shallowRef(prepareVirtualCollection(
+      waitingForGeometry.value ? [] : props.items,
+      props.getID,
+      props.maxItems,
+    ));
     const automaticEstimate = shallowRef<number>();
-    const initialState = virtualSizePolicyRequiresMeasurement(props.sizePolicy)
+    const initialState = waitingForGeometry.value
+      ? createVirtualMasonryState(prepared.value, [], props, { count: 1, extent: 1, gap: 0 }, 0)
+      : virtualSizePolicyRequiresMeasurement(props.sizePolicy)
       ? createVirtualMasonryState(
           prepareVirtualCollection([], props.getID, props.maxItems),
           [],
@@ -107,12 +114,27 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         )
       : createVirtualMasonryState(prepared.value, props.items, props, initialGeometry);
     const activeState = shallowRef(initialState);
+    // An empty canonical state lets the existing host measure its viewport.
+    // Its synthetic lane is never projected into the waiting surface.
+    const strategy = waitingForGeometry.value
+      ? {
+          ...masonryLayoutStrategy,
+          tryQuery: ((state, input) => {
+            const result = masonryLayoutStrategy.tryQuery(state, input);
+            return state !== initialState || !result.ok ? result : {
+              ok: true,
+              value: Object.freeze({ ...result.value, contentSize: Object.freeze({ width: 0, height: 0 }) }),
+            };
+          }) satisfies typeof masonryLayoutStrategy.tryQuery,
+        }
+      : masonryLayoutStrategy;
     const root = shallowRef<VirtualizerRootExpose>();
     const viewportWidth = shallowRef(initialViewport?.width ?? 0);
     const bootstrapElements = new Map<number, HTMLElement>();
     let bootstrapScheduled = false;
     let disposed = false;
-    const isBootstrapping = (): boolean => virtualSizePolicyRequiresMeasurement(props.sizePolicy)
+    const isBootstrapping = (): boolean => !waitingForGeometry.value
+      && virtualSizePolicyRequiresMeasurement(props.sizePolicy)
       && automaticEstimate.value === undefined
       && prepared.value.domain.size > 0;
     const bootstrapItemRef = (index: number, value: unknown): void => {
@@ -129,6 +151,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         viewportWidth.value,
         props.lanePolicy,
       );
+      if (geometry.extent === 0) return;
       const count = Math.min(geometry.count, prepared.value.domain.size);
       let total = 0;
       for (let index = 0; index < count; index += 1) {
@@ -152,6 +175,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     function scheduleBootstrap(): void {
       if (
         disposed
+        || waitingForGeometry.value
         || bootstrapScheduled
         || automaticEstimate.value !== undefined
         || prepared.value.domain.size === 0
@@ -174,6 +198,7 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
     watch(
       () => [props.items, props.getID] as const,
       () => {
+        if (waitingForGeometry.value) return;
         if (
           virtualSizePolicyRequiresMeasurement(props.sizePolicy)
           && automaticEstimate.value === undefined
@@ -230,12 +255,25 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
         viewportWidth.value,
       ] as const,
       () => {
-        const exposed = root.value;
-        if (exposed === undefined) return;
         const geometry = resolveVirtualLaneGeometry(
           viewportWidth.value,
           props.lanePolicy,
         );
+        if (geometry.extent === 0) return;
+        if (waitingForGeometry.value) {
+          const next = prepareVirtualCollection(props.items, props.getID, props.maxItems);
+          const nextState = virtualSizePolicyRequiresMeasurement(props.sizePolicy)
+            ? createVirtualMasonryState(prepared.value, [], props, geometry, 0)
+            : createVirtualMasonryState(next, props.items, props, geometry);
+          prepared.value = next;
+          activeState.value = nextState;
+          waitingForGeometry.value = false;
+          scheduleBootstrap();
+          return;
+        }
+        const exposed = root.value;
+        if (exposed === undefined) return;
+        scheduleBootstrap();
         const state = exposed.state as MasonryLayoutState<StableID>;
         if (
           state.laneCount === geometry.count
@@ -255,22 +293,19 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       },
       { flush: 'post' },
     );
-    expose(createVirtualCollectionExpose(
-      root,
-      initialState,
-      () => prepared.value.domain.size === 0
-        ? 'empty'
-        : isBootstrapping()
-          ? 'bootstrap'
-          : 'ready',
-    ));
+    const phase = () => (waitingForGeometry.value ? props.items.length : prepared.value.domain.size) === 0
+      ? 'empty' as const
+      : waitingForGeometry.value || isBootstrapping()
+        ? 'bootstrap' as const
+        : 'ready' as const;
+    expose(createVirtualCollectionExpose(root, initialState, phase, () => !waitingForGeometry.value));
 
     return (): VNodeChild => h(VirtualizerRoot, {
       ...attrs,
       style: virtualCollectionRootStyle(attrs),
       ref: root,
       defaultState: activeState.value,
-      strategy: masonryLayoutStrategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,
+      strategy: strategy as unknown as VirtualLayoutStrategy<object, StableID, unknown, unknown>,
       overscan: props.overscan,
       ...(props.viewportInsets === undefined ? {} : { viewportInsets: props.viewportInsets }),
       ...(initialViewport === undefined ? {} : { initialViewport }),
@@ -279,39 +314,31 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
       }),
       as: props.as,
       'data-virtual-layout': 'virtual-masonry',
-      'data-phase': prepared.value.domain.size === 0
-        ? 'empty'
-        : isBootstrapping()
-          ? 'bootstrap'
-          : 'ready',
-      onStateChange: (state: object) => emit('stateChange', state as MasonryLayoutState<StableID>),
+      'data-phase': phase(),
+      onStateChange: (state: object) => {
+        if (!waitingForGeometry.value) emit('stateChange', state as MasonryLayoutState<StableID>);
+      },
       onPlanChange: (plan: VirtualLayoutPlan<StableID>) => {
         viewportWidth.value = plan.viewport.width;
-        emit('planChange', plan);
+        if (!waitingForGeometry.value) emit('planChange', plan);
       },
       onError: (error: Parameters<VirtualizerErrorHandler>[0]) => emit('error', error),
     }, {
-      default: ({ placements }: VirtualizerRootSlotProps) => [
+      default: ({ placements, state }: VirtualizerRootSlotProps) => [
         slots['header'] === undefined
           ? null
           : h(VirtualizerHeader, props.partAttributes?.header ?? {}, { default: () => slots['header']?.() }),
         h(VirtualizerSurface, { ...props.partAttributes?.surface, as: props.contentAs }, {
-          default: () => isBootstrapping()
-            ? renderCollectionBootstrapItems(
+          default: () => {
+            if (waitingForGeometry.value) return props.items.length === 0 ? slots['empty']?.() : undefined;
+            if (isBootstrapping()) {
+              const { laneCount, laneExtent } = state as MasonryLayoutState<StableID>;
+              return renderCollectionBootstrapItems(
                 'virtual-masonry',
                 prepared.value,
                 props.items,
-                Math.min(
-                  resolveVirtualLaneGeometry(
-                    viewportWidth.value,
-                    props.lanePolicy,
-                  ).count,
-                  prepared.value.domain.size,
-                ),
-                resolveVirtualLaneGeometry(
-                  viewportWidth.value,
-                  props.lanePolicy,
-                ).extent,
+                Math.min(laneCount, prepared.value.domain.size),
+                laneExtent,
                 props.itemAs,
                 props.itemAttributes,
                 (value, id, index, placement) => slots['item']?.({
@@ -322,27 +349,29 @@ const VirtualMasonryRuntime = /* @__PURE__ */ defineComponent({
                   lane: index,
                 }),
                 bootstrapItemRef,
-              )
-            : renderHighLevelItems(
-                'virtual-masonry',
-                placements,
-                prepared.value,
-                props.items,
-                props.itemAs,
-                props.itemAttributes,
-                props.sizePolicy.kind === 'fixed' ? 'both' : 'width',
-                (value, id, index, placement) => {
-                  const masonryPlacement = placement as MasonryPlacement<StableID>;
-                  return slots['item']?.({
-                    value,
-                    id,
-                    index,
-                    placement: masonryPlacement,
-                    lane: masonryPlacement.lane,
-                  });
-                },
-                slots['empty'],
-              ),
+              );
+            }
+            return renderHighLevelItems(
+              'virtual-masonry',
+              placements,
+              prepared.value,
+              props.items,
+              props.itemAs,
+              props.itemAttributes,
+              props.sizePolicy.kind === 'fixed' ? 'both' : 'width',
+              (value, id, index, placement) => {
+                const masonryPlacement = placement as MasonryPlacement<StableID>;
+                return slots['item']?.({
+                  value,
+                  id,
+                  index,
+                  placement: masonryPlacement,
+                  lane: masonryPlacement.lane,
+                });
+              },
+              slots['empty'],
+            );
+          },
         }),
         slots['footer'] === undefined
           ? null

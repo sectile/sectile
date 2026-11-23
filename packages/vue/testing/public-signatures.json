@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "078c8bc81c007675a98d0975e95845ffa3f7ea6f67a1c6ee23ef5bd392da95b0",
+  "fingerprint": "ef384cf98ab08c29166259967784fe82d29ca12277c1aebc25e9e7c4390a8eae",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -643,7 +643,7 @@
     },
     {
       "path": "dist/tabular/context.d.ts",
-      "sha256": "eb0d7166ce9eb9d8a5230321bdfab6f1a5359461825d41df4dbd2390e18108cb"
+      "sha256": "3f25d1a92321196a8995afd93541729b3cde0a7cf0d9cd9c20120638641c2dd8"
     },
     {
       "path": "dist/tabular/controller.d.ts",
@@ -663,7 +663,7 @@
     },
     {
       "path": "dist/tabular/parts.d.ts",
-      "sha256": "3430c4b7d7268ec6ca0ce7f979a95c57bef5b0899794b3b8eeb7916b7d4914bb"
+      "sha256": "803faa50f325b735f00d1a3a1588edb21c0cb43ea1e2f280379d8cea4305960e"
     },
     {
       "path": "dist/tabular/schema.d.ts",
@@ -811,7 +811,7 @@
     },
     {
       "path": "dist/virtual/virtual-collection.d.ts",
-      "sha256": "de954456be2b1b2e6a704293ed973802315d57b18199f9546df8ab33fa17be7a"
+      "sha256": "4bf28bf0fd909f82a1e8f6bcce71e10267069980189d5449c7c4ce3a44cdcbcc"
     },
     {
       "path": "dist/virtual/virtual-core.d.ts",
@@ -819,11 +819,11 @@
     },
     {
       "path": "dist/virtual/virtual-grid.d.ts",
-      "sha256": "d994b48eac73a77276761eba7439fe224f82fd426bc18b02a9460dd4a8bf372f"
+      "sha256": "90c81e31ec6ef57605e7625c1948bf80d825a226f13561838adaeec5202634e9"
     },
     {
       "path": "dist/virtual/virtual-list.d.ts",
-      "sha256": "fc8a61fded03054cc62297726e078619afae8229eb99a62b841147033a69374d"
+      "sha256": "46904b3259d90ea4d20856946897161e70ffcb8465f5084ff26d1445189751cc"
     },
     {
       "path": "dist/virtual/virtual-masonry.d.ts",
@@ -831,7 +831,7 @@
     },
     {
       "path": "dist/virtual/virtual-spatial.d.ts",
-      "sha256": "c33b4381e1a06f3ad71b6a6b98858f364f690e86d09ffad6181694739e5756a3"
+      "sha256": "887173b24a28c318bd69e4a5c92b49355cb3a6a34c2d940e4d4b7087ee352415"
     },
     {
       "path": "dist/window-splitter.d.ts",

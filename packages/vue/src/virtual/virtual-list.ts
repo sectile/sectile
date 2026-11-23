@@ -16,9 +16,9 @@ import { asHTMLElement, VirtualizerFooter, VirtualizerHeader, VirtualizerRoot, V
 import {
   constrainPreparedVirtualCollection,
   createVirtualCollectionExpose,
-  prepareVirtualCollection,
   renderHighLevelItems,
   updatePreparedVirtualCollection,
+  useVirtualCollectionInitialization,
   virtualCollectionRootStyle,
   type PreparedVirtualCollection,
   type VirtualCollectionPartAttributes,
@@ -37,6 +37,8 @@ export interface VirtualListProps<Value = unknown, ID extends StableID = StableI
   readonly sizePolicy: VirtualSizePolicy<Value>;
   readonly axis?: LinearAxis;
   readonly gap?: number;
+  /** Initialize after mount when no initial viewport or measurement bootstrap is needed. */
+  readonly deferInitialLayout?: boolean;
 }
 
 export type VirtualListPublicProps<Value = unknown, ID extends StableID = StableID> =
@@ -106,6 +108,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       type: Object as PropType<VirtualRect>,
       default: undefined,
     },
+    deferInitialLayout: { type: Boolean, default: false },
     as: { type: String, default: 'div' },
     contentAs: { type: String, default: 'div' },
     itemAs: { type: String, default: 'div' },
@@ -134,12 +137,19 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const initialViewport = props.initialViewport === undefined
       ? undefined
       : Object.freeze({ ...props.initialViewport });
-    const prepared = shallowRef(
-      prepareVirtualCollection(props.items, props.getID, maxItems),
+    const deferInitialLayout = props.deferInitialLayout;
+    const measured = virtualSizePolicyRequiresMeasurement(sizePolicy);
+    const initialCrossExtent = crossExtentForViewport(axis, initialViewport);
+    const { pending, prepared, initialState, activeState } = useVirtualCollectionInitialization(
+      props,
+      deferInitialLayout && initialViewport === undefined && !measured,
+      (collection, items) => measured
+        ? createEmptyVirtualListState({ axis, gap, maxItems, crossExtent: initialCrossExtent })
+        : createVirtualListState(collection, items, { sizePolicy, axis, gap, maxItems, crossExtent: initialCrossExtent }),
     );
     const automaticEstimate = shallowRef<number>();
     const bootstrapCount = shallowRef(
-      virtualSizePolicyRequiresMeasurement(sizePolicy) && prepared.value.domain.size > 0
+      measured && prepared.value.domain.size > 0
         ? 1
         : 0,
     );
@@ -147,15 +157,6 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     const bootstrapRefs = new Map<number, (value: unknown) => void>();
     let bootstrapScheduled = false;
     let disposed = false;
-    const initialCrossExtent = crossExtentForViewport(axis, initialViewport);
-    const initialState = virtualSizePolicyRequiresMeasurement(sizePolicy)
-      ? createEmptyVirtualListState({ axis, gap, maxItems, crossExtent: initialCrossExtent })
-      : createVirtualListState(
-          prepared.value,
-          props.items,
-          { sizePolicy, axis, gap, maxItems, crossExtent: initialCrossExtent },
-        );
-    const activeState = shallowRef(initialState);
     const root = shallowRef<VirtualizerRootExpose>();
     const measure = sizePolicy.kind === 'fixed'
       ? undefined
@@ -164,9 +165,9 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       automaticEstimate.value === undefined
       && bootstrapCount.value > 0
       && prepared.value.domain.size > 0;
-    const phase = () => prepared.value.domain.size === 0
+    const phase = () => (pending.value ? props.items.length : prepared.value.domain.size) === 0
       ? 'empty' as const
-      : isBootstrapping()
+      : pending.value || isBootstrapping()
         ? 'bootstrap' as const
         : 'ready' as const;
     // The child receives this snapshot on its next render, after ready consumers
@@ -252,6 +253,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
     watch(
       () => [props.items, props.getID] as const,
       () => {
+        if (pending.value) return;
         const next = updatePreparedVirtualCollection(
           prepared.value,
           props.items,
@@ -338,6 +340,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
         props.gap,
         props.maxItems,
         props.sizePolicy,
+        props.deferInitialLayout,
         props.initialViewport?.x,
         props.initialViewport?.y,
         props.initialViewport?.width,
@@ -351,12 +354,13 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
             && props.gap === gap
             && props.maxItems === maxItems
             && sameVirtualSizePolicy(props.sizePolicy, sizePolicy)
+            && props.deferInitialLayout === deferInitialLayout
             && sameVirtualRect(props.initialViewport, initialViewport)
           )
         ) return;
         constructionWarningShown = true;
         console.warn(
-          '[Sectile] VirtualList axis, gap, maxItems, sizePolicy, and initialViewport are construction-time options. Remount the list to change them.',
+          '[Sectile] VirtualList axis, gap, maxItems, sizePolicy, initialViewport, and deferInitialLayout are construction-time options. Remount the list to change them.',
         );
       },
       { flush: 'sync' },
@@ -374,6 +378,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
       ...attrs,
       ref: root,
       defaultState: activeState.value,
+      ...(pending.value ? { scrollport: null } : {}),
       strategy: linearLayoutStrategyFor<StableID>() as unknown as VirtualizerRootProps['strategy'],
       overscan: props.overscan,
       ...(props.viewportInsets === undefined ? {} : { viewportInsets: props.viewportInsets }),
@@ -407,8 +412,10 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
             ? { style: { display: 'flex' } }
             : {}),
         }, {
-          default: () => isBootstrapping()
-            ? renderVirtualListBootstrapItems(
+          default: () => {
+            if (pending.value) return props.items.length === 0 ? slots['empty']?.() : undefined;
+            return isBootstrapping()
+              ? renderVirtualListBootstrapItems(
                 prepared.value,
                 props.items,
                 bootstrapCount.value,
@@ -422,7 +429,7 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
                 slots['item'],
                 bootstrapItemRef,
               )
-            : renderHighLevelItems(
+              : renderHighLevelItems(
                 'virtual-list',
                 placements,
                 prepared.value,
@@ -437,7 +444,8 @@ const VirtualListRuntime = /* @__PURE__ */ defineComponent({
                   placement,
                 }),
                 slots['empty'],
-              ),
+              );
+          },
         }),
         slots['footer'] === undefined
           ? null

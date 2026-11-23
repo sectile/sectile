@@ -48,6 +48,7 @@ const stringList: VirtualListPublicProps<StringValue, string> = {
   items: stringItems,
   getID: (value) => value.id,
   sizePolicy: { kind: 'estimated', estimate: 24 },
+  deferInitialLayout: true,
 };
 stringList.getID(stringItems[0]!, 0) satisfies string;
 stringList.sizePolicy satisfies VirtualSizePolicy<StringValue>;
@@ -64,6 +65,7 @@ const numberGrid: VirtualGridPublicProps<NumberValue, number> = {
   getID: (value) => value.id,
   sizePolicy: { kind: 'fixed', extent: 24 },
   lanePolicy: { kind: 'fixed', count: 2 },
+  deferInitialLayout: true,
   scrollport: elementScrollport,
 };
 void numberGrid;
@@ -83,6 +85,7 @@ const numberSpatial: VirtualSpatialPublicProps<NumberValue, number> = {
   getID: (value) => value.id,
   getRect: (_value, index) => ({ x: 0, y: index * 20, width: 20, height: 20 }),
   sizeOwnership: 'declared',
+  deferInitialLayout: true,
   scrollport: null,
 };
 numberSpatial.sizeOwnership satisfies VirtualSpatialSizeOwnership;

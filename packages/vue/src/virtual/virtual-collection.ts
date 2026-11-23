@@ -2,6 +2,7 @@ import {
   defineComponent,
   h,
   onBeforeUnmount,
+  onMounted,
   shallowReactive,
   shallowRef,
   type PropType,
@@ -148,6 +149,36 @@ export function prepareVirtualCollection<
     maxItems,
     maxIDCodeUnits: 1_024,
   });
+}
+
+/**
+ * The placeholder owns an empty canonical state. Publish the replacement
+ * collection and layout together before the caller attaches a scrollport.
+ */
+export function useVirtualCollectionInitialization<State>(
+  props: Readonly<Pick<VirtualCollectionBaseProps<unknown, StableID>, 'items' | 'getID' | 'maxItems'>>,
+  defer: boolean,
+  createState: (collection: PreparedVirtualCollection, items: readonly unknown[]) => State,
+): {
+  readonly pending: ShallowRef<boolean>;
+  readonly prepared: ShallowRef<PreparedVirtualCollection>;
+  readonly initialState: State;
+  readonly activeState: ShallowRef<State>;
+} {
+  const pending = shallowRef(defer);
+  const initialItems = defer ? [] : props.items;
+  const prepared = shallowRef(prepareVirtualCollection(initialItems, props.getID, props.maxItems));
+  const initialState = createState(prepared.value, initialItems);
+  const activeState: ShallowRef<State> = shallowRef(initialState);
+  if (defer) onMounted(() => {
+    const items = props.items;
+    const next = prepareVirtualCollection(items, props.getID, props.maxItems);
+    const state = createState(next, items);
+    prepared.value = next;
+    activeState.value = state;
+    pending.value = false;
+  });
+  return { pending, prepared, initialState, activeState };
 }
 
 export function updatePreparedVirtualCollection<
@@ -413,6 +444,7 @@ export function createVirtualCollectionExpose<State>(
   root: ShallowRef<VirtualizerRootExpose | undefined>,
   initialState: State,
   phase: () => VirtualCollectionPhase,
+  available: (() => boolean) | undefined = undefined,
 ): VirtualCollectionExpose<State, StableID> {
   const emptyScrollport = shallowRef<VirtualScrollport | null>(null);
   const emptySurface = shallowRef<HTMLElement | null>(null);
@@ -420,12 +452,12 @@ export function createVirtualCollectionExpose<State>(
     get scrollport() { return root.value?.scrollport ?? emptyScrollport; },
     get surface() { return root.value?.surface ?? emptySurface; },
     get state() { return (root.value?.state as State | undefined) ?? initialState; },
-    get plan() { return root.value?.plan ?? null; },
+    get plan() { return available?.() === false ? null : root.value?.plan ?? null; },
     get phase() { return phase(); },
     scrollToID: (id: StableID, alignment?: VirtualScrollAlignment) =>
-      root.value?.scrollTo(id, alignment) ?? virtualizerNotConnected(),
+      (available?.() === false ? undefined : root.value?.scrollTo(id, alignment)) ?? virtualizerNotConnected(),
     refresh: () => root.value?.refresh(),
-    flush: () => root.value?.flush() ?? virtualizerNotConnected(),
+    flush: () => (available?.() === false ? undefined : root.value?.flush()) ?? virtualizerNotConnected(),
   });
 }
 

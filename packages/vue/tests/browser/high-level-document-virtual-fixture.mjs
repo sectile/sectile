@@ -36,7 +36,6 @@ export async function runHighLevelDocumentVirtualScenarios() {
       itemGap: 12,
       overscan: 360,
       viewportInsets: { top: 48 },
-      initialViewport: { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight },
       itemAttributes: (value) => ({ 'data-browser-masonry-item': String(value.id) }),
       onPlanChange: (plan) => {
         frameTrace.push({ generation: plan.generation, viewportY: plan.viewport.y,
@@ -116,6 +115,9 @@ export async function runHighLevelDocumentVirtualScenarios() {
     await settleVueAndFrames(2);
     const scrollToHasNoFeedback = scrollToQuiesced && writes.length === 0;
 
+    // Native movement releases the imperative target before testing anchor compensation.
+    nativeScrollTo({ left: 0, top: window.scrollY + 16, behavior: 'instant' });
+    await settleVueAndFrames(2);
     const anchor = masonry.value.plan.anchor;
     const anchorPlacement = anchor === null
       ? undefined

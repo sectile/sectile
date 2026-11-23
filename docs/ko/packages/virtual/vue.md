@@ -71,6 +71,8 @@ const rows = Array.from({ length: 50_000 }, (_, index) => ({
 
 선택한 문서 자체의 브라우저 realm을 사용하므로 iframe이 소유한 `Document`도 같은 낮은 수준 계약으로 처리할 수 있습니다.
 
+`initialViewport`를 생략했거나 viewport 폭이 lane 간격을 감당하기에 부족하면 Masonry는 root와 surface를 먼저 렌더링합니다. 스크롤 영역에서 충분한 폭을 측정하면 레이아웃을 초기화하고, `sizePolicy`에 따라 필요한 표본을 렌더링합니다. 이후 폭이 너무 좁아지면 충분한 폭을 다시 확보할 때까지 마지막으로 사용한 lane 구성을 유지합니다.
+
 ## 외부 요소를 scrollport로 사용하기
 
 Virtual 컴포넌트 바깥의 컨테이너가 스크롤을 소유한다면 그 요소를 직접 전달합니다.
@@ -142,6 +144,12 @@ Document 스크롤은 layout viewport를 기준으로 합니다. `Window`는 별
 ## 가로와 세로가 모두 큰 격자
 
 `VirtualGrid`는 주축 방향으로 흐르는 촘촘한 lane 배치입니다. 수백 개 행과 열을 각각 가상화해야 하는 표나 일정표라면 `VirtualizerRoot`에 `trackGridLayoutStrategy`를 연결합니다. [300 × 300 격자 예제](layouts.md#트랙-격자)에서 전체 코드를 확인할 수 있습니다.
+
+## 첫 레이아웃 계산 미루기
+
+`VirtualSpatial`, `VirtualList`, `VirtualGrid`에 `deferInitialLayout`을 지정하면 마운트 후 항목 ID를 구하고 첫 레이아웃을 계산합니다. 서버와 클라이언트의 첫 렌더에서는 같은 root, surface, 그리고 지정한 header와 footer를 렌더링합니다. 컬렉션이 비어 있으면 `empty` 슬롯도 렌더링합니다.
+
+이 옵션은 컴포넌트를 만들 때 지정합니다. 항목 유효성도 마운트할 때 검사합니다. `initialViewport`를 전달하면 해당 viewport를 우선 사용합니다. List와 Grid의 크기 정책이 초기 크기를 측정해야 하는 경우에는 첫 렌더에서 측정용 항목도 렌더링합니다.
 
 ## 낮은 수준 구성 요소
 
