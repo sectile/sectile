@@ -136,19 +136,21 @@ test('Vue Tabular lower owners and schema stay below public profiles', async () 
   }
 });
 
-test('Vue Temporal capability adapters and provider remain below picker profiles', async () => {
+test('Vue Temporal capability adapters, presentation and provider remain below picker profiles', async () => {
   const { packages } = await loadPublishedPackageGraph();
   const graph = await collectPackageGraph(root, packages);
   const policy = JSON.parse(await readFile(resolve(root, 'verification/package-structure/manifest.json'), 'utf8'));
   const classes = validateStructureManifest(policy, packages, graph);
   assertStructure(inspectStructure(graph, policy, classes));
   const lower = graph.modules.filter(({ path }) => path.startsWith('packages/vue/src/temporal/')
-    && ['temporal-capability', 'temporal-capabilities', 'temporal-provider'].includes(classes.get(path).role));
+    && ['temporal-capability', 'temporal-capabilities', 'temporal-presentation', 'temporal-provider'].includes(classes.get(path).role));
   for (const { path: source } of lower) {
     const role = classes.get(source).role;
+    const allowed = role === 'temporal-presentation' ? ['temporal-provider'] : ['temporal-capability'];
+    if (/\/capabilities\/date-time(?:-range)?-picker\.ts$/u.test(source)) allowed.push('temporal-presentation');
     for (const edge of graph.edges.filter((edge) => edge.source === source && edge.target !== null)) {
       const target = classes.get(edge.target);
-      if (target.package === 'vue') assert.equal(target.role, 'temporal-capability');
+      if (target.package === 'vue') assert.ok(allowed.includes(target.role), `${source} must not import ${edge.target}`);
     }
     const forbidden = ['temporal/picker.ts', 'temporal/date-picker.ts', 'temporal/date-field.ts', 'form/root.ts'];
     const peer = source.endsWith('/date-picker.ts') ? 'temporal/capabilities/year-picker.ts' : 'temporal/capabilities/date-picker.ts';
@@ -160,6 +162,9 @@ test('Vue Temporal capability adapters and provider remain below picker profiles
       }
     }
   }
+  const formatImport = { source: 'packages/vue/src/temporal/picker.ts', target: 'packages/vue/src/temporal/internal/time-presentation.ts',
+    targetPackage: '@sectile/vue', phase: 'value', kind: 'import' };
+  assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, formatImport] }, policy, classes)), /direction/u);
 });
 
 test('Vue Form contracts and participation stay below mounted components', async () => {
