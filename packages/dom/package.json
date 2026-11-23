@@ -495,14 +495,14 @@
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^"
+    "@sectile/core": "workspace:^0.16.1"
   },
   "peerDependencies": {
-    "@sectile/chart": "workspace:^",
-    "@sectile/form": "workspace:^",
-    "@sectile/tabular": "workspace:^",
-    "@sectile/temporal": "workspace:^",
-    "@sectile/virtual": "workspace:^"
+    "@sectile/chart": "workspace:^0.16.1",
+    "@sectile/form": "workspace:^0.15.2",
+    "@sectile/tabular": "workspace:^0.18.0",
+    "@sectile/temporal": "workspace:^0.16.0",
+    "@sectile/virtual": "workspace:^0.16.1"
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {

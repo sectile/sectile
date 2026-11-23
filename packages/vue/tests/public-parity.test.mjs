@@ -26,7 +26,7 @@ test('Vue exposes every public DOM component family', async () => {
 test('Form is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/form'], undefined);
-  assert.equal(vuePackage.peerDependencies?.['@sectile/form'], 'workspace:^');
+  assert.match(vuePackage.peerDependencies?.['@sectile/form'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/form']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -47,7 +47,7 @@ test('Form is exposed only through its optional subpath', async () => {
 test('Chart is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/chart'], undefined);
-  assert.equal(vuePackage.peerDependencies?.['@sectile/chart'], 'workspace:^');
+  assert.match(vuePackage.peerDependencies?.['@sectile/chart'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/chart']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -68,7 +68,7 @@ test('Chart is exposed only through its optional subpath', async () => {
 test('Tabular is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/tabular'], undefined);
-  assert.equal(vuePackage.peerDependencies?.['@sectile/tabular'], 'workspace:^');
+  assert.match(vuePackage.peerDependencies?.['@sectile/tabular'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/tabular']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -85,7 +85,7 @@ test('Tabular is exposed only through its optional subpath', async () => {
 test('virtualization is exposed only through its optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/virtual'], undefined);
-  assert.equal(vuePackage.peerDependencies?.['@sectile/virtual'], 'workspace:^');
+  assert.match(vuePackage.peerDependencies?.['@sectile/virtual'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');
@@ -100,7 +100,7 @@ test('virtualization is exposed only through its optional subpath', async () => 
 test('temporal controls are exposed only through their optional subpath', async () => {
   const vuePackage = await readPackage('../package.json');
   assert.equal(vuePackage.dependencies?.['@sectile/temporal'], undefined);
-  assert.equal(vuePackage.peerDependencies?.['@sectile/temporal'], 'workspace:^');
+  assert.match(vuePackage.peerDependencies?.['@sectile/temporal'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
   assert.equal(vuePackage.peerDependenciesMeta?.['@sectile/temporal']?.optional, true);
 
   const rootModule = await import('../.verification-dist/index.js');

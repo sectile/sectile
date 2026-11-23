@@ -87,7 +87,7 @@
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^"
+    "@sectile/core": "workspace:^0.16.1"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",

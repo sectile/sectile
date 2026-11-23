@@ -97,6 +97,7 @@ export function caretAccepts(baseVersion, candidateVersion) {
 
 export function planIndependentVersions(packages, requestedReleases) {
   assert.ok(requestedReleases.length > 0, 'at least one package is required for an independent release');
+  assertIndependentDependencyProtocols(packages);
   const byName = new Map(packages.map((entry) => [entry.name, entry]));
   assert.equal(byName.size, packages.length, 'published package names must be unique');
   const requested = new Map();
@@ -119,12 +120,9 @@ export function planIndependentVersions(packages, requestedReleases) {
     changed = false;
     for (const entry of packages) {
       if (planned.has(entry.name)) continue;
-      const incompatible = publishedDependencies(entry.manifest)
-        .map((name) => planned.get(name))
-        .filter(Boolean)
-        .filter((dependency) => !caretAccepts(dependency.previousVersion, dependency.version));
+      const incompatible = planWorkspaceRangeUpdates(entry.manifest, planned);
       if (incompatible.length === 0) continue;
-      planned.set(entry.name, releaseEntry(entry, 'patch', false, incompatible.map(({ name }) => name)));
+      planned.set(entry.name, releaseEntry(entry, 'patch', false, [...new Set(incompatible.map(({ name }) => name))]));
       changed = true;
     }
   }
@@ -201,15 +199,34 @@ export function selectReleasePackages(packages, expectedTag, manifest) {
 }
 
 export function assertIndependentDependencyProtocols(packages) {
-  const names = new Set(packages.map(({ manifest }) => manifest.name));
+  const versions = new Map(packages.map(({ manifest }) => [manifest.name, manifest.version]));
   for (const { manifest } of packages) {
-    for (const field of publishedDependencyFields) {
-      for (const [name, version] of Object.entries(manifest[field] ?? {})) {
-        if (!names.has(name)) continue;
-        assert.equal(version, 'workspace:^', `${manifest.name} ${field}.${name} must use workspace:^`);
-      }
+    for (const { field, name, range } of publishedDependencies(manifest)) {
+      const version = versions.get(name);
+      if (version === undefined) continue;
+      const floor = explicitWorkspaceCaretFloor(range);
+      assert.notEqual(floor, null, `${manifest.name} ${field}.${name} must use workspace:^<version>`);
+      assert.ok(caretAccepts(floor, version), `${manifest.name} ${field}.${name} ${range} excludes local version ${version}`);
     }
   }
+}
+
+export function explicitWorkspaceCaretFloor(range) {
+  const match = /^workspace:\^((?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*))$/u.exec(range);
+  return match?.[1] ?? null;
+}
+
+export function planWorkspaceRangeUpdates(manifest, releases) {
+  const updates = [];
+  for (const { field, name, range } of publishedDependencies(manifest)) {
+    const release = releases.get(name);
+    if (release === undefined) continue;
+    const floor = explicitWorkspaceCaretFloor(range);
+    if (floor !== null && !caretAccepts(floor, release.version)) {
+      updates.push({ field, name, range, next: `workspace:^${release.version}` });
+    }
+  }
+  return updates;
 }
 
 function releaseEntry(entry, bump, direct, dependencies) {
@@ -225,8 +242,10 @@ function releaseEntry(entry, bump, direct, dependencies) {
   });
 }
 
-function publishedDependencies(manifest) {
-  return [...new Set(publishedDependencyFields.flatMap((field) => Object.keys(manifest[field] ?? {})))];
+function* publishedDependencies(manifest) {
+  for (const field of publishedDependencyFields) {
+    for (const [name, range] of Object.entries(manifest[field] ?? {})) yield { field, name, range };
+  }
 }
 
 function compareVersions(left, right) {

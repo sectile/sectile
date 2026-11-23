@@ -3,14 +3,17 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, readdir, realpath, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { validateInstallBaseline } from './check.mjs';
 import { inspectPackedPackageDirectory, packageMetadataFiles } from '../lib/packed-package-contract.mjs';
 import { execFilePortable } from '../../tools/tooling/portable-process.mjs';
 import { publishedPackageDirectories } from '../lib/published-packages.mjs';
+import { loadWorkspacePackageVersions } from '../lib/workspace-graph.mjs';
 
 const repoRoot = resolve('.');
+const vueConsumerTypeScript = '5.7.3';
 const mode = process.argv[2] ?? 'check';
-assert.ok(mode === 'record' || mode === 'check', 'Usage: run.mjs <record|check> [--report=<new-path>] [--tarball-directory=<directory>]');
+assert.ok(['record', 'check', 'compat'].includes(mode), 'Usage: run.mjs <record|check|compat> [--report=<new-path>] [--tarball-directory=<directory>]');
 const baselinePath = resolve(repoRoot, 'verification/consumer-install/baseline.json');
 const reportArguments = process.argv.slice(3).filter(argument => argument.startsWith('--report='));
 assert.ok(reportArguments.length <= 1, 'consumer install verification accepts at most one --report option');
@@ -18,6 +21,7 @@ const reportArgument = reportArguments[0]?.slice('--report='.length);
 assert.notEqual(reportArgument, '', 'consumer install report requires a new output path');
 const reportPath = reportArgument === undefined ? undefined : resolve(repoRoot, reportArgument);
 assert.notEqual(reportPath, baselinePath, 'a diagnostic report cannot overwrite the canonical install baseline');
+assert.ok(mode !== 'compat' || reportPath === undefined, '--report is available for footprint checks only');
 const tarballDirectoryArgument = process.argv.slice(3)
   .find((argument) => argument.startsWith('--tarball-directory='));
 const unexpectedArguments = process.argv.slice(3).filter((argument) => (
@@ -37,7 +41,7 @@ if (process.env['SECTILE_KEEP_INSTALL'] === '1') process.stderr.write(`consumer 
 try {
   const packDirectory = suppliedTarballDirectory ?? join(temporaryRoot, 'packs');
   await mkdir(packDirectory, { recursive: true });
-  const packageNames = publishedPackageDirectories;
+  const packageNames = mode === 'compat' ? ['core', 'dom', 'vue'] : publishedPackageDirectories;
   const sourceManifests = {};
   for (const packageName of packageNames) {
     const manifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
@@ -46,6 +50,10 @@ try {
       .filter((dependency) => !dependency.startsWith('@sectile/'));
     assert.deepEqual(thirdPartyRuntime, [], `${packageName}: third-party runtime dependency remains`);
   }
+  const workspaceVersions = loadWorkspacePackageVersions(repoRoot);
+  const vueRange = sourceManifests.vue.peerDependencies.vue;
+  const minimumVue = /^\^(3\.\d+\.\d+)$/u.exec(vueRange)?.[1];
+  assert.ok(minimumVue, 'Vue peer must declare an explicit 3.x caret floor');
   const tarballs = {};
   for (const packageName of packageNames) {
     if (suppliedTarballDirectory === null) await run('pnpm', ['--filter', `@sectile/${packageName}`, 'pack', '--pack-destination', packDirectory], repoRoot);
@@ -55,38 +63,45 @@ try {
     tarballs[packageName] = join(packDirectory, candidates[0]);
   }
   const packages = {};
-  for (const packageName of packageNames) packages[packageName] = await inspectTarball(temporaryRoot, packageName, tarballs[packageName]);
-  // Keep the two real package-manager witnesses without overlapping install heaps.
-  const installs = [];
-  for (const packageManager of ['npm', 'pnpm']) installs.push(await inspectVueInstall(temporaryRoot, packageManager, tarballs));
-  const report = Object.freeze({
-    schemaVersion: 2,
-    packages,
-    installs,
-  });
-  // Preserve complete observations even when admission against historical budgets fails.
-  if (reportPath !== undefined) await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
-  if (mode === 'record') await writeFile(baselinePath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
-  else validateInstallBaseline(JSON.parse(await readFile(baselinePath, 'utf8')), report);
-  console.log(JSON.stringify({ status: 'passed', mode, packages: packageNames.length, installs: installs.length }));
+  for (const packageName of packageNames) packages[packageName] = await inspectTarball(
+    temporaryRoot, packageName, tarballs[packageName], sourceManifests[packageName], workspaceVersions,
+  );
+  if (mode === 'compat') {
+    const versions = [];
+    for (const [label, spec] of [['minimum', minimumVue], ['latest', vueRange]]) {
+      versions.push(await verifyVueCompatibility(temporaryRoot, label, spec, tarballs));
+    }
+    assert.equal(versions[0].vue, minimumVue, 'minimum Vue fixture installed a different version');
+    console.log(JSON.stringify({ status: 'passed', mode, versions }));
+  } else {
+    // Keep the two real package-manager witnesses without overlapping install heaps.
+    const installs = [];
+    for (const packageManager of ['npm', 'pnpm']) installs.push(await inspectVueInstall(temporaryRoot, packageManager, tarballs, minimumVue));
+    const report = Object.freeze({ schemaVersion: 2, packages, installs });
+    // Preserve complete observations even when admission against historical budgets fails.
+    if (reportPath !== undefined) await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`, { flag: 'wx' });
+    if (mode === 'record') await writeFile(baselinePath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+    else validateInstallBaseline(JSON.parse(await readFile(baselinePath, 'utf8')), report);
+    console.log(JSON.stringify({ status: 'passed', mode, packages: packageNames.length, installs: installs.length }));
+  }
 } finally {
   if (process.env['SECTILE_KEEP_INSTALL'] !== '1') await rm(temporaryRoot, { recursive: true, force: true });
 }
 
-async function inspectVueInstall(root, packageManager, tarballs) {
-  const directory = join(root, `install-${packageManager}`);
+async function installVue(root, label, packageManager, tarballs, vueVersion, compilerVersion) {
+  const directory = join(root, `install-${label}`);
   await mkdir(directory);
-  const vueManifest = JSON.parse(await readFile(resolve(repoRoot, 'packages/vue/node_modules/vue/package.json'), 'utf8'));
   const dependencies = {
     '@sectile/core': `file:${tarballs.core}`,
     '@sectile/dom': `file:${tarballs.dom}`,
     '@sectile/vue': `file:${tarballs.vue}`,
-    vue: vueManifest.version,
+    vue: vueVersion,
   };
   await writeFile(join(directory, 'package.json'), `${JSON.stringify({
     private: true,
     type: 'module',
     dependencies,
+    ...(compilerVersion === undefined ? {} : { devDependencies: { typescript: compilerVersion } }),
     pnpm: {
       overrides: {
         '@sectile/core': `file:${tarballs.core}`,
@@ -95,7 +110,7 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     },
   }, null, 2)}\n`);
   if (packageManager === 'npm') {
-    await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--omit=optional', '--cache', join(root, 'npm-cache')], directory);
+    await run('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund', '--package-lock=false', '--omit=optional', '--strict-peer-deps', '--cache', join(root, 'npm-cache')], directory);
   } else {
     await writeFile(join(directory, 'pnpm-workspace.yaml'), [
       "packages: ['.']",
@@ -107,6 +122,59 @@ async function inspectVueInstall(root, packageManager, tarballs) {
     ].join('\n'));
     await run('pnpm', ['--store-dir', resolve(repoRoot, '.pnpm-store'), 'install', '--ignore-scripts', '--no-frozen-lockfile', '--config.optional=false', '--config.auto-install-peers=false'], directory);
   }
+  return directory;
+}
+
+async function verifyVueCompatibility(root, label, spec, tarballs) {
+  const directory = await installVue(root, label, 'npm', tarballs, spec, vueConsumerTypeScript);
+  const manifest = JSON.parse(await readFile(join(directory, 'node_modules/vue/package.json'), 'utf8'));
+  const renderer = JSON.parse(await readFile(join(directory, 'node_modules/@vue/server-renderer/package.json'), 'utf8'));
+  assert.equal(renderer.version, manifest.version, `${label}: Vue and its SSR renderer must match`);
+  const happyDOM = pathToFileURL(resolve(repoRoot, 'packages/vue/node_modules/happy-dom/lib/index.js')).href;
+  await run(process.execPath, ['--input-type=module', '-e', `
+    import assert from 'node:assert/strict';
+    import { Window } from ${JSON.stringify(happyDOM)};
+    const window = new Window();
+    Object.assign(globalThis, {
+      window, document: window.document, Node: window.Node, Element: window.Element,
+      HTMLElement: window.HTMLElement, SVGElement: window.SVGElement,
+    });
+    const { createSSRApp, h, nextTick } = await import('vue');
+    const { renderToString } = await import('vue/server-renderer');
+    const { CheckboxRoot } = await import('@sectile/vue/checkbox');
+    const root = { render: () => h(CheckboxRoot, { defaultValue: true }, () => 'Packed checkbox') };
+    const container = document.createElement('div');
+    document.body.append(container);
+    container.innerHTML = await renderToString(createSSRApp(root));
+    const checkbox = container.querySelector('[role=checkbox]');
+    assert.equal(checkbox?.getAttribute('aria-checked'), 'true');
+    const app = createSSRApp(root);
+    const warnings = [];
+    app.config.warnHandler = (message) => warnings.push(message);
+    try {
+      app.mount(container);
+      assert.equal(container.querySelector('[role=checkbox]'), checkbox);
+      assert.deepEqual(warnings, []);
+      checkbox.click();
+      await nextTick();
+      assert.equal(checkbox.getAttribute('aria-checked'), 'false');
+    } finally {
+      app.unmount();
+      await window.happyDOM.close();
+    }
+  `], directory);
+  await writeFile(join(directory, 'public-type.mts'), `
+    import { h } from 'vue';
+    import { CheckboxRoot } from '@sectile/vue/checkbox';
+    h(CheckboxRoot, { defaultValue: 'indeterminate' });
+  `);
+  await run(process.execPath, [join(directory, 'node_modules/typescript/bin/tsc'),
+    '--strict', '--noEmit', '--target', 'ES2022', '--module', 'NodeNext', 'public-type.mts'], directory);
+  return { label, vue: manifest.version, renderer: renderer.version, typescript: vueConsumerTypeScript };
+}
+
+async function inspectVueInstall(root, packageManager, tarballs, vueVersion) {
+  const directory = await installVue(root, packageManager, packageManager, tarballs, vueVersion);
   await run(process.execPath, ['--input-type=module', '-e', "await import('@sectile/vue');"], directory);
   await run(process.execPath, ['--input-type=module', '-e', [
     "import assert from 'node:assert/strict';",
@@ -201,13 +269,12 @@ async function assertMissingEntrypoint(directory, packageManager, specifier) {
   assert.match(`${result.stdout}\n${result.stderr}`, /ERR_PACKAGE_PATH_NOT_EXPORTED/u);
 }
 
-async function inspectTarball(root, packageName, tarball) {
+async function inspectTarball(root, packageName, tarball, sourceManifest, workspaceVersions) {
   const directory = join(root, `unpack-${packageName}`);
   await mkdir(directory);
   await run('tar', ['-xzf', tarball, '-C', directory], repoRoot);
   const packageRoot = join(directory, 'package');
-  const sourceManifest = JSON.parse(await readFile(resolve(repoRoot, `packages/${packageName}/package.json`), 'utf8'));
-  await inspectPackedPackageDirectory(packageRoot, { sourceManifest });
+  await inspectPackedPackageDirectory(packageRoot, { sourceManifest, workspaceVersions });
   const files = await filesUnder(packageRoot);
   const categories = {
     runtimeJS: { files: 0, bytes: 0 },

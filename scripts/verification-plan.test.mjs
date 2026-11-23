@@ -182,6 +182,10 @@ test('verification CLI separates affected, full deterministic, and release certi
   assert.deepEqual(installUnit.stages, ['consumer install']);
   assert.deepEqual(installUnit.units.find(({ id }) => id === 'consumer-install').requires, ['publication-artifacts']);
 
+  const vueCompatibility = explain(['vue', '--exact', '--unit', 'vue:packed-compatibility']);
+  assert.equal(vueCompatibility.selectedUnit, 'vue:packed-compatibility');
+  assert.deepEqual(vueCompatibility.units.find(({ id }) => id === vueCompatibility.selectedUnit).requires, ['publication-artifacts']);
+
   const release = explain(['--release']);
   assert.equal(release.stages.includes('performance certification'), true);
   assert.equal(release.certificationPerformance, true);

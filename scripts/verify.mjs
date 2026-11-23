@@ -202,6 +202,13 @@ function verificationSteps() {
   if (reproducibleBuilds !== null) result.push(reproducibleBuilds);
   const publicationArtifacts = publicationArtifactStep();
   if (publicationArtifacts !== null) result.push(publicationArtifacts);
+  if (selectedPackages.has('@sectile/vue')) {
+    result.push(commandStep('vue:packed-compatibility', 'Vue packed consumer compatibility', process.execPath, [
+      join(root, 'scripts', 'consumer-install', 'run.mjs'),
+      'compat',
+      `--tarball-directory=${publicationPackDirectory}`,
+    ], { requires: ['publication-artifacts'] }));
+  }
   if (selectedPackages.has('@sectile/form')) {
     result.push(commandStep('form:packed-consumer', 'Form packed consumer verification', process.execPath, [
       join(root, 'verification', 'consumer-install', 'form.mjs'),
@@ -231,10 +238,10 @@ function reproducibleBuildStep() {
 }
 
 function publicationArtifactStep() {
-  if (!fullRepositoryVerification && !selectedPackages.has('@sectile/form')) return null;
+  if (!fullRepositoryVerification && !selectedPackages.has('@sectile/form') && !selectedPackages.has('@sectile/vue')) return null;
   const packageNames = fullRepositoryVerification
     ? graph.order.map(({ directory }) => directory)
-    : formConsumerPackages;
+    : selectedPackages.has('@sectile/form') ? formConsumerPackages : ['core', 'dom', 'vue'];
   return commandStep('publication-artifacts', 'prepare publication artifacts', process.execPath, [
     join(root, 'scripts', 'publish-packages.mjs'),
     '--pack-only',

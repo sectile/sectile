@@ -22,6 +22,7 @@ import {
   formatReleaseTitle,
   independentReleaseBaselineTag,
   planIndependentVersions,
+  planWorkspaceRangeUpdates,
   releaseManifestFile,
   releaseSetSequence,
 } from './lib/release-set.mjs';
@@ -146,12 +147,14 @@ function createIndependentPlan(context) {
       bump: recommendation.bump,
     })),
   );
+  const releases = new Map(planned.map((entry) => [entry.name, entry]));
   const detailed = planned.map((entry) => {
     const source = context.byName.get(entry.name);
     const direct = context.directChanges.find(({ name }) => name === entry.name);
     const baseTag = direct?.baseTag ?? createPackageTag(entry.name, entry.previousVersion);
     const commits = direct?.commits ?? [];
-    return Object.freeze({ ...entry, baseTag, commits, source });
+    const rangeUpdates = planWorkspaceRangeUpdates(source.manifest, releases);
+    return Object.freeze({ ...entry, baseTag, commits, source, rangeUpdates });
   });
   return Object.freeze({
     entries: Object.freeze(detailed),
@@ -171,9 +174,10 @@ function renderIndependentRecommendations(context) {
 function renderIndependentPlan(plan) {
   return [
     `release tag: ${plan.releaseTag}`,
-    ...plan.entries.map((entry) => (
-      `${entry.name}: ${entry.previousVersion} -> ${entry.version}${entry.direct ? '' : ` (compatibility: ${entry.dependencies.join(', ')})`}`
-    )),
+    ...plan.entries.flatMap((entry) => [
+      `${entry.name}: ${entry.previousVersion} -> ${entry.version}${entry.direct ? '' : ` (compatibility: ${entry.dependencies.join(', ')})`}`,
+      ...entry.rangeUpdates.map(({ field, name, range, next }) => `  ${field}.${name}: ${range} -> ${next}`),
+    ]),
   ].join('\n');
 }
 
@@ -181,6 +185,10 @@ function updateIndependentPackages(root, plan) {
   for (const entry of plan.entries) {
     const manifest = JSON.parse(readFileSync(entry.source.manifestPath, 'utf8'));
     manifest.version = entry.version;
+    for (const { field, name, range, next } of entry.rangeUpdates) {
+      assert.equal(manifest[field][name], range);
+      manifest[field][name] = next;
+    }
     writeFileSync(entry.source.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
     const commitChanges = entry.commits.map(({ shortHash, subject }) => `${subject} (${shortHash})`);
     const changes = entry.direct

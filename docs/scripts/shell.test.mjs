@@ -172,7 +172,7 @@ test('the active documentation package is a Vue and Vite shell', async () => {
     scripts: packageJSON.scripts,
   });
 
-  assert.equal(packageJSON.dependencies.vue, '^3.5.22');
+  assert.match(packageJSON.dependencies.vue, /^3\.\d+\.\d+$/u);
   assert.equal(packageJSON.scripts.dev, 'vite --host 127.0.0.1');
   assert.equal(packageJSON.scripts.build, 'vite build && node scripts/materialize-routes.mjs');
   assert.doesNotMatch(dependencySurface, /vitepress/u);

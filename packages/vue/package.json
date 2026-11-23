@@ -499,16 +499,16 @@
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^",
-    "@sectile/dom": "workspace:^"
+    "@sectile/core": "workspace:^0.16.1",
+    "@sectile/dom": "workspace:^0.23.0"
   },
   "peerDependencies": {
-    "@sectile/chart": "workspace:^",
-    "@sectile/form": "workspace:^",
-    "@sectile/tabular": "workspace:^",
-    "@sectile/virtual": "workspace:^",
+    "@sectile/chart": "workspace:^0.16.1",
+    "@sectile/form": "workspace:^0.15.2",
+    "@sectile/tabular": "workspace:^0.18.0",
+    "@sectile/virtual": "workspace:^0.16.1",
     "vue": "^3.5.41",
-    "@sectile/temporal": "workspace:^"
+    "@sectile/temporal": "workspace:^0.16.0"
   },
   "peerDependenciesMeta": {
     "@sectile/chart": {

@@ -6,8 +6,8 @@ import { checkAllGroupEvidence } from './lib/evidence.mjs';
 const manifest = JSON.parse(await readFile('package.json', 'utf8'));
 assert.deepEqual(manifest.files, ['dist']);
 assert.equal(manifest.sideEffects, false);
-assert.equal(manifest.dependencies?.['@sectile/core'], 'workspace:^');
-assert.equal(manifest.peerDependencies?.['@sectile/virtual'], 'workspace:^');
+assert.match(manifest.dependencies?.['@sectile/core'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
+assert.match(manifest.peerDependencies?.['@sectile/virtual'] ?? '', /^workspace:\^\d+\.\d+\.\d+$/u);
 assert.equal(manifest.peerDependenciesMeta?.['@sectile/virtual']?.optional, true);
 assert.deepEqual(Object.keys(manifest.exports['./virtual']).sort(), ['default', 'import', 'types']);
 

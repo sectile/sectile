@@ -96,12 +96,14 @@ test('rejects manifest drift and tarball paths outside package/', () => {
 test('validates exact and caret workspace ranges after packing', () => {
   const sourceManifest = {
     name: '@sectile/form',
-    dependencies: { '@sectile/core': 'workspace:^' },
+    dependencies: { '@sectile/core': 'workspace:^0.14.0' },
+    peerDependencies: { vue: '^3.5.42' },
     devDependencies: { '@sectile/virtual': 'workspace:*' },
   };
   const packedManifest = {
     name: '@sectile/form',
-    dependencies: { '@sectile/core': '^0.14.1' },
+    dependencies: { '@sectile/core': '^0.14.0' },
+    peerDependencies: { vue: '^3.5.42' },
     devDependencies: { '@sectile/virtual': '0.14.3' },
   };
   const versions = new Map([
@@ -109,8 +111,11 @@ test('validates exact and caret workspace ranges after packing', () => {
     ['@sectile/virtual', '0.14.3'],
   ]);
   assert.doesNotThrow(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions));
-  packedManifest.dependencies['@sectile/core'] = '0.14.1';
-  assert.throws(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions), /must be \^0\.14\.1/u);
+  packedManifest.peerDependencies.vue = '^3.5.46';
+  assert.throws(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions), /peerDependencies\.vue must be \^3\.5\.42/u);
+  packedManifest.peerDependencies.vue = '^3.5.42';
+  packedManifest.dependencies['@sectile/core'] = '^0.14.1';
+  assert.throws(() => assertPackedDependencyRanges(packedManifest, sourceManifest, versions), /must be \^0\.14\.0/u);
 });
 
 test('discovers private workspace dependency versions before installation and validates packed development ranges', async () => {

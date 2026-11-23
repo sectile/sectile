@@ -3,6 +3,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdtemp, readFile, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve, sep } from 'node:path';
+import { caretAccepts, explicitWorkspaceCaretFloor } from './release-set.mjs';
 import { validateSourceMapFiles } from './source-map-policy.mjs';
 
 export const packageMetadataFiles = Object.freeze(['LICENSE', 'README.md', 'package.json']);
@@ -21,6 +22,8 @@ const sourceManifestFields = Object.freeze([
   'files',
   'types',
   'exports',
+  'engines',
+  'peerDependenciesMeta',
   'publishConfig',
 ]);
 
@@ -113,13 +116,20 @@ export function assertPackedManifestMatchesSource(manifest, sourceManifest) {
 export function assertPackedDependencyRanges(manifest, sourceManifest, workspaceVersions) {
   for (const field of dependencyFields) {
     for (const [name, sourceRange] of Object.entries(sourceManifest[field] ?? {})) {
-      if (!String(sourceRange).startsWith('workspace:')) continue;
+      if (!sourceRange.startsWith('workspace:')) {
+        if (field !== 'devDependencies') assert.equal(manifest[field]?.[name], sourceRange,
+          `${sourceManifest.name}: packed ${field}.${name} must be ${sourceRange}`);
+        continue;
+      }
       const workspaceVersion = workspaceVersions.get(name);
       assert.notEqual(workspaceVersion, undefined, `${sourceManifest.name}: missing workspace version for ${name}`);
       const protocolRange = String(sourceRange).slice('workspace:'.length);
-      assert.equal(protocolRange === '*' || protocolRange === '^', true,
+      const floor = explicitWorkspaceCaretFloor(sourceRange);
+      assert.ok(protocolRange === '*' || protocolRange === '^' || floor !== null,
         `${sourceManifest.name}: unsupported workspace range ${sourceRange}`);
-      const expected = protocolRange === '*' ? workspaceVersion : `${protocolRange}${workspaceVersion}`;
+      if (floor !== null) assert.ok(caretAccepts(floor, workspaceVersion),
+        `${sourceManifest.name}: ${field}.${name} ${sourceRange} excludes local version ${workspaceVersion}`);
+      const expected = floor !== null ? protocolRange : protocolRange === '*' ? workspaceVersion : `^${workspaceVersion}`;
       assert.equal(manifest[field]?.[name], expected,
         `${sourceManifest.name}: packed ${field}.${name} must be ${expected}`);
     }

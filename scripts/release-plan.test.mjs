@@ -55,6 +55,7 @@ test('independent release plans propagate pre-1 minor dependency changes', (cont
   for (const directory of publishedPackageDirectories) {
     assert.match(plan, new RegExp(`@sectile/${directory}:`, 'u'), `${directory} was not propagated`);
   }
+  assert.match(plan, /dependencies\.@sectile\/core: workspace:\^0\.14\.0 -> workspace:\^0\.15\.0/u);
 });
 
 test('independent releases preserve commit-based bump recommendations', (context) => {
@@ -151,6 +152,11 @@ function releaseFixture(context) {
       'name', 'version', 'dependencies', 'optionalDependencies', 'peerDependencies', 'devDependencies',
     ].filter((field) => source[field] !== undefined).map((field) => [field, source[field]]));
     manifest.version = '0.14.1';
+    for (const field of ['dependencies', 'optionalDependencies', 'peerDependencies']) {
+      for (const [name, range] of Object.entries(manifest[field] ?? {})) {
+        if (range.startsWith('workspace:^')) manifest[field][name] = 'workspace:^0.14.0';
+      }
+    }
     writeFileSync(join(packageRoot, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
     writeFileSync(join(packageRoot, 'CHANGELOG.md'), `# ${manifest.name}\n`);
   }

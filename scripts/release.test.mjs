@@ -24,6 +24,7 @@ import {
   formatReleasePackageSummary,
   isReleaseSetTag,
   planIndependentVersions,
+  planWorkspaceRangeUpdates,
   releaseSetDate,
   releaseSetSequence,
   selectReleasePackages,
@@ -362,11 +363,26 @@ test('validates release manifests against package source versions', () => {
   );
 });
 
-test('requires caret workspace protocols for independently published edges', () => {
+test('requires explicit compatible caret floors for independently published edges', () => {
   const packages = releaseGraphFixture().map((entry) => ({ directory: entry.directory, manifest: entry.manifest }));
   assert.doesNotThrow(() => assertIndependentDependencyProtocols(packages));
-  packages[1].manifest = { ...packages[1].manifest, dependencies: { '@sectile/core': 'workspace:*' } };
-  assert.throws(() => assertIndependentDependencyProtocols(packages), /must use workspace:\^/u);
+  packages[1].manifest.dependencies['@sectile/core'] = 'workspace:^';
+  assert.throws(() => assertIndependentDependencyProtocols(packages), /must use workspace:\^<version>/u);
+  packages[1].manifest.dependencies['@sectile/core'] = 'workspace:^0.14.2';
+  assert.throws(() => assertIndependentDependencyProtocols(packages), /excludes local version 0\.14\.1/u);
+});
+
+test('keeps a published floor on compatible releases and displays incompatible updates', () => {
+  const { manifest } = releaseGraphFixture()[1];
+  const releases = new Map([['@sectile/core', { version: '0.14.2' }]]);
+  assert.deepEqual(planWorkspaceRangeUpdates(manifest, releases), []);
+  releases.set('@sectile/core', { version: '0.15.0' });
+  assert.deepEqual(planWorkspaceRangeUpdates(manifest, releases), [{
+    field: 'dependencies',
+    name: '@sectile/core',
+    range: 'workspace:^0.14.0',
+    next: 'workspace:^0.15.0',
+  }]);
 });
 
 function releaseGraphFixture() {
@@ -382,7 +398,7 @@ function releaseGraphFixture() {
       manifest: {
         name: '@sectile/form',
         version: '0.14.1',
-        dependencies: { '@sectile/core': 'workspace:^' },
+        dependencies: { '@sectile/core': 'workspace:^0.14.0' },
       },
     },
     {
@@ -391,8 +407,8 @@ function releaseGraphFixture() {
       manifest: {
         name: '@sectile/dom',
         version: '0.14.1',
-        dependencies: { '@sectile/core': 'workspace:^' },
-        peerDependencies: { '@sectile/form': 'workspace:^' },
+        dependencies: { '@sectile/core': 'workspace:^0.14.0' },
+        peerDependencies: { '@sectile/form': 'workspace:^0.14.0' },
       },
     },
   ];
