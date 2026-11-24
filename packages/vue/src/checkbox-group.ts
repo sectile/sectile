@@ -152,7 +152,7 @@ export const CheckboxGroupRoot = defineComponent({
       const root = h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (element: unknown) => { rootElement.value = element instanceof HTMLElement ? element : null; },
-      role: 'group', 'aria-label': props.label,
+      role: 'group', ...(props.label === undefined ? {} : { 'aria-label': props.label }),
       'aria-disabled': flags.value.disabled ? 'true' : undefined, 'aria-readonly': flags.value.readonly ? 'true' : undefined,
       'data-scope': 'checkbox-group', 'data-part': 'root',
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });

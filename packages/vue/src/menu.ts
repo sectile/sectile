@@ -396,7 +396,7 @@ function createPopupContent(scope: 'menu-button' | 'context-menu') { return defi
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerRoot(content); },
-        id: root.contentID, role: 'menu', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+        id: root.contentID, role: 'menu', hidden: !root.active.value || !present.value, ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
         'aria-labelledby': root.label.value === undefined ? root.triggerID : undefined, dir: root.direction.value,
         ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,

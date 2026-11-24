@@ -47,7 +47,7 @@ export function getProgressRootAttributes(
     'aria-valuemax': state.max,
     'aria-valuenow': state.value ?? undefined,
     'aria-valuetext': state.value === null ? undefined : options.formatValue?.(state.value) ?? state.value,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'aria-labelledby': options.labelledBy,
     'aria-describedby': options.describedBy,
     'data-scope': options.scope ?? 'progress',

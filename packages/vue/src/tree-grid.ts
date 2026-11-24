@@ -411,7 +411,7 @@ export const TreeGridEditor = defineComponent({
         ...(inactivePresent ? { inert: true, 'aria-hidden': 'true' } : {}),
         disabled: root.slot.value.disabled,
         readonly: root.slot.value.readonly,
-        'aria-label': props.label,
+        ...(props.label === undefined ? {} : { 'aria-label': props.label }),
         'data-sectile-tree-grid-editor': props.for,
         'data-scope': 'tree-grid',
         'data-part': 'editor',

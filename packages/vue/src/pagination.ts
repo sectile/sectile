@@ -147,7 +147,7 @@ export const PaginationRoot = defineComponent({
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },
-      role: 'navigation', 'aria-label': props.label, 'data-scope': 'pagination', 'data-part': 'root',
+      role: 'navigation', ...(props.label === undefined ? {} : { 'aria-label': props.label }), 'data-scope': 'pagination', 'data-part': 'root',
       'data-disabled': props.disabled ? '' : undefined, 'data-readonly': props.readonly ? '' : undefined,
     }), { default: () => slots['default']?.(state.value) });
   },

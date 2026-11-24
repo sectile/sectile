@@ -312,7 +312,7 @@ export function createNativeFieldComponent<Value, Policies = Readonly<Record<str
         required: projected.value.required,
         'aria-disabled': String(projected.value.disabled),
         'aria-readonly': String(projected.value.readonly),
-        'aria-label': props.label,
+        ...(props.label === undefined ? {} : { 'aria-label': props.label }),
         onCompositionstart: () => setInputComposing(true),
         onCompositionend: () => setInputComposing(false),
         ...(renderServerValue ? { value: projectedText.value } : { defaultValue: defaultText }),

@@ -207,7 +207,7 @@ export const TagsInputRoot = defineComponent({
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
-        role: 'group', 'aria-label': props.label, dir: direction.value, 'data-scope': 'tags-input', 'data-part': 'root',
+        role: 'group', ...(props.label === undefined ? {} : { 'aria-label': props.label }), dir: direction.value, 'data-scope': 'tags-input', 'data-part': 'root',
         'data-disabled': flags.value.disabled ? '' : undefined, 'data-readonly': flags.value.readonly ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return visual;
@@ -281,7 +281,7 @@ export const TagsInputInput = defineComponent({
       type: 'text',
       ...(renderServerValue ? { value: root.state.value.inputValue } : {}),
       disabled: root.state.value.disabled,
-      readonly: root.state.value.readonly, 'aria-label': root.label.value,
+      readonly: root.state.value.readonly, ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
       onCompositionstart: () => root.setInputComposing(true),
       onCompositionend: () => root.setInputComposing(false),
       'data-scope': 'tags-input', 'data-part': 'input',

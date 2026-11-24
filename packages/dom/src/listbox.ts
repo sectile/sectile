@@ -234,7 +234,7 @@ export function getListboxRootAttributes(
     'aria-orientation': options.orientation ?? 'vertical',
     dir: options.direction,
     'aria-multiselectable': options.selectionMode === 'multiple' ? 'true' : undefined,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'data-scope': 'listbox',
     'data-part': 'root',
     'data-disabled': options.disabled === true ? '' : undefined,
@@ -347,6 +347,8 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
   readonly #itemIDs = new Map<ID, string>();
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handleClick: (event: MouseEvent) => void;
+  #label: string | undefined;
+  #originalLabel: string | null = null;
   #active = true;
 
   public constructor(options: ListboxConnectionOptions<ID>, effectsPublished = false) {
@@ -402,12 +404,12 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
       selectionMode: this.#selectionMode,
       orientation: this.#orientation,
       direction: this.#direction,
-      ...(label === undefined ? {} : { label }),
       disabled: this.#disabled,
       ...(current === null || this.#itemIDs.get(current) === undefined
         ? {}
         : { activeDescendantID: this.#itemIDs.get(current) as string }),
     }));
+    this.#setLabel(label);
   }
 
   public setItemAttributes(
@@ -478,6 +480,20 @@ class DOMListboxConnection<ID extends StableID> implements ListboxConnection<ID>
     this.#root.removeEventListener('keydown', this.#handleKeydown);
     this.#root.removeEventListener('click', this.#handleClick);
     this.#itemIDs.clear();
+    this.#setLabel(undefined);
+  }
+
+  #setLabel(label: string | undefined): void {
+    const previous = this.#label;
+    if (label === undefined && previous === undefined) return;
+    const current = this.#root.getAttribute('aria-label');
+    this.#label = label;
+    if (label === undefined && current !== previous) return;
+    if (current !== previous) this.#originalLabel = current;
+    const next = label ?? this.#originalLabel;
+    if (next === current) return;
+    if (next === null) this.#root.removeAttribute('aria-label');
+    else this.#root.setAttribute('aria-label', next);
   }
 
   #completePublication(

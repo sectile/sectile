@@ -264,7 +264,7 @@ function createTimePickerRoot() {
           onAfterClose: () => { if (!disposed) emit('afterClose'); },
           onInteractOutside: (event: InteractOutsideEvent) => { if (!disposed) emit('interactOutside', event); },
         }, { default: (popupState: PopoverRootSlotProps) => h(Primitive, mergeProps(attrs, {
-          as: props.as ?? 'div', asChild: props.asChild ?? false, role: 'group', 'aria-label': props.label,
+          as: props.as ?? 'div', asChild: props.asChild ?? false, role: 'group', ...(props.label === undefined ? {} : { 'aria-label': props.label }),
           'data-scope': 'time-picker', 'data-part': 'root',
         }), { default: () => slots.default?.({ ...popupState, value: value.value, parts: model.value.format.order,
           disabled: disabled.value, readonly: readonly.value, required: required.value, composing: composing.value,
@@ -349,7 +349,7 @@ export const TimePickerColumn = /* @__PURE__ */ defineComponent<TimePickerColumn
       items: metadata.value.items, textValue: metadata.value.textValue, disabledItems: disabledItems.value, renderedItems: renderedItems.value,
       modelValue: column.value.selected === null ? '' : String(column.value.selected),
       disabled: context.disabled.value, readonly: context.readonly.value || context.composing.value,
-      as: props.as ?? 'div', asChild: props.asChild ?? false, 'aria-label': props.label,
+      as: props.as ?? 'div', asChild: props.asChild ?? false, ...(props.label === undefined ? {} : { 'aria-label': props.label }),
       'data-scope': 'time-picker', 'data-part': 'column', 'data-time-part': props.part,
       onHighlight: (id: string | null) => emit('highlight', id === null ? null : Number(id)),
       onActivate: (id: string) => { if (context.selectChoice(props.part, Number(id))) emit('activate', Number(id)); },

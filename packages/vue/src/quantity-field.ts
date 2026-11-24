@@ -204,7 +204,7 @@ export const QuantityFieldInput = defineComponent({
       disabled: root.state.value.disabled, readonly: root.state.value.readonly,
       onCompositionstart: () => root.setInputComposing(true),
       onCompositionend: () => root.setInputComposing(false),
-      'aria-label': root.label.value, 'data-scope': 'quantity-field', 'data-part': 'input',
+      ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }), 'data-scope': 'quantity-field', 'data-part': 'input',
     }, participation.controlProps.value));
   },
 });
@@ -217,7 +217,7 @@ export const QuantityFieldUnitSelect = defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerUnitSelect(node instanceof HTMLSelectElement ? node : undefined),
       disabled: root.unitState.value.disabled, 'aria-readonly': root.unitState.value.readonly ? 'true' : undefined,
-      'aria-label': root.label.value === undefined ? undefined : `${root.label.value} unit`,
+      ...(root.label.value === undefined ? {} : { 'aria-label': `${root.label.value} unit` }),
       'data-scope': 'quantity-field', 'data-part': 'unit-select',
     }), { default: () => root.units.value.map(unit => h('option', { key: unit.id, value: unit.id,
       selected: unit.id === root.unitState.value.displayUnit }, unit.symbol)) });

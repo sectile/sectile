@@ -41,7 +41,7 @@ export function getToggleGroupRootAttributes(options: ToggleGroupRootAttributesO
     'aria-orientation': undefined,
     'data-orientation': options.orientation ?? 'horizontal',
     dir: options.direction,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': undefined,
     'data-scope': 'toggle-group',
@@ -117,11 +117,12 @@ function mapEvent<ID extends StableID>(event: ToggleGroupEvent<ID>) {
 
 function setRootAttributes<ID extends StableID>(root: HTMLElement, options: ToggleGroupOptions<ID>): void {
   for (const [name, value] of Object.entries(getToggleGroupRootAttributes(options))) {
+    if (name === 'aria-label') continue;
     if (value === undefined) root.removeAttribute(name); else root.setAttribute(name, value);
   }
   root.removeAttribute('aria-multiselectable');
 }
 
 function clearRootAttributes(root: HTMLElement): void {
-  for (const name of ['role', 'aria-orientation', 'aria-label', 'data-orientation', 'data-scope', 'data-part']) root.removeAttribute(name);
+  for (const name of ['role', 'aria-orientation', 'data-orientation', 'data-scope', 'data-part']) root.removeAttribute(name);
 }

@@ -63,7 +63,7 @@ export const ToolbarRoot = defineComponent({
     watch(() => props.modelValue, (value) => { if (!controlled || value === undefined || connection.value === undefined) return; const result = connection.value.syncControlledValue(value); if (!result.ok) throw new TypeError(result.error.message); refresh(); });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
-      role: 'toolbar', 'aria-label': props.label, 'aria-orientation': props.orientation, 'aria-disabled': props.disabled ? 'true' : undefined,
+      role: 'toolbar', ...(props.label === undefined ? {} : { 'aria-label': props.label }), 'aria-orientation': props.orientation, 'aria-disabled': props.disabled ? 'true' : undefined,
       dir: direction.value,
       'data-scope': 'toolbar', 'data-part': 'root', 'data-orientation': props.orientation,
     }), { default: () => slots['default']?.(state.value) });

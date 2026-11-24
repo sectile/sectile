@@ -278,7 +278,7 @@ export const SpinButtonInput = defineComponent({
       readonly: root.state.value.readonly,
       onCompositionstart: () => root.setInputComposing(true),
       onCompositionend: () => root.setInputComposing(false),
-      'aria-label': root.label.value,
+      ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
       'aria-valuemin': root.min.value,
       'aria-valuemax': root.max.value,
       'aria-valuenow': root.state.value.value,

@@ -81,7 +81,7 @@ export function getTabsListAttributes(options: TabsListAttributesOptions = {}): 
     role: 'tablist',
     'aria-orientation': options.orientation ?? 'horizontal',
     dir: options.direction,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,
     'data-scope': 'tabs',

@@ -350,7 +350,8 @@ export const SelectTrigger = defineComponent({
     as: props.as, asChild: props.asChild, elementRef: (node: unknown) => root.registerTrigger(node instanceof HTMLButtonElement ? node : undefined),
     onClick: root.activateTrigger,
     type: props.as === 'button' ? 'button' : undefined, disabled: root.state.value.disabled,
-    'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'aria-controls': root.contentID, 'aria-label': root.label.value,
+    'aria-haspopup': 'listbox', 'aria-expanded': String(root.state.value.open), 'aria-controls': root.contentID,
+    ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
     'data-scope': 'select', 'data-part': 'trigger', 'data-state': root.state.value.open ? 'open' : 'closed',
   }), { default: () => slots['default']?.(root.state.value) }); },
 });
@@ -386,7 +387,8 @@ export const SelectContent = defineComponent({
     const exiting = !open.value && present.value;
     return h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { const content = node instanceof HTMLElement ? node : undefined; element.value = content; root.registerPopup(content); },
-      id: root.contentID, role: 'listbox', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+      id: root.contentID, role: 'listbox', hidden: !root.active.value || !present.value,
+      ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
       ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       style: root.position.value
         ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }

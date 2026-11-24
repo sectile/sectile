@@ -83,9 +83,9 @@ export function getMeterGroupRootAttributes<ID extends StableID>(
   const percentage = formatExactPercentage(state.ratio);
   return Object.freeze({
     role: 'group',
-    'aria-label': options.label,
-    'aria-labelledby': options.labelledBy,
-    'aria-describedby': options.describedBy,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
+    ...(options.labelledBy === undefined ? {} : { 'aria-labelledby': options.labelledBy }),
+    ...(options.describedBy === undefined ? {} : { 'aria-describedby': options.describedBy }),
     'data-scope': options.scope ?? 'meter-group',
     'data-part': options.part ?? 'root',
     'data-zone': state.zone,
@@ -127,9 +127,9 @@ function projectSegmentAttributes<ID extends StableID>(maximum: string, segment:
       'aria-valuemax': maximum,
       'aria-valuenow': segment.value,
       'aria-valuetext': options.formatValue?.(segment.value, segment.id) ?? segment.value,
-      'aria-label': options.label,
-      'aria-labelledby': options.labelledBy,
-      'aria-describedby': options.describedBy,
+      ...(options.label === undefined ? {} : { 'aria-label': options.label }),
+      ...(options.labelledBy === undefined ? {} : { 'aria-labelledby': options.labelledBy }),
+      ...(options.describedBy === undefined ? {} : { 'aria-describedby': options.describedBy }),
       'data-scope': options.scope ?? 'meter-group',
       'data-part': options.part ?? 'segment',
       'data-id': segment.id,
@@ -218,7 +218,7 @@ class DOMMeterGroup<ID extends StableID> implements MeterGroupConnection<ID> {
     for (const [id, registration] of this.#segments) {
       const attributes = projected.segment(id, registration.options);
       if (attributes.ok) applyAttributes(registration.element, attributes.value);
-      else clearSegmentAttributes(registration.element);
+      else clearSegmentAttributes(registration.element, registration.options);
     }
   }
 
@@ -257,12 +257,15 @@ function applyStyleProperties(element: HTMLElement, value: string | number | und
   }
 }
 
-function clearSegmentAttributes(element: HTMLElement): void {
+function clearSegmentAttributes(element: HTMLElement, options: Pick<MeterGroupRootAttributesOptions, 'label' | 'labelledBy' | 'describedBy'>): void {
   for (const name of [
     'role', 'aria-valuemin', 'aria-valuemax', 'aria-valuenow', 'aria-valuetext',
-    'aria-label', 'aria-labelledby', 'aria-describedby', 'data-scope', 'data-part',
+    'data-scope', 'data-part',
     'data-id', 'data-percentage', 'data-start-percentage', 'data-end-percentage',
   ]) element.removeAttribute(name);
+  if (options.label !== undefined) element.removeAttribute('aria-label');
+  if (options.labelledBy !== undefined) element.removeAttribute('aria-labelledby');
+  if (options.describedBy !== undefined) element.removeAttribute('aria-describedby');
   applyStyleProperties(element, undefined);
 }
 

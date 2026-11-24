@@ -12,6 +12,7 @@ import { createSequence } from '@sectile/core/sequence';
 
 test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activation', async () => {
   const root = new FakeElement();
+  root.setAttribute('aria-label', 'Authored name');
   const activations = [];
   let updates = 0;
   const connection = createListbox({
@@ -21,6 +22,7 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
     onActivate: (id) => activations.push(id),
     onUpdate: () => { updates += 1; },
   });
+  assert.equal(root.getAttribute('aria-label'), 'Authored name');
   connection.setListboxAttributes('Letters');
   assert.equal(root.attributes.get('role'), 'listbox');
   assert.equal(root.attributes.get('aria-label'), 'Letters');
@@ -39,6 +41,8 @@ test('DOM listbox facade owns construction, keyboard dispatch, ARIA, and activat
   assert.deepEqual(activations, ['b']);
   assert.equal(connection.getSnapshot().state.cursor.current, 'b');
   assert.equal(updates, 2);
+  connection.setListboxAttributes();
+  assert.equal(root.getAttribute('aria-label'), 'Authored name');
   connection.disconnect();
   assert.equal(root.listeners.get('keydown')?.size ?? 0, 0);
 
@@ -358,6 +362,8 @@ class FakeElement {
   setAttribute(name, value) {
     this.attributes.set(name, value);
   }
+
+  getAttribute(name) { return this.attributes.get(name) ?? null; }
 
   removeAttribute(name) {
     this.attributes.delete(name);

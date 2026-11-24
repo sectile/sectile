@@ -195,7 +195,7 @@ export const PinInputRoot = defineComponent({
     return (): VNodeChild => {
       const visual = h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: registerRoot,
-        role: 'group', 'aria-label': props.label, 'data-scope': 'pin-input', 'data-part': 'root',
+        role: 'group', ...(props.label === undefined ? {} : { 'aria-label': props.label }), 'data-scope': 'pin-input', 'data-part': 'root',
         'data-complete': state.value.complete ? '' : undefined,
       }, participation.controlProps.value), { default: () => slots['default']?.(state.value) });
       if (!participation.participating && props.name === undefined && props.form === undefined) return visual;

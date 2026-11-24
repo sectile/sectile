@@ -250,7 +250,7 @@ export const CascadeListRoot = defineComponent({
         elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : null; },
         role: 'group',
         tabindex: -1,
-        'aria-label': props.label,
+        ...(props.label === undefined ? {} : { 'aria-label': props.label }),
         'aria-disabled': flags.value.disabled ? 'true' : undefined,
         'aria-readonly': flags.value.readonly ? 'true' : undefined,
         'data-scope': 'cascade-list',

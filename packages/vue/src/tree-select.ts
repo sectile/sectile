@@ -281,7 +281,7 @@ export const TreeSelectInput = /* @__PURE__ */ defineComponent({
     role: 'combobox', 'aria-haspopup': 'tree', 'aria-autocomplete': 'list', 'aria-controls': root.popupID, 'aria-expanded': root.active.value && root.state.value.open,
     'aria-activedescendant': element.value ? element.value.getAttribute('aria-activedescendant') ?? undefined
       : root.active.value && root.state.value.open && !root.state.value.pending && root.state.value.highlightedValue !== null ? root.elementID(root.state.value.highlightedValue) : undefined,
-    'aria-label': root.label.value ?? attrs['aria-label'], disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'data-scope': 'tree-select', 'data-part': 'input',
+    ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }), disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'data-scope': 'tree-select', 'data-part': 'input',
     ...(root.display.value === undefined ? {} : { 'data-display': root.display.value }),
   }), slots); },
 });
@@ -308,7 +308,7 @@ export const TreeSelectContent = /* @__PURE__ */ defineComponent({
     const present = usePresence(open, element, undefined, root.active); onBeforeUnmount(root.registerPresence(present));
     return (): VNodeChild => h(Primitive, mergeProps(attrs, { as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => { element.value = typeof HTMLElement !== 'undefined' && node instanceof HTMLElement ? node : undefined; root.registerPopup(node); },
-      id: root.popupID, role: 'tree', tabindex: -1, hidden: !root.active.value || !present.value, 'aria-label': root.label.value, 'aria-busy': root.slot().pending,
+      id: root.popupID, role: 'tree', tabindex: -1, hidden: !root.active.value || !present.value, ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }), 'aria-busy': root.slot().pending,
       'aria-multiselectable': selectionMode.value === 'multiple' ? 'true' : undefined,
       ...(!open.value || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
       style: root.position.value ? { position: 'absolute', visibility: element.value === undefined ? 'hidden' : undefined } : undefined,

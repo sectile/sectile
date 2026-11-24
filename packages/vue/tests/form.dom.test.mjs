@@ -492,7 +492,7 @@ test('[HYD-09] composite labels and native metadata remain stable through hydrat
     },
   }, () => controls.map(([Control, props], index) => h(FormField, {
     name: `choice${index}`, required: flags.value, disabled: flags.value,
-  }, { default: field => { fields.set(index, field); return [h(FormLabel, {}, () => label.value), h(Control, { ...props, ...(override.value ? { name: undefined, required: false, disabled: false } : {}) })]; } })));
+  }, { default: field => { fields.set(index, field); return [h(FormLabel, {}, () => label.value), h(Control, { ...props, 'aria-label': `Authored ${index}`, ...(override.value ? { name: undefined, required: false, disabled: false } : {}) })]; } })));
   const host = document.createElement('div'); document.body.append(host);
   const app = createSSRApp({ render: view });
   const drain = async () => { for (let turn = 0; turn < 8; turn++) await nextTick(); };
@@ -506,6 +506,9 @@ test('[HYD-09] composite labels and native metadata remain stable through hydrat
     const names = [...host.querySelectorAll('input,select')].map(element => element.name);
     assert.deepEqual(names, ['choice0', 'choice1', 'choice1', 'choice2', 'choice3']);
     assert.ok(before.includes('aria-labelledby='));
+    const checkboxGroup = host.querySelector('[data-scope="checkbox-group"]');
+    assert.match(before, /aria-label="Authored 3"/);
+    assert.equal(checkboxGroup.getAttribute('aria-label'), 'Authored 3');
     flags.value = true; label.value = 'Updated'; await drain();
     assert.ok([...host.querySelectorAll('input,select')].every(element => element.disabled));
     override.value = true; await drain();

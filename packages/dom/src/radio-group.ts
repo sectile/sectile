@@ -87,7 +87,7 @@ export function getRadioGroupRootAttributes(
     role: 'radiogroup',
     'aria-orientation': options.orientation ?? 'vertical',
     dir: options.direction,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,
     'data-scope': 'radio-group',

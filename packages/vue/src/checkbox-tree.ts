@@ -179,7 +179,7 @@ const CheckboxTreeRootImplementation = /* @__PURE__ */ defineComponent({
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild,
       elementRef: (node: unknown) => { element.value = typeof HTMLElement !== 'undefined' && node instanceof HTMLElement ? node : undefined; },
-      role: 'tree', 'aria-label': props.label, 'aria-multiselectable': 'true', 'aria-disabled': slot.value.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
+      role: 'tree', ...(props.label === undefined ? {} : { 'aria-label': props.label }), 'aria-multiselectable': 'true', 'aria-disabled': slot.value.disabled ? 'true' : undefined, 'aria-readonly': props.readonly ? 'true' : undefined,
       tabindex: rootTabIndex.value,
       'data-scope': 'checkbox-tree', 'data-part': 'root',
     }), { default: () => slots.default?.(slot.live) });

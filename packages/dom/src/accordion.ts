@@ -212,7 +212,7 @@ export function getAccordionRootAttributes(
     'data-part': 'root',
     'data-disabled': options.disabled === true ? '' : undefined,
     'data-readonly': options.readOnly === true ? '' : undefined,
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
   });
 }
 

@@ -253,8 +253,9 @@ export const ComboboxRoot = /* @__PURE__ */ defineComponent({
         onAccept: (id) => emit('accept', id), onUpdate: refresh,
       });
       inline.value = props.presentation === 'inline';
-      connection.value.setInputAttributes(props.label ?? (!manageText ? input.value.getAttribute('aria-label') ?? undefined : undefined));
-      connection.value.setPopupAttributes(props.label); refreshItems(); refresh();
+      connection.value.setInputAttributes(props.label ?? input.value.getAttribute('aria-label') ?? undefined);
+      connection.value.setPopupAttributes(props.label ?? popup.value?.getAttribute('aria-label') ?? undefined);
+      refreshItems(); refresh();
     };
     const disconnect = (): void => {
       lifecycle.release();
@@ -420,7 +421,8 @@ export const ComboboxInput = /* @__PURE__ */ defineComponent({
       type: 'text', role: 'combobox',
       ...(renderServerValue ? { value: root.state.value.inputValue } : {}),
       name: props.name, form: props.form, required: props.required,
-      disabled: root.state.value.disabled, readonly: root.state.value.readonly, 'aria-label': root.label.value,
+      disabled: root.state.value.disabled, readonly: root.state.value.readonly,
+      ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
       'aria-autocomplete': 'list', 'aria-expanded': String(root.state.value.open),
       onCompositionstart: () => { if (root.active.value) root.setInputComposing(true); },
       onCompositionend: () => { if (root.active.value) root.setInputComposing(false); },
@@ -446,7 +448,8 @@ export const ComboboxContent = /* @__PURE__ */ defineComponent({
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
         as: props.as, asChild: props.asChild, elementRef: registerContent,
-        role: 'listbox', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+        role: 'listbox', hidden: !root.active.value || !present.value,
+        ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
         ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         style: root.position.value
           ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined }

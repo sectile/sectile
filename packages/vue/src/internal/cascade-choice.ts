@@ -128,7 +128,7 @@ export function createCascadeChoiceParts<State extends CascadeChoiceRootState>(o
           if (node instanceof HTMLElement) root.registerColumn(node, props.depth, props.label);
         },
         role: 'listbox',
-        'aria-label': props.label ?? root.label.value,
+        ...((props.label ?? root.label.value) === undefined ? {} : { 'aria-label': props.label ?? root.label.value }),
         'aria-orientation': 'vertical',
         hidden: state.value.items.length === 0,
         'data-scope': options.scope,

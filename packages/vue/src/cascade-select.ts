@@ -226,7 +226,7 @@ export const CascadeSelectContent = defineComponent({
     return (): VNodeChild => {
       const exiting = !open.value && present.value;
       return h(Primitive, mergeProps(attrs, {
-        as: props.as, asChild: props.asChild, elementRef: registerContent, role: 'group', hidden: !root.active.value || !present.value, 'aria-label': root.label.value,
+        as: props.as, asChild: props.asChild, elementRef: registerContent, role: 'group', hidden: !root.active.value || !present.value, ...(root.label.value === undefined ? {} : { 'aria-label': root.label.value }),
         ...(exiting || !root.active.value ? { inert: true, 'aria-hidden': 'true' } : {}),
         style: root.position.value ? { position: root.strategy.value, visibility: element.value === undefined ? 'hidden' : undefined } : undefined,
         'data-scope': 'cascade-select', 'data-part': 'content', 'data-state': open.value ? 'open' : 'closed',
