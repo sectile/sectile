@@ -85,6 +85,8 @@ export function useFileUploadGroup<const ID extends StableID, T extends FileMeta
   let adapterSource: UseFileUploadGroupOptions<ID, T, Receipt>['adapter'] | undefined = options.adapter;
   let concurrencySource = options.concurrency, activeSource = options.active, maxFiles = options.maxFiles, cleanupError = options.onCleanupError;
   let alive = true, epoch: object | undefined;
+  let membershipError: SectileError<FileUploadGroupErrorCode> | undefined;
+  let concurrencyError: SectileError<FileUploadGroupErrorCode> | undefined;
   const control: Control<ID, T, Receipt> = { native: undefined, available: false, rows: new Set(), observed: new Map() };
   const snapshot = shallowRef<FileUploadGroupSnapshot<ID>>(), error = shallowRef<SectileError<FileUploadGroupErrorCode>>(), ready = shallowRef(false);
   const handle = createComponentHandle<Control<ID, T, Receipt>, Pick<UseFileUploadGroupReturn<ID, T, Receipt>, 'getItem' | 'start' | 'cancel' | 'reset' | 'useItem'>>(current => {
@@ -108,6 +110,7 @@ export function useFileUploadGroup<const ID extends StableID, T extends FileMeta
   watch(ready, available => { if (!available && !control.available) control.native?.cancel(); }, { flush: 'post' });
   const release = (): void => {
     epoch = undefined; const held = control.native; control.native = undefined;
+    membershipError = undefined; concurrencyError = undefined;
     snapshot.value = undefined; error.value = undefined; ready.value = false;
     for (const row of control.rows) row.value.value = undefined;
     held?.destroy();
@@ -147,10 +150,17 @@ export function useFileUploadGroup<const ID extends StableID, T extends FileMeta
   watch(() => { try { return read(); } catch { return undefined; } }, (input, previous) => {
     const native = control.native;
     if (!alive || !native || !input) return;
-    let failure: SectileError<FileUploadGroupErrorCode> | undefined;
-    if (!previous || input[0] !== previous[0]) { const result = native.syncItems(input[0]!); if (result && !result.ok) failure = result.error; }
-    if (!previous || input[2] !== previous[2]) { const result = native.setConcurrency(input[2]); if (result && !result.ok) failure ??= result.error; }
-    error.value = failure;
+    if (!previous || input[0] !== previous[0]) {
+      const result = native.syncItems(input[0]!);
+      if (!alive || control.native !== native) return;
+      membershipError = result.ok ? undefined : result.error;
+    }
+    if (!previous || input[2] !== previous[2]) {
+      const result = native.setConcurrency(input[2]);
+      if (!alive || control.native !== native) return;
+      concurrencyError = result.ok ? undefined : result.error;
+    }
+    error.value = membershipError ?? concurrencyError;
   }, { flush: 'post' });
   return Object.freeze({ ...handle.view, snapshot: shallowReadonly(snapshot), error: shallowReadonly(error), ready: shallowReadonly(ready) });
 }

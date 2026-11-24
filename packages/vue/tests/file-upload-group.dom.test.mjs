@@ -83,6 +83,28 @@ test('concurrency changes are admitted by the native owner and adapter replaceme
     f.api.start([0]); await settle(); assert.equal(f.first.value.state.receipt.name, '0.txt'); assert.deepEqual(f.errors, []);
   } finally { f.close(); }
 });
+test('membership and concurrency admission errors survive independent corrections', async () => {
+  const f = fixture();
+  try {
+    await settle();
+    const original = f.source.value;
+    f.source.value = [original[0], original[0]];
+    await settle();
+    f.concurrency.value = 3;
+    await settle();
+    assert.equal(f.api.snapshot.value.state.concurrency, 3);
+    assert.equal(f.api.error.value?.code, 'duplicate-id');
+    f.concurrency.value = 0;
+    await settle();
+    assert.equal(f.api.error.value?.code, 'duplicate-id');
+    f.source.value = original;
+    await settle();
+    assert.ok(f.api.error.value);
+    f.concurrency.value = 2;
+    await settle();
+    assert.equal(f.api.error.value, undefined);
+  } finally { f.close(); }
+});
 test('activity and KeepAlive cancel pending/live work without retrying or losing completed receipts', async () => {
   const f = fixture({ cached: true });
   try {
