@@ -2951,7 +2951,7 @@ test('Slider reconnects live orientation, range and track without retaining reti
     default: () => [h(SliderTrack, { key: trackKey.value }), h(SliderThumb)],
   }) });
   const drain = async () => { for (let turn = 0; turn < 4; turn++) await nextTick(); };
-  const pointer = (target, x, y) => { const event = new Event('pointerdown', { bubbles: true }); Object.assign(event, { pointerId: 1, clientX: x, clientY: y }); target.dispatchEvent(event); };
+  const pointer = (target, x, y) => { const event = new Event('pointerdown', { bubbles: true }); Object.assign(event, { pointerId: 1, button: 0, isPrimary: true, clientX: x, clientY: y }); target.dispatchEvent(event); };
   const bounds = { left: 0, top: 0, bottom: 100, width: 100, height: 100 };
   try {
     app.mount(host); await drain(); const oldTrack = host.querySelector('[data-part="track"]'); oldTrack.getBoundingClientRect = () => bounds;

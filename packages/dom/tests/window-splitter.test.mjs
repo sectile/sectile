@@ -46,7 +46,7 @@ test('DOM window splitter measures the pane surface but starts dragging only fro
 });
 
 function pointerEvent(clientY) {
-  return { clientX: 0, clientY, pointerId: 1, preventDefault() {} };
+  return { clientX: 0, clientY, pointerId: 1, button: 0, isPrimary: true, preventDefault() {} };
 }
 
 function keyboardEvent(key) {
@@ -74,5 +74,6 @@ class FakeElement {
     return { left: 0, width: 100, top: 0, bottom: 100, height: 100 };
   }
   setPointerCapture() {}
+  focus() {}
   releasePointerCapture() {}
 }

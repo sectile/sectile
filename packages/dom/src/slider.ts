@@ -15,6 +15,7 @@ import {
 } from '@sectile/core/slider';
 import type { RevisionResult, RevisionSnapshot } from '@sectile/core/revision';
 import { setInteractionAttributes } from './interaction/attributes.js';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 
 export interface KeyboardInput {
   readonly key: string;
@@ -111,6 +112,7 @@ export interface SliderConnectionOptions {
   readonly label?: string;
   readonly role?: 'slider' | 'separator';
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly disabled?: boolean;
   readonly readOnly?: boolean;
   readonly formatValue?: (value: string) => string;
@@ -197,7 +199,7 @@ export function getSliderAttributes(
     'aria-valuenow': value,
     'aria-valuetext': options.formatValue?.(value) ?? value,
     'aria-orientation': options.orientation ?? 'horizontal',
-    'aria-label': options.label,
+    ...(options.label === undefined ? {} : { 'aria-label': options.label }),
     'aria-disabled': options.disabled === true ? 'true' : undefined,
     'aria-readonly': options.readOnly === true ? 'true' : undefined,
     'data-scope': options.scope ?? 'slider',
@@ -272,6 +274,7 @@ class DOMSliderConnection implements SliderConnection {
   readonly #label: string | undefined;
   readonly #role: 'slider' | 'separator';
   readonly #orientation: 'horizontal' | 'vertical';
+  readonly #direction: ReadingDirection;
   readonly #formatValue: (value: string) => string;
   readonly #disabled: boolean;
   readonly #readOnly: boolean;
@@ -280,7 +283,7 @@ class DOMSliderConnection implements SliderConnection {
   readonly #handleKeydown: (event: KeyboardEvent) => void;
   readonly #handlePointer: (event: PointerEvent) => void;
   readonly #handlePointerUp: (event: PointerEvent) => void;
-  #dragging = false;
+  #pointerId: number | null = null;
 
   public constructor(options: SliderConnectionOptions) {
     this.#controller = options.controller;
@@ -293,6 +296,7 @@ class DOMSliderConnection implements SliderConnection {
     this.#role = options.role ?? 'slider';
     this.#pointerTarget = this.#role === 'separator' ? options.root : this.#track;
     this.#orientation = options.orientation ?? 'horizontal';
+    this.#direction = this.#role === 'slider' && this.#orientation === 'horizontal' ? options.direction ?? 'ltr' : 'ltr';
     this.#formatValue = options.formatValue ?? ((value) => value);
     this.#disabled = options.disabled ?? false;
     this.#readOnly = options.readOnly ?? false;
@@ -303,34 +307,38 @@ class DOMSliderConnection implements SliderConnection {
     };
     this.#handlePointer = (event): void => {
       if (event.type === 'pointerdown') {
-        this.#dragging = true;
-        this.#pointerTarget.setPointerCapture?.(event.pointerId);
-      } else if (!this.#dragging) {
+        if (event.defaultPrevented || event.button !== 0 || event.isPrimary === false || this.#disabled || this.#readOnly || this.#pointerId !== null) return;
+      } else if (event.pointerId !== this.#pointerId) {
         return;
       }
       const rect = this.#track.getBoundingClientRect();
       const extent = this.#orientation === 'horizontal' ? rect.width : rect.height;
       if (extent <= 0) return;
       const rawRatio = this.#orientation === 'horizontal'
-        ? (event.clientX - rect.left) / rect.width
+        ? (this.#direction === 'rtl' ? rect.right - event.clientX : event.clientX - rect.left) / rect.width
         : this.#role === 'separator'
           ? (event.clientY - rect.top) / rect.height
           : (rect.bottom - event.clientY) / rect.height;
       const ratio = Math.min(1, Math.max(0, rawRatio));
       const tick = Math.round(ratio * this.range.count);
       const semanticEvent: SliderEvent = { type: 'set-tick', tick };
+      if (event.type === 'pointerdown') {
+        this.#pointerTarget.setPointerCapture?.(event.pointerId);
+        this.#pointerId = event.pointerId;
+        this.#root.focus({ preventScroll: true });
+        if (this.#pointerId !== event.pointerId) return;
+      }
       if (this.handleEvent(semanticEvent)) event.preventDefault();
     };
     this.#handlePointerUp = (event): void => {
-      if (!this.#dragging) return;
-      this.#dragging = false;
-      this.#pointerTarget.releasePointerCapture?.(event.pointerId);
+      if (event.pointerId === this.#pointerId) this.#endDrag();
     };
     this.#root.addEventListener('keydown', this.#handleKeydown);
     this.#pointerTarget.addEventListener('pointerdown', this.#handlePointer);
     this.#pointerTarget.addEventListener('pointermove', this.#handlePointer);
     this.#pointerTarget.addEventListener('pointerup', this.#handlePointerUp);
     this.#pointerTarget.addEventListener('pointercancel', this.#handlePointerUp);
+    this.#pointerTarget.addEventListener('lostpointercapture', this.#handlePointerUp);
     setInteractionAttributes(this.#root, options, false, this.#role === 'slider');
     this.refreshAttributes();
   }
@@ -374,6 +382,10 @@ class DOMSliderConnection implements SliderConnection {
       ctrlKey: event.ctrlKey,
       metaKey: event.metaKey,
     };
+    const arrow = this.#direction === 'rtl' ? horizontalArrow(input.key, this.#direction) : null;
+    if (arrow !== null && !input.altKey && !input.ctrlKey && !input.metaKey) {
+      return this.handleEvent(arrow === 'next' ? 'increment' : 'decrement');
+    }
     const semanticEvent = this.#role === 'separator' && this.#orientation === 'vertical'
       ? toVerticalSplitterEvent(input)
       : toSliderEvent(input);
@@ -395,6 +407,14 @@ class DOMSliderConnection implements SliderConnection {
     this.#pointerTarget.removeEventListener('pointermove', this.#handlePointer);
     this.#pointerTarget.removeEventListener('pointerup', this.#handlePointerUp);
     this.#pointerTarget.removeEventListener('pointercancel', this.#handlePointerUp);
+    this.#pointerTarget.removeEventListener('lostpointercapture', this.#handlePointerUp);
+    this.#endDrag();
+  }
+
+  #endDrag(): void {
+    const id = this.#pointerId;
+    this.#pointerId = null;
+    if (id !== null && this.#pointerTarget.hasPointerCapture?.(id)) this.#pointerTarget.releasePointerCapture?.(id);
   }
 }
 

@@ -8,6 +8,7 @@ import { applyMultiThumbSliderEvent, getMultiThumbSliderThumbBounds, tryCreateMu
 export type { MultiThumbSliderPolicies } from '@sectile/core/multi-thumb-slider';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction/attributes.js';
+import { horizontalArrow, type ReadingDirection } from './interaction/keyboard.js';
 
 export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends BoundedRangeInput {
   readonly root: HTMLElement;
@@ -20,6 +21,7 @@ export interface MultiThumbSliderOptions<ID extends StableID = StableID> extends
   readonly readOnly?: boolean;
   readonly policies?: MultiThumbSliderPolicies;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: ReadingDirection;
   readonly label?: string;
   readonly getThumbLabel?: (id: ID) => string;
   readonly formatValue?: (value: string, id: ID) => string;
@@ -107,30 +109,32 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
     this.domain = thumbs;
     this.range = range;
     this.#runtime = runtime;
+    const direction = options.orientation === 'vertical' ? 'ltr' : options.direction ?? 'ltr';
     this.#handleKeydown = (event): void => {
-      const semantic = toMultiThumbSliderEvent(event);
+      const semantic = toMultiThumbSliderEvent(event, direction);
       if (semantic !== null && this.handleEvent(semantic)) event.preventDefault();
     };
     this.#handlePointer = (event): void => {
       if (event.type === 'pointerdown') {
-        if (event.button !== 0 || options.disabled || options.readOnly || this.#pointerId !== null) return;
+        if (event.defaultPrevented || event.button !== 0 || event.isPrimary === false || options.disabled || options.readOnly || this.#pointerId !== null) return;
       } else if (event.pointerId !== this.#pointerId) return;
       const rect = (options.track ?? options.root).getBoundingClientRect();
       const orientation = options.orientation ?? 'horizontal';
       const extent = orientation === 'horizontal' ? rect.width : rect.height;
       if (extent <= 0) return;
       const rawRatio = orientation === 'horizontal'
-        ? (event.clientX - rect.left) / rect.width
+        ? (direction === 'rtl' ? rect.right - event.clientX : event.clientX - rect.left) / rect.width
         : (rect.bottom - event.clientY) / rect.height;
       const ratio = Math.max(0, Math.min(1, rawRatio));
       const tick = Math.round(ratio * range.count);
       if (event.type === 'pointerdown') {
         const id = this.#thumbForPointer(event, tick);
         if (id === null) return;
+        (options.track ?? options.root).setPointerCapture?.(event.pointerId);
         this.#draggingThumb = id;
         this.#pointerId = event.pointerId;
-        (options.track ?? options.root).setPointerCapture?.(event.pointerId);
-        this.#elements.get(id)?.focus();
+        this.#elements.get(id)?.focus({ preventScroll: true });
+        if (this.#pointerId !== event.pointerId) return;
       } else if (this.#draggingThumb === null) {
         return;
       }
@@ -235,10 +239,11 @@ class DOMMultiThumbSlider<ID extends StableID> implements MultiThumbSliderConnec
 
 function multiThumbIntent<ID extends StableID>(event: MultiThumbSliderEvent<ID>): 'navigate' | 'mutate' { if (typeof event === 'object') return event.type === 'focus' ? 'navigate' : 'mutate'; return event === 'next-thumb' || event === 'previous-thumb' ? 'navigate' : 'mutate'; }
 
-function toMultiThumbSliderEvent(event: KeyboardEvent): Extract<MultiThumbSliderEvent, string> | null {
+function toMultiThumbSliderEvent(event: KeyboardEvent, direction: ReadingDirection): Extract<MultiThumbSliderEvent, string> | null {
   if (event.altKey || event.ctrlKey || event.metaKey) return null;
-  if (event.key === 'ArrowRight' || event.key === 'ArrowUp') return 'increment';
-  if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') return 'decrement';
+  const arrow = horizontalArrow(event.key, direction);
+  if (arrow === 'next' || event.key === 'ArrowUp') return 'increment';
+  if (arrow === 'previous' || event.key === 'ArrowDown') return 'decrement';
   if (event.key === 'Home') return 'home'; if (event.key === 'End') return 'end';
   return null;
 }

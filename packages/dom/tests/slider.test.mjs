@@ -65,6 +65,27 @@ test('DOM slider maps pointer position onto an exact tick', () => {
   assert.equal(connection.getValue(), '0.75');
 });
 
+test('horizontal RTL slider hands a primary drag to the keyboard and retires only its pointer', () => {
+  const root = new FakeElement();
+  const slider = createSlider({ min: '0', max: '100', step: '1', root, direction: 'rtl' });
+  root.emit('pointerdown', { ...pointerEvent(25), button: 2 });
+  assert.equal(slider.getValue(), '0');
+  assert.equal(root.focused, false);
+  root.emit('pointerdown', pointerEvent(25));
+  assert.equal(slider.getValue(), '75');
+  assert.equal(root.focused, true);
+  root.emit('pointermove', { ...pointerEvent(75), pointerId: 2 });
+  assert.equal(slider.getValue(), '75');
+  root.emit('lostpointercapture', pointerEvent(25));
+  root.emit('pointermove', pointerEvent(75));
+  assert.equal(slider.getValue(), '75');
+  root.emit('keydown', keyboardEvent('ArrowRight'));
+  assert.equal(slider.getValue(), '74');
+  root.emit('pointerdown', pointerEvent(75));
+  slider.disconnect();
+  assert.equal(root.capture, null);
+});
+
 test('DOM slider preserves a composed public scope and part across refreshes', () => {
   const root = new FakeElement();
   const connection = createSlider({
@@ -93,7 +114,7 @@ test('DOM vertical slider maps its top edge to the upper value', () => {
     orientation: 'vertical',
     formatValue: (value) => `${value} units`,
   });
-  root.emit('pointerdown', { clientX: 0, clientY: 0, pointerId: 1, preventDefault() {} });
+  root.emit('pointerdown', { ...pointerEvent(0), clientY: 0 });
   assert.equal(connection.getValue(), '1');
   assert.equal(root.attributes.get('aria-valuenow'), '1');
   assert.equal(root.attributes.get('aria-valuetext'), '1 units');
@@ -157,13 +178,15 @@ function keyboardEvent(key) {
 }
 
 function pointerEvent(clientX) {
-  return { type: 'pointerdown', clientX, pointerId: 1, preventDefault() {} };
+  return { type: 'pointerdown', clientX, pointerId: 1, button: 0, preventDefault() {} };
 }
 
 class FakeElement {
   attributes = new Map();
   listeners = new Map();
   tabIndex = -1;
+  focused = false;
+  capture = null;
 
   addEventListener(type, listener) {
     const listeners = this.listeners.get(type) ?? new Set();
@@ -181,12 +204,16 @@ class FakeElement {
   }
 
   getBoundingClientRect() {
-    return { left: 0, width: 100, top: 0, bottom: 100, height: 100 };
+    return { left: 0, right: 100, width: 100, top: 0, bottom: 100, height: 100 };
   }
 
-  setPointerCapture() {}
+  focus() { this.focused = true; }
 
-  releasePointerCapture() {}
+  setPointerCapture(id) { this.capture = id; }
+
+  hasPointerCapture(id) { return this.capture === id; }
+
+  releasePointerCapture() { this.capture = null; }
 
   setAttribute(name, value) {
     this.attributes.set(name, value);

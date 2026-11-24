@@ -80,7 +80,7 @@ test('Vue slider responds to keyboard and track pointer input', async () => {
   assert.equal(thumb.getAttribute('aria-valuenow'), '41');
 
   track.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true,
+    bubbles: true, isPrimary: true,
     clientX: 75,
     clientY: 5,
     pointerId: 1,
@@ -184,7 +184,7 @@ test('Vue multi-thumb slider keeps both thumbs adjustable', async () => {
   assert.equal(renderedThumbs[1].getAttribute('aria-valuenow'), '72');
 
   track.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true,
+    bubbles: true, isPrimary: true,
     clientX: 80,
     clientY: 5,
     pointerId: 2,
@@ -204,7 +204,7 @@ test('Vue multi-thumb slider rebinds replaced tracks and live presentation witho
     'onUpdate:modelValue': values => updates.push([...values]),
   }, { default: () => [h(MultiThumbSliderTrack, { key: trackKey.value }), h(MultiThumbSliderThumb, { value: 'low' }), h(MultiThumbSliderThumb, { value: 'high' })] }) });
   const drain = async () => { for (let turn = 0; turn < 5; turn++) await nextTick(); };
-  const press = (element, x, y = 5) => { element.dispatchEvent(new PointerEvent('pointerdown', { button: 0, bubbles: true, clientX: x, clientY: y, pointerId: 1 })); element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 })); };
+  const press = (element, x, y = 5) => { element.dispatchEvent(new PointerEvent('pointerdown', { button: 0, isPrimary: true, bubbles: true, clientX: x, clientY: y, pointerId: 1 })); element.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 1 })); };
   try {
     app.mount(host); await drain(); const retired = host.querySelector('[data-part="track"]'); horizontalTrack(retired);
     host.querySelector('[data-sectile-multi-thumb="high"]').focus();
@@ -275,7 +275,7 @@ test('Vue window splitter updates its constrained surface with live range and or
     assert.equal(handle.getAttribute('aria-orientation'), 'vertical');
     track.getBoundingClientRect = () => ({ x: 0, y: 30, left: 0, top: 30, right: 10, bottom: 70,
       width: 10, height: 40, toJSON: () => ({}) });
-    handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, clientX: 5, clientY: 60, pointerId: 9 }));
+    handle.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, isPrimary: true, clientX: 5, clientY: 60, pointerId: 9 }));
     await settle();
     assert.equal(handle.getAttribute('aria-valuenow'), '60');
     assert.deepEqual(updates, ['60']);
@@ -313,7 +313,7 @@ test('Vue window splitter drags against the complete pane surface', async () => 
   horizontalTrack(track);
 
   root.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true,
+    bubbles: true, isPrimary: true,
     clientX: 60,
     clientY: 5,
     pointerId: 3,
@@ -322,7 +322,7 @@ test('Vue window splitter drags against the complete pane surface', async () => 
   assert.equal(handle.getAttribute('aria-valuenow'), '35');
 
   handle.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true,
+    bubbles: true, isPrimary: true,
     clientX: 72,
     clientY: 5,
     pointerId: 4,
@@ -367,14 +367,15 @@ test('Vue window splitter keeps the visual separator inside min and max pane per
   });
 
   handle.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true, clientX: 0, clientY: 5, pointerId: 5,
+    bubbles: true, isPrimary: true, clientX: 0, clientY: 5, pointerId: 5,
   }));
   await settle();
   assert.equal(handle.getAttribute('aria-valuenow'), '22');
   assert.match(root.getAttribute('style') ?? '', /--sectile-window-splitter-percentage:\s*22%/);
 
+  handle.dispatchEvent(new PointerEvent('pointerup', { bubbles: true, pointerId: 5 }));
   handle.dispatchEvent(new PointerEvent('pointerdown', {
-    bubbles: true, clientX: 100, clientY: 5, pointerId: 6,
+    bubbles: true, isPrimary: true, clientX: 100, clientY: 5, pointerId: 6,
   }));
   await settle();
   assert.equal(handle.getAttribute('aria-valuenow'), '72');

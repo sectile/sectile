@@ -29,6 +29,7 @@ export interface SliderRootProps {
   readonly defaultValue?: number | string;
   readonly pageStep?: number;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: 'ltr' | 'rtl';
   readonly role?: 'slider' | 'separator';
   readonly disabled?: boolean;
   readonly?: boolean;
@@ -49,6 +50,7 @@ interface SliderContext {
   readonly controller: ShallowRef<SliderController>;
   readonly state: ComputedRef<SliderSlotProps>;
   readonly orientation: ComputedRef<'horizontal' | 'vertical'>;
+  readonly direction: ComputedRef<'ltr' | 'rtl'>;
   readonly role: ComputedRef<'slider' | 'separator'>;
   readonly root: ShallowRef<HTMLElement | undefined>;
   readonly track: ShallowRef<HTMLElement | undefined>;
@@ -77,6 +79,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
     defaultValue: { type: [Number, String], default: 0 },
     pageStep: { type: Number, default: 10 },
     orientation: { type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal' },
+    direction: { type: String as PropType<'ltr' | 'rtl'>, default: 'ltr' },
     role: { type: String as PropType<'slider' | 'separator'>, default: 'slider' },
     disabled: { type: Boolean, default: false },
     readonly: { type: Boolean, default: false },
@@ -141,6 +144,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
       readonly: flags.value.readonly,
     }));
     const orientation = computed(() => props.orientation);
+    const direction = computed(() => props.direction);
     const role = computed(() => props.role);
     const label = computed(() => props.label);
     const formatValue = computed(() => props.formatValue);
@@ -171,7 +175,7 @@ export const SliderRoot = /* @__PURE__ */ defineComponent({
         });
       },
     });
-    provide<SliderContext>(sliderKey, { controller, state, orientation, role, root: rootElement, track, thumb, connection, label, formatValue, partContract: part, refresh });
+    provide<SliderContext>(sliderKey, { controller, state, orientation, direction, role, root: rootElement, track, thumb, connection, label, formatValue, partContract: part, refresh });
     return (): VNodeChild => {
       const root = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
         as: props.as, asChild: props.asChild,
@@ -250,6 +254,7 @@ export const SliderThumb = /* @__PURE__ */ defineComponent({
         scope: part.scope,
         part: part.part,
         orientation: root.orientation.value,
+        direction: root.direction.value,
         role: root.role.value,
         disabled: root.state.value.disabled,
         readOnly: root.state.value.readonly,
@@ -265,7 +270,7 @@ export const SliderThumb = /* @__PURE__ */ defineComponent({
       if (root.thumb.value === element.value) root.thumb.value = undefined;
       element.value = undefined;
     });
-    watch([root.controller, root.track, root.root, root.orientation, root.role, root.label, root.formatValue, element], connect, { flush: 'post' });
+    watch([root.controller, root.track, root.root, root.orientation, root.direction, root.role, root.label, root.formatValue, element], connect, { flush: 'post' });
     const attributes = computed(() => getSliderAttributes(root.controller.value, {
       scope: part.scope,
       part: part.part,

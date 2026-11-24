@@ -7,6 +7,7 @@ import {
 } from '@sectile/dom/multi-thumb-slider';
 import { tryCreateMultiThumbSliderState } from '@sectile/core/multi-thumb-slider';
 import { tryCreateSequence } from '@sectile/core/sequence';
+import { sameStableIDOrder } from '@sectile/core/identity';
 import { unwrap } from '@sectile/core/result';
 import { createSliderControllerFromRange } from '@sectile/dom/slider';
 import type { FormSubmissionRegistration } from './form/control.js';
@@ -27,6 +28,7 @@ export interface MultiThumbSliderRootProps {
   readonly max?: number | string;
   readonly step?: number | string;
   readonly orientation?: 'horizontal' | 'vertical';
+  readonly direction?: 'ltr' | 'rtl';
   readonly disabled?: boolean;
   readonly?: boolean;
   readonly label?: string;
@@ -70,6 +72,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
     defaultValue: { type: Array as PropType<readonly (number | string)[]>, default: undefined },
     min: { type: [Number, String], default: 0 }, max: { type: [Number, String], default: 100 }, step: { type: [Number, String], default: 1 },
     orientation: { type: String as PropType<'horizontal' | 'vertical'>, default: 'horizontal' },
+    direction: { type: String as PropType<'ltr' | 'rtl'>, default: 'ltr' },
     disabled: { type: Boolean, default: false }, readonly: { type: Boolean, default: false }, label: { type: String, default: undefined },
     getThumbLabel: { type: Function as PropType<MultiThumbSliderThumbLabelResolver>, default: undefined },
     formatValue: { type: Function as PropType<MultiThumbSliderValueFormatter>, default: undefined },
@@ -82,6 +85,10 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
   slots: Object as SlotsType<{ default: (props: MultiThumbSliderRootSlotProps) => VNodeChild }>,
   setup(props, { attrs, emit, slots }) {
     const flags = useFormControlFlags(props);
+    const thumbs = computed<readonly string[]>((previous) => {
+      const next = props.thumbs;
+      return previous !== undefined && (previous === next || sameStableIDOrder(previous, next)) ? previous : next;
+    });
     const root = shallowRef<HTMLElement>(); const track = shallowRef<HTMLElement>();
     const submissions = new Map<number, HTMLInputElement>();
     const connection = shallowRef<MultiThumbSliderConnection<string>>();
@@ -133,7 +140,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       if (tick === null) throw new TypeError(`Multi-thumb slider value ${value} is outside its exact range.`);
       return tick;
     });
-    const domain = computed(() => connection.value?.domain ?? unwrap(tryCreateSequence(props.thumbs)));
+    const domain = computed(() => connection.value?.domain ?? unwrap(tryCreateSequence(thumbs.value)));
     const projection = computed(() => {
       const values = current.value;
       return connection.value?.getSnapshot().state
@@ -148,10 +155,10 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       connection.value?.disconnect(); connection.value = undefined;
       if (!mounted || root.value === undefined) return;
       connection.value = createMultiThumbSlider({
-        root: root.value, ...(track.value === undefined ? {} : { track: track.value }), thumbs: props.thumbs,
+        root: root.value, ...(track.value === undefined ? {} : { track: track.value }), thumbs: thumbs.value,
         min: String(props.min), max: String(props.max), step: String(props.step),
         ...(controlled ? { values: ticks(current.value) } : { defaultValues: ticks(current.value) }),
-        disabled: flags.value.disabled, readOnly: flags.value.readonly, orientation: props.orientation,
+        disabled: flags.value.disabled, readOnly: flags.value.readonly, orientation: props.orientation, direction: props.direction,
         ...(props.label === undefined ? {} : { label: props.label }),
         ...(props.getThumbLabel === undefined ? {} : { getThumbLabel: props.getThumbLabel }),
         ...(props.formatValue === undefined ? {} : { formatValue: props.formatValue }),
@@ -184,7 +191,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       });
     };
     provide<Context>(key, {
-      state, thumbs: computed(() => props.thumbs), orientation: computed(() => props.orientation), connection: computed(() => connection.value),
+      state, thumbs, orientation: computed(() => props.orientation), connection: computed(() => connection.value),
       registerTrack: (element) => { track.value = element; },
       registerThumb: (id, element) => {
         if (element === undefined) requestConnect(); else connection.value?.setThumbAttributes(element, id);
@@ -204,7 +211,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       connection.value?.disconnect(); connection.value = undefined;
       root.value = undefined; track.value = undefined; submissions.clear();
     });
-    watch([() => props.thumbs, () => props.min, () => props.max, () => props.step, () => props.orientation,
+    watch([thumbs, () => props.min, () => props.max, () => props.step, () => props.orientation, () => props.direction,
       () => flags.value.disabled, () => flags.value.readonly, () => props.policies, () => props.label,
       () => props.getThumbLabel, () => props.formatValue, () => props.modelValue], (next, previous) => {
       if (!mounted) return;
@@ -220,7 +227,7 @@ export const MultiThumbSliderRoot = /* @__PURE__ */ defineComponent({
       const style = Object.fromEntries(percentages.value.map((value, index) => [`--sectile-thumb-${index}-percentage`, `${value}%`]));
       const visual = h(Primitive, mergeProps(participation.controlProps.value, attrs, {
         as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { root.value = node instanceof HTMLElement ? node : undefined; },
-        role: 'group', 'aria-label': props.label, 'data-scope': 'multi-thumb-slider', 'data-part': 'root',
+        role: 'group', ...(props.label === undefined ? {} : { 'aria-label': props.label }), 'data-scope': 'multi-thumb-slider', 'data-part': 'root',
         'data-orientation': props.orientation, style,
       }), { default: () => slots['default']?.(state.value) });
       if (props.name === undefined && props.form === undefined && !props.required && !participation.participating) return visual;
