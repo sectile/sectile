@@ -1688,6 +1688,7 @@
       "platform": "browser",
       "runtimeExports": [
         "TemporalProvider",
+        "useTemporalEditingFormatter",
         "useTemporalFormatter",
         "useTemporalReferenceDate"
       ],

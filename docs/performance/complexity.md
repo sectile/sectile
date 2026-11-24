@@ -8,7 +8,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 
 | Package | Runtime export keys | Aliases | Internal hot operations |
 |---|---:|---:|---:|
-| core | 417 | 26 | 91 |
+| core | 420 | 26 | 92 |
 | chart | 80 | 0 | 15 |
 | dom | 490 | 177 | 62 |
 | form | 26 | 0 | 9 |
@@ -16,7 +16,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | temporal | 137 | 14 | 4 |
 | terminal | 347 | 167 | 9 |
 | virtual | 114 | 0 | 36 |
-| vue | 843 | 351 | 18 |
+| vue | 844 | 351 | 18 |
 
 ## Variables
 
@@ -78,8 +78,9 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | core:multi-thumb.bounds | external | `O(1)` expected | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/composites/multi-thumb-slider.reference-law.test.mjs |
 | core:range.arithmetic | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:reorder.borrow-owners | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | packages/core/tests/runtime/reorder.test.mjs |
-| core:reorder.sequence-transition | trusted | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
+| core:reorder.sequence-transition | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:reorder.tree-availability | trusted | `O(1 + s + k)` worst-case | `O(1)` | `O(1)` | `O(k)` | allowed | packages/core/tests/runtime/reorder.test.mjs |
+| core:reorder.tree-batch-admission | trusted | `O(c log c + s + k)` worst-case | `O(c)` | `O(c)` | `O(k)` | forbidden | packages/core/tests/runtime/reorder.test.mjs |
 | core:reorder.tree-transition | trusted | `O(n)` worst-case | `O(n)` | `O(n)` | `O(n)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:selection-expression.algebra | trusted | `O(eLeft + eRight)` expected | `O(eLeft + eRight)` | `O(eResult)` | `O(eResult)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | core:selection-expression.materialize | trusted | `O(nDomain)` worst-case | `O(1)` | `O(k)` | `O(k)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
@@ -173,7 +174,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:position.discovery | connected | `O(aDom)` worst-case | `O(aDom)` | `O(aDom)` | `O(aDom)` | allowed | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.schedule | trusted | `O(1)` worst-case | `O(1)` | `O(1)` | `O(1)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
 | dom:position.update | connected | `O(aDom + cAnchor)` worst-case | `O(aDom + cAnchor)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
-| dom:reorder.drag-feedback | connected | `O(1+s+a)` worst-case | `O(1)` | `O(1)` | `O(1+a)` | forbidden | packages/dom/tests/reorder.test.mjs |
+| dom:reorder.drag-feedback | connected | `O(1+c log c+s+a)` worst-case | `O(c)` | `O(1)` | `O(1+c+a)` | forbidden | packages/dom/tests/reorder.test.mjs |
 | dom:reorder.interaction-preview | connected | `O(n+m+h)` worst-case | `O(n)` | `O(n)` | `O(n+m)` | allowed | packages/dom/tests/reorder.test.mjs, packages/vue/tests/dynamic-collections.dom.test.mjs, scripts/browser-verification.mjs |
 | dom:reorder.item-projection | connected | `O(n + k + z)` amortized | `O(1)` | `O(k)` | `O(n + k + z)` | allowed | packages/dom/tests/reorder.test.mjs |
 | dom:reorder.target-routing | connected | `O(h)` expected | `O(1)` | `O(1)` | `O(k + z)` | forbidden | packages/dom/tests/reorder.test.mjs |

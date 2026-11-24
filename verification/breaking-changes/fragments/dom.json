@@ -3,6 +3,14 @@
   "package": "@sectile/dom",
   "entries": [
     {
+      "id": "WI-254:dom-feed-scroll-anchor",
+      "change": "signature-changed",
+      "before": { "subpath": "./feed" },
+      "symbols": ["FeedOptions", "FeedConnection"],
+      "replacement": { "package": "@sectile/dom", "subpath": "./feed" },
+      "removalReason": "An optional scrollport enables earlier-window anchor compensation. Call restoreScrollAnchor after rendering the accepted items."
+    },
+    {
       "id": "WI-008:dom-cascade-list-direction",
       "change": "signature-changed",
       "before": { "subpath": "./cascade-list" },

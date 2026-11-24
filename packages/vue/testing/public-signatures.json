@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "ef384cf98ab08c29166259967784fe82d29ca12277c1aebc25e9e7c4390a8eae",
+  "fingerprint": "53490fc596d199643534d5c4dd6a0a62baaca2d67de7f3b239abe2b504521bb3",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -435,7 +435,7 @@
     },
     {
       "path": "dist/feed.d.ts",
-      "sha256": "a758c0cb211cf1d14e975ca0e4606fa7e8ca00360525a2668d382370447fe4b8"
+      "sha256": "0cdd19a21ca82beb4e89763437cf8a541bccbc7ea6cbf516bf13ec883d177a94"
     },
     {
       "path": "dist/form-boundary.d.ts",
@@ -543,7 +543,7 @@
     },
     {
       "path": "dist/multi-thumb-slider.d.ts",
-      "sha256": "1e277dd27ce7b8e99d3cd2c71bdcde52e60175212079025889dd8dd18ebc1c46"
+      "sha256": "503e1138178935d631824c57e4b3939f0d46c28512c136e80b6443887da09c30"
     },
     {
       "path": "dist/navigation-menu.d.ts",
@@ -555,27 +555,27 @@
     },
     {
       "path": "dist/overlay/alert-dialog.d.ts",
-      "sha256": "ae8d258ddbc890f0fd2eb1dd5f216ca4a5d9b3630543de26b958f0a7db6a06ae"
+      "sha256": "202d08ee61219413beb01a50be1abada78b9328bb4bf8cf9395434f719885495"
     },
     {
       "path": "dist/overlay/dialog.d.ts",
-      "sha256": "309182beda2152028ac1d9b9404d2f525441f86d99ba30088ce64aa510a92c23"
+      "sha256": "62ededa9acf9634c81aae25a8d7c97a34535e8a79cd7b7427fb3c86ec066581f"
     },
     {
       "path": "dist/overlay/drawer.d.ts",
-      "sha256": "b53e0cc3e72dc9823cb96770393bd79292482266879f86fef153b578b0d8630b"
+      "sha256": "d66dc81e16601bb9a3b5dfd9a8ee1a6631bbc1f65c96bbc6b5f17f51b90b3f32"
     },
     {
       "path": "dist/overlay/popover.d.ts",
-      "sha256": "a37ccf1270a370dba2621f8b98b478f4632adcbd6e471a5caa383366fe3c5e5b"
+      "sha256": "bd5721fc7a754df73476ca6e78fb2aae865d0c7199894a02edd16b539b3e562c"
     },
     {
       "path": "dist/overlay/popup.d.ts",
-      "sha256": "51eb6f28f4aeabee4055cd35deed377a1c03b1f5680b3752929cfc107182b574"
+      "sha256": "7c7ab1b0fe288322a30983f8cd1a9e6c53fcbb090c7853da0cb7592911c5d91e"
     },
     {
       "path": "dist/overlay/tooltip.d.ts",
-      "sha256": "7191454f3dee4ed6440993353663b08c08337c60e3edcf164848f8ddf97ae4c8"
+      "sha256": "1d170e14f9447d072f76dee069fe67900569115425dd0b5d675f55cab39ce09f"
     },
     {
       "path": "dist/pagination.d.ts",
@@ -611,7 +611,7 @@
     },
     {
       "path": "dist/reorder.d.ts",
-      "sha256": "91b930d18ec82d1619897ea724bb24a87ea74b670824a98775382234d4d60d96"
+      "sha256": "22304d08ea54ff7adb524ae66b22e42bbb4c6d315c9716db21dc508bbf2eaadb"
     },
     {
       "path": "dist/select.d.ts",
@@ -619,7 +619,7 @@
     },
     {
       "path": "dist/slider.d.ts",
-      "sha256": "f2589ff54adcf6fac874f76017091516bca8fa34cc0c5cf697246cfaa7d3982d"
+      "sha256": "61b3ec2b226288a10cb2e32b426289b097cedddb0d8adf3ef885bdb0b72c6e1f"
     },
     {
       "path": "dist/spin-button.d.ts",
@@ -683,7 +683,7 @@
     },
     {
       "path": "dist/temporal/capability.d.ts",
-      "sha256": "4e8bf5f0a6721c76d33744b29f598c26406781d9c373a4545a9b4869681140df"
+      "sha256": "42de013970dc36a9afb8c6684723cacaa0bd51a8653e320a2438f6ff5d93e0e1"
     },
     {
       "path": "dist/temporal/date-field.d.ts",
@@ -722,6 +722,10 @@
       "sha256": "ed08029e9607d70795fcdbf9bf425347a74b3b323a805516a4a9cca8d6f159e9"
     },
     {
+      "path": "dist/temporal/internal/editing-format-contract.d.ts",
+      "sha256": "fe3c5fd7913af8539c2039040a6a60fe99b62f87dc8b8a1ccc4cb4cef19d6f99"
+    },
+    {
       "path": "dist/temporal/month-picker.d.ts",
       "sha256": "8ab785187728090654d1d369691c051bda7d45e32d161897f6ad0664c14a1a37"
     },
@@ -739,7 +743,7 @@
     },
     {
       "path": "dist/temporal/temporal-provider.d.ts",
-      "sha256": "12171c2ed0391202e1dadd2f232526e9437a2754495277c49873a61608c2e1ef"
+      "sha256": "4aa2e7d54c2b2d06b808a989c9eb01c317992a19870625b586857830a854cff2"
     },
     {
       "path": "dist/temporal/time-field.d.ts",

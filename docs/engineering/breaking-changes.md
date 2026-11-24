@@ -155,7 +155,7 @@
 | WI-014 | @sectile/core | `./menubar` | `Tree declaration closure` | @sectile/core/menubar |
 | WI-014 | @sectile/tabular | `./model` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/model |
 | WI-014 | @sectile/core | `./navigation-menu` | `Tree declaration closure` | @sectile/core/navigation-menu |
-| WI-014 | @sectile/core | `./reorder` | `Grid declaration closure` | @sectile/core/reorder |
+| WI-014 | @sectile/core | `./reorder` | `Grid declaration closure`, `SequenceReorderEvent`, `getSequenceReorderCohort`, `getTreeReorderCohort`, `canMoveTreeReorderNodes` | @sectile/core/reorder |
 | WI-014 | @sectile/tabular | `.` | `TabularLimits.maxLiveRequestGenerations`, `TabularLimitErrorCode.live-request-generation-ceiling-exceeded`, `TabularRowSelection declaration closure`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular |
 | WI-014 | @sectile/core | `.` | `Grid.domain`, `Tree.subtreeIntervalOf`, `TreeSubtreeInterval` | @sectile/core |
 | WI-014 | @sectile/tabular | `./source` | `Partial<TabularLimits>.maxLiveRequestGenerations`, `TabularLeafRow.contextOnly declaration closure` | @sectile/tabular/source |
@@ -244,3 +244,4 @@
 | WI-047 | @sectile/form | `./state` | `FormEvent update-field`, `FormFieldInput.valid`, `getFormFieldIDsByIssueSource`, `FormState flat validation and submission fields`, `FormStateInput flat validation and submission fields`, `FormIssue`, `FormFieldState`, `FormEvent submit-failed` | @sectile/form/state |
 | WI-047 | @sectile/dom | `./form` | `FormConnection.subscribe`, `FormConnection field mutation surface`, `FormValidationIssue`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormSubmitFailureResult`, `FormConnection.submitFailed`, `FormAnnounceSummaryHandler`, `FormOptions.manageSummaryVisibility` | @sectile/dom/form |
 | WI-047 | @sectile/vue | `./form` | `FormRootSlotProps`, `FormRoot default slot`, `FormSummary default slot`, `FormReset default slot`, `FormSubmit default slot`, `FormSubmitSlotProps.submissionStatus`, `FormFieldSlotProps`, `FormIssueInput`, `FormSubmitResult`, `FormSubmitErrorMapper`, `FormMessage.forcePresent`, `FormSummary.forcePresent` | @sectile/vue/form |
+| WI-254 | @sectile/dom | `./feed` | `FeedOptions`, `FeedConnection` | @sectile/dom/feed |

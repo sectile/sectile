@@ -1376,8 +1376,8 @@
           "timers": "O(1)",
           "subscriptions": "0"
         },
-        "proof": "An update consumes retained discovery, completes reference/floating/boundary/ancestor reads, invokes the bounded Core AnchoredLayout solver, then commits one owned projection. A plain static BODY offset-parent sentinel uses one bounded computed-style decision and live signed document scroll instead of a body rect; exceptional body styles add at most one style read to the existing parent-rect path. No new ancestry walk, cache, listener, observer or retained state is added.",
-        "adversarialWitness": "Every ancestor clips and every side candidate overflows. Existing popover-positioning tests additionally exercise body margin, signed document scroll, positioned/transformed/contained/will-change bodies and element parents, exact five/six read counts, one completed update and zero post-disconnect resources.",
+        "proof": "The Core solver consumes viewport geometry. DOM projects that result through the measured containing block. Ordinary unscaled updates skip the transform chain. A scaled basis reads at most the containing block ancestry and retains no frame-local styles. Explicit element-anchor hiding measures retained reference clips independently from floating collision clips. Event tracking owns at most one extra paint observer, which coalesces updates and is disconnected with ancestor subscriptions.",
+        "adversarialWitness": "Body and element containing-block tests assert exact reads of five, six, or eight by route and zero post-disconnect resources. The browser contract exercises independently scaled axes, a zero-flow block, borders, scrolling and pure visibility changes.",
         "fullScan": {
           "allowed": false,
           "rationale": "Ordinary updates cannot rediscover ancestors or scan global connections."
@@ -1389,15 +1389,16 @@
       "inherits": "linear-v1",
       "source": "packages/dom/src/reorder.ts",
       "benchmarkIDs": ["VAL-017:linear-work"],
-      "specificationCeiling": "O(1) unchanged placement; O(1+s+a) changed-placement admission, excluding existing hit routing",
+      "specificationCeiling": "O(1) unchanged placement; O(1+c log c+s+a) changed placement, excluding existing hit routing",
       "contract": {
         "variables": [
+          { "name": "c", "meaning": "captured source cohort", "ceiling": "canonical order size" },
           { "name": "s", "meaning": "affected moving subtree visited by canonical admission", "ceiling": "canonical tree nodes" },
           { "name": "a", "meaning": "cold canonical destination child-view admission", "ceiling": "destination sibling count" }
         ],
-        "time": { "bound": "O(1+s+a)", "kind": "worst-case", "runtimeState": "connected" },
-        "space": { "auxiliary": "O(1)", "output": "O(1)", "retained": "O(1+a)" },
-        "resources": { "allocations": "O(1+a)", "cacheEntries": "2", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "time": { "bound": "O(1+c log c+s+a)", "kind": "worst-case", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(c)", "output": "O(1)", "retained": "O(1+c+a)" },
+        "resources": { "allocations": "O(1+c+a)", "cacheEntries": "2 bindings and one captured cohort", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
         "proof": "Existing capture and logical target are authoritative. Equivalent item placements or identical canonical insertion ports skip preview admission and DOM writes; public pointer facts may still publish changed coordinates. One host-local move-event resolver serves both preview and commit; Core admission reuses the existing policy reentrancy lock. Host feedback retains two attribute bindings with four entries total. The retained/allocation ceiling includes cold canonical child-view admission; warm feedback itself is constant-space, and those child views retain the existing immutable Core owner lifetime. A new destination retires its predecessor before acquiring one ephemeral binding. Capture cleanup drains source,target and pointer release after clearing fields, even on restoration errors. No per-target binding Map is introduced. Existing connection listeners are separately governed; feedback adds none.",
         "adversarialWitness": "Production connection tests perform 100 extra pointer moves within one destination and observe one policy query and three target writes total. Commit rechecks a changed permission and refuses. Virtual anchors resolve with all mounted rectangle readers configured to throw. Refused targets, target switching, caller writes, reentrant disposal and write/restoration failures release feedback and capture. The held-owner GC fixture now starts an active drag with an explicit target before retirement.",
         "evidence": ["packages/dom/tests/reorder.test.mjs"],
@@ -2342,7 +2343,7 @@
           "subscriptions": "0"
         },
         "assumptions": [
-          "the cached surface frame is current",
+          "the cached surface frame is current and the native scroll offset agrees with its direction",
           "the owning layout query retains its registered package bound"
         ],
         "ceilings": [

@@ -1,5 +1,28 @@
 # Package boundary
 
+## November 2026 atomic reorder
+
+Atomic reorder adds cohort admission, destination preview, and a single batch
+commit shared by DOM and Vue. The Core transition keeps policy checks and tree
+cycle admission in the same owner. The DOM preview checks only the selected
+cohort against existing tree indexes. Replaying individual moves would expose
+intermediate orders and repeat tree construction. A separate batch entry point
+would also require consumers to choose a different control for the same gesture.
+
+The direct and root named Reorder fixtures use updated budgets. These are the
+direct fixture measurements and raw byte ceilings for both bundlers.
+
+| Fixture | Raw / gzip / Brotli bytes | Raw ceiling |
+| --- | --- | --- |
+| DOM esbuild | 49,923 / 14,343 / 12,902 → 53,855 / 15,364 / 13,830 | 52,436 → 56,564 |
+| DOM Vite | 50,448 / 14,387 / 12,951 → 54,454 / 15,413 / 13,886 | 52,987 → 57,193 |
+| Vue esbuild | 61,956 / 18,363 / 16,489 → 65,968 / 19,417 / 17,454 | 65,070 → 69,283 |
+| Vue Vite | 61,938 / 18,125 / 16,349 → 66,027 / 19,185 / 17,321 | 65,051 → 69,345 |
+
+The root fixtures use their own measured compression results. All eight fixture
+results retain their dependency closure. Unused Reorder imports erase on both
+bundlers, and all nine packages fit the existing install ceilings.
+
 ## November 2026 remote selection and temporal formats
 
 Remote group selection raises the Tabular JavaScript ceiling from 165,000 to

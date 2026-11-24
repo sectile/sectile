@@ -894,9 +894,12 @@
         "applySequenceReorderEvent",
         "applyTreeReorderEvent",
         "canMoveTreeReorderNode",
+        "canMoveTreeReorderNodes",
         "createSequenceReorderState",
         "createTreeReorderState",
+        "getSequenceReorderCohort",
         "getSequenceReorderOrder",
+        "getTreeReorderCohort",
         "getTreeReorderHierarchy",
         "tryCreateSequenceReorderState",
         "tryCreateTreeReorderState"

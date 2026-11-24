@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "197f926e9e5ee7f69f034b17b8df1f47d5154c8b5105d013e18ea0a3f8ac0c21",
+  "fingerprint": "2f6097b6f39523a40d00bc0d071097ac7fdd56982818191a5791c57ece3a6a87",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -459,7 +459,7 @@
     },
     {
       "path": "dist/feed.d.ts",
-      "sha256": "8b28f5d82f86a309421af1881d07c713003e683de0e4e5930e36362e57ebbbad"
+      "sha256": "3961ee244839eb1e50fbd189e956f4f48c0ca3a552fcb92c9ca6dd90dea23529"
     },
     {
       "path": "dist/focus-visibility.d.ts",
@@ -575,7 +575,7 @@
     },
     {
       "path": "dist/multi-thumb-slider.d.ts",
-      "sha256": "95746c95e604f6e6fbc6bc7646a6e40dd73bf10e429d24ebd81a4f36171a4e34"
+      "sha256": "b3bab94ca26fc6881be60b3c0affe35fec2f504ed1d23a4366c285ef1757ae20"
     },
     {
       "path": "dist/navigation-menu.d.ts",
@@ -659,7 +659,7 @@
     },
     {
       "path": "dist/reorder.d.ts",
-      "sha256": "5bc3caeb007109c8f7042b0acf7fa0d1fd4d82d622ed1224ce61306cec9b1ea5"
+      "sha256": "22bb22ce062f5d7f3045fc9f2f15c96457fee4bbdfc06ba75b5ff1a95faae4fc"
     },
     {
       "path": "dist/scalar/checked-control.d.ts",
@@ -675,7 +675,7 @@
     },
     {
       "path": "dist/slider.d.ts",
-      "sha256": "67225724b65ce506a576b7ecb675dab028d56ec5b26e3119e609f2f202fa796a"
+      "sha256": "37095eb29d69f490a3338989b396321378fbe6e31252bcac0ded437f3e8afbb4"
     },
     {
       "path": "dist/spin-button.d.ts",

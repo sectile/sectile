@@ -1981,7 +1981,7 @@
           "runtimeState": "trusted"
         },
         "space": {
-          "auxiliary": "O(1)",
+          "auxiliary": "O(n)",
           "output": "O(n)",
           "retained": "O(n)"
         },
@@ -1993,7 +1993,7 @@
           "timers": "0",
           "subscriptions": "0"
         },
-        "proof": "A canonical state retains its Sequence owner. The caller-owned event discriminant, source, and applicable target are captured into fixed scalar locals once; source and target resolve through the retained index, one move overlay is created in O(1), and the public full ids snapshot is materialized exactly once.",
+        "proof": "A canonical state retains its Sequence owner. A single move resolves its source and target through the index, creates one move overlay in O(1), and materializes the ids snapshot once. A batch captures at most n IDs, validates through the same index, and constructs one replacement order with a linear pass. A no-op preserves state identity.",
         "adversarialWitness": "A getter-backed move proves the discriminant, source, and target are each observed once while a maximum-size first-to-last move still performs two indexed lookups, one overlay, and one full output materialization.",
         "fullScan": {
           "allowed": true,
@@ -2023,6 +2023,27 @@
         "proof": "The query and single-node reducer share one admission helper. Canonical state borrows retained Tree membership, parent and subtree intervals, captures placement and policy fields once, and checks root/depth/permission/capacity without constructing a next node vector, Tree or position index. Depth visits only the moved subtree; increasing capacity borrows the existing child count, whose first view may retain O(k) work. Warm leaf queries take O(1), excluding application callback CPU. Structural caller states retain the existing complete O(n) admission path; they are outside this trusted-state bound. No policy callback or alternate query index is retained.",
         "adversarialWitness": "Existing Reorder production tests assert independently specified accepted/refused placements, unchanged source, single getter reads, structural caller validation and thrown callback propagation.100 warmed leaf queries over514 nodes perform0 Map writes, detecting accidental next-tree position-index construction. Commit rechecks a permission changed after a successful advisory query.",
         "fullScan": { "allowed": true, "rationale": "An explicit depth policy must inspect the complete affected subtree; unrelated canonical nodes are not scanned. External structural states require complete validation separately." }
+      }
+    },
+    {
+      "id": "reorder.tree-batch-admission",
+      "inherits": "linear-v1",
+      "source": "packages/core/src/reorder.ts",
+      "benchmarkIDs": ["VAL-019:tree-reorder-availability-work"],
+      "specificationCeiling": "O(c log c + s + k) advisory batch; O(c log c) cohort normalization",
+      "contract": {
+        "variables": [
+          { "name": "c", "meaning": "selected root identities", "ceiling": "c <= Tree maxItems" },
+          { "name": "s", "meaning": "affected subtree nodes inspected by a depth limit", "ceiling": "s <= Tree maxItems" },
+          { "name": "k", "meaning": "destination children admitted into a cold child view", "ceiling": "k <= Tree maxItems" }
+        ],
+        "time": { "bound": "O(c log c + s + k)", "kind": "worst-case", "runtimeState": "trusted" },
+        "space": { "auxiliary": "O(c)", "output": "O(c)", "retained": "O(k)" },
+        "resources": { "allocations": "O(c + k)", "cacheEntries": "O(k)", "listeners": "0", "observers": "0", "timers": "0", "subscriptions": "0" },
+        "proof": "Normalization orders selected subtree intervals and skips selected descendants. Advisory admission shares the batch membership, overlap and policy checks with commit. It sorts only the affected intervals and borrows the canonical hierarchy instead of creating an order or next tree. Commit already emits a full tree and checks overlap in canonical order in O(n).",
+        "adversarialWitness": "One hundred two-root admissions in a tree with 4096 unrelated nodes call the move policy exactly twice per admission, perform zero Map writes, and preserve hierarchy identity.",
+        "evidence": ["packages/core/tests/runtime/reorder.test.mjs"],
+        "fullScan": { "allowed": false, "rationale": "The advisory overlap path evaluates only selected intervals and visits affected subtrees when the depth policy requires it." }
       }
     },
     {

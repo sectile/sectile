@@ -1985,8 +1985,8 @@
           "allows": ["overlay-presence-motion"]
         },
         "viewport": {
-          "reason": "Shared native visual-viewport facts stay independent of positioning and focus effect lifetimes or portable geometry decisions.",
-          "allows": []
+          "reason": "Shared visual-viewport facts and local CSS scale measurement for positioning and scroll hosts.",
+          "allows": ["foundation"]
         },
         "focus-visibility": {
           "reason": "Scoped native focus visibility owns event subscriptions, current scrollport measurement and immediate scroll effects over Core geometry.",
@@ -2066,6 +2066,7 @@
         "overlay-position-engine": {
           "reason": "Physical anchored-layout engine, source subscriptions, observers and scheduled positioning work.",
           "allows": [
+            "foundation",
             "overlay-position-engine",
             "viewport"
           ]
@@ -2165,6 +2166,7 @@
         "controls": {
           "reason": "Compact public DOM control profiles own their named contracts and compose explicitly classified lower host support.",
           "allows": [
+            "viewport",
             "controls",
             "foundation",
             "interaction-attributes",
@@ -2503,13 +2505,17 @@
             "form-submission"
           ]
         },
+        "form-reset-dispatch": {
+          "reason": "Native reset dispatch completion and owned scheduling shared by Form and file input.",
+          "allows": []
+        },
         "form-native-files": {
           "reason": "Native FileList capability and atomic assignment/rollback without metadata policy or field state ownership.",
           "allows": ["form-native-files"]
         },
         "form-file-input": {
           "reason": "Native file event, controlled FileList effects and bounded input/form/drop resource ownership; metadata policy remains Form.",
-          "allows": ["form-file-input", "form-native-files", "interaction-attributes"]
+          "allows": ["form-file-input", "form-native-files", "form-reset-dispatch", "interaction-attributes"]
         },
         "form-file-upload": {
           "reason": "Single-file adapter execution, AbortController/disposer and revocable Promise/progress ownership over canonical Form upload transitions.",
@@ -2518,6 +2524,7 @@
         "form-connection": {
           "reason": "Single DOM Form connection state/resource owner and orchestration boundary.",
           "allows": [
+            "form-reset-dispatch",
             "form-contracts",
             "form-participants",
             "form-validation",
@@ -2595,6 +2602,7 @@
           "role": "form-contracts",
           "kind": "owner"
         },
+        "src/form/reset-dispatch.ts": { "role": "form-reset-dispatch", "kind": "owner" },
         "src/form/file-input/native-files.ts": { "role": "form-native-files", "kind": "owner" },
         "src/form/file-input/connection.ts": { "role": "form-file-input", "kind": "owner" },
         "src/form/file-upload.ts": { "role": "form-file-upload", "kind": "facade" },
@@ -3824,8 +3832,13 @@
         "temporal-capability": {
           "reason": "Lower typed DOM connection and family capability definition without Vue component ownership.",
           "allows": [
-            "temporal-capability"
+            "temporal-capability",
+            "temporal-format-contract"
           ]
+        },
+        "temporal-format-contract": {
+          "reason": "Shared editing-format lookup contract between Vue provider and picker capabilities.",
+          "allows": ["temporal-format-contract"]
         },
         "temporal-capabilities": {
           "reason": "Independently selected family DOM adapters use the lower capability and presentation owners.",
@@ -3837,7 +3850,8 @@
         "temporal-provider": {
           "reason": "Single Vue reference-date, request seed and borrowed DOM formatting context below picker runtime.",
           "allows": [
-            "temporal-provider"
+            "temporal-provider",
+            "temporal-format-contract"
           ]
         },
         "temporal-presentation": {
@@ -4340,6 +4354,10 @@
         },
         "src/temporal/capability.ts": {
           "role": "temporal-capability",
+          "kind": "owner"
+        },
+        "src/temporal/internal/editing-format-contract.ts": {
+          "role": "temporal-format-contract",
           "kind": "owner"
         },
         "src/overlay/popup.ts": {
