@@ -840,6 +840,35 @@ test('DOM positioning cancels a queued generation before disconnect can project'
   fixture.close();
 });
 
+test('reference clipping is independent of the floating collision boundary', () => {
+  const fixture = createPositionFixture();
+  const visualViewport = new fixture.window.EventTarget();
+  Object.assign(visualViewport, { offsetLeft: 0, offsetTop: 0, width: 400, height: 400 });
+  Object.defineProperty(fixture.window, 'visualViewport', { configurable: true, value: visualViewport });
+  const scroller = fixture.window.document.createElement('div');
+  scroller.style.overflow = 'auto';
+  fixture.window.document.body.append(scroller);
+  scroller.append(fixture.reference);
+  setRect(scroller, { x: 20, y: 80, width: 200, height: 100 });
+  setRect(fixture.boundary, { x: 0, y: 0, width: 100, height: 75 });
+  setRect(fixture.reference, { x: 80, y: 165, width: 40, height: 20 });
+  const engine = createPositionEngine({
+    root: fixture.root, reference: fixture.reference, collisionBoundary: fixture.boundary,
+    hideWhenDetached: true, tracking: 'animation-frame',
+  });
+  try {
+    engine.connect();
+    fixture.frames.flush();
+    assert.equal(fixture.root.dataset.referenceHidden, 'false', 'partial clipping preserves visibility');
+    setRect(fixture.reference, { x: 80, y: 181, width: 40, height: 20 });
+    fixture.frames.flush();
+    assert.equal(fixture.root.style.visibility, 'hidden');
+    setRect(fixture.reference, { x: 80, y: 123, width: 40, height: 20 });
+    fixture.frames.flush();
+    assert.equal(fixture.root.style.visibility, '');
+  } finally { engine.disconnect(); fixture.close(); }
+});
+
 test('absolute positioning separates a plain body sentinel from containing-block parents with bounded reads and cleanup', () => {
   for (const mode of ['plain', 'positioned', 'transformed', 'contained', 'will-change', 'element']) {
     const fixture = createPositionFixture(), before = readPositionSourceRegistryDiagnostics();
@@ -865,7 +894,8 @@ test('absolute positioning separates a plain body sentinel from containing-block
       assert.equal(fixture.root.style.left, mode === 'plain' ? '-5px' : '23px', mode);
       assert.equal(fixture.root.style.top, mode === 'plain' ? '140px' : '146px', mode);
       assert.equal(parentReads, mode === 'plain' ? 0 : 1, mode);
-      assert.equal(engine.diagnostics().measurementReads, mode === 'plain' || mode === 'element' ? 5 : 6, mode);
+      const expectedReads = { plain: 5, element: 5, positioned: 6, transformed: 8, contained: 6, 'will-change': 6 };
+      assert.equal(engine.diagnostics().measurementReads, expectedReads[mode], mode);
       assert.equal(engine.diagnostics().completedUpdates, 1);
     } finally { engine.disconnect(); fixture.frames.flush();
       assert.equal(fixture.frames.pending, 0); assert.equal(engine.diagnostics().sourceSubscriptions, 0);

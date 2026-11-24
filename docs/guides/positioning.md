@@ -15,10 +15,12 @@ Change every shared positioning prop below. The popup reports the resolved `data
 - `arrowPadding` keeps the arrow away from content edges.
 - `strategy` selects `absolute` or `fixed` positioning.
 - `tracking` uses event-driven updates by default or continuous animation-frame tracking when required.
-- `hideWhenDetached` hides content when its anchor leaves layout.
+- `hideWhenDetached` hides content when its element anchor is hidden or fully clipped.
 - `position=false` disables the engine and leaves placement to normal application layout.
 
 The same contract applies to Popover, Tooltip, Select, Combobox, Cascade Select, Menu Button, and date picker roots. Menu submenus use the same engine with their parent item as the anchor.
+
+An inline floating surface can use `absolute` or `fixed` positioning within an axis-aligned, positively scaled containing block. The engine converts the resolved placement into the containing block's CSS coordinates. Use a portal outside the transform for rotation, reflection, or perspective.
 
 ## Keep a dropdown below its anchor
 

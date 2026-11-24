@@ -727,9 +727,11 @@ function availableFocusTarget(element: HTMLElement): boolean {
   if (element.isConnected === false || element.hasAttribute?.('disabled') || element.closest?.('[hidden],[inert],[aria-hidden="true"],:disabled')) return false;
   const view = element.ownerDocument?.defaultView;
   if (view?.getComputedStyle === undefined) return true;
+  const targetStyle = view.getComputedStyle(element);
+  if (targetStyle.visibility === 'hidden' || targetStyle.visibility === 'collapse') return false;
   for (let node: HTMLElement | null = element; node !== null; node = node.parentElement) {
-    const style = view.getComputedStyle(node);
-    if (style.display === 'none' || style.visibility === 'hidden' || style.visibility === 'collapse' || style.contentVisibility === 'hidden') return false;
+    const style = node === element ? targetStyle : view.getComputedStyle(node);
+    if (style.display === 'none' || style.contentVisibility === 'hidden') return false;
   }
   return true;
 }

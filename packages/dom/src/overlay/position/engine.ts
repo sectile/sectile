@@ -2,7 +2,8 @@ import {
   solveAnchoredLayout,
   type AnchoredLayout,
 } from '@sectile/core/anchored-layout';
-import { readViewportRect as viewportRect } from '../../internal/viewport.js';
+import { readAxisAlignedScale, readViewportRect as viewportRect } from '../../internal/viewport.js';
+import { gestureParent as parentElement } from '../../interaction/gesture.js';
 import {
   intersectRects,
   type Insets,
@@ -104,7 +105,16 @@ interface SourceEntry {
 
 interface DiscoveredAncestors {
   readonly clipping: readonly Element[];
+  readonly referenceClipping: readonly ReferenceClip[];
+  readonly fixedBlock: Element | null;
+  readonly hasScaleBasis: boolean;
   readonly sources: readonly Element[];
+}
+
+interface ReferenceClip {
+  readonly element: Element;
+  readonly x: boolean;
+  readonly y: boolean;
 }
 
 interface OwnedValue {
@@ -123,8 +133,11 @@ interface Measurement {
     readonly scrollTop: number;
     readonly clientLeft: number;
     readonly clientTop: number;
+    readonly scaleX: number;
+    readonly scaleY: number;
   } | null;
   readonly detached: boolean;
+  readonly referenceHidden: boolean | undefined;
 }
 
 const scrollSources = new WeakMap<EventTarget, SourceEntry>();
@@ -230,8 +243,13 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
   const disposers: (() => void)[] = [];
   const ancestorSubscriptions = new Map<EventTarget, () => void>();
   let clippingAncestors: readonly Element[] = Object.freeze([]);
+  const trackReferenceVisibility = options.hideWhenDetached === true && options.anchorRect === undefined && options.measureAnchorRect === undefined;
+  let referenceClippingAncestors: readonly ReferenceClip[] = Object.freeze([]);
+  let fixedBlock: Element | null = null;
+  let hasScaleBasis = false;
   let resizeObserver: ResizeObserver | undefined;
   let layoutObserver: IntersectionObserver | undefined;
+  let referencePaintObserver: MutationObserver | undefined;
   let frame: number | ReturnType<typeof setTimeout> | undefined;
   let frameKind: 'raf' | 'timeout' | undefined;
   let connected = false;
@@ -277,7 +295,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
   };
 
   const updateJavaScript = (): void => {
-    const measurement = measure(options, clippingAncestors, diagnostics);
+    const measurement = measure(options, clippingAncestors, referenceClippingAncestors, fixedBlock, hasScaleBasis, diagnostics);
     if (measurement === null) {
       writeStyle(ownedStyles, options.root, 'visibility', 'hidden', diagnostics);
       return;
@@ -324,7 +342,23 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       diagnostics.sourceSubscriptions += 1;
     }
     clippingAncestors = ancestors.clipping;
+    referenceClippingAncestors = ancestors.referenceClipping;
+    fixedBlock = ancestors.fixedBlock;
+    hasScaleBasis = ancestors.hasScaleBasis;
     diagnostics.discoveredAncestors = ancestors.sources.length;
+  };
+
+  const observeReferencePaint = (): void => {
+    if (referencePaintObserver === undefined) return;
+    referencePaintObserver.disconnect();
+    for (let current: Element | null = options.reference; current !== null; current = parentElement(current)) {
+      referencePaintObserver.observe(current, { attributeFilter: ['class', 'style', 'hidden'] });
+    }
+  };
+
+  const discover = (): void => {
+    diagnostics.discoveryRuns += 1;
+    reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view, trackReferenceVisibility));
   };
 
   const connect = (): void => {
@@ -338,8 +372,7 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       options.onPositioned?.();
       return;
     }
-    diagnostics.discoveryRuns += 1;
-    reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view));
+    discover();
     disposers.push(subscribeSource(view, 'scroll', schedule));
     diagnostics.sourceSubscriptions += 1;
     disposers.push(subscribeSource(view, 'resize', schedule));
@@ -371,6 +404,15 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
       layoutObserver.observe(options.reference);
       diagnostics.layoutObservers = 1;
     }
+    if (trackReferenceVisibility && options.tracking !== 'animation-frame' && typeof view.MutationObserver === 'function') {
+      referencePaintObserver = new view.MutationObserver(() => {
+        if (!connected) return;
+        discover();
+        schedule();
+      });
+      observeReferencePaint();
+      diagnostics.layoutObservers += 1;
+    }
     writeStyle(ownedStyles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
     if (options.arrow !== undefined) writeStyle(ownedStyles, options.arrow, 'position', 'absolute', diagnostics);
     if (options.root.style.left === '' && options.root.style.top === '') writeStyle(ownedStyles, options.root, 'visibility', 'hidden', diagnostics);
@@ -390,10 +432,15 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
     resizeObserver = undefined;
     layoutObserver?.disconnect();
     layoutObserver = undefined;
+    referencePaintObserver?.disconnect();
+    referencePaintObserver = undefined;
     diagnostics.sourceSubscriptions = 0;
     diagnostics.resizeObservers = 0;
     diagnostics.layoutObservers = 0;
     clippingAncestors = Object.freeze([]);
+    referenceClippingAncestors = Object.freeze([]);
+    fixedBlock = null;
+    hasScaleBasis = false;
     restoreOwned(ownedStyles, false);
     restoreOwned(ownedData, true);
     anchorName = undefined;
@@ -408,8 +455,8 @@ export function createPositionEngine(options: PositionEngineOptions): PositionEn
         if (anchorName !== undefined) projectCSS(options, anchorName, ownedStyles, ownedData, diagnostics);
         options.onPositioned?.();
       } else {
-        diagnostics.discoveryRuns += 1;
-        reconcileAncestors(discoverOverflowAncestors(options.reference, options.root, view));
+        discover();
+        observeReferencePaint();
         schedule();
       }
     },
@@ -488,15 +535,24 @@ function subscribeSource(target: EventTarget, type: 'scroll' | 'resize', callbac
   };
 }
 
-function discoverOverflowAncestors(reference: Element, root: Element, view: Window): DiscoveredAncestors {
+function discoverOverflowAncestors(reference: Element, root: Element, view: Window, trackReferenceVisibility: boolean): DiscoveredAncestors {
   const clipping: Element[] = [];
+  const referenceClipping: ReferenceClip[] = [];
   const sources: Element[] = [];
   const clippingSeen = new Set<Element>();
   const sourceSeen = new Set<Element>();
+  let fixedBlock: Element | null = null;
+  let hasScaleBasis = false;
   for (const [start, clipsRoot] of [[reference, false], [root, true]] as const) {
     let current: Element | null = parentElement(start);
     while (current !== null) {
-      if (clipsOrScrolls(view.getComputedStyle(current))) {
+      const style = view.getComputedStyle(current);
+      if (clipsRoot) {
+        if (fixedBlock === null && establishesFixedContainingBlock(style)) fixedBlock = current;
+        hasScaleBasis ||= !initialStyle(style.transform, 'none') || !initialStyle(style.scale, 'none')
+          || !initialStyle(style.zoom, '1') && !initialStyle(style.zoom, 'normal');
+      }
+      if (clipsOrScrolls(style)) {
         if (!sourceSeen.has(current)) {
           sourceSeen.add(current);
           sources.push(current);
@@ -505,19 +561,16 @@ function discoverOverflowAncestors(reference: Element, root: Element, view: Wind
           clippingSeen.add(current);
           clipping.push(current);
         }
+        if (!clipsRoot && trackReferenceVisibility) {
+          referenceClipping.push({ element: current,
+            x: overflowValue(style.overflowX || style.overflow), y: overflowValue(style.overflowY || style.overflow) });
+        }
       }
       current = parentElement(current);
     }
   }
-  return Object.freeze({ clipping: Object.freeze(clipping), sources: Object.freeze(sources) });
-}
-
-function parentElement(element: Element): Element | null {
-  if (element.parentElement !== null) return element.parentElement;
-  const root = element.getRootNode();
-  return 'host' in root && root.host !== null && typeof root.host === 'object' && 'ownerDocument' in root.host
-    ? root.host as Element
-    : null;
+  return Object.freeze({ clipping: Object.freeze(clipping), referenceClipping: Object.freeze(referenceClipping),
+    fixedBlock, hasScaleBasis, sources: Object.freeze(sources) });
 }
 
 function clipsOrScrolls(style: CSSStyleDeclaration): boolean {
@@ -542,7 +595,16 @@ function initialContainingBlockStyle(style: CSSStyleDeclaration, allowPositioned
     && initialStyle(style.contentVisibility, 'visible') && initialStyle(style.containerType, 'normal');
 }
 
-function measure(options: PositionEngineOptions, ancestors: readonly Element[], diagnostics: MutableDiagnostics): Measurement | null {
+function establishesFixedContainingBlock(style: CSSStyleDeclaration): boolean {
+  return !initialStyle(style.transform, 'none') || !initialStyle(style.translate, 'none')
+    || !initialStyle(style.rotate, 'none') || !initialStyle(style.scale, 'none')
+    || !initialStyle(style.perspective, 'none') || !initialStyle(style.filter, 'none')
+    || !initialStyle(style.backdropFilter, 'none') || /\b(layout|paint|content|strict)\b/u.test(style.contain)
+    || style.contentVisibility === 'auto' || /\b(transform|translate|rotate|scale|perspective|filter|backdrop-filter|contain)\b/u.test(style.willChange);
+}
+
+function measure(options: PositionEngineOptions, ancestors: readonly Element[], referenceAncestors: readonly ReferenceClip[],
+  fixedBlock: Element | null, hasScaleBasis: boolean, diagnostics: MutableDiagnostics): Measurement | null {
   const view = options.root.ownerDocument.defaultView!;
   const dynamic = options.measureAnchorRect;
   const referenceRect = dynamic === undefined
@@ -550,10 +612,12 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     : snapshotPositionRect(dynamic());
   if (referenceRect === undefined) return null;
   const floatingRect = rect(options.root.getBoundingClientRect());
-  let boundary = options.collisionBoundary !== undefined && options.collisionBoundary !== 'viewport'
-    ? rect(options.collisionBoundary.getBoundingClientRect())
-    : viewportRect(options.root.ownerDocument, view);
+  const collisionElement = options.collisionBoundary === 'viewport' ? undefined : options.collisionBoundary;
+  const measureReferenceVisibility = options.hideWhenDetached === true && dynamic === undefined && options.anchorRect === undefined;
+  const viewport = collisionElement === undefined || measureReferenceVisibility ? viewportRect(options.root.ownerDocument, view) : undefined;
+  let boundary = collisionElement === undefined ? viewport! : rect(collisionElement.getBoundingClientRect());
   diagnostics.measurementReads += options.anchorRect === undefined && dynamic === undefined ? 3 : 2;
+  if (collisionElement !== undefined && measureReferenceVisibility) diagnostics.measurementReads += 1;
   for (const ancestor of ancestors) {
     const clipped = intersectRects(boundary, rect(ancestor.getBoundingClientRect()));
     diagnostics.measurementReads += 1;
@@ -566,29 +630,51 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     arrow = Object.freeze({ width: measured.width, height: measured.height });
   }
   let offsetParent: Measurement['offsetParent'] = null;
-  if ((options.strategy ?? 'absolute') === 'absolute') {
-    const parent = options.root.offsetParent;
-    diagnostics.measurementReads += 1;
-    if (parent != null) {
-      let initial = false;
-      if (parent === options.root.ownerDocument.body) {
-        initial = initialContainingBlockStyle(view.getComputedStyle(parent));
-        diagnostics.measurementReads += 1;
-      }
-      if (initial) {
-        offsetParent = Object.freeze({
-          rect: Object.freeze({ x: -view.scrollX, y: -view.scrollY, width: 0, height: 0 }),
-          scrollLeft: 0, scrollTop: 0, clientLeft: 0, clientTop: 0,
-        });
-      } else {
-        offsetParent = Object.freeze({
-          rect: rect(parent.getBoundingClientRect()),
-          scrollLeft: parent.scrollLeft, scrollTop: parent.scrollTop,
-          clientLeft: parent.clientLeft, clientTop: parent.clientTop,
-        });
-        diagnostics.measurementReads += 1;
-      }
+  const fixed = options.strategy === 'fixed';
+  const parent = fixed ? options.root.offsetParent ?? fixedBlock : options.root.offsetParent;
+  if (!fixed || parent !== null) diagnostics.measurementReads += 1;
+  if (parent != null) {
+    let initial = false;
+    if (parent === options.root.ownerDocument.body) {
+      initial = initialContainingBlockStyle(view.getComputedStyle(parent), fixed);
+      diagnostics.measurementReads += 1;
     }
+    if (initial && !fixed) {
+      offsetParent = Object.freeze({
+        rect: Object.freeze({ x: -view.scrollX, y: -view.scrollY, width: 0, height: 0 }),
+        scrollLeft: 0, scrollTop: 0, clientLeft: 0, clientTop: 0, scaleX: 1, scaleY: 1,
+      });
+    } else if (!initial) {
+      const scale = hasScaleBasis || fixed && fixedBlock === null ? readAxisAlignedScale(parent, view) : undefined;
+      diagnostics.measurementReads += scale?.styleReads ?? 0;
+      offsetParent = Object.freeze({
+        rect: rect(parent.getBoundingClientRect()),
+        scrollLeft: parent.scrollLeft, scrollTop: parent.scrollTop,
+        clientLeft: parent.clientLeft, clientTop: parent.clientTop,
+        scaleX: scale?.x ?? 1, scaleY: scale?.y ?? 1,
+      });
+      diagnostics.measurementReads += 1;
+    }
+  }
+  const detached = !options.reference.isConnected || !options.root.isConnected;
+  let referenceHidden: boolean | undefined;
+  if (!detached && measureReferenceVisibility) {
+    const style = view.getComputedStyle(options.reference);
+    diagnostics.measurementReads += 1;
+    referenceHidden = style.visibility === 'hidden' || style.visibility === 'collapse' || style.display === 'none';
+    let visible = intersectRects(referenceRect, viewport!);
+    for (const ancestor of referenceAncestors) {
+      if (referenceHidden || visible === null) break;
+      const bounds = rect(ancestor.element.getBoundingClientRect());
+      visible = intersectRects(visible, {
+        x: ancestor.x ? bounds.x : visible.x,
+        y: ancestor.y ? bounds.y : visible.y,
+        width: ancestor.x ? bounds.width : visible.width,
+        height: ancestor.y ? bounds.height : visible.height,
+      });
+      diagnostics.measurementReads += 1;
+    }
+    referenceHidden ||= visible === null || visible.width === 0 || visible.height === 0;
   }
   return Object.freeze({
     reference: referenceRect,
@@ -596,7 +682,8 @@ function measure(options: PositionEngineOptions, ancestors: readonly Element[], 
     boundary,
     arrow,
     offsetParent,
-    detached: !options.reference.isConnected || !options.root.isConnected,
+    detached,
+    referenceHidden,
   });
 }
 
@@ -614,19 +701,21 @@ function projectJavaScript(
 ): void {
   let x = layout.rect.x;
   let y = layout.rect.y;
+  const scaleX = measurement.offsetParent?.scaleX ?? 1;
+  const scaleY = measurement.offsetParent?.scaleY ?? 1;
   if (measurement.offsetParent !== null) {
-    x = x - measurement.offsetParent.rect.x + measurement.offsetParent.scrollLeft - measurement.offsetParent.clientLeft;
-    y = y - measurement.offsetParent.rect.y + measurement.offsetParent.scrollTop - measurement.offsetParent.clientTop;
+    x = (x - measurement.offsetParent.rect.x) / scaleX + measurement.offsetParent.scrollLeft - measurement.offsetParent.clientLeft;
+    y = (y - measurement.offsetParent.rect.y) / scaleY + measurement.offsetParent.scrollTop - measurement.offsetParent.clientTop;
   }
-  const hidden = measurement.detached || layout.referenceHidden;
+  const hidden = measurement.detached || (measurement.referenceHidden ?? layout.referenceHidden);
   writeStyle(styles, options.root, 'position', options.strategy ?? 'absolute', diagnostics);
   writeStyle(styles, options.root, 'left', `${x}px`, diagnostics);
   writeStyle(styles, options.root, 'top', `${y}px`, diagnostics);
   writeStyle(styles, options.root, 'visibility', (options.hideWhenDetached ?? false) && hidden ? 'hidden' : '', diagnostics);
-  writeStyle(styles, options.root, '--sectile-position-available-width', `${layout.availableSize.width}px`, diagnostics);
-  writeStyle(styles, options.root, '--sectile-position-available-height', `${layout.availableSize.height}px`, diagnostics);
-  writeStyle(styles, options.root, '--sectile-position-anchor-width', `${measurement.reference.width}px`, diagnostics);
-  writeStyle(styles, options.root, '--sectile-position-anchor-height', `${measurement.reference.height}px`, diagnostics);
+  writeStyle(styles, options.root, '--sectile-position-available-width', `${layout.availableSize.width / scaleX}px`, diagnostics);
+  writeStyle(styles, options.root, '--sectile-position-available-height', `${layout.availableSize.height / scaleY}px`, diagnostics);
+  writeStyle(styles, options.root, '--sectile-position-anchor-width', `${measurement.reference.width / scaleX}px`, diagnostics);
+  writeStyle(styles, options.root, '--sectile-position-anchor-height', `${measurement.reference.height / scaleY}px`, diagnostics);
   writeData(data, options.root, 'positionRoute', 'javascript', diagnostics);
   writeData(data, options.root, 'side', layout.side, diagnostics);
   writeData(data, options.root, 'align', layout.align, diagnostics);
@@ -634,8 +723,8 @@ function projectJavaScript(
   if (options.arrow !== undefined) {
     writeStyle(styles, options.arrow, 'position', 'absolute', diagnostics);
     writeData(data, options.arrow, 'side', layout.side, diagnostics);
-    writeStyle(styles, options.arrow, 'left', layout.arrow === null ? '' : `${layout.arrow.x}px`, diagnostics);
-    writeStyle(styles, options.arrow, 'top', layout.arrow === null ? '' : `${layout.arrow.y}px`, diagnostics);
+    writeStyle(styles, options.arrow, 'left', layout.arrow === null ? '' : `${layout.arrow.x / scaleX}px`, diagnostics);
+    writeStyle(styles, options.arrow, 'top', layout.arrow === null ? '' : `${layout.arrow.y / scaleY}px`, diagnostics);
     writeData(data, options.arrow, 'centerOffset', String(layout.arrow?.centerOffset ?? 0), diagnostics);
   }
 }
