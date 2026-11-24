@@ -8,7 +8,7 @@ import {
   type DateFieldOptions,
 } from '@sectile/dom/temporal/date-field';
 import { createNativeFieldComponent, type NativeFieldPresentation } from '../input/native-field.js';
-import { useTemporalFormatter } from './temporal-provider.js';
+import { useTemporalEditingFormatter } from './temporal-provider.js';
 
 export type DateValue = NonNullable<DateFieldOptions['value']>;
 export interface DateFieldProps {
@@ -45,7 +45,7 @@ export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, D
   create: createDateField,
   rebase: (value, inputState, previousFormat) => rebase(value, inputState, previousFormat),
   usePresentation(props) {
-    const formatter = useTemporalFormatter();
+    const formatter = useTemporalEditingFormatter();
     return computed<NativeFieldPresentation<DateValue, DateFieldPolicies, DateFieldFormat> | undefined>(() => {
       if (props.native === true) return undefined;
       if (props.granularity === 'month' || props.granularity === 'year') {
@@ -57,7 +57,7 @@ export const DateField = /* @__PURE__ */ createNativeFieldComponent<DateValue, D
           rebase: value => createDateFieldState(value, undefined, undefined, granularity).inputState,
         };
       }
-      const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
+      const format = props.format ?? formatter.dateFieldFormat();
       if (format === undefined) return undefined;
       return { format, placeholder: getDateFieldPlaceholder(format), formatValue: (value: DateValue) => formatDateFieldValue(value, format),
         create: options => createDateField({ ...options, format }),

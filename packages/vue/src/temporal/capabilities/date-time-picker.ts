@@ -5,19 +5,19 @@ import { formatTimeValue, getTimeFieldPlaceholder } from '@sectile/dom/temporal/
 import { formatDateFieldValue } from '@sectile/temporal/date-field';
 import { formatTimeFieldValue } from '@sectile/temporal/time-field';
 import { formatDateTimeFieldValue } from '@sectile/temporal/date-time-field';
-import { unwrap } from '@sectile/core/result';
 import { createDateTimePickerState, type DateTimePickerPolicies } from '@sectile/temporal/date-time-picker';
 import { definePickerFamilyCapability } from '../capability.js';
-import { admitTimePresentation, resolveDateTimeFormat } from '../internal/time-presentation.js';
+import { admitTimePresentation, defaultDateTimeFormat } from '../internal/time-presentation.js';
 
 export const dateTimePickerCapability = definePickerFamilyCapability({
   kind: 'date-time' as const,
   connect: (options) => createDateTimePicker(options as never),
   presentation: (formatter, _date, explicit) => {
-    const format = explicit?.format ?? (explicit?.precision === undefined
-      ? formatter === undefined ? undefined : unwrap(formatter.dateTimeFieldFormat('millisecond'))
-      : resolveDateTimeFormat(formatter, explicit.precision));
-    const dateFormat = format?.date, timeFormat = format?.time;
+    const precision = explicit?.precision ?? 'millisecond';
+    const combined = explicit?.format ?? formatter.dateTimeFieldFormat(precision, false);
+    const format = combined ?? formatter.dateTimeFieldFormat(precision) ?? (explicit?.precision === undefined ? undefined : defaultDateTimeFormat(precision));
+    const dateFormat = combined?.date ?? formatter.dateFieldFormat(false) ?? format?.date;
+    const timeFormat = combined?.time ?? formatter.timeFieldFormat(precision, false) ?? format?.time;
     return { timeFormat, ...(timeFormat === undefined ? {} : { admitTimes: times => admitTimePresentation(timeFormat, times) }),
       options: { format, dateFormat, timeFormat }, attributes: {
       'date-time-input': { placeholder: getDateTimeFieldPlaceholder(format), inputmode: 'text' },
@@ -25,8 +25,9 @@ export const dateTimePickerCapability = definePickerFamilyCapability({
       'time-input': { placeholder: getTimeFieldPlaceholder(timeFormat), inputmode: timeFormat?.dayPeriods === undefined ? 'numeric' : 'text' },
     }, formatInput: (part, value) => {
       const dateTime = value as DateTimeValue;
-      return format === undefined ? undefined : part === 'time-input' ? formatTimeFieldValue(dateTime.time, timeFormat)
-        : part === 'date-input' ? formatDateFieldValue(dateTime.date, dateFormat) : formatDateTimeFieldValue(dateTime, format);
+      return part === 'time-input' ? timeFormat === undefined ? undefined : formatTimeFieldValue(dateTime.time, timeFormat)
+        : part === 'date-input' ? dateFormat === undefined ? undefined : formatDateFieldValue(dateTime.date, dateFormat)
+          : format === undefined ? undefined : formatDateTimeFieldValue(dateTime, format);
     } };
   },
   initialInputValues: (referenceDate, policies, presentation) => {

@@ -945,6 +945,48 @@ test('ISSUE-139: hydration preserves unavailable day-cell slot and native semant
   host.remove();
 });
 
+test('provider formats hydrate split and combined range inputs with native submission names', async () => {
+  const date = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const time = createTimeFieldFormat({ precision: 'second', literals: ['', '.', '.', ''] });
+  const format = createDateTimeFieldFormat({ date, time, separator: ' @ ' });
+  const proposals = [];
+  const component = { render: () => h(TemporalProvider, {
+    referenceDate: start.date, editingFormats: { dateTime: { second: format } },
+  }, () => h(FormRoot, null, () => h(FormField, { name: 'delivery' }, () => h(DateTimeRangePickerRoot, {
+    precision: 'second', defaultValue: { start, end }, 'onUpdate:modelValue': value => proposals.push(value),
+  }, () => [
+    h(DateTimeRangePickerStartDateTimeInput, { id: 'provider-combined' }),
+    h(DateTimeRangePickerStartDateInput, { id: 'provider-date' }),
+    h(DateTimeRangePickerStartTimeInput, { id: 'provider-time' }),
+    h(DateTimeRangePickerEndDateTimeInput),
+    h(DateTimeRangePickerEndDateInput),
+    h(DateTimeRangePickerEndTimeInput),
+  ])))) };
+  const host = document.createElement('div');
+  host.innerHTML = await renderToString(createSSRApp(component));
+  document.body.append(host);
+  const values = () => ['combined', 'date', 'time'].map(part => host.querySelector(`#provider-${part}`).value);
+  const expected = ['18/08/2026 @ 09.30.00', '18/08/2026', '09.30.00'];
+  const app = createSSRApp(component);
+  try {
+    assert.deepEqual(values(), expected);
+    app.mount(host);
+    await settle();
+    assert.deepEqual(values(), expected);
+    const input = host.querySelector('#provider-time');
+    input.focus();
+    input.value = '10.31.12';
+    input.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertReplacementText' }));
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    await settle();
+    assert.deepEqual(proposals.at(-1).start.time, { hour: 10, minute: 31, second: 12, millisecond: 0 });
+    assert.deepEqual(values(), ['18/08/2026 @ 10.31.12', '18/08/2026', '10.31.12']);
+    assert.deepEqual([...new FormData(host.querySelector('form')).entries()], [
+      ['delivery.start', '18/08/2026 @ 10.31.12'], ['delivery.end', '21/08/2026 @ 17.30.00'],
+    ]);
+  } finally { app.unmount(); host.remove(); }
+});
+
 test('Vue period pickers keep granularity-specific text and keyboard movement', async () => {
   const host = document.createElement('div');
   document.body.append(host);

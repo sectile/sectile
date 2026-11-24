@@ -1,14 +1,13 @@
 import { createDatePicker } from '@sectile/dom/temporal/date-picker';
 import { formatDateValue, getDateFieldPlaceholder, type DateValue } from '@sectile/dom/temporal/date-field';
 import { formatDateFieldValue } from '@sectile/temporal/date-field';
-import { unwrap } from '@sectile/core/result';
 import { definePickerFamilyCapability, type PickerCapabilityGranularity } from '../capability.js';
 
 export const datePickerCapability = definePickerFamilyCapability({
   kind: 'date' as const,
   connect: (options) => createDatePicker(options as never),
   presentation: (formatter, explicit) => {
-    const format = explicit ?? (formatter === undefined ? undefined : unwrap(formatter.dateFieldFormat()));
+    const format = explicit ?? formatter.dateFieldFormat();
     return { options: { format }, attributes: { input: { placeholder: getDateFieldPlaceholder(format), inputmode: 'numeric' } },
       formatInput: (part, value) => part === 'input' && format !== undefined ? formatDateFieldValue(value as DateValue, format) : undefined };
   },

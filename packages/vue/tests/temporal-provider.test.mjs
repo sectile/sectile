@@ -3,6 +3,10 @@ import test from 'node:test';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, defineComponent, h } from 'vue';
 import { DatePickerRoot } from '../.verification-dist/temporal/date-picker.js';
+import { DateField } from '../.verification-dist/temporal/date-field.js';
+import { TimeField } from '../.verification-dist/temporal/time-field.js';
+import { createDateFieldFormat } from '@sectile/temporal/date-field';
+import { createTimeFieldFormat } from '@sectile/temporal/time-field';
 import {
   TemporalProvider,
   useTemporalReferenceDate,
@@ -30,6 +34,27 @@ test('TemporalProvider supplies a deterministic reference date to its subtree', 
   }));
 
   assert.match(html, /<output>2026-8-28<\/output>/);
+});
+
+test('provider editing formats inherit by domain and precision with explicit field precedence', async () => {
+  const date = createDateFieldFormat({ order: ['day', 'month', 'year'], literals: ['', '/', '/', ''] });
+  const inner = createDateFieldFormat({ order: ['year', 'day', 'month'], literals: ['', '.', '.', ''] });
+  const time = createTimeFieldFormat({ precision: 'minute', literals: ['', '.', ''] });
+  const value = { year: 2026, month: 8, day: 22 };
+  const html = await renderToString(createSSRApp({ render: () => h(TemporalProvider, {
+    referenceDate: value, editingFormats: { date, time: { minute: time } },
+  }, { default: () => [
+    h(DateField, { id: 'outer', defaultValue: value }),
+    h(TemporalProvider, { editingFormats: { date: inner } }, { default: () => [
+      h(DateField, { id: 'inner', defaultValue: value }),
+      h(DateField, { id: 'override', defaultValue: value, format: date }),
+      h(TimeField, { id: 'time', defaultValue: { hour: 9, minute: 30 }, precision: 'minute' }),
+    ] }),
+  ] }) }));
+  assert.match(html, /id="outer"[^>]*value="22\/08\/2026"/);
+  assert.match(html, /id="inner"[^>]*value="2026\.22\.08"/);
+  assert.match(html, /id="override"[^>]*value="22\/08\/2026"/);
+  assert.match(html, /id="time"[^>]*value="09\.30"/);
 });
 
 const FormattingOutput = defineComponent({

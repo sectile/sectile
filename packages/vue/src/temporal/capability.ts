@@ -1,8 +1,8 @@
-import type { TemporalFormatter } from '@sectile/dom/temporal/format';
 import type { Result } from '@sectile/core/result';
 import type { DateFieldFormat } from '@sectile/temporal/date-field';
 import type { DateTimeFieldFormat } from '@sectile/temporal/date-time-field';
 import type { TimeFieldFormat, TimeFieldPrecision, TimeValue } from '@sectile/temporal/time-field';
+import type { TemporalEditingFormatter } from './internal/editing-format-contract.js';
 export type PickerCapabilityGranularity = 'day' | 'month' | 'year';
 
 export interface PickerDateTimeFormatOptions {
@@ -37,7 +37,7 @@ export interface PickerFamilyCapability<Kind extends string> {
   readonly kind: Kind;
   connect(options: Record<string, unknown>): PickerCapabilityConnection;
   formatInput(granularity: PickerCapabilityGranularity, part: string, value: unknown): string;
-  presentation?(formatter: TemporalFormatter | undefined, format?: DateFieldFormat, dateTime?: PickerDateTimeFormatOptions): PickerInputPresentation;
+  presentation?(formatter: TemporalEditingFormatter, format?: DateFieldFormat, dateTime?: PickerDateTimeFormatOptions): PickerInputPresentation;
   initialInputValues?(referenceDate: DateValue, policies: unknown, presentation?: PickerInputPresentation): Readonly<Record<string, string>>;
 }
 

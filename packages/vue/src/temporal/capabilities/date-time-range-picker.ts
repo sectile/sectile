@@ -5,18 +5,20 @@ import { formatDateTimeFieldValue } from '@sectile/temporal/date-time-field';
 import { formatTimeValue, getTimeFieldPlaceholder } from '@sectile/dom/temporal/time-field';
 import { formatDateFieldValue } from '@sectile/temporal/date-field';
 import { formatTimeFieldValue } from '@sectile/temporal/time-field';
-import { unwrap } from '@sectile/core/result';
 import { createDateTimeRangePickerState } from '@sectile/temporal/date-time-range-picker';
 import { definePickerFamilyCapability } from '../capability.js';
-import { admitTimePresentation, resolveDateTimeFormat } from '../internal/time-presentation.js';
+import { admitTimePresentation, defaultDateTimeFormat } from '../internal/time-presentation.js';
 
 export const dateTimeRangePickerCapability = definePickerFamilyCapability({
   kind: 'date-time-range' as const,
   connect: (options) => createDateTimeRangePicker(options as never),
   presentation: (formatter, _date, explicit) => {
-    const format = explicit?.format ?? (explicit?.precision === undefined ? undefined : resolveDateTimeFormat(formatter, explicit.precision));
-    const dateFormat = format?.date ?? (formatter === undefined ? undefined : unwrap(formatter.dateFieldFormat()));
-    const timeFormat = format?.time ?? (formatter === undefined ? undefined : unwrap(formatter.timeFieldFormat('millisecond')));
+    const precision = explicit?.precision ?? 'millisecond';
+    const combinedFormat = explicit?.format ?? formatter.dateTimeFieldFormat(precision, false);
+    const format = combinedFormat ?? (explicit?.precision === undefined ? undefined
+      : formatter.dateTimeFieldFormat(precision) ?? defaultDateTimeFormat(precision));
+    const dateFormat = combinedFormat?.date ?? formatter.dateFieldFormat(false) ?? format?.date ?? formatter.dateFieldFormat();
+    const timeFormat = combinedFormat?.time ?? formatter.timeFieldFormat(precision, false) ?? format?.time ?? formatter.timeFieldFormat(precision);
     const date = { placeholder: getDateFieldPlaceholder(dateFormat), inputmode: 'numeric' as const };
     const time = { placeholder: getTimeFieldPlaceholder(timeFormat), inputmode: timeFormat?.dayPeriods === undefined ? 'numeric' as const : 'text' as const };
     const combined = { placeholder: getDateTimeFieldPlaceholder(format), inputmode: 'text' as const };

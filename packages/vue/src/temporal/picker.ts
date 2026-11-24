@@ -37,7 +37,7 @@ import { usePresence } from '../presence/presence.js';
 import { HostPortal, provideHostLayerParent } from '../host-provider.js';
 import { usePopupPresentation } from '../internal/popup-presentation.js';
 import type { DOMLayerPresentationSnapshot } from '@sectile/dom/dialog';
-import { useTemporalReferenceDate, useTemporalFormatter } from './temporal-provider.js';
+import { useTemporalReferenceDate, useTemporalEditingFormatter } from './temporal-provider.js';
 import { useHostLayer } from '../host-provider.js';
 import type { PickerCapabilityConnection, PickerFamilyCapability } from './capability.js';
 
@@ -256,12 +256,12 @@ export function createPickerRoot<Kind extends PickerKind>(capability: PickerFami
       const constraint = shallowRef<HTMLSelectElement | null>(null);
       const constraintAttributes = useFormSubmissionDefaults({ element: constraint, capabilities: { form: true } });
       const hostReferenceDate = useTemporalReferenceDate();
-      const formatter = useTemporalFormatter();
+      const formatter = useTemporalEditingFormatter();
       const layerHost = useHostLayer();
       const requestedPresentation = computed(() => {
         if (granularity !== 'day') return undefined;
         const explicit = dateTimeFormat ? { format: runtimeProps.format as DateTimeFieldFormat | undefined, precision: runtimeProps.precision } : undefined;
-        return capability.presentation?.(formatter.value, dateTimeFormat ? undefined : runtimeProps.format as DateFieldFormat | undefined, explicit);
+        return capability.presentation?.(formatter, dateTimeFormat ? undefined : runtimeProps.format as DateFieldFormat | undefined, explicit);
       });
       const acceptedPresentation = dateTimeFormat ? shallowRef(requestedPresentation.value) : undefined;
       const inputPresentation = acceptedPresentation ?? requestedPresentation;

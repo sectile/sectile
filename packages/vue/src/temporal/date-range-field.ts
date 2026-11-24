@@ -5,7 +5,7 @@ import { getDateFieldPlaceholder } from '@sectile/dom/temporal/date-field';
 import { createDateRangeField, tryCreateDateRangeFieldState, type DateRangeFieldPolicies, type DateRangeFieldState } from '@sectile/dom/temporal/date-range-field';
 import type { DateFieldFormat, DateFieldGranularity, DateRange } from '@sectile/dom/temporal/date-field';
 import { setupNativeRangeField, createNativeRangeFieldInput, type NativeRangeFieldConfig, type NativeRangePresentation } from '../input/native-range-field.js';
-import { useTemporalFormatter } from './temporal-provider.js';
+import { useTemporalEditingFormatter } from './temporal-provider.js';
 import type { PrimitiveAs } from '../primitive.js';
 
 export interface DateRangeFieldRootProps {
@@ -44,7 +44,7 @@ const config: NativeRangeFieldConfig<DateRange, DateRangeFieldPolicies, DateRang
 };
 
 function useDateRangePresentation(props: { readonly format?: DateFieldFormat | undefined; readonly granularity: DateFieldGranularity }) {
-  const formatter = useTemporalFormatter();
+  const formatter = useTemporalEditingFormatter();
   return computed<NativeRangePresentation<DateRange, DateRangeFieldPolicies, DateRangeFieldState> | undefined>(() => {
     if (props.granularity !== 'day') {
       const granularity = props.granularity;
@@ -52,7 +52,7 @@ function useDateRangePresentation(props: { readonly format?: DateFieldFormat | u
         create: options => createDateRangeField({ ...options, granularity }),
         rebase: state => tryCreateDateRangeFieldState({ value: state.value, active: state.active, granularity }) };
     }
-    const format = props.format ?? (formatter.value === undefined ? undefined : unwrap(formatter.value.dateFieldFormat()));
+    const format = props.format ?? formatter.dateFieldFormat();
     if (format === undefined) return undefined;
     return { placeholder: getDateFieldPlaceholder(format), initial: options => tryCreateDateRangeFieldState({ ...options, startFormat: format, endFormat: format }),
       create: options => createDateRangeField({ ...options, format }),
