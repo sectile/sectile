@@ -145,6 +145,8 @@ Bind `:format="format"` to either picker root. The range picker's combined start
 
 Use the same `format` on `DateTimeField` and `DateTimeRangeFieldRoot`. Pass `time` to `TimeField`, `TimeRangeFieldRoot`, or `TimePickerRoot`. An explicit format takes precedence over `precision` and the provider. With `native` on a scalar field, the browser owns its ISO value and localized display. TimePicker uses its accepted format for both the input and the choice columns. A live change that would lose precision rejects and retains the current input and value.
 
+Set `:editing-formats="{ date: format.date, time: { minute: time }, dateTime: { minute: format } }"` on `TemporalProvider` to share these formats. A nested provider can override one domain or precision and inherit the others. A field's explicit format takes precedence. Time and date-time fields look up the configured precision, or millisecond precision when omitted. Locale and time zone continue to govern calendar labels and reference dates.
+
 ## Show a TreeSelect selection beside its query
 
 `TreeSelectValue` displays the label for the accepted selection while the TreeSelect is closed and idle. Provide a `selectedLabel` function that accepts all selected IDs. In single-select mode it receives one ID. In multiple-select mode you can join the names or display a count. Returning `null` or an empty string hides the label.
@@ -239,6 +241,18 @@ import { HostProvider } from '@sectile/vue/host-provider'
 ```
 
 Nested providers inherit omitted values. A component-specific portal target still takes priority over the provider default. Without a custom ID generator, Vue's `useId()` provides the host ID source.
+
+## Match slider input to the track
+
+Set `direction="rtl"` on a horizontal `SliderRoot` or `MultiThumbSliderRoot` whose minimum is at the right edge. Pointer input and the horizontal arrow keys follow the same direction. Use logical positioning such as `inset-inline-start` with RTL styles on the track. The input direction defaults to `ltr`.
+
+## Preserve position while prepending feed items
+
+Pass the scrolling element as `:scrollport` to `FeedRoot`. When accepting an earlier window, update the items and revision and pass back the request generation. If the anchor remains in the list, Feed compensates for its movement after Vue renders the new items. The scrollport's own adjustment takes precedence when the browser or application has already moved it.
+
+## Move selected items together
+
+Pass `getSourceIDs` to a `SequenceReorderRoot` or `TreeReorderRoot` to supply the current selection for a lift. Return the selected IDs when the lifted item belongs to the selection. The interaction exposes the normalized group in `sourceIDs` and keeps the lifted item in `sourceID`. With `keyboard-mode="preview"`, use Space to lift, arrows to preview, and Enter to commit. Escape cancels the move. Tree selection moves a selected ancestor with its descendants once.
 
 ## Style state and motion through public hooks
 
