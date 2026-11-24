@@ -1,5 +1,5 @@
 import {
-  computed, defineComponent, h, inject, mergeProps, onBeforeUnmount, onMounted, provide,
+  computed, defineComponent, h, inject, mergeProps, nextTick, onBeforeUnmount, onMounted, provide,
   shallowRef, watch, type ComputedRef, type PropType, type SlotsType, type VNodeChild,
 } from 'vue';
 import { createFeed, type FeedConnection, type FeedDirection } from '@sectile/dom/feed';
@@ -15,6 +15,7 @@ export interface FeedRootProps {
   readonly label?: string;
   readonly setSize?: number;
   readonly getPosition?: (id: string) => number;
+  readonly scrollport?: HTMLElement;
   readonly as?: PrimitiveAs;
   readonly asChild?: boolean;
 }
@@ -37,6 +38,7 @@ export const FeedRoot = defineComponent({
     items: { type: Array as PropType<readonly string[]>, required: true }, revision: { type: Number, default: 0 }, requestGeneration: { type: Number, default: undefined },
     defaultHighlightedValue: { type: String as PropType<string | null>, default: null }, disabled: { type: Boolean, default: false },
     label: { type: String, default: undefined }, setSize: { type: Number, default: undefined }, getPosition: { type: Function as PropType<FeedPositionResolver>, default: undefined },
+    scrollport: { type: Object as PropType<HTMLElement>, default: undefined },
     as: { type: [String, Object, Function] as PropType<PrimitiveAs>, default: 'div' }, asChild: { type: Boolean, default: false },
   },
   emits: { highlight: (_value: string | null): boolean => true, requestWindow: (_direction: FeedDirection, _anchor: string | null, _revision: number, _requestGeneration: number): boolean => true },
@@ -58,6 +60,7 @@ export const FeedRoot = defineComponent({
       connection.value = createFeed({
         root: element.value, items: props.items, revision: props.revision, defaultHighlightedValue: highlighted.value,
         disabled: props.disabled, ...(props.label === undefined ? {} : { label: props.label }), ...(props.setSize === undefined ? {} : { setSize: props.setSize }),
+        ...(props.scrollport === undefined ? {} : { scrollport: props.scrollport }),
         ...(props.getPosition === undefined ? {} : { getPosition: props.getPosition }), onHighlightedValueChange: (value) => { highlighted.value = value; emit('highlight', value); },
         onRequestWindow: (direction, anchor, revision, requestGeneration) => { pending.value = direction; currentRequestGeneration.value = requestGeneration; emit('requestWindow', direction, anchor, revision, requestGeneration); }, onUpdate: refresh,
       });
@@ -65,15 +68,22 @@ export const FeedRoot = defineComponent({
     };
     provide<Context>(key, { state, registerItem: (node, id) => connection.value?.setItemAttributes(node, id), request: (direction) => { connection.value?.handleEvent(direction === 'before' ? 'request-before' : 'request-after'); refresh(); } });
     onMounted(connect); onBeforeUnmount(() => connection.value?.disconnect());
-    watch([() => props.disabled, () => props.label, () => props.setSize, () => props.getPosition], connect);
-    watch([() => props.items, () => props.revision, () => props.requestGeneration], () => {
+    watch([() => props.disabled, () => props.label, () => props.setSize, () => props.getPosition, () => props.scrollport], connect);
+    watch([() => props.items, () => props.revision, () => props.requestGeneration], ([items, revision], [previousItems]) => {
       if (connection.value === undefined) return;
-      if (props.revision <= currentRevision.value) { connect(); return; }
-      const reconciled = reconcileCollectionState(props.items, [], highlighted.value, [], 'single');
-      if (highlighted.value !== reconciled.current) emit('highlight', reconciled.current);
-      highlighted.value = reconciled.current;
-      const result = connection.value.syncWindow({ items: props.items, revision: props.revision, ...(props.requestGeneration === undefined ? {} : { requestGeneration: props.requestGeneration }), highlightedValue: reconciled.current });
-      if (!result.ok) throw new TypeError(result.error.message); refresh();
+      if (revision <= currentRevision.value) {
+        if (revision === currentRevision.value && items.length === previousItems.length && items.every((id, index) => id === previousItems[index])) return;
+        connect();
+        return;
+      }
+      const previousHighlight = highlighted.value;
+      const reconciled = reconcileCollectionState(items, [], previousHighlight, [], 'single');
+      const owner = connection.value;
+      const result = owner.syncWindow({ items, revision, ...(props.requestGeneration === undefined ? {} : { requestGeneration: props.requestGeneration }), highlightedValue: reconciled.current });
+      if (!result.ok) throw new TypeError(result.error.message);
+      if (previousHighlight !== reconciled.current) emit('highlight', reconciled.current);
+      refresh();
+      if (props.scrollport !== undefined) void nextTick(() => { if (connection.value === owner) owner.restoreScrollAnchor(); });
     });
     return (): VNodeChild => h(Primitive, mergeProps(attrs, {
       as: props.as, asChild: props.asChild, elementRef: (node: unknown) => { element.value = node instanceof HTMLElement ? node : undefined; },

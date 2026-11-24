@@ -23,7 +23,7 @@ const { CarouselRoot, CarouselPause, CarouselIndicatorGroup } = await import('..
 const { CascadeSelectContent, CascadeSelectRoot, CascadeSelectTrigger } = await import('../.verification-dist/cascade-select.js');
 const { CheckboxTreeItem, CheckboxTreeRoot } = await import('../.verification-dist/checkbox-tree.js');
 const { ComboboxContent, ComboboxInput, ComboboxItem, ComboboxRoot } = await import('../.verification-dist/combobox.js');
-const { FeedRoot } = await import('../.verification-dist/feed.js');
+const { FeedLoadEarlier, FeedRoot } = await import('../.verification-dist/feed.js');
 const { GridCell, GridRoot, GridRow } = await import('../.verification-dist/grid.js');
 const { ListboxItem, ListboxRoot } = await import('../.verification-dist/listbox.js');
 const { MenuItem, MenuRoot, MenuSubContent, MenuButtonRoot, MenuButtonTrigger, MenuButtonContent, MenubarRoot, NavigationMenuRoot } = await import('../.verification-dist/menu.js');
@@ -1199,6 +1199,26 @@ test('Vue menu and feed reconcile internal focus after their domains change', as
   assert.equal(menuHighlight, 'a');
   assert.equal(feedHighlight, 'a');
   unmount(app, host);
+});
+
+test('Vue Feed retains a request when the parent replaces equivalent ordered IDs', async () => {
+  const items = ref(['a', 'b']), revision = ref(0), generation = ref();
+  let state, request;
+  const { app, host } = mount(() => h(FeedRoot, {
+    items: items.value, revision: revision.value, requestGeneration: generation.value,
+    onRequestWindow: (...args) => { request = args; },
+  }, value => { state = value; return h(FeedLoadEarlier); }));
+  try {
+    host.querySelector('button').click();
+    await settle();
+    assert.deepEqual(request, ['before', 'a', 0, 1]);
+    items.value = [...items.value];
+    await settle();
+    assert.deepEqual([state.pending, state.requestGeneration], ['before', 1]);
+    items.value = ['earlier', ...items.value]; revision.value = 1; generation.value = 1;
+    await settle();
+    assert.deepEqual([state.pending, state.revision, state.requestGeneration], [null, 1, 1]);
+  } finally { unmount(app, host); }
 });
 
 test('Vue ContextMenu delegates pointer and keyboard invocation and preserves point across provider and part reconnects', async () => {

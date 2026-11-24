@@ -14,6 +14,7 @@ import { tryCreateSequence, type Sequence } from '@sectile/core/sequence';
 import { createFacadeConnection, type FacadeConnection } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes } from './interaction/attributes.js';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
+import { readAxisAlignedScale } from './internal/viewport.js';
 
 export type { FeedDirection } from '@sectile/core/feed';
 
@@ -28,6 +29,8 @@ export interface FeedOptions<ID extends StableID = StableID> {
   readonly label?: string;
   readonly setSize?: number;
   readonly getPosition?: (id: ID) => number;
+  /** Scroll owner for opt-in compensation after an accepted earlier window. */
+  readonly scrollport?: HTMLElement;
   readonly onHighlightedValueChange?: (value: ID | null) => void;
   readonly onRequestWindow?: (
     direction: FeedDirection,
@@ -59,6 +62,8 @@ export interface FeedWindow<ID extends StableID = StableID> {
 export interface FeedConnection<ID extends StableID = StableID> {
   getSnapshot(): RevisionSnapshot<FeedState<ID>>;
   syncWindow(window: FeedWindow<ID>): Result<RevisionSnapshot<FeedState<ID>>>;
+  /** Apply pending compensation after the accepted items have been rendered. */
+  restoreScrollAnchor(): void;
   setItemAttributes(element: HTMLElement, id: ID): void;
   handleEvent(event: FeedEvent<ID>): boolean;
   focusCurrent(): void;
@@ -115,6 +120,8 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
   }>();
   readonly #keydown: (event: KeyboardEvent) => void;
   #active = true;
+  #earlierRequest: { readonly id: ID; readonly generation: number } | undefined;
+  #scrollAnchor: { readonly id: ID; readonly scrollTop: number; readonly offset: number } | undefined;
 
   public constructor(
     options: FeedOptions<ID>,
@@ -155,6 +162,23 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
         : window.highlightedValue,
     });
     if (!state.ok) return state;
+    this.#scrollAnchor = undefined;
+    const request = this.#earlierRequest;
+    const scrollport = this.#options.scrollport;
+    if (request !== undefined && state.value.pending === null) {
+      this.#earlierRequest = undefined;
+      const item = this.#elements.get(request.id)?.element;
+      const previousIndex = this.#model.value.indexOf(request.id);
+      const nextIndex = items.value.indexOf(request.id);
+      if (scrollport !== undefined && item !== undefined && scrollport.contains(item)
+        && window.requestGeneration === request.generation && previousIndex !== null && nextIndex !== null && nextIndex > previousIndex) {
+        this.#scrollAnchor = {
+          id: request.id,
+          offset: item.getBoundingClientRect().top - scrollport.getBoundingClientRect().top,
+          scrollTop: scrollport.scrollTop,
+        };
+      }
+    }
     this.#model.value = items.value;
     for (const [id, registration] of this.#elements) {
       if (items.value.contains(id)) continue;
@@ -168,6 +192,21 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
       this.focusCurrent();
     }
     return result;
+  }
+
+  public restoreScrollAnchor(): void {
+    const scrollport = this.#options.scrollport;
+    const anchor = this.#scrollAnchor;
+    this.#scrollAnchor = undefined;
+    if (!this.#active || scrollport === undefined || anchor === undefined) return;
+    const item = this.#elements.get(anchor.id)?.element;
+    if (item === undefined || !scrollport.contains(item)) return;
+    const offset = item.getBoundingClientRect().top - scrollport.getBoundingClientRect().top;
+    // The native anchor, or the application, may already have adjusted the scrollport.
+    if (scrollport.scrollTop === anchor.scrollTop && offset !== anchor.offset) {
+      const delta = (offset - anchor.offset) / readAxisAlignedScale(scrollport).y;
+      scrollport.scrollTop = anchor.scrollTop + delta;
+    }
   }
 
   public setItemAttributes(element: HTMLElement, id: ID): void {
@@ -185,6 +224,8 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
     if (result.ok) {
       for (const command of result.commands) {
         if (command.type === 'request-window') {
+          this.#earlierRequest = this.#options.scrollport !== undefined && command.direction === 'before' && command.anchor !== null
+            ? { id: command.anchor, generation: command.requestGeneration } : undefined;
           this.#options.onRequestWindow?.(
             command.direction,
             command.anchor,
@@ -203,16 +244,19 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
   }
 
   public focusCurrent(): void {
+    const preventScroll = this.#scrollAnchor !== undefined;
     queueMicrotask(() => {
       if (!this.#active) return;
       const current = this.getSnapshot().state.cursor.current;
-      if (current === null) this.#options.root.focus();
-      else this.#elements.get(current)?.element.focus();
+      if (current === null) this.#options.root.focus({ preventScroll });
+      else this.#elements.get(current)?.element.focus({ preventScroll });
     });
   }
 
   public disconnect(): void {
     this.#active = false;
+    this.#earlierRequest = undefined;
+    this.#scrollAnchor = undefined;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     for (const { element, click } of this.#elements.values()) {
       element.removeEventListener('click', click);
