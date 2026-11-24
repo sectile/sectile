@@ -158,6 +158,7 @@ class ManagedDrawer implements DrawerConnection {
   #startTime = 0;
   #movement = 0;
   #active = false;
+  #ownsCapture = false;
   #wasOpen = false;
 
   public constructor(
@@ -176,7 +177,11 @@ class ManagedDrawer implements DrawerConnection {
     this.#pointerDown = (event) => { this.#beginSwipe(event); };
     this.#pointerMove = (event) => { this.#moveSwipe(event); };
     this.#pointerEnd = (event) => { this.#finishSwipe(event); };
-    this.#pointerCancel = (event) => { if (event.pointerId === this.#pointerID) this.#cancelSwipe(); };
+    this.#pointerCancel = (event) => {
+      if (event.pointerId !== this.#pointerID) return;
+      if (event.type === 'lostpointercapture' && (!this.#active || event.target !== this.#gestureTarget)) return;
+      this.#cancelSwipe();
+    };
     this.#swipeRequested = options.swipeToDismiss !== false;
     this.#syncSwipeEnabled(this.#swipeRequested && !this.#suspended);
     this.syncProjection();
@@ -278,7 +283,8 @@ class ManagedDrawer implements DrawerConnection {
   }
 
   #beginSwipe(event: PointerEvent): void {
-    if (!this.#popup.getActive() || this.#pointerID !== undefined || event.defaultPrevented || !this.#swipeEnabled || this.#disabled || !this.#popup.getSnapshot().state.open || event.button !== 0 || isSwipeIgnored(event.target)) return;
+    if (this.#captureWasRevoked()) this.#cancelSwipe();
+    if (!this.#popup.getActive() || this.#pointerID !== undefined || event.defaultPrevented || !this.#swipeEnabled || this.#disabled || !this.#popup.getSnapshot().state.open || event.button !== 0 || event.isPrimary === false || isSwipeIgnored(event.target)) return;
     const content = this.#options.handle === undefined || !isEventInside(event, this.#options.handle);
     const origin = eventOrigin(event);
     if (content && (origin === undefined || protectsNativeInteraction(origin, this.#options.root, 'data-sectile-drawer-swipe-ignore')
@@ -295,6 +301,7 @@ class ManagedDrawer implements DrawerConnection {
 
   #moveSwipe(event: PointerEvent): void {
     if (event.pointerId !== this.#pointerID) return;
+    if (this.#captureWasRevoked()) { this.#cancelSwipe(); return; }
     const side = this.#popup.getSnapshot().state.side;
     const vertical = isVertical(side);
     const main = vertical ? event.clientY : event.clientX;
@@ -309,8 +316,10 @@ class ManagedDrawer implements DrawerConnection {
         this.#cancelSwipe(); return;
       }
       this.#contentOrigin = undefined;
+      try { this.#gestureTarget.setPointerCapture?.(event.pointerId); }
+      catch (error) { this.#cancelSwipe(); throw error; }
+      this.#ownsCapture = this.#gestureTarget.hasPointerCapture?.(event.pointerId) === true;
       this.#active = true;
-      this.#gestureTarget.setPointerCapture?.(event.pointerId);
       for (const element of this.#projectedElements()) {
         element.setAttribute('data-swiping', '');
         element.setAttribute('data-swipe', 'move');
@@ -324,6 +333,7 @@ class ManagedDrawer implements DrawerConnection {
   #finishSwipe(event: PointerEvent): void {
     if (event.pointerId !== this.#pointerID) return;
     if (this.#active) this.#moveSwipe(event);
+    if (event.pointerId !== this.#pointerID) return;
     const elapsed = Math.max(1, event.timeStamp - this.#startTime);
     const velocity = this.#movement / elapsed;
     const dismiss = this.#active && (
@@ -369,11 +379,21 @@ class ManagedDrawer implements DrawerConnection {
   }
 
   #clearPointer(): void {
-    if (this.#pointerID !== undefined) this.#gestureTarget.releasePointerCapture?.(this.#pointerID);
+    const pointerID = this.#pointerID;
+    const captured = this.#active;
     this.#pointerID = undefined;
     this.#contentOrigin = undefined;
     this.#movement = 0;
     this.#active = false;
+    this.#ownsCapture = false;
+    if (captured && pointerID !== undefined && (this.#gestureTarget.hasPointerCapture?.(pointerID) ?? true)) {
+      this.#gestureTarget.releasePointerCapture?.(pointerID);
+    }
+  }
+
+  #captureWasRevoked(): boolean {
+    // A pending capture can be revoked before the browser fires gotpointercapture.
+    return this.#ownsCapture && !this.#gestureTarget.hasPointerCapture(this.#pointerID!);
   }
 
   #resetSwipe(): void {
@@ -401,7 +421,7 @@ class ManagedDrawer implements DrawerConnection {
   #syncSwipeEnabled(enabled: boolean): void {
     if (enabled === this.#swipeEnabled) return;
     if (!enabled) this.#clearPointer();
-    for (const [type, listener] of [['pointerdown', this.#pointerDown], ['pointermove', this.#pointerMove], ['pointerup', this.#pointerEnd], ['pointercancel', this.#pointerCancel]] as const) {
+    for (const [type, listener] of [['pointerdown', this.#pointerDown], ['pointermove', this.#pointerMove], ['pointerup', this.#pointerEnd], ['pointercancel', this.#pointerCancel], ['lostpointercapture', this.#pointerCancel]] as const) {
       if (enabled) this.#eventTarget.addEventListener(type, listener);
       else this.#eventTarget.removeEventListener(type, listener);
       if (this.#eventTarget !== this.#options.root) {

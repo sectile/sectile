@@ -139,6 +139,7 @@ function pointer(type, x, y = 0) {
     cancelable: true,
     button: 0,
     pointerId: 1,
+    isPrimary: true,
     pointerType: 'mouse',
     clientX: x,
     clientY: y,

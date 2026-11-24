@@ -24,7 +24,7 @@ function setup(side = 'right', options = {}, observeHandle) {
 }
 
 function pointer(window, type, init) {
-  return new window.PointerEvent(type, { bubbles: true, composed: true, cancelable: true, button: 0, pointerId: 1, pointerType: 'mouse', ...init });
+  return new window.PointerEvent(type, { bubbles: true, composed: true, cancelable: true, button: 0, pointerId: 1, pointerType: 'mouse', isPrimary: true, ...init });
 }
 
 test('live drawer gesture configuration preserves paint and cancels obsolete captures with bounded listeners', () => {
@@ -36,11 +36,12 @@ test('live drawer gesture configuration preserves paint and cancels obsolete cap
   } }, (handle, root) => {
     const add = root.addEventListener.bind(root), remove = root.removeEventListener.bind(root);
     root.addEventListener = (type, listener, options) => {
-      if (type.startsWith('pointer')) { const owned = listeners.get(type) ?? new Set(); owned.add(listener); listeners.set(type, owned); }
+      if (type.startsWith('pointer') || type === 'lostpointercapture') { const owned = listeners.get(type) ?? new Set(); owned.add(listener); listeners.set(type, owned); }
       add(type, listener, options);
     };
     root.removeEventListener = (type, listener, options) => { listeners.get(type)?.delete(listener); remove(type, listener, options); };
     handle.setPointerCapture = id => { captures.add(id); };
+    handle.hasPointerCapture = id => captures.has(id);
     handle.releasePointerCapture = id => { captures.delete(id); };
   });
   const send = (type, x, y = 0) => f.handle.dispatchEvent(pointer(f.window, type, { clientX: x, clientY: y }));
@@ -48,7 +49,7 @@ test('live drawer gesture configuration preserves paint and cancels obsolete cap
   const configure = { side: 'right', swipeToDismiss: true, swipeThreshold: 80, swipeVelocityThreshold: 99 };
   f.drawer.handleEvent('open'); let paint; f.drawer.subscribeLayerPresentation(value => { paint = value; });
   let active = paint; f.close.focus(); send('pointerdown', 0); send('pointermove', 30);
-  assert.equal(captures.size, 1); assert.equal(count(), 4);
+  assert.equal(captures.size, 1); assert.equal(count(), 5);
   assert.equal(f.drawer.syncGesture(configure).ok, true); assert.equal(captures.size, 1);
   assert.equal(f.drawer.syncGesture({ ...configure, swipeThreshold: -1 }).error.code, 'invalid-drawer-swipe-threshold');
   assert.equal(f.drawer.syncGesture({ ...configure, side: 'invalid' }).error.code, 'invalid-drawer-side');
@@ -60,7 +61,7 @@ test('live drawer gesture configuration preserves paint and cancels obsolete cap
   assert.equal(f.drawer.syncGesture({ ...configure, swipeThreshold: 81 }).ok, true); assert.equal(count(), 0);
   f.drawer.resume(); f.drawer.subscribeLayerPresentation(value => { paint = value; });
   assert.ok(paint.generation > active.generation); active = paint;
-  assert.equal(count(), 4); f.close.focus(); send('pointerdown', 0); send('pointermove', 30);
+  assert.equal(count(), 5); f.close.focus(); send('pointerdown', 0); send('pointermove', 30);
   assert.equal(captures.size, 1, 'resumed gesture uses the retained model and current configuration');
   f.drawer.syncGesture({ ...configure, side: 'left' });
   assert.equal(captures.size, 0); assert.equal(f.surface.hasAttribute('data-swipe'), false);
@@ -69,7 +70,7 @@ test('live drawer gesture configuration preserves paint and cancels obsolete cap
   for (let index = 0; index < 32; index++) {
     f.drawer.syncGesture({ ...configure, side: 'left', swipeToDismiss: false }); assert.equal(count(), 0);
     send('pointerdown', 100); send('pointermove', 0); assert.equal(captures.size, 0);
-    f.drawer.syncGesture({ ...configure, side: 'left' }); assert.equal(count(), 4);
+    f.drawer.syncGesture({ ...configure, side: 'left' }); assert.equal(count(), 5);
   }
   f.drawer.syncDisabled(true); f.drawer.syncGesture({ ...configure, side: 'bottom', swipeThreshold: 40 });
   assert.equal(f.surface.getAttribute('data-side'), 'bottom'); assert.equal(paint, active);
@@ -129,6 +130,40 @@ test('handle swipe cancels below the threshold and dismisses beyond it', () => {
   assert.equal(fixture.surface.hasAttribute('data-swipe'), false);
   assert.equal(fixture.surface.style.getPropertyValue('--sectile-drawer-swipe-movement-x'), '');
   fixture.drawer.disconnect();
+});
+
+test('a drawer remains open after its captured pointer is lost and permits the next swipe', () => {
+  let captured = false;
+  const { window, handle, surface, drawer } = setup('right', {}, target => {
+    target.setPointerCapture = () => { captured = true; };
+    target.hasPointerCapture = () => captured;
+    target.releasePointerCapture = () => { captured = false; };
+  });
+  const send = (type, clientX, isPrimary = true) => handle.dispatchEvent(pointer(window, type, { clientX, isPrimary }));
+  try {
+    drawer.handleEvent('open');
+    send('pointerdown', 0, false);
+    send('pointermove', 100, false);
+    send('pointerup', 100, false);
+    assert.equal(drawer.getSnapshot().state.open, true);
+    send('pointerdown', 0);
+    send('pointermove', 30);
+    captured = false;
+    send('lostpointercapture', 30);
+    assert.equal(surface.dataset.swipe, 'cancel');
+    send('pointerup', 100);
+    assert.equal(drawer.getSnapshot().state.open, true);
+    send('pointerdown', 0);
+    send('pointermove', 30);
+    captured = false;
+    send('pointerup', 100);
+    assert.equal(drawer.getSnapshot().state.open, true);
+    assert.equal(surface.dataset.swipe, 'cancel');
+    send('pointerdown', 0);
+    send('pointermove', 100);
+    send('pointerup', 100);
+    assert.equal(drawer.getSnapshot().state.open, false);
+  } finally { drawer.destroy(); }
 });
 
 test('drawer swipe ignore marker protects interactive descendants', () => {
@@ -326,7 +361,7 @@ test('content-only drawers clean their fixed listener set after reconfiguration 
   const f = setup('bottom', { handle: undefined }, (_handle, root) => {
     const add = root.addEventListener.bind(root), remove = root.removeEventListener.bind(root);
     root.addEventListener = (type, listener, options) => {
-      if (type.startsWith('pointer')) { const owned = resources.get(type) ?? new Set(); owned.add(listener); resources.set(type, owned); }
+      if (type.startsWith('pointer') || type === 'lostpointercapture') { const owned = resources.get(type) ?? new Set(); owned.add(listener); resources.set(type, owned); }
       add(type, listener, options);
     };
     root.removeEventListener = (type, listener, options) => { resources.get(type)?.delete(listener); remove(type, listener, options); };
@@ -334,7 +369,7 @@ test('content-only drawers clean their fixed listener set after reconfiguration 
   const count = () => [...resources.values()].reduce((sum, value) => sum + value.size, 0);
   f.drawer.handleEvent('open');
   for (let i = 0; i < 12; i++) {
-    assert.equal(count(), 4);
+    assert.equal(count(), 5);
     f.surface.dispatchEvent(pointer(f.window, 'pointerdown', { clientY: 0 }));
     f.surface.dispatchEvent(pointer(f.window, 'pointermove', { clientY: 30 }));
     assert.equal(f.surface.getAttribute('data-swipe'), 'move');
