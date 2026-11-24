@@ -13,7 +13,10 @@ import {
   watch,
   type Component,
   type ComputedRef,
+  type DefineSetupFnComponent,
+  type EmitsToProps,
   type PropType,
+  type PublicProps,
   type ShallowRef,
   type SlotsType,
   type VNodeChild,
@@ -33,7 +36,7 @@ import type { DrawerGestureErrorCode, DrawerGestureOptions } from '@sectile/dom/
 import { failResult, SectileResultError, unwrap, type Result } from '@sectile/core/result';
 import type { LayerHostConnection, LayerHostTransferErrorCode, LayerReservation } from '@sectile/dom/layer-host';
 import { Primitive, renderPrimitive, type PrimitiveAs } from '../primitive.js';
-import { HostPortal, provideHostActive, provideHostLayerParent, useHostActive, useHostDirection, useHostId, useHostLayer, useHostLayerParent, useHostPopup } from '../host-provider.js';
+import { HostPortal, provideHostActive, provideHostLayerParent, useHostActive, useHostDirection, useHostId, useHostLayer, useHostLayerParent, useHostPopup, type HostPortalProps } from '../host-provider.js';
 import { usePresence } from '../presence/presence.js';
 import { useControlledStateInvariant } from '../internal/controlled-state.js';
 import { providePortalMove } from '../internal/portal-move.js';
@@ -146,7 +149,29 @@ export interface PopupRootProps extends PositionOptions {
   readonly position?: boolean;
 }
 export interface PopupPartProps { readonly as?: PrimitiveAs; readonly asChild?: boolean }
-export interface PopupPortalProps { readonly to?: string | HTMLElement; readonly disabled?: boolean; readonly defer?: boolean }
+export type PopupPortalProps = HostPortalProps;
+
+type PopupRootEmits = { 'update:open': [open: boolean]; closeRequest: [reason: PopupCloseReason]; afterClose: []; interactOutside: [event: InteractOutsideEvent] };
+type PopupRootSlots = SlotsType<{ default: (props: PopupRootSlotProps) => VNodeChild }>;
+export type PopupRootComponent<Props extends Record<string, any> = PopupRootProps> =
+  DefineSetupFnComponent<Props, PopupRootEmits, PopupRootSlots> & {
+    new(): InstanceType<DefineSetupFnComponent<Props, PopupRootEmits, PopupRootSlots>>
+      & PopupRootExpose & { readonly $props: Props & PublicProps & EmitsToProps<PopupRootEmits> };
+  };
+type PopupPartComponent = DefineSetupFnComponent<PopupPartProps, {}, SlotsType<{ default?: () => VNodeChild }>>;
+interface PopupComponents {
+  readonly Root: PopupRootComponent;
+  readonly Trigger: PopupPartComponent;
+  readonly Anchor: PopupPartComponent;
+  readonly Portal: typeof HostPortal;
+  readonly Overlay: PopupPartComponent;
+  readonly Handle: PopupPartComponent;
+  readonly Content: PopupPartComponent;
+  readonly Title: PopupPartComponent;
+  readonly Description: PopupPartComponent;
+  readonly Close: PopupPartComponent;
+  readonly Arrow: PopupPartComponent;
+}
 
 type PopupElementPart = 'trigger' | 'anchor' | 'arrow' | 'overlay' | 'handle' | 'content';
 
@@ -175,19 +200,7 @@ interface PopupContext {
   refresh(): void;
 }
 
-export function createPopupComponents(config: PopupComponentConfig): Readonly<{
-  Root: Component;
-  Trigger: Component;
-  Anchor: Component;
-  Portal: Component;
-  Overlay: Component;
-  Handle: Component;
-  Content: Component;
-  Title: Component;
-  Description: Component;
-  Close: Component;
-  Arrow: Component;
-}> {
+export function createPopupComponents(config: PopupComponentConfig): PopupComponents {
   const contextKey = Symbol(`Sectile${config.scope}Root`);
   const useRoot = (part: string): PopupContext => {
     const context = inject<PopupContext>(contextKey);
@@ -773,7 +786,7 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
   });
   const Portal = HostPortal;
 
-  function createLabelPart(name: string, part: string, id: (root: PopupContext) => string): Component {
+  function createLabelPart(name: string, part: string, id: (root: PopupContext) => string) {
     return defineComponent({
       name: `Sectile${pascal(config.scope)}${name}`, inheritAttrs: false, props: primitiveProps,
       setup(props, { attrs, slots }) {
@@ -785,7 +798,10 @@ export function createPopupComponents(config: PopupComponentConfig): Readonly<{
     });
   }
 
-  return Object.freeze({ Root, Trigger, Anchor, Portal, Overlay, Content, Handle, Title, Description, Close, Arrow });
+  const parts = {
+    Root, Trigger, Anchor, Portal, Overlay, Content, Handle, Title, Description, Close, Arrow,
+  } satisfies Record<keyof PopupComponents, Component>;
+  return Object.freeze(parts) as unknown as PopupComponents;
 }
 
 export type { InteractOutsideEvent, InteractOutsideHandler };

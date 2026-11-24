@@ -5,6 +5,7 @@ import {
   type PopupPartProps,
   type PopupPortalProps,
   type PopupRootProps,
+  type PopupRootComponent,
   type PopupRootSlotProps,
 } from './popup.js';
 
@@ -16,7 +17,7 @@ const parts = createPopupComponents({
   },
 });
 
-export const AlertDialogRoot = parts.Root;
+export const AlertDialogRoot: PopupRootComponent<AlertDialogRootProps> = parts.Root;
 export type AlertDialogOpenChangeHandler = PopupFactoryOptions['onOpenChange'];
 export type AlertDialogInteractOutsideHandler = NonNullable<PopupFactoryOptions['onInteractOutside']>;
 export const AlertDialogTrigger = parts.Trigger;
