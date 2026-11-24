@@ -4,6 +4,7 @@ import { requireInteraction, tryCreateInteractionState, type InteractionState, t
 import { failResult, okResult, unwrap, type CoreErrorCode, type Result, type SectileError } from '@sectile/core/result';
 import { tryCreateFilePolicy, type FilePolicy, type FilePolicyErrorCode, type FilePolicyOptions, type FileSelection } from '@sectile/form/files';
 import { createDOMAttributeBinding, type DOMAttributeBinding } from '../../interaction/attributes.js';
+import { createResetDispatchTask } from '../reset-dispatch.js';
 import { tryCreateNativeFileListBinding, type NativeFileListBinding, type NativeFileListErrorCode } from './native-files.js';
 
 export type FileInputChangeSource = 'input' | 'drop' | 'clear' | 'reset' | 'programmatic';
@@ -109,7 +110,7 @@ class FileInputHost implements FileInputConnection {
   #form: HTMLFormElement | null = null;
   #dropTarget: HTMLElement | null = null;
   #pendingReset: Event | undefined;
-  #resetQueued = false;
+  readonly #resetDispatch = createResetDispatchTask(() => { if (this.getActive()) this.#settleReset(); });
   #onChange: FileInputOptions['onValueChange'];
   #onReject: FileInputOptions['onReject'];
   #onUpdate: FileInputOptions['onUpdate'];
@@ -228,15 +229,15 @@ class FileInputHost implements FileInputConnection {
   #onCancel = (): void => { if (this.getActive()) this.#report(this.#write(this.#snapshot.state.files)); };
   #onClick = (event: Event): void => { if (!this.#guard().ok) event.preventDefault(); };
   #onReset = (event: Event): void => {
-    if (!this.getActive()) return;
+    if (!this.getActive() || event.target !== this.#form || event.defaultPrevented) return;
     this.#pendingReset = event;
-    if (this.#resetQueued) return;
-    this.#resetQueued = true;
-    queueMicrotask(() => { this.#resetQueued = false; if (this.getActive()) this.#settleReset(); });
+    this.#resetDispatch.schedule(event);
   };
   #refreshForm(): void {
     const form = this.#observing ? this.#element?.form ?? null : null;
     if (form === this.#form) return;
+    this.#resetDispatch.clear();
+    this.#pendingReset = undefined;
     this.#form?.removeEventListener('reset', this.#onReset);
     this.#form = form;
     form?.addEventListener('reset', this.#onReset);

@@ -3,6 +3,43 @@ import test from 'node:test';
 import { Window } from 'happy-dom';
 import { createForm, defineFormSubmission } from '../.verification-dist/form/connection.js';
 
+test('DOM Form honors earlier submit cancellation and later reset cancellation', async () => {
+  const dom = installDOM();
+  const { document } = dom.window;
+  const root = document.createElement('form');
+  const input = document.createElement('input');
+  root.append(input);
+  document.body.append(root);
+  let validations = 0, submissions = 0, resets = 0, participantResets = 0;
+  const form = createForm({
+    form: root,
+    participants: [{ id: 'field', element: input, reset() { participantResets++; } }],
+    validate() { validations++; return {}; },
+    onSubmit() { submissions++; },
+    onReset() { resets++; },
+  });
+  const cancel = (event) => event.preventDefault();
+  try {
+    document.addEventListener('submit', cancel, { capture: true, once: true });
+    root.requestSubmit();
+    assert.deepEqual([validations, submissions], [0, 0]);
+    root.requestSubmit();
+    assert.deepEqual([validations, submissions], [1, 1]);
+    root.addEventListener('reset', cancel, { once: true });
+    root.reset();
+    await Promise.resolve();
+    assert.deepEqual([resets, participantResets], [0, 0]);
+    root.addEventListener('reset', cancel, { once: true });
+    form.reset();
+    assert.deepEqual([resets, participantResets], [0, 0]);
+    form.reset();
+    assert.deepEqual([resets, participantResets], [1, 1]);
+  } finally {
+    form.destroy();
+    dom.restore();
+  }
+});
+
 test('value and baseline participant refresh stay field-local while default refresh preserves target/order discovery', () => {
   const dom = installDOM(); let form;
   try {

@@ -67,6 +67,7 @@ import {
   nativeSubmitterForm,
   normalizeSubmissionIssues,
 } from './submission.js';
+import { createResetDispatchTask } from './reset-dispatch.js';
 
 const summaryAttributes = [
   ['data-scope', 'form'], ['data-part', 'summary'], ['role', 'alert'],
@@ -148,6 +149,9 @@ export function tryCreateForm<
   let observing = true;
   let suspending = false;
   let observationGeneration = 0;
+  let resetGeneration = 0;
+  let applyingReset = false;
+  const pendingResets = new Set<Event>();
   let recoveringFocus = false;
   let invalidBatchPending = false;
   let invalidBatchGeneration = 0;
@@ -448,8 +452,14 @@ export function tryCreateForm<
       participantBaselines.set(participant.id, value);
     }
   };
+  const retirePendingResets = (): void => {
+    resetGeneration += 1;
+    pendingResets.clear();
+    resetDispatch.clear();
+  };
   const reinitialize = (reinitializeOptions: FormReinitializeOptions = {}): void => {
     if (!active) return;
+    retirePendingResets();
     const canceledPendingValidation = state.validation.status === 'validating';
     nativeResume = null;
     pendingReinitializations.clear();
@@ -821,6 +831,7 @@ export function tryCreateForm<
       nativeResume = null;
       return;
     }
+    if (event.defaultPrevented) return;
     if (state.validation.status === 'validating' && state.validation.intent === 'submission') {
       event.preventDefault();
       return;
@@ -922,17 +933,48 @@ export function tryCreateForm<
     return createNativeFormData(options.form, submitter);
   };
   const reset = (): void => {
-    if (!active) return;
-    nativeResume = null;
-    pendingReinitializations.clear();
-    const commands = transition('reset', true);
-    if (!active) return;
-    if (commands !== null) execute(commands);
-    resetHandler?.();
-    const generation = observationGeneration;
-    queueMicrotask(() => { if (generation === observationGeneration) captureAllCurrentValues(); });
+    if (!active || applyingReset) return;
+    const generation = resetGeneration;
+    applyingReset = true;
+    try {
+      nativeResume = null;
+      pendingReinitializations.clear();
+      const commands = transition('reset', true);
+      if (!active || generation !== resetGeneration) return;
+      if (commands !== null) execute(commands);
+      if (!active || generation !== resetGeneration) return;
+      resetHandler?.();
+      queueMicrotask(() => { if (generation === resetGeneration) captureAllCurrentValues(); });
+    } finally {
+      applyingReset = false;
+    }
   };
-  const onReset = (): void => { if (active && observing) reset(); };
+  const settleReset = (event: Event): void => {
+    if (pendingResets.delete(event) && !event.defaultPrevented) reset();
+  };
+  const resetDispatch = createResetDispatchTask(() => {
+    for (const event of [...pendingResets]) settleReset(event);
+  });
+  const onReset = (event: Event): void => {
+    if (!active || !observing || applyingReset || event.target !== options.form || event.defaultPrevented) return;
+    pendingResets.add(event);
+    resetDispatch.schedule(event);
+  };
+  const resetFromConnection = (): void => {
+    if (!active || applyingReset) return;
+    const generation = resetGeneration;
+    let dispatched: Event | undefined;
+    const capture = (event: Event): void => { if (event.target === options.form) dispatched = event; };
+    options.form.addEventListener('reset', capture, true);
+    try {
+      options.form.reset();
+    } finally {
+      options.form.removeEventListener('reset', capture, true);
+    }
+    if (dispatched === undefined || generation !== resetGeneration) return;
+    pendingResets.delete(dispatched);
+    if (!dispatched.defaultPrevented) reset();
+  };
 
   const bindForm = (): void => {
     options.form.addEventListener('input', onValueInteraction);
@@ -1077,6 +1119,7 @@ export function tryCreateForm<
 
   const stopObservation = (): void => {
     observing = false; observationGeneration += 1;
+    retirePendingResets();
     invalidBatchPending = false; nativeResume = null;
     options.form.removeEventListener('input', onValueInteraction);
     options.form.removeEventListener('change', onValueInteraction);
@@ -1194,7 +1237,7 @@ export function tryCreateForm<
       return true;
     },
     reinitialize,
-    reset: () => { if (!active) return; const observed = observing; options.form.reset(); if (!observed) reset(); },
+    reset: resetFromConnection,
     subscribeForm,
     subscribeField,
     destroy: () => {

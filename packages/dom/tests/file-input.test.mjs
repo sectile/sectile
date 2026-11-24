@@ -70,6 +70,26 @@ test('completed reset respects late cancellation and controlled/uncontrolled own
   const uncontrolled = f.own({ onValueChange: (_files, source) => sources.push(source) });
   f.reset(); await Promise.resolve(); assert.equal(uncontrolled.state.files.length, 0); assert.equal(f.input.files.length, 0); assert.deepEqual(sources, ['reset', 'reset']);
 });
+test('a reset observed during dispatch settles automatically after the browser checkpoint', async t => {
+  const f = fixture(t), file = f.file('accepted.txt'), sources = [];
+  f.own({ defaultValue: [file], onValueChange: (_files, source) => sources.push(source) });
+  const reset = async cancel => {
+    let phase = f.window.Event.AT_TARGET;
+    const event = new f.window.Event('reset', { bubbles: true, cancelable: true });
+    Object.defineProperty(event, 'eventPhase', { get: () => phase });
+    f.form.dispatchEvent(event);
+    await Promise.resolve();
+    if (cancel) event.preventDefault();
+    else f.set([]);
+    phase = f.window.Event.NONE;
+    await new Promise(resolve => setTimeout(resolve, 0));
+  };
+  await reset(true);
+  assert.deepEqual(sources, []);
+  assert.equal(f.input.files[0], file);
+  await reset(false);
+  assert.deepEqual(sources, ['reset']);
+});
 test('Form preparation flushes controlled reset before binary serialization without replacing same-name siblings', t => {
   const f = fixture(t), restore = installGlobals(f.window); t.after(restore);
   const file = f.file('accepted.txt'), owner = f.own({ value: [file] }), text = f.document.createElement('input');

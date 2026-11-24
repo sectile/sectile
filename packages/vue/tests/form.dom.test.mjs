@@ -1343,8 +1343,7 @@ test('Vue Form reset restores native and uncontrolled Sectile defaults without t
   await nextTick();
   assert.equal(controlledText.defaultValue, 'controlled-default');
   host.querySelector('[data-part="reset"]').click();
-  await Promise.resolve();
-  await nextTick();
+  await new Promise(resolve => setTimeout(resolve, 0));
   assert.equal(native.value, 'native-default');
   assert.equal(text.value, 'sectile-default');
   assert.equal(textarea.value, 'textarea-default');
