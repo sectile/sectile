@@ -4,13 +4,40 @@ import {
   applySequenceReorderEvent,
   applyTreeReorderEvent,
   canMoveTreeReorderNode,
+  canMoveTreeReorderNodes,
   createSequenceReorderState,
   createTreeReorderState,
   tryCreateTreeReorderState,
   getSequenceReorderOrder,
   getTreeReorderHierarchy,
+  getTreeReorderCohort,
 } from '../../.verification-dist/reorder.js';
 
+test('tree batch admission checks only the moved roots and does not construct a next tree', () => {
+  const state = createTreeReorderState([
+    { id: 'parent', parentID: null },
+    { id: 'child', parentID: 'parent' },
+    { id: 'other', parentID: null },
+    { id: 'target', parentID: null },
+    ...Array.from({ length: 4096 }, (_, index) => ({ id: index, parentID: null })),
+  ]);
+  const hierarchy = getTreeReorderHierarchy(state);
+  const cohort = getTreeReorderCohort(state, ['child', 'other', 'parent']);
+  assert.deepEqual(cohort, ['parent', 'other']);
+  const event = { type: 'move-nodes', ids: cohort, parentID: 'target' };
+  let policyCalls = 0, writes = 0;
+  const set = Map.prototype.set;
+  Map.prototype.set = function (...args) { writes++; return set.apply(this, args); };
+  try {
+    for (let index = 0; index < 100; index++) {
+      assert.equal(canMoveTreeReorderNodes(state, event, { canMove() { policyCalls++; return true; } }), true);
+    }
+  } finally { Map.prototype.set = set; }
+  assert.equal(policyCalls, 200);
+  assert.equal(writes, 0);
+  assert.equal(getTreeReorderHierarchy(state), hierarchy);
+  assert.equal(canMoveTreeReorderNodes(state, { ...event, ids: ['child', 'parent'] }), false);
+});
 test('Reorder borrows canonical owners and revalidates structural caller states', () => {
   const ids = ['a', 'b', 'c'];
   const state = createSequenceReorderState(ids);

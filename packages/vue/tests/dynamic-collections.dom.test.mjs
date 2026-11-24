@@ -155,7 +155,7 @@ test('Vue insertion parts route pointer drops to empty columns and unmounted can
     document.elementFromPoint = () => zone;
     const drop = () => {
       const item = fixture.host.querySelector('[data-value="a"]');
-      item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 9, button: 0, bubbles: true, cancelable: true }));
+      item.dispatchEvent(new window.PointerEvent('pointerdown', { pointerId: 9, button: 0, isPrimary: true, bubbles: true, cancelable: true }));
       for (const type of ['pointermove', 'pointerup']) root.dispatchEvent(new window.PointerEvent(type, { pointerId: 9, button: 0, bubbles: true, cancelable: true }));
     };
     drop(); await settle(); assert.deepEqual(state.getChildren('right'), ['a', 'hidden']);

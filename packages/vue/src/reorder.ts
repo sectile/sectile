@@ -43,6 +43,7 @@ export type TreeReorderNode<ID extends string = string> = Omit<TreeReorderOption
 export interface SequenceReorderRootProps<ID extends string = string> {
   readonly items: readonly ID[];
   readonly keyboardMode?: 'immediate' | 'preview';
+  readonly getSourceIDs?: (primaryID: NoInfer<ID>) => readonly NoInfer<ID>[] | undefined;
   readonly controlled?: boolean;
   readonly handleOnly?: boolean;
   readonly label?: string;
@@ -55,6 +56,7 @@ export interface SequenceReorderRootProps<ID extends string = string> {
 export interface TreeReorderRootProps<ID extends string = string> {
   readonly nodes: readonly TreeReorderNode<ID>[];
   readonly keyboardMode?: 'immediate' | 'preview';
+  readonly getSourceIDs?: (primaryID: NoInfer<ID>) => readonly NoInfer<ID>[] | undefined;
   readonly controlled?: boolean;
   readonly handleOnly?: boolean;
   readonly label?: string;
@@ -167,6 +169,7 @@ const treeKey = /* @__PURE__ */ Symbol('SectileTreeReorderRoot');
 
 const rootProps = {
   keyboardMode: { type: String as PropType<'immediate' | 'preview'>, default: 'immediate' },
+  getSourceIDs: { type: Function as PropType<(primaryID: string) => readonly string[] | undefined>, default: undefined },
   handleOnly: { type: Boolean, default: false },
   label: { type: String, default: undefined },
   roleDescription: { type: String, default: undefined },
@@ -202,6 +205,7 @@ const SequenceRootImplementation = /* @__PURE__ */ defineComponent({
         root: root.value,
         ids: props.controlled ? props.items : current.value.ids,
         keyboardMode: props.keyboardMode,
+        getSourceIDs: id => props.getSourceIDs?.(id),
         controlled: props.controlled,
         handleOnly: props.handleOnly,
         ...reorderLabelOptions(props, attrs),
@@ -353,6 +357,7 @@ const TreeRootImplementation = /* @__PURE__ */ defineComponent({
           nodes: props.controlled ? props.nodes : current.value.nodes,
           controlled: props.controlled, handleOnly: props.handleOnly,
           keyboardMode: props.keyboardMode,
+          getSourceIDs: id => props.getSourceIDs?.(id),
           ...reorderLabelOptions(props, attrs),
           orientation: props.orientation, disabled: props.disabled,
           readOnly: props.readonly, layout: props.layout, direction: direction.value,
@@ -617,7 +622,7 @@ function createReorderHandle(name: string, scope: 'sequence' | 'tree') {
         as: props.as, asChild: props.asChild,
         type: props.as === 'button' ? 'button' : undefined,
         disabled: props.disabled || root.disabled(),
-        'aria-label': props.label,
+        ...(props.label === undefined ? {} : { 'aria-label': props.label }),
         'aria-keyshortcuts': 'Alt+ArrowUp Alt+ArrowDown Alt+ArrowLeft Alt+ArrowRight Alt+Home Alt+End',
         'data-sectile-reorder-handle': '',
         'data-scope': scope === 'sequence' ? 'sequence-reorder' : 'tree-reorder',

@@ -18,7 +18,8 @@ export type SequenceReorderEvent<ID extends StableID = StableID> =
   | { readonly type: 'move-before'; readonly id: ID; readonly targetID: ID }
   | { readonly type: 'move-after'; readonly id: ID; readonly targetID: ID }
   | { readonly type: 'move-to-start'; readonly id: ID }
-  | { readonly type: 'move-to-end'; readonly id: ID };
+  | { readonly type: 'move-to-end'; readonly id: ID }
+  | { readonly type: 'move-items'; readonly ids: readonly ID[]; readonly beforeID: ID | null };
 
 export type SequenceReorderCommand<ID extends StableID = StableID> = {
   readonly type: 'sequence-order-changed';
@@ -96,6 +97,15 @@ export function getSequenceReorderOrder<ID extends StableID>(
   return getSequenceReorderOrder(unwrap(tryCreateSequenceReorderState(state.ids)));
 }
 
+/** Borrow source order for a selected cohort; reject IDs outside the current domain. */
+export function getSequenceReorderCohort<ID extends StableID>(state: SequenceReorderState<ID>, ids: readonly NoInfer<ID>[]): readonly ID[] | null {
+  const order = getSequenceReorderOrder(state);
+  if (ids.length > order.size) return null;
+  const unique = [...new Set<ID>(ids)];
+  for (const id of unique) if (!order.contains(id)) return null;
+  return Object.freeze(unique.sort((left, right) => order.indexOf(left)! - order.indexOf(right)!));
+}
+
 export function applySequenceReorderEvent<ID extends StableID>(
   state: SequenceReorderState<ID>,
   event: SequenceReorderEvent<ID>,
@@ -107,6 +117,7 @@ export function applySequenceReorderEvent<ID extends StableID>(
     sequence = sequenceReorderOwners.get(valid.value) as Sequence<ID>;
   }
   const type = event.type;
+  if (type === 'move-items') return moveSequenceItems(state, sequence, event.ids, event.beforeID);
   const id = event.id;
   const targetID = type === 'move-before' || type === 'move-after' ? event.targetID : null;
   const sourceIndex = sequence.indexOf(id);
@@ -134,6 +145,33 @@ export function applySequenceReorderEvent<ID extends StableID>(
     type: 'sequence-order-changed',
     patch,
   }]);
+}
+
+function moveSequenceItems<ID extends StableID>(
+  state: SequenceReorderState<ID>, sequence: Sequence<ID>, ids: readonly ID[], beforeID: ID | null,
+): Result<SequenceReorderUpdate<ID>> {
+  if (!Array.isArray(ids) || ids.length > sequence.size) return fail('transition-rejection', 'invalid-boundary', 'Too many reordered items or invalid cohort.');
+  const moving = new Set<ID>();
+  for (const id of ids) {
+    if (!sequence.contains(id)) return missingID(id);
+    if (moving.has(id)) return fail('transition-rejection', 'invalid-boundary', 'Each moved item must occur once.');
+    moving.add(id);
+  }
+  if (beforeID !== null) {
+    if (!sequence.contains(beforeID)) return missingID(beforeID);
+    if (moving.has(beforeID)) return fail('transition-rejection', 'invalid-boundary', 'The insertion anchor must not be a moved item.');
+  }
+  if (moving.size === 0) return createMachineUpdate(state);
+  const inserted: ID[] = [];
+  for (const id of sequence.ids) {
+    if (id === beforeID) for (const moved of moving) inserted.push(moved);
+    if (!moving.has(id)) inserted.push(id);
+  }
+  if (beforeID === null) for (const moved of moving) inserted.push(moved);
+  if (inserted.every((id, index) => id === sequence.at(index))) return createMachineUpdate(state);
+  const patch = Object.freeze({ type: 'splice' as const, index: 0, deleteCount: sequence.size, inserted: Object.freeze(inserted) });
+  const next = sequenceReorderState(applySequencePatch(sequence, patch));
+  return createMachineUpdate(next, [{ type: 'sequence-order-changed', patch }]);
 }
 
 export function createTreeReorderState<ID extends StableID>(
@@ -185,6 +223,35 @@ export function canMoveTreeReorderNode<ID extends StableID>(
   }
   const { id, parentID, beforeID = null } = event;
   return checkTreeNodeMove(owner.tree, id, parentID, beforeID, policy).ok;
+}
+
+/** Normalize a selected cohort in preorder, excluding selected descendants of selected roots. */
+export function getTreeReorderCohort<ID extends StableID>(state: TreeReorderState<ID>, ids: readonly NoInfer<ID>[]): readonly ID[] | null {
+  const tree = getTreeReorderHierarchy(state);
+  if (ids.length > tree.size) return null;
+  const intervals = sortedSubtreeIntervals(tree, ids);
+  if (intervals === null) return null;
+  const roots: ID[] = [];
+  let end = 0;
+  for (const entry of intervals) {
+    if (entry.start < end) continue;
+    roots.push(entry.id);
+    end = entry.endExclusive;
+  }
+  return Object.freeze(roots);
+}
+
+/** Advisory batch admission with no next-tree construction. */
+export function canMoveTreeReorderNodes<ID extends StableID>(
+  state: TreeReorderState<ID>,
+  event: Extract<TreeReorderEvent<NoInfer<ID>>, { readonly type: 'move-nodes' }>,
+  policies?: TreeReorderPolicies<NoInfer<ID>>,
+): boolean {
+  const captured = policies === undefined ? ok(undefined) : captureTreePolicies(policies);
+  if (!captured.ok) return false;
+  const owner = treeReorderOwners.get(state) as TreeReorderOwner<ID> | undefined;
+  const tree = owner === undefined ? tryCreateTree(state.nodes) : ok(owner.tree);
+  return tree.ok && checkTreeNodesMove(tree.value, event.ids, event.parentID, event.beforeID ?? null, captured.value).ok;
 }
 
 export function applyTreeReorderEvent<ID extends StableID>(
@@ -255,44 +322,15 @@ function moveTreeNodes<ID extends StableID>(
   policy?: CapturedTreePolicies<ID>,
 ): Result<TreeReorderUpdate<ID>> {
   const { tree, positions } = owner;
-  if (!Array.isArray(ids)) return fail('transition-rejection', 'invalid-boundary', 'Moved roots require an array.');
-  const count = ids.length;
-  if (!Number.isSafeInteger(count) || count < 0) return fail('transition-rejection', 'invalid-boundary', 'Moved roots require a safe array length.');
-  if (parentID !== null && !tree.has(parentID)) return missingID(parentID);
-  if (beforeID !== null && (!tree.has(beforeID) || tree.parentOf(beforeID) !== parentID)) {
-    return fail('transition-rejection', 'reorder-tree-sibling-invalid', 'beforeID must identify a sibling under the requested parent.', { beforeID, parentID });
-  }
-  if (count > tree.size) {
-    return fail('transition-rejection', 'reorder-tree-ids-duplicate', 'A move cannot contain more roots than the current tree.', { count });
-  }
+  const admitted = checkTreeNodesMove(tree, ids, parentID, beforeID, policy, true);
+  if (!admitted.ok) return admitted;
+  const moving = admitted.value;
+  const count = moving.size;
   if (count === 0) return createMachineUpdate(original);
-  const moving = new Set<ID>();
   const roots: TreeNodeInput<ID>[] = [];
-  for (let index = 0; index < count; index++) {
-    const id = ids[index]!;
-    if (!tree.has(id)) return missingID(id);
-    if (moving.has(id)) return fail('transition-rejection', 'reorder-tree-ids-duplicate', 'Each moved root must occur once.', { id });
-    if (parentID !== null && isWithinSubtree(tree, id, parentID)) {
-      return fail('transition-rejection', 'reorder-tree-cycle', 'A tree node cannot move below itself or one of its descendants.', { id, parentID });
-    }
-    moving.add(id);
+  for (const id of moving) {
     const source = canonical.nodes[positions.get(id)!]!;
     roots.push(source.parentID === parentID ? source : Object.freeze({ id, parentID }));
-  }
-  if (beforeID !== null && moving.has(beforeID)) {
-    return fail('transition-rejection', 'reorder-tree-sibling-invalid', 'The insertion anchor must not be a moved root.', { beforeID, parentID });
-  }
-  let selectedEnd = 0;
-  for (const id of tree.preorder().ids) {
-    if (!moving.has(id)) continue;
-    const interval = tree.subtreeIntervalOf(id)!;
-    if (interval.start < selectedEnd) {
-      return fail('transition-rejection', 'reorder-tree-move-overlap', 'Moved roots must not contain one another.', { id });
-    }
-    selectedEnd = interval.endExclusive;
-  }
-  if (policy !== undefined) {
-    const allowed = checkTreeMove(tree, moving, parentID, policy); if (!allowed.ok) return allowed;
   }
   const siblings = parentID === null ? tree.roots : tree.childrenOf(parentID)!;
   const first = siblings.indexOf(roots[0]!.id);
@@ -322,6 +360,59 @@ function moveTreeNodes<ID extends StableID>(
   if (!nextTree.ok) return transitionFailure(nextTree);
   const next = treeReorderState(nodes, nextTree.value);
   return createMachineUpdate(next, [{ type: 'tree-order-changed', nodes: next.nodes }]);
+}
+
+function checkTreeNodesMove<ID extends StableID>(
+  tree: Tree<ID>, ids: readonly ID[], parentID: ID | null, beforeID: ID | null, policy?: CapturedTreePolicies<ID>,
+  materializesTree = false,
+): Result<ReadonlySet<ID>> {
+  if (!Array.isArray(ids)) return fail('transition-rejection', 'invalid-boundary', 'Moved roots require an array.');
+  const count = ids.length;
+  if (!Number.isSafeInteger(count) || count < 0) return fail('transition-rejection', 'invalid-boundary', 'Moved roots require a safe array length.');
+  if (parentID !== null && !tree.has(parentID)) return missingID(parentID);
+  if (beforeID !== null && (!tree.has(beforeID) || tree.parentOf(beforeID) !== parentID)) {
+    return fail('transition-rejection', 'reorder-tree-sibling-invalid', 'beforeID must identify a sibling under the requested parent.', { beforeID, parentID });
+  }
+  if (count > tree.size) {
+    return fail('transition-rejection', 'reorder-tree-ids-duplicate', 'A move cannot contain more roots than the current tree.', { count });
+  }
+  const moving = new Set<ID>();
+  for (let index = 0; index < count; index++) {
+    const id = ids[index]!;
+    if (!tree.has(id)) return missingID(id);
+    if (moving.has(id)) return fail('transition-rejection', 'reorder-tree-ids-duplicate', 'Each moved root must occur once.', { id });
+    if (parentID !== null && isWithinSubtree(tree, id, parentID)) {
+      return fail('transition-rejection', 'reorder-tree-cycle', 'A tree node cannot move below itself or one of its descendants.', { id, parentID });
+    }
+    moving.add(id);
+  }
+  if (beforeID !== null && moving.has(beforeID)) {
+    return fail('transition-rejection', 'reorder-tree-sibling-invalid', 'The insertion anchor must not be a moved root.', { beforeID, parentID });
+  }
+  let selectedEnd = 0;
+  const order = materializesTree ? tree.preorder().ids : sortedSubtreeIntervals(tree, moving)!.map(interval => interval.id);
+  for (const id of order) {
+    if (!moving.has(id)) continue;
+    const interval = tree.subtreeIntervalOf(id)!;
+    if (interval.start < selectedEnd) {
+      return fail('transition-rejection', 'reorder-tree-move-overlap', 'Moved roots must not contain one another.', { id });
+    }
+    selectedEnd = interval.endExclusive;
+  }
+  if (policy !== undefined) {
+    const allowed = checkTreeMove(tree, moving, parentID, policy); if (!allowed.ok) return allowed;
+  }
+  return ok(moving);
+}
+
+function sortedSubtreeIntervals<ID extends StableID>(tree: Tree<ID>, ids: Iterable<ID>) {
+  const intervals: { readonly id: ID; readonly start: number; readonly endExclusive: number }[] = [];
+  for (const id of ids) {
+    const interval = tree.subtreeIntervalOf(id);
+    if (interval === null) return null;
+    intervals.push({ id, ...interval });
+  }
+  return intervals.sort((left, right) => left.start - right.start);
 }
 
 function captureTreePolicies<ID extends StableID>(policies: TreeReorderPolicies<ID>): Result<CapturedTreePolicies<ID>> {

@@ -1,9 +1,12 @@
 import type { Result, StableID } from '@sectile/core';
 import {
   applySequenceReorderEvent,
+  canMoveTreeReorderNodes,
+  getTreeReorderCohort,
   applyTreeReorderEvent,
   canMoveTreeReorderNode,
   getSequenceReorderOrder,
+  getSequenceReorderCohort,
   getTreeReorderHierarchy,
   tryCreateSequenceReorderState,
   tryCreateTreeReorderState,
@@ -15,7 +18,8 @@ import {
   type TreeReorderPolicies,
 } from '@sectile/core/reorder';
 import type { RevisionSnapshot } from '@sectile/core/revision';
-import type { TreeNodeInput } from '@sectile/core/tree';
+import type { Tree, TreeNodeInput } from '@sectile/core/tree';
+import type { Sequence } from '@sectile/core/sequence';
 import { unwrap, failResult } from '@sectile/core/result';
 import { createSemanticController, type SemanticController } from '@sectile/core/adapter-runtime';
 import { setInteractionAttributes, createDOMAttributeBinding, type DOMAttributeBinding } from './interaction/attributes.js';
@@ -27,6 +31,7 @@ export type ReorderOrientation = 'horizontal' | 'vertical';
 
 export interface ReorderInteractionSnapshot<ID extends StableID = StableID> {
   readonly sourceID: ID | null;
+  readonly sourceIDs?: readonly ID[];
   readonly input: 'pointer' | 'keyboard' | null;
   readonly target: TreeReorderDropTarget<ID> | null;
   readonly allowed: boolean;
@@ -55,6 +60,7 @@ interface ReorderHostOptions<ID extends StableID> {
   readonly roleDescription?: string;
   readonly onUpdate?: () => void;
   readonly keyboardMode?: 'immediate' | 'preview';
+  readonly getSourceIDs?: (primaryID: ID) => readonly ID[] | undefined;
   readonly onInteractionChange?: (change: ReorderInteractionChange<ID>) => void;
 }
 
@@ -264,6 +270,8 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
   #target: DropTarget<ID> | null = null;
   readonly #keyboardMode: 'immediate' | 'preview';
   #onInteractionChange: ReorderHostOptions<ID>['onInteractionChange'];
+  #getSourceIDs: ReorderHostOptions<ID>['getSourceIDs'];
+  #cohort: { readonly ids: readonly ID[]; readonly members: ReadonlySet<ID> } | undefined;
   #interaction: ReorderInteractionSnapshot<ID> = Object.freeze({ sourceID: null, input: null, target: null, allowed: false, clientPoint: null });
   #proposal: Event | null = null;
   #preview: Result<State> | undefined;
@@ -294,6 +302,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
     if (options.keyboardMode !== undefined && options.keyboardMode !== 'immediate' && options.keyboardMode !== 'preview') throw new TypeError('Unknown Reorder keyboard mode.');
     this.#keyboardMode = options.keyboardMode ?? 'immediate';
     this.#onInteractionChange = options.onInteractionChange;
+    this.#getSourceIDs = options.getSourceIDs;
     this.#disabled = options.disabled === true || readOnly === true;
     this.#handleOnly = options.handleOnly === true;
     this.#keydown = (event) => {
@@ -307,7 +316,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
           if (this.#keyboard?.id === id) this.commitInteraction();
           else if (event.key === ' ') {
             this.cancelInteraction();
-            if (!this.#active) return;
+            if (!this.#active || !this.captureCohort(id)) return;
             this.#keyboard = { id, state: this.runtime.getSnapshot().state };
             try { this.publish('start', id, 'keyboard', null, null); }
             catch (error) { try { this.clearDrag(); } catch { /* Preserve callback failure. */ } throw error; }
@@ -325,7 +334,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
         && this.handleKeyboard(id, event)) event.preventDefault();
     };
     this.#pointerdown = (event) => {
-      if (!this.#active || event.defaultPrevented || event.button !== 0 || this.#disabled || this.#drag !== null || this.#clearingDrag) return;
+      if (!this.#active || event.defaultPrevented || event.button !== 0 || event.isPrimary === false || this.#disabled || this.#drag !== null || this.#clearingDrag) return;
       const id = this.resolveTarget(event.target);
       const item = id === null ? undefined : this.elements.get(id);
       const origin = item === undefined ? null : this.allowedOrigin(event.target, item, this.#handleOnly);
@@ -334,6 +343,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
       event.preventDefault();
       origin.focus({ preventScroll: true });
       if (!this.#active || this.elements.get(id) !== item || (origin !== item && !item.contains(origin)) || this.#drag !== null || this.#clearingDrag) return;
+      if (!this.captureCohort(id) || !this.#active || this.elements.get(id) !== item) return;
       const drag = this.#drag = { id, pointerID: event.pointerId, revision: this.runtime.getSnapshot().revision };
       this.#target = { kind: 'item', id, before: true };
       try {
@@ -360,7 +370,8 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
           return;
         }
         this.#target = target;
-        const proposal = target === null || (target.kind === 'item' && target.id === drag.id) ? null : this.dropEvent(drag.id, target);
+        const drop = target === null || (target.kind === 'item' && target.id === drag.id) ? null : this.dropEvent(drag.id, target);
+        const proposal = drop === null ? null : this.batchProposal(drop, this.runtime.getSnapshot().state);
         this.#proposal = proposal; this.#preview = undefined;
         const allowed = proposal !== null && this.admitProposal(proposal);
         if (!this.#active || this.#drag !== drag) return;
@@ -409,6 +420,8 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
   protected abstract reducePreview(state: State, event: Event): Result<State>;
   protected abstract admitProposal(event: Event): boolean;
   protected abstract destination(event: Event): TreeReorderDropTarget<ID>;
+  protected abstract normalizeCohort(ids: readonly ID[], state: State): readonly ID[] | null;
+  protected abstract moveCohort(ids: readonly ID[], target: TreeReorderDropTarget<ID>, state: State): Event;
   public abstract handleEvent(event: Event): boolean;
   protected abstract projectItem(element: HTMLElement, id: ID): void;
   protected feedback(_id: ID, _target: DropTarget<ID>, _allowed: boolean): DropFeedback | null { return null; }
@@ -417,6 +430,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
   protected keyboardStep(event: Event): boolean {
     const session = this.#keyboard;
     if (!session) return this.handleEvent(event);
+    event = this.batchProposal(event, session.state);
     const result = this.reducePreview(session.state, event);
     if (!this.#active || this.#keyboard !== session) return false;
     if (!result.ok) {
@@ -427,6 +441,37 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
     session.state = result.value; this.#proposal = event; this.#preview = result;
     this.publish('preview', session.id, 'keyboard', this.destination(event), null, true);
     return true;
+  }
+
+  private captureCohort(primary: ID): boolean {
+    const before = this.runtime.getSnapshot();
+    const selected = this.#getSourceIDs?.(primary);
+    if (!this.#active || this.runtime.getSnapshot().revision !== before.revision || !this.elements.has(primary)
+      || this.#drag !== null || this.#keyboard !== undefined) return false;
+    if (selected === undefined) return true;
+    if (!Array.isArray(selected)) return false;
+    if (selected.length < 2 || !selected.includes(primary)) return true;
+    const ids = this.normalizeCohort(selected, before.state);
+    if (ids === null) return false;
+    if (ids.length > 1 || ids[0] !== primary) this.#cohort = { ids, members: new Set(ids) };
+    return true;
+  }
+
+  protected isCohortMember(id: ID): boolean { return this.#cohort?.members.has(id) === true; }
+  protected get hasCohort(): boolean { return this.#cohort !== undefined; }
+
+  protected unselectedSibling(order: Sequence<ID>, start: number, step: 1 | -1 = 1): ID | null {
+    let id = order.at(start);
+    for (let index = start; id !== null && this.isCohortMember(id);) {
+      index += step;
+      id = order.at(index);
+    }
+    return id;
+  }
+
+  private batchProposal(event: Event, state: State): Event {
+    const cohort = this.#cohort;
+    return cohort === undefined ? event : this.moveCohort(cohort.ids, this.destination(event), state);
   }
   public getInteractionSnapshot(): ReorderInteractionSnapshot<ID> { return this.#interaction; }
   public getPreviewState(): Result<State> {
@@ -449,6 +494,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
   private publish(type: ReorderInteractionChange<ID>['type'], sourceID: ID, input: 'pointer' | 'keyboard',
     target: TreeReorderDropTarget<ID> | null, clientPoint: ReorderInteractionSnapshot<ID>['clientPoint'], allowed = false): void {
     const interaction = this.#interaction = Object.freeze({ sourceID, input, target: target === null ? null : Object.freeze(target), allowed,
+      ...(this.#cohort === undefined ? {} : { sourceIDs: this.#cohort.ids }),
       clientPoint: clientPoint === null ? null : Object.freeze(clientPoint) });
     this.#onInteractionChange?.({ type, interaction });
     if (this.#active && this.#interaction === interaction) this.#onUpdate?.();
@@ -552,7 +598,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
     drain(() => root.ownerDocument?.removeEventListener?.('visibilitychange', this.#visibility));
     drain(() => root.ownerDocument?.defaultView?.removeEventListener?.('blur', this.#blur));
     this.elements.clear(); this.#elementOwners = new WeakMap(); this.#focusRecipient = undefined; this.#onUpdate = undefined;
-    this.#onInteractionChange = undefined;
+    this.#onInteractionChange = undefined; this.#getSourceIDs = undefined;
     if (this.#bindings) { for (const binding of this.#bindings.values()) drain(() => binding.disconnect()); this.#bindings.clear(); }
     this.#root = undefined;
     if (failed) throw first;
@@ -615,7 +661,7 @@ abstract class DOMReorderHost<ID extends StableID, State, Event> {
     const interaction = this.#interaction;
     this.#drag = null;
     this.#target = null;
-    this.#keyboard = undefined; this.#proposal = null; this.#preview = undefined;
+    this.#keyboard = undefined; this.#proposal = null; this.#preview = undefined; this.#cohort = undefined;
     this.#interaction = Object.freeze({ sourceID: null, input: null, target: null, allowed: false, clientPoint: null });
     const root = this.#root, source = this.#sourceFeedback, target = this.#dropFeedback;
     this.#sourceFeedback = undefined; this.#dropFeedback = undefined;
@@ -659,18 +705,21 @@ class DOMSequenceReorder<ID extends StableID>
     const order = getSequenceReorderOrder(this.keyboardState());
     const index = order.indexOf(id);
     if (index === null) return false;
+    const previous = this.unselectedSibling(order, index - 1, -1);
+    const next = this.unselectedSibling(order, index + 1);
     let semantic: SequenceReorderEvent<ID> | null = null;
     if (event.key === 'Home') semantic = { type: 'move-to-start', id };
     else if (event.key === 'End') semantic = { type: 'move-to-end', id };
-    else if ((event.key === 'ArrowUp' || event.key === 'ArrowLeft') && index > 0) semantic = { type: 'move-before', id, targetID: order.at(index - 1)! };
-    else if ((event.key === 'ArrowDown' || event.key === 'ArrowRight') && index < order.size - 1) semantic = { type: 'move-after', id, targetID: order.at(index + 1)! };
+    else if ((event.key === 'ArrowUp' || event.key === 'ArrowLeft') && previous !== null) semantic = { type: 'move-before', id, targetID: previous };
+    else if ((event.key === 'ArrowDown' || event.key === 'ArrowRight') && next !== null) semantic = { type: 'move-after', id, targetID: next };
     if (semantic === null) return false;
     const ok = this.keyboardStep(semantic);
     if (ok) this.focus(id);
     return ok;
   }
   protected dropEvent(id: ID, target: DropTarget<ID>): SequenceReorderEvent<ID> | null {
-    return target.kind !== 'item' || target.id === id ? null : { type: target.before ? 'move-before' : 'move-after', id, targetID: target.id };
+    if (target.kind !== 'item' || target.id === id || !getSequenceReorderOrder(this.getSnapshot().state).contains(target.id)) return null;
+    return { type: target.before ? 'move-before' : 'move-after', id, targetID: target.id };
   }
   protected reducePreview(state: SequenceReorderState<ID>, event: SequenceReorderEvent<ID>): Result<SequenceReorderState<ID>> {
     const result = applySequenceReorderEvent(state, event);
@@ -678,14 +727,25 @@ class DOMSequenceReorder<ID extends StableID>
   }
   protected admitProposal(event: SequenceReorderEvent<ID>): boolean {
     const order = getSequenceReorderOrder(this.getSnapshot().state);
+    if (event.type === 'move-items') return event.beforeID === null || order.contains(event.beforeID);
     return order.indexOf(event.id) !== null && (!('targetID' in event) || order.indexOf(event.targetID) !== null);
   }
   protected destination(event: SequenceReorderEvent<ID>): TreeReorderDropTarget<ID> {
+    if (event.type === 'move-items') return { parentID: null, beforeID: event.beforeID };
     const order = getSequenceReorderOrder(this.keyboardState());
     let beforeID = event.type === 'move-to-end' ? null : event.type === 'move-to-start' ? order.at(0)
       : event.type === 'move-before' ? event.targetID : order.at(order.indexOf(event.targetID)! + 1);
     if (beforeID === event.id) beforeID = order.at(order.indexOf(event.id)! + 1);
     return { parentID: null, beforeID };
+  }
+  protected normalizeCohort(ids: readonly ID[], state: SequenceReorderState<ID>): readonly ID[] | null {
+    return getSequenceReorderCohort(state, ids);
+  }
+  protected moveCohort(ids: readonly ID[], target: TreeReorderDropTarget<ID>, state: SequenceReorderState<ID>): SequenceReorderEvent<ID> {
+    const order = getSequenceReorderOrder(state);
+    const before = target.beforeID ?? null;
+    const index = before === null ? null : order.indexOf(before);
+    return { type: 'move-items', ids, beforeID: index === null ? before : this.unselectedSibling(order, index) };
   }
   protected projectItem(element: HTMLElement, id: ID): void {
     const order = getSequenceReorderOrder(this.getSnapshot().state);
@@ -746,32 +806,37 @@ class DOMTreeReorder<ID extends StableID>
     if ((!event.altKey && this.getInteractionSnapshot().input !== 'keyboard') || event.ctrlKey || event.metaKey) return false;
     const tree = getTreeReorderHierarchy(this.keyboardState());
     if (!tree.has(id)) return false;
+    const focusID = id;
+    id = this.movingRoot(id, tree);
     const parentID = tree.parentOf(id);
     const siblings = parentID === null ? tree.roots : tree.childrenOf(parentID)!;
     const index = siblings.indexOf(id)!;
+    const previous = this.unselectedSibling(siblings, index - 1, -1);
+    const next = this.unselectedSibling(siblings, index + 1);
+    const afterNext = next === null ? null : siblings.at(siblings.indexOf(next)! + 1);
     let semantic: TreeReorderEvent<ID> | null = null;
     if (this.#scope.columns) {
       if (event.isComposing || event.shiftKey) return false;
       if (event.key === 'Home') semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(0) };
       else if (event.key === 'End') semantic = { type: 'move-node', id, parentID, beforeID: null };
-      else if (parentID !== null && event.key === 'ArrowUp' && index > 0) semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(index - 1) };
-      else if (parentID !== null && event.key === 'ArrowDown' && index < siblings.size - 1) semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(index + 2) };
+      else if (parentID !== null && event.key === 'ArrowUp' && previous !== null) semantic = { type: 'move-node', id, parentID, beforeID: previous };
+      else if (parentID !== null && event.key === 'ArrowDown' && next !== null) semantic = { type: 'move-node', id, parentID, beforeID: afterNext };
       else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         const forward = (event.key === 'ArrowRight') !== (this.#scope.direction === 'rtl');
         const column = parentID ?? id, columnIndex = tree.roots.indexOf(column)!;
-        const destination = tree.roots.at(columnIndex + (forward ? 1 : -1));
+        const destination = this.unselectedSibling(tree.roots, columnIndex + (forward ? 1 : -1), forward ? 1 : -1);
         if (destination !== null) semantic = parentID === null
-          ? { type: 'move-node', id, parentID: null, beforeID: forward ? tree.roots.at(columnIndex + 2) : destination }
+          ? { type: 'move-node', id, parentID: null, beforeID: forward ? tree.roots.at(tree.roots.indexOf(destination)! + 1) : destination }
           : { type: 'move-node', id, parentID: destination, beforeID: null };
       }
       if (semantic === null) return false;
-      const accepted = this.keyboardStep(semantic); if (accepted) this.focus(id); return accepted;
+      const accepted = this.keyboardStep(semantic); if (accepted) this.focus(focusID); return accepted;
     }
     if (event.key === 'Home') semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(0) };
     else if (event.key === 'End') semantic = { type: 'move-node', id, parentID, beforeID: null };
-    else if (event.key === 'ArrowUp' && index > 0) semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(index - 1) };
-    else if (event.key === 'ArrowDown' && index < siblings.size - 1) semantic = { type: 'move-node', id, parentID, beforeID: siblings.at(index + 2) };
-    else if (event.key === 'ArrowRight' && index > 0) semantic = { type: 'move-node', id, parentID: siblings.at(index - 1), beforeID: null };
+    else if (event.key === 'ArrowUp' && previous !== null) semantic = { type: 'move-node', id, parentID, beforeID: previous };
+    else if (event.key === 'ArrowDown' && next !== null) semantic = { type: 'move-node', id, parentID, beforeID: afterNext };
+    else if (event.key === 'ArrowRight' && previous !== null) semantic = { type: 'move-node', id, parentID: previous, beforeID: null };
     else if (event.key === 'ArrowLeft' && parentID !== null) {
       const grandparentID = tree.parentOf(parentID);
       const parentSiblings = grandparentID === null ? tree.roots : tree.childrenOf(grandparentID)!;
@@ -779,7 +844,7 @@ class DOMTreeReorder<ID extends StableID>
     }
     if (semantic === null) return false;
     const ok = this.keyboardStep(semantic);
-    if (ok) this.focus(id);
+    if (ok) this.focus(focusID);
     return ok;
   }
   protected reducePreview(state: TreeReorderState<ID>, event: TreeReorderEvent<ID>): Result<TreeReorderState<ID>> {
@@ -791,7 +856,33 @@ class DOMTreeReorder<ID extends StableID>
         : result.ok ? { ok: true, value: result.value.state } : result;
     } finally { this.#scope.reducing = false; }
   }
-  protected admitProposal(event: TreeReorderEvent<ID>): boolean { return event.type === 'move-node' && this.canMove(event.id, event); }
+  protected admitProposal(event: TreeReorderEvent<ID>): boolean {
+    if (event.type === 'move-node') return this.canMove(event.id, event);
+    if (!this.active || this.#scope.reducing) return false;
+    this.#scope.reducing = true;
+    try {
+      const allowed = canMoveTreeReorderNodes(this.getSnapshot().state, event, this.#scope.policies);
+      return this.active && allowed;
+    } finally { this.#scope.reducing = false; }
+  }
+  protected normalizeCohort(ids: readonly ID[], state: TreeReorderState<ID>): readonly ID[] | null {
+    return getTreeReorderCohort(state, ids);
+  }
+  protected moveCohort(ids: readonly ID[], target: TreeReorderDropTarget<ID>, state: TreeReorderState<ID>): TreeReorderEvent<ID> {
+    const tree = getTreeReorderHierarchy(state);
+    const siblings = target.parentID === null ? tree.roots : tree.childrenOf(target.parentID);
+    const before = target.beforeID ?? null;
+    const index = before === null ? null : siblings?.indexOf(before);
+    const beforeID = index == null || siblings == null ? before : this.unselectedSibling(siblings, index);
+    return { type: 'move-nodes', ids, parentID: target.parentID, beforeID };
+  }
+  private movingRoot(id: ID, tree: Tree<ID>): ID {
+    if (!this.hasCohort) return id;
+    for (let current: ID | null = id; current !== null; current = tree.parentOf(current)) {
+      if (this.isCohortMember(current)) return current;
+    }
+    return id;
+  }
   protected destination(event: TreeReorderEvent<ID>): TreeReorderDropTarget<ID> { return { parentID: event.parentID, beforeID: event.beforeID ?? null }; }
   protected dropEvent(id: ID, target: DropTarget<ID>): Extract<TreeReorderEvent<ID>, { type: 'move-node' }> | null {
     if (target.kind === 'position') {
@@ -800,6 +891,7 @@ class DOMTreeReorder<ID extends StableID>
     }
     const targetID = target.id, before = target.before;
     const tree = getTreeReorderHierarchy(this.getSnapshot().state);
+    id = this.movingRoot(id, tree);
     if (!tree.has(targetID)) return null;
     if (this.#scope.columns && tree.parentOf(id) !== null && tree.parentOf(targetID) === null) {
       return { type: 'move-node', id, parentID: targetID, beforeID: null };

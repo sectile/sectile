@@ -107,8 +107,9 @@
       "id": "WI-014:reorder-grid-closure",
       "change": "signature-changed",
       "before": { "subpath": "./reorder" },
-      "symbols": ["Grid declaration closure"],
-      "replacement": { "package": "@sectile/core", "subpath": "./reorder" }
+      "symbols": ["Grid declaration closure", "SequenceReorderEvent", "getSequenceReorderCohort", "getTreeReorderCohort", "canMoveTreeReorderNodes"],
+      "replacement": { "package": "@sectile/core", "subpath": "./reorder" },
+      "removalReason": "Handle move-items in exhaustive SequenceReorderEvent switches. Index-backed cohort helpers support sequence and tree batch interactions."
     },
     {
       "id": "WI-014:tree-observations",

@@ -10,7 +10,7 @@
     "errorRemoved": "breaking"
   },
   "baseline": {
-    "publicSignatureFingerprint": "bad7f464c0957b6f6073a1da7b87d0adbfd810f400936fea3d21c909971f9d9b",
+    "publicSignatureFingerprint": "a6ca2980c5e5fa96ae796d849ce0aa0c6e7383b48e38b0632bda2997d60bb8e2",
     "subpaths": [
       ".",
       "./accordion",
@@ -561,7 +561,7 @@
     }
   ],
   "acceptance": {
-    "classification": "minor",
-    "reason": "Add an explicit pointer activation option while preserving existing menu opening events"
+    "classification": "breaking",
+    "reason": "SequenceReorderEvent includes move-items and exhaustive switches must handle the new case. The cohort helpers are additive."
   }
 }

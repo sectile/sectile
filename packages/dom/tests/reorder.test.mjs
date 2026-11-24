@@ -50,6 +50,47 @@ test('DOM tree reorder supports sibling movement, indent, and outdent', () => {
   assert.equal(reorder.getSnapshot().state.nodes.find((node) => node.id === 'c').parentID, null);
 });
 
+test('selected sequence items share one pointer proposal and one commit', () => {
+  const root = new FakeElement();
+  const ids = ['a', 'b', 'c', 'd', 'e'];
+  const elements = ids.map((_id, index) => new FakeElement(index * 40));
+  const changes = [];
+  let selected = ['d', 'b'];
+  const reorder = createReorder({ root, ids, getSourceIDs: () => selected, onOrderChange: order => changes.push(order) });
+  try {
+    elements.forEach((element, index) => reorder.setItemAttributes(element, ids[index]));
+    root.emit('pointerdown', pointer(elements[1], 1, 45));
+    selected = ['b'];
+    root.emit('pointermove', pointer(elements[0], 1, 5));
+    assert.deepEqual(reorder.getInteractionSnapshot().sourceIDs, ['b', 'd']);
+    assert.deepEqual(reorder.getSnapshot().state.ids, ids);
+    assert.deepEqual(reorder.getPreviewState().value.ids, ['b', 'd', 'a', 'c', 'e']);
+    root.emit('pointerup', pointer(elements[0], 1, 5));
+    assert.deepEqual(changes, [['b', 'd', 'a', 'c', 'e']]);
+  } finally { reorder.disconnect(); }
+});
+
+test('tree keyboard preview moves an ancestor once while keeping the lifted descendant primary', () => {
+  const root = new FakeElement();
+  const nodes = [{ id: 'a', parentID: null }, { id: 'child', parentID: 'a' }, { id: 'b', parentID: null }, { id: 'c', parentID: null }];
+  const elements = nodes.map((_node, index) => new FakeElement(index * 40));
+  const changes = [];
+  const reorder = createReorder({ root, nodes, keyboardMode: 'preview', getSourceIDs: () => ['child', 'a', 'c'],
+    onOrderChange: order => changes.push(order.filter(node => node.parentID === null).map(node => node.id)) });
+  const key = value => root.emit('keydown', { ...keyboard(elements[1], value), altKey: false });
+  try {
+    elements.forEach((element, index) => reorder.setItemAttributes(element, nodes[index].id));
+    key(' '); key('End');
+    assert.equal(reorder.getInteractionSnapshot().sourceID, 'child');
+    assert.deepEqual(reorder.getInteractionSnapshot().sourceIDs, ['a', 'c']);
+    assert.deepEqual(reorder.getPreviewState().value.nodes.filter(node => node.parentID === null).map(node => node.id), ['b', 'a', 'c']);
+    assert.deepEqual(changes, []);
+    key('Enter');
+    assert.deepEqual(changes, [['b', 'a', 'c']]);
+    assert.equal(reorder.getSnapshot().state.nodes.find(node => node.id === 'child').parentID, 'a');
+  } finally { reorder.disconnect(); }
+});
+
 test('DOM reorder releases removed items, active captures and queued focus across replacement churn', async () => {
   for (const tree of [false, true]) {
     const root = new FakeElement();
