@@ -27,6 +27,7 @@ import {
   readHostSurfaceFrame,
   requireOwned,
   clampHostScroll,
+  hasLeftwardScroll,
 } from './scroll-host.js';
 import { normalizeViewportInsets, sameOverscan, sameInsets, sameRect } from './viewport.js';
 import { unwrap, SectileResultError } from '@sectile/core/result';
@@ -78,6 +79,8 @@ class DOMVirtualizer<
   Mutation,
 > implements VirtualizerConnection<State, ID, Measurement, Mutation> {
   readonly #host: VirtualScrollHost;
+  #leftwardScroll: boolean;
+  #surfaceLeftward: boolean;
   readonly #strategy: VirtualLayoutStrategy<State, ID, Measurement, Mutation>;
   readonly #measure:
     VirtualMeasurementResolver<State, ID, Measurement> | undefined;
@@ -131,6 +134,8 @@ class DOMVirtualizer<
     this.#onStateChange = options.onStateChange;
     this.#onError = options.onError;
     this.#viewportInsets = normalizeViewportInsets(options.viewportInsets);
+    this.#leftwardScroll = hasLeftwardScroll(host);
+    this.#surfaceLeftward = this.#leftwardScroll;
     this.#surfaceFrame = readHostSurfaceFrame(host, this.#viewportInsets);
     this.#plan = unwrap(this.#query(
       this.#state,
@@ -391,7 +396,7 @@ class DOMVirtualizer<
   ): DOMVirtualResult<VirtualPoint> {
     this.#requireConnected();
     this.#cancelScheduled();
-    const prepared = this.#prepareFrame(this.#viewportInsets);
+    const prepared = this.#prepareFrame(this.#viewportInsets, true);
     if (!prepared.ok) return prepared;
     const measured = this.#resolveMeasurements(this.#state, [], false);
     if (!measured.ok) return measured;
@@ -466,13 +471,14 @@ class DOMVirtualizer<
     this.#dirty = 0;
   }
 
-  #readPhysicalViewport(): VirtualRect {
+  #readPhysicalViewport(scrollLeft?: number): VirtualRect {
     const readViewport = this.#readViewport;
     if (readViewport !== undefined) return readViewport(this.#host[1]);
     const scroll = this.#host[4];
     const viewport = this.#host[5];
+    const x = scrollLeft ?? scroll.scrollLeft;
     return {
-      x: Math.max(0, scroll.scrollLeft),
+      x: this.#leftwardScroll ? Math.min(0, x) : Math.max(0, x),
       y: Math.max(0, scroll.scrollTop),
       width: Math.max(0, viewport.clientWidth),
       height: Math.max(0, viewport.clientHeight),
@@ -535,10 +541,15 @@ class DOMVirtualizer<
 
   #prepareFrame(
     viewportInsets: VirtualInsets,
+    readDirection = false,
   ): DOMVirtualResult<FramePreparation> {
     return this.#tryVirtual(() => {
       const frameDirty = (this.#dirty & 2) !== 0;
-      const nextFrame = frameDirty
+      const scrollLeft = this.#readViewport === undefined ? this.#host[4].scrollLeft : 0;
+      const signChanged = this.#leftwardScroll ? scrollLeft > 0 : scrollLeft < 0;
+      if (frameDirty || readDirection || signChanged) this.#leftwardScroll = hasLeftwardScroll(this.#host);
+      const directionChanged = this.#surfaceLeftward !== this.#leftwardScroll;
+      const nextFrame = frameDirty || directionChanged
         ? readHostSurfaceFrame(this.#host, viewportInsets, this.#surfaceFrame)
         : sameInsets(this.#viewportInsets, viewportInsets)
           ? this.#surfaceFrame
@@ -547,10 +558,10 @@ class DOMVirtualizer<
               viewportInsets,
             });
       return [
-        this.#surfaceFrame,
+        directionChanged ? nextFrame : this.#surfaceFrame,
         nextFrame,
-        this.#readPhysicalViewport(),
-        this.#dirty !== 0,
+        this.#readPhysicalViewport(scrollLeft),
+        this.#dirty !== 0 || directionChanged,
       ] as const;
     });
   }
@@ -705,7 +716,7 @@ class DOMVirtualizer<
     const queried = this.#tryVirtual(() => {
       let accepted = false;
       try {
-        this.#writePhysicalScroll(clampHostScroll(this.#host, target));
+        this.#writePhysicalScroll(clampHostScroll(this.#host, target, this.#leftwardScroll));
         const viewport = this.#readPhysicalViewport();
         const plan = this.#strategy.tryQuery(state, {
           viewport: toVirtualViewport(viewport, frame),
@@ -736,6 +747,7 @@ class DOMVirtualizer<
     this.#overscan = overscan;
     this.#viewportInsets = viewportInsets;
     this.#surfaceFrame = surfaceFrame;
+    this.#surfaceLeftward = this.#leftwardScroll;
     this.#dirty = 0;
     this.#plan = plan;
     this.#indexPlacements(plan);

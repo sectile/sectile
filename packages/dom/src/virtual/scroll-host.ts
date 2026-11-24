@@ -77,6 +77,7 @@ function stableDocumentOrigin(value: number, previous: number, rect: number, scr
 export function clampHostScroll(
   host: VirtualScrollHost,
   point: VirtualPoint,
+  leftward: boolean,
 ): VirtualPoint {
   const scrollport = host[2];
   const maxX = scrollport !== null
@@ -90,9 +91,15 @@ export function clampHostScroll(
     ? Math.max(0, scrollport.scrollHeight - scrollport.clientHeight)
     : null;
   return Object.freeze({
-    x: maxX === null ? Math.max(0, point.x) : Math.min(Math.max(0, point.x), maxX),
+    x: leftward ? Math.min(0, Math.max(-(maxX ?? Infinity), point.x))
+      : maxX === null ? Math.max(0, point.x) : Math.min(Math.max(0, point.x), maxX),
     y: maxY === null ? Math.max(0, point.y) : Math.min(Math.max(0, point.y), maxY),
   });
+}
+
+export function hasLeftwardScroll(host: VirtualScrollHost): boolean {
+  const style = host[0].defaultView?.getComputedStyle?.(host[4]);
+  return style?.direction === 'rtl' || style?.writingMode === 'vertical-rl' || style?.writingMode === 'sideways-rl';
 }
 
 export function requireOwned(element: HTMLElement, ownerDocument: Document): void {

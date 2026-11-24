@@ -110,6 +110,32 @@ test('ordinary scroll reuses the cached surface frame without element geometry r
   connection.disconnect();
 });
 
+test('signed scroll direction changes rebase the surface once without overriding native scroll', () => {
+  const fixture = createFixture();
+  let direction = 'ltr', styleReads = 0;
+  fixture.scrollport.ownerDocument.defaultView = { getComputedStyle: () => { styleReads++; return { direction }; } };
+  const connection = createVirtualizer(fixture.options);
+  try {
+    fixture.resetEvidence();
+    styleReads = 0;
+    direction = 'rtl';
+    fixture.surface.originX = -600;
+    fixture.scrollport.scrollLeft = -100;
+    fixture.scrollport.dispatch('scroll');
+    fixture.runFrame();
+    assert.equal(connection.getPlan().viewport.x, 500);
+    assert.equal(styleReads, 1);
+    assert.equal(fixture.surface.geometryReads, 1);
+    assert.deepEqual(fixture.scrollport.writes, []);
+    fixture.scrollport.scrollLeft = -120;
+    fixture.scrollport.dispatch('scroll');
+    fixture.runFrame();
+    assert.equal(connection.getPlan().viewport.x, 480);
+    assert.equal(styleReads, 1);
+    assert.equal(fixture.surface.geometryReads, 1);
+  } finally { connection.disconnect(); }
+});
+
 test('document scrollport projects restored fractional page scroll through its own realm', () => {
   let observedViewport;
   const fixture = createDocumentFixture({
