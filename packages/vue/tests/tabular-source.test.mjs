@@ -11,6 +11,44 @@ const columns = [{ id: 'name', capabilities: ['edit'] }];
 const response = (request, name = 'Ada') => ({ protocolVersion: 1, requestID: request.requestID, sourceGeneration: request.sourceGeneration, queryRevision: request.queryRevision, expansionRevision: request.expansionRevision, viewRevision: 1, access: request.access, matchingLeafCount: { kind: 'known', value: 1 }, visibleRowCount: { kind: 'known', value: 1 }, rows: [{ kind: 'leaf', id: 'r1', cells: { name } }], columnSchema: { revision: request.columnSchemaRevision, columns, headers: [] }, removedRowIDs: [] });
 const waitFor = async (read, expected) => { for (let index = 0; index < 20; index += 1) { if (read() === expected) return; await new Promise((resolve) => setTimeout(resolve, 0)); } assert.equal(read(), expected); };
 
+test('a rejected source response retires its request before a later retry', async () => {
+  let table;
+  const host = document.createElement('div');
+  const app = createApp({ setup() {
+    table = useDataTable({ source: request => ({ ...response(request), requestID: request.requestID + 10 }) });
+    return () => h('div');
+  } });
+  app.mount(host);
+  try {
+    await waitFor(() => table.status.value, 'error');
+    assert.equal(table.error.value.code, 'response-envelope-mismatch');
+    assert.equal(table.requestState.value.pendingRequest, null);
+    table.cancel();
+    assert.equal(table.requestState.value.pendingRequest, null);
+    table.replaceResolver(request => response(request));
+    await waitFor(() => table.status.value, 'success');
+    assert.equal(table.requestState.value.pendingRequest, null);
+  } finally { app.unmount(); }
+});
+
+test('an unreadable response row settles through the normal source error path', async () => {
+  let table;
+  const app = createApp({ setup() {
+    table = useDataTable({ source: request => {
+      const view = response(request);
+      Object.defineProperty(view.rows, 0, { get: () => { throw new Error('Unreadable row'); } });
+      return view;
+    } });
+    return () => h('div');
+  } });
+  app.mount(document.createElement('div'));
+  try {
+    await waitFor(() => table.status.value, 'error');
+    assert.equal(table.error.value.code, 'response-envelope-mismatch');
+    assert.equal(table.requestState.value.pendingRequest, null);
+  } finally { app.unmount(); }
+});
+
 test('Vue Tabular source is owned by the controller and starts only after mount', async () => {
   let calls = 0; let source;
   const app = createApp({ setup() { source = useDataTable({ source: async (request) => { calls += 1; return response(request); } }); const DataTable = createDataTableComponents(source); return () => h(DataTable.Provider, null, { default: () => h(DataTable.Root) }); } });

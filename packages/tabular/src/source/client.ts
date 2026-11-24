@@ -253,6 +253,7 @@ export function synchronizeTabularView(
   let matchingLeafCountInput: unknown;
   let visibleRowCountInput: unknown;
   let rowsInput: unknown;
+  let rowCount: number;
   let removedRowIDsInput: unknown;
   let columnSchemaInput: unknown;
   try {
@@ -266,6 +267,10 @@ export function synchronizeTabularView(
     matchingLeafCountInput = response.matchingLeafCount;
     visibleRowCountInput = response.visibleRowCount;
     rowsInput = response.rows;
+    if (Array.isArray(rowsInput)) {
+      rowCount = rowsInput.length;
+      if (!isNonNegativeSafeInteger(rowCount)) return fail('transition-rejection', 'response-envelope-mismatch', 'Response rows require a safe array length.');
+    } else rowCount = Infinity;
     removedRowIDsInput = response.removedRowIDs;
     columnSchemaInput = response.columnSchema;
   } catch {
@@ -306,11 +311,16 @@ export function synchronizeTabularView(
   if (request.access.kind === 'page' && visibleRowCount.value.kind !== 'known') {
     return fail('transition-rejection', 'response-envelope-mismatch', 'Page responses require a known visible row count.');
   }
-  const exceeded = checkResponseRowBudget(Array.isArray(rowsInput) ? rowsInput.length : Infinity, schema.value.schema.columns.length, limits);
+  const exceeded = checkResponseRowBudget(rowCount, schema.value.schema.columns.length, limits);
   if (exceeded !== null) return exceeded;
-  const rows = normalizeRows(rowsInput as readonly TabularRow[], schema.value.schema.columns, limits);
+  const rows = normalizeRows(rowsInput as readonly TabularRow[], rowCount, schema.value.schema.columns, limits);
   if (!rows.ok) return rows;
-  const removed = normalizeIDs(removedRowIDsInput as readonly string[], 'removedRowID', limits, limits.maxScanRecords);
+  let removed: ReturnType<typeof normalizeIDs>;
+  try {
+    removed = normalizeIDs(removedRowIDsInput as readonly string[], 'removedRowID', limits, limits.maxScanRecords);
+  } catch {
+    return fail('transition-rejection', 'response-envelope-mismatch', 'Removed row identities must be readable.');
+  }
   if (!removed.ok) return removed;
   const crossInvariant = validateResponseCrossInvariants(
     request,
@@ -910,6 +920,7 @@ function validateColumnSchema(
 
 function normalizeRows(
   input: readonly TabularRow[],
+  rowCount: number,
   columns: readonly TabularColumnDefinition[],
   limits: TabularLimits,
 ): TabularResult<{ readonly rows: readonly TabularResolvedRow[]; readonly indexes: ReadonlyMap<TabularRowID | TabularGroupID, number> }> {
@@ -919,11 +930,12 @@ function normalizeRows(
   }));
   const indexes = new Map<TabularRowID | TabularGroupID, number>();
   const result: TabularResolvedRow[] = [];
-  for (const row of input) {
-    if (row === null || typeof row !== 'object') {
-      return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row must be a leaf or group.');
-    }
+  for (let index = 0; index < rowCount; index += 1) {
     try {
+      const row = input[index];
+      if (row === null || typeof row !== 'object') {
+        return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row must be a leaf or group.');
+      }
       const kind = row.kind;
       if (kind !== 'leaf' && kind !== 'group') {
         return fail('transition-rejection', 'response-envelope-mismatch', 'Every response row must be a leaf or group.');
@@ -1085,6 +1097,7 @@ function normalizeIDs(
 ): TabularResult<readonly string[]> {
   if (!Array.isArray(input)) return fail('transition-rejection', 'response-envelope-mismatch', `${label} list must be an array.`);
   const length = input.length;
+  if (!isNonNegativeSafeInteger(length)) return fail('transition-rejection', 'response-envelope-mismatch', `${label} list requires a safe array length.`);
   if (ceiling !== undefined && length > ceiling) {
     return fail('resource-rejection', 'scan-record-ceiling-exceeded', `${label} list exceeds the configured source cardinality ceiling.`, { actual: length, ceiling });
   }

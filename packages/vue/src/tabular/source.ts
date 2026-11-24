@@ -35,8 +35,9 @@ export function useProfileSource<State, Event, Command>(
   let sequence = 0;
 
   const setStatus = (next: SourceStatus): void => {
+    const publication = sequence;
     status.value = next;
-    options.onStatusChange?.(next);
+    if (!disposed && sequence === publication) options.onStatusChange?.(next);
   };
   const abandon = (requestID: number): void => { controller.abandonRequest(requestID); };
   const cancel = (): void => {
@@ -66,33 +67,35 @@ export function useProfileSource<State, Event, Command>(
     const abort = new AbortController();
     const owner = { requestID: request.requestID, abort };
     const executeResolver = resolver;
+    const ownsRequest = (): boolean => !disposed && !abort.signal.aborted && active === owner;
     active = owner;
     error.value = null;
+    if (!ownsRequest()) return;
     setStatus('loading');
-    Promise.resolve().then(() => {
-      if (disposed || abort.signal.aborted || active !== owner) return undefined;
-      return executeResolver(request, { signal: abort.signal });
-    }).then((response) => {
-      if (response === undefined || disposed || abort.signal.aborted || active !== owner) return;
-      const synchronized = controller.synchronizeView(response);
-      if (disposed || abort.signal.aborted || active !== owner) return;
-      if (!synchronized.ok) {
-        active = null;
-        error.value = synchronized.error;
-        setStatus('error');
-        options.onError?.(synchronized.error);
-        return;
-      }
-      active = null;
-      setStatus('success');
-    }, (reason: unknown) => {
-      if (disposed || abort.signal.aborted || active !== owner) return;
+    const fail = (reason: unknown): void => {
+      if (!ownsRequest()) return;
       active = null;
       abandon(request.requestID);
+      if (disposed || sequence !== execution) return;
       error.value = reason;
+      if (disposed || sequence !== execution) return;
       setStatus('error');
-      options.onError?.(reason);
-    });
+      if (!disposed && sequence === execution) options.onError?.(reason);
+    };
+    Promise.resolve().then(() => {
+      if (!ownsRequest()) return undefined;
+      return executeResolver(request, { signal: abort.signal });
+    }).then((response) => {
+      if (!ownsRequest()) return;
+      const synchronized = controller.synchronizeView(response as TabularViewResponse);
+      if (!synchronized.ok) {
+        fail(synchronized.error);
+        return;
+      }
+      if (!ownsRequest()) return;
+      active = null;
+      setStatus('success');
+    }, fail);
   };
   const attached = controller.attachRequestExecutor((command) => execute((command as unknown as { readonly request: TabularRequest }).request));
   if (!attached.ok) throw new TypeError(attached.error.message);
