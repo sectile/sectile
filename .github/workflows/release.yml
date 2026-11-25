@@ -88,20 +88,23 @@ jobs:
           path: release-artifacts
       - name: Publish verified npm bytes with OIDC
         id: npm
-        uses: releaseway/npm-actions@c61fca168e342a622406ef7ee85a27c3a51e8de6 # v0.8.0
+        uses: releaseway/npm-actions@9f054e6aa942e473d18817056f296ad5f560117b # v0.9.0
         with:
           artifacts-manifest: release-artifacts/artifacts.json
+          publish-concurrency: "4"
       - name: Collect publication evidence
         if: always()
         env:
           REPORT: ${{ steps.npm.outputs.report-path }}
           DIAGNOSTICS: ${{ steps.npm.outputs.diagnostics-path }}
           ARTIFACT_REPORT: ${{ steps.npm.outputs.artifact-report-path }}
+          EXECUTION_REPORT: ${{ steps.npm.outputs.execution-report-path }}
         run: |
           mkdir -p release-evidence
           if test -n "$REPORT"; then cp -- "$REPORT" release-evidence/npm-report.json; fi
           if test -n "$DIAGNOSTICS"; then cp -- "$DIAGNOSTICS" release-evidence/npm-diagnostics.json; fi
           if test -n "$ARTIFACT_REPORT"; then cp -- "$ARTIFACT_REPORT" release-evidence/npm-artifact-report.json; fi
+          if test -n "$EXECUTION_REPORT"; then cp -- "$EXECUTION_REPORT" release-evidence/npm-execution-report.json; fi
       - id: evidence
         if: always()
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0

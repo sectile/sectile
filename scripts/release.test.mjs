@@ -71,8 +71,11 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
   const publicationJob = workflow.slice(workflow.indexOf('\n  publish:'), workflow.indexOf('\n  github-release:'));
   assert.match(publicationJob, /permissions:\n      contents: read\n      id-token: write/u);
   assert.match(publicationJob, /artifacts-manifest: release-artifacts\/artifacts.json/u);
+  assert.match(publicationJob, /publish-concurrency: "(?:[2-9]|[1-9][0-9]+)"/u);
   assert.ok(publicationJob.includes('artifact-ids: ${{ needs.prepare.outputs.artifact-id }}'));
   assert.match(publicationJob, /artifact-report-path/u);
+  assert.ok(publicationJob.includes('EXECUTION_REPORT: ${{ steps.npm.outputs.execution-report-path }}'));
+  assert.ok(publicationJob.includes('cp -- "$EXECUTION_REPORT" release-evidence/npm-execution-report.json'));
   assert.match(publicationJob, /if: always\(\)/u);
   assert.match(workflow, /group: release-main/u);
   assert.match(preparation, /notes: changelog/u);
@@ -86,9 +89,8 @@ test('release hands verified artifacts to source-bound Releaseway publishers wit
   assert.match(githubJob, /notes-existing: verify/u);
   assert.match(githubJob, /release-artifacts\/artifacts.json/u);
   assert.match(githubJob, /release-evidence\/\*\.json/u);
-  for (const action of ['releaseway/npm-actions', 'releaseway/actions']) {
-    assert.match(workflow, new RegExp(`uses: ${action}@[0-9a-f]{40} # v0\\.8\\.0`, 'u'));
-  }
+  assert.match(publicationJob, /uses: releaseway\/npm-actions@[0-9a-f]{40} # v0\.9\.0/u);
+  assert.match(workflow, /uses: releaseway\/actions@[0-9a-f]{40} # v0\.8\.0/u);
   assert.match(readText(join(root, '.github/npm/packages.yml')), /publish:\n  mode: direct/u);
   assert.equal(workflow.includes('@sectile/docs'), false, 'docs remain local-only');
   assert.equal(workflow.includes('docs/dist'), false);
