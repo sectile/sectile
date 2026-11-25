@@ -23,6 +23,15 @@ The root fixtures use their own measured compression results. All eight fixture
 results retain their dependency closure. Unused Reorder imports erase on both
 bundlers, and all nine packages fit the existing install ceilings.
 
+Core's package JavaScript ceiling moves from 468,000 to 471,000 bytes. The
+published `0.16.1` artifact contains 467,861 JavaScript bytes. The candidate
+contains 470,922 bytes under both Node 24.22.1 locally and Node 24.22.3 in CI.
+All 3,061 additional JavaScript bytes are in `reorder.js`, which grows from
+13,175 to 16,236 bytes. The new ceiling leaves 78 bytes of headroom. Keeping
+cohort normalization and atomic mutation in Core avoids duplicating portable
+rules in the hosts. The npm and pnpm install budgets and the existing focused
+Core bundle budgets still apply.
+
 ## November 2026 remote selection and temporal formats
 
 Remote group selection raises the Tabular JavaScript ceiling from 165,000 to
