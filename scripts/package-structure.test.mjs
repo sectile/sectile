@@ -144,13 +144,16 @@ test('Vue Temporal capability adapters, presentation and provider remain below p
   assertStructure(inspectStructure(graph, policy, classes));
   const lower = graph.modules.filter(({ path }) => path.startsWith('packages/vue/src/temporal/')
     && ['temporal-capability', 'temporal-capabilities', 'temporal-presentation', 'temporal-provider'].includes(classes.get(path).role));
+  const formatContract = 'packages/vue/src/temporal/internal/editing-format-contract.ts';
   for (const { path: source } of lower) {
     const role = classes.get(source).role;
     const allowed = role === 'temporal-presentation' ? ['temporal-provider'] : ['temporal-capability'];
     if (/\/capabilities\/date-time(?:-range)?-picker\.ts$/u.test(source)) allowed.push('temporal-presentation');
     for (const edge of graph.edges.filter((edge) => edge.source === source && edge.target !== null)) {
       const target = classes.get(edge.target);
-      if (target.package === 'vue') assert.ok(allowed.includes(target.role), `${source} must not import ${edge.target}`);
+      const sharedFormatType = edge.target === formatContract && edge.phase === 'type'
+        && (role === 'temporal-capability' || role === 'temporal-provider');
+      if (target.package === 'vue') assert.ok(sharedFormatType || allowed.includes(target.role), `${source} must not import ${edge.target}`);
     }
     const forbidden = ['temporal/picker.ts', 'temporal/date-picker.ts', 'temporal/date-field.ts', 'form/root.ts'];
     const peer = source.endsWith('/date-picker.ts') ? 'temporal/capabilities/year-picker.ts' : 'temporal/capabilities/date-picker.ts';
@@ -162,6 +165,7 @@ test('Vue Temporal capability adapters, presentation and provider remain below p
       }
     }
   }
+  assert.ok(!graph.edges.some(({ source, target }) => source === formatContract && target !== null && classes.get(target).package === 'vue'));
   const formatImport = { source: 'packages/vue/src/temporal/picker.ts', target: 'packages/vue/src/temporal/internal/time-presentation.ts',
     targetPackage: '@sectile/vue', phase: 'value', kind: 'import' };
   assert.throws(() => assertStructure(inspectStructure({ ...graph, edges: [...graph.edges, formatImport] }, policy, classes)), /direction/u);
@@ -862,7 +866,8 @@ test('DOM overlay infrastructure keeps lower resource owners below public profil
       if (visited.has(path)) continue;
       visited.add(path);
       const owner = classes.get(path);
-      if (owner.package === 'dom') assert.ok(allowed.includes(owner.role), path);
+      const composedTreeSupport = allowed.includes('viewport') && path === 'packages/dom/src/interaction/gesture.ts';
+      if (owner.package === 'dom') assert.ok(composedTreeSupport || allowed.includes(owner.role), path);
       pending.push(...dependencies.get(path));
     }
     for (const target of ['overlay/popup/connection.ts', 'overlay/menu/control.ts', 'dialog.ts', 'popover.ts', 'menu.ts']) {
