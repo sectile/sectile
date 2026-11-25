@@ -24,6 +24,36 @@ test('accepted earlier windows restore a retained anchor after projection', () =
   } finally { feed.disconnect(); }
 });
 
+test('focus queued by an earlier request preserves the accepted window anchor', async () => {
+  const root = new FakeElement();
+  const anchor = new FakeElement();
+  const scrollport = { scrollTop: 0, contains: node => node === anchor, getBoundingClientRect: () => ({ top: 0 }) };
+  let layoutTop = 0;
+  anchor.getBoundingClientRect = () => ({ top: layoutTop - scrollport.scrollTop });
+  anchor.focus = ({ preventScroll } = {}) => {
+    anchor.focused = true;
+    if (!preventScroll && layoutTop > scrollport.scrollTop) scrollport.scrollTop = 65;
+  };
+  let acceptance;
+  const feed = createFeed({
+    root, items: ['a'], scrollport,
+    onRequestWindow(_direction, _anchor, revision, requestGeneration) {
+      acceptance = Promise.resolve().then(() => {
+        unwrap(feed.syncWindow({ items: ['earlier', 'a'], revision: revision + 1, requestGeneration }));
+        layoutTop = 150;
+      });
+    },
+  });
+  try {
+    feed.setItemAttributes(anchor, 'a');
+    assert.equal(feed.handleEvent('request-before'), true);
+    await acceptance;
+    feed.restoreScrollAnchor();
+    assert.equal(anchor.getBoundingClientRect().top, 0);
+    assert.equal(anchor.focused, true);
+  } finally { feed.disconnect(); }
+});
+
 test('feed compensation converts scaled viewport distance to local scroll distance', () => {
   const root = new FakeElement(), anchor = new FakeElement();
   let top = 16;

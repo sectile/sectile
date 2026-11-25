@@ -122,6 +122,7 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
   #active = true;
   #earlierRequest: { readonly id: ID; readonly generation: number } | undefined;
   #scrollAnchor: { readonly id: ID; readonly scrollTop: number; readonly offset: number } | undefined;
+  #pendingFocus: boolean | undefined;
 
   public constructor(
     options: FeedOptions<ID>,
@@ -188,8 +189,9 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
     const result = this.#runtime.replace(state);
     if (result.ok) {
       this.#refresh();
+      const preserveScroll = this.#scrollAnchor !== undefined;
       this.#options.onUpdate?.();
-      this.focusCurrent();
+      this.#queueFocus(preserveScroll);
     }
     return result;
   }
@@ -244,12 +246,24 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
   }
 
   public focusCurrent(): void {
-    const preventScroll = this.#scrollAnchor !== undefined;
+    this.#queueFocus(this.#scrollAnchor !== undefined);
+  }
+
+  #queueFocus(preventScroll: boolean): void {
+    if (!this.#active) return;
+    if (this.#pendingFocus !== undefined) {
+      // A window accepted during the same update also owns the queued focus.
+      this.#pendingFocus ||= preventScroll;
+      return;
+    }
+    this.#pendingFocus = preventScroll;
     queueMicrotask(() => {
-      if (!this.#active) return;
+      const preserveScroll = this.#pendingFocus;
+      this.#pendingFocus = undefined;
+      if (preserveScroll === undefined) return;
       const current = this.getSnapshot().state.cursor.current;
-      if (current === null) this.#options.root.focus({ preventScroll });
-      else this.#elements.get(current)?.element.focus({ preventScroll });
+      if (current === null) this.#options.root.focus({ preventScroll: preserveScroll });
+      else this.#elements.get(current)?.element.focus({ preventScroll: preserveScroll });
     });
   }
 
@@ -257,6 +271,7 @@ class DOMFeed<ID extends StableID> implements FeedConnection<ID> {
     this.#active = false;
     this.#earlierRequest = undefined;
     this.#scrollAnchor = undefined;
+    this.#pendingFocus = undefined;
     this.#options.root.removeEventListener('keydown', this.#keydown);
     for (const { element, click } of this.#elements.values()) {
       element.removeEventListener('click', click);
