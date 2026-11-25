@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.24.1
+
+### Changes
+
+- fix(dom): preserve Feed scroll when focusing a prepended anchor (ff0a3cfa9)
+
 ## 0.24.0
 
 ### Changes
