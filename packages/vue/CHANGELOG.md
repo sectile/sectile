@@ -1,5 +1,21 @@
 # @sectile/vue
 
+## 0.25.0
+
+### Changes
+
+- chore(verification): record scoped API and package evidence (a4a6e23a5)
+- feat(reorder)!: move selected items in a single batch (8124da8db)
+- feat(feed)!: preserve anchors when prepending a feed window (378f4c3f6)
+- feat(temporal): inherit editing formats from Vue providers (ca9d47021)
+- fix(vue): preserve Popup part props and slots in declarations (908648b22)
+- fix(a11y): preserve authored labels across DOM and Vue controls (d830af148)
+- fix(drawer): cancel swipes when pointer capture is revoked (2a9750cf1)
+- feat(slider): support RTL input and retain pointer ownership (a46b52413)
+- fix(tabular): settle requests after rejected responses (6ee8a4ba2)
+- fix(file-upload): retain independent configuration errors (45348597c)
+- fix(form): honor native submit and reset cancellation (b06ffd428)
+
 ## 0.24.0
 
 ### Changes

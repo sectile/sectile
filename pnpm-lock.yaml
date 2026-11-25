@@ -164,7 +164,7 @@ importers:
   packages/chart:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@sectile/tooling':
@@ -186,7 +186,7 @@ importers:
   packages/dom:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@sectile/chart':
@@ -217,7 +217,7 @@ importers:
   packages/form:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@sectile/tooling':
@@ -230,7 +230,7 @@ importers:
   packages/tabular:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@sectile/tooling':
@@ -246,7 +246,7 @@ importers:
   packages/temporal:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@sectile/tooling':
@@ -259,7 +259,7 @@ importers:
   packages/terminal:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
       '@sectile/temporal':
         specifier: workspace:^0.16.0
@@ -278,7 +278,7 @@ importers:
   packages/virtual:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
     devDependencies:
       '@chenglou/pretext':
@@ -294,10 +294,10 @@ importers:
   packages/vue:
     dependencies:
       '@sectile/core':
-        specifier: workspace:^0.16.1
+        specifier: workspace:^0.17.0
         version: link:../core
       '@sectile/dom':
-        specifier: workspace:^0.23.0
+        specifier: workspace:^0.24.0
         version: link:../dom
     devDependencies:
       '@sectile/chart':

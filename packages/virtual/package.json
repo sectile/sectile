@@ -1,6 +1,6 @@
 {
   "name": "@sectile/virtual",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "description": "Renderer-neutral dynamic virtualization and layout semantics for Sectile.",
   "license": "MIT",
   "type": "module",
@@ -87,7 +87,7 @@
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",

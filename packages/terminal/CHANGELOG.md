@@ -1,5 +1,11 @@
 # @sectile/terminal
 
+## 0.15.4
+
+### Changes
+
+- Update compatibility for @sectile/core.
+
 ## 0.15.3
 
 ### Changes

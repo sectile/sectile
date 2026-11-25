@@ -1,5 +1,12 @@
 # @sectile/tabular
 
+## 0.18.2
+
+### Changes
+
+- test(tabular): refresh response admission evidence (e007747a5)
+- fix(tabular): settle requests after rejected responses (6ee8a4ba2)
+
 ## 0.18.1
 
 ### Changes

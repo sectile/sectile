@@ -1,5 +1,11 @@
 # @sectile/virtual
 
+## 0.16.3
+
+### Changes
+
+- Update compatibility for @sectile/core.
+
 ## 0.16.2
 
 ### Changes

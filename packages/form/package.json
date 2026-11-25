@@ -1,6 +1,6 @@
 {
   "name": "@sectile/form",
-  "version": "0.15.3",
+  "version": "0.15.4",
   "description": "Renderer-neutral form paths, values, validation, and submission state for Sectile.",
   "license": "MIT",
   "type": "module",
@@ -77,7 +77,7 @@
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",

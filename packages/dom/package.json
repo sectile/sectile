@@ -1,6 +1,6 @@
 {
   "name": "@sectile/dom",
-  "version": "0.23.1",
+  "version": "0.24.0",
   "description": "DOM host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",
@@ -495,7 +495,7 @@
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "peerDependencies": {
     "@sectile/chart": "workspace:^0.16.1",

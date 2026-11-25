@@ -1,6 +1,6 @@
 {
   "name": "@sectile/vue",
-  "version": "0.24.0",
+  "version": "0.25.0",
   "description": "Headless Vue components for Sectile DOM interaction semantics.",
   "license": "MIT",
   "type": "module",
@@ -499,8 +499,8 @@
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1",
-    "@sectile/dom": "workspace:^0.23.0"
+    "@sectile/core": "workspace:^0.17.0",
+    "@sectile/dom": "workspace:^0.24.0"
   },
   "peerDependencies": {
     "@sectile/chart": "workspace:^0.16.1",

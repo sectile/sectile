@@ -1,6 +1,6 @@
 {
   "name": "@sectile/chart",
-  "version": "0.16.2",
+  "version": "0.16.3",
   "description": "Renderer-neutral chart models, interaction, and packed projections for Sectile.",
   "license": "MIT",
   "type": "module",
@@ -101,7 +101,7 @@
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",

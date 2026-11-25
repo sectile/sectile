@@ -1,5 +1,11 @@
 # @sectile/temporal
 
+## 0.16.2
+
+### Changes
+
+- Update compatibility for @sectile/core.
+
 ## 0.16.1
 
 ### Changes

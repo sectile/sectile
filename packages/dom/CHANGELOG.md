@@ -1,5 +1,19 @@
 # @sectile/dom
 
+## 0.24.0
+
+### Changes
+
+- chore(verification): record scoped API and package evidence (a4a6e23a5)
+- feat(reorder)!: move selected items in a single batch (8124da8db)
+- feat(feed)!: preserve anchors when prepending a feed window (378f4c3f6)
+- fix(virtual): read signed offsets and rebase on direction changes (e66a5c5f8)
+- fix(popup): resolve containing block scale and anchor visibility (c16ae7a27)
+- fix(a11y): preserve authored labels across DOM and Vue controls (d830af148)
+- fix(drawer): cancel swipes when pointer capture is revoked (2a9750cf1)
+- feat(slider): support RTL input and retain pointer ownership (a46b52413)
+- fix(form): honor native submit and reset cancellation (b06ffd428)
+
 ## 0.23.1
 
 ### Changes

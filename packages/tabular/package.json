@@ -1,6 +1,6 @@
 {
   "name": "@sectile/tabular",
-  "version": "0.18.1",
+  "version": "0.18.2",
   "description": "Renderer-neutral tabular data and interaction semantics for Sectile.",
   "license": "MIT",
   "type": "module",
@@ -83,7 +83,7 @@
     "benchmark": "pnpm --silent run build && node --expose-gc benchmarks/tabular.mjs"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "peerDependencies": {
     "@sectile/virtual": "workspace:^0.16.1"

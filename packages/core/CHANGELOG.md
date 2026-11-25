@@ -1,5 +1,12 @@
 # @sectile/core
 
+## 0.17.0
+
+### Changes
+
+- test(core): admit the measured atomic reorder footprint (81fce1212)
+- feat(reorder)!: move selected items in a single batch (8124da8db)
+
 ## 0.16.1
 
 ### Changes

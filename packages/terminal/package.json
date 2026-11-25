@@ -1,6 +1,6 @@
 {
   "name": "@sectile/terminal",
-  "version": "0.15.3",
+  "version": "0.15.4",
   "description": "Terminal host adapters for Sectile semantic interaction machines.",
   "license": "MIT",
   "type": "module",
@@ -389,7 +389,7 @@
     "typecheck:public:prepared": "tsc --project type-tests/tsconfig.json --pretty false"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1",
+    "@sectile/core": "workspace:^0.17.0",
     "@sectile/temporal": "workspace:^0.16.0"
   },
   "devDependencies": {

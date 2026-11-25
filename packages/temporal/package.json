@@ -1,6 +1,6 @@
 {
   "name": "@sectile/temporal",
-  "version": "0.16.1",
+  "version": "0.16.2",
   "description": "Renderer-neutral date and time field, calendar, and picker semantics for Sectile.",
   "license": "MIT",
   "type": "module",
@@ -126,7 +126,7 @@
     "verify:reproducible-build": "sectile-check-build"
   },
   "dependencies": {
-    "@sectile/core": "workspace:^0.16.1"
+    "@sectile/core": "workspace:^0.17.0"
   },
   "devDependencies": {
     "@sectile/tooling": "workspace:*",
