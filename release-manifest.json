@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "releaseTag": "release-2026-11-25.2",
+  "releaseTag": "release-2026-11-26.1",
   "packages": [
     {
       "name": "@sectile/dom",
       "directory": "dom",
-      "previousVersion": "0.24.0",
-      "version": "0.24.1",
+      "previousVersion": "0.24.1",
+      "version": "0.24.2",
       "bump": "patch",
-      "tag": "@sectile/dom@0.24.1",
+      "tag": "@sectile/dom@0.24.2",
       "direct": true,
       "dependencies": []
     }

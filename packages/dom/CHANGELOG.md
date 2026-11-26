@@ -1,5 +1,11 @@
 # @sectile/dom
 
+## 0.24.2
+
+### Changes
+
+- fix(dom): keep dismissal ownership within one input (f474ecb7b)
+
 ## 0.24.1
 
 ### Changes
