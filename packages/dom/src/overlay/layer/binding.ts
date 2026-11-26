@@ -35,8 +35,6 @@ export interface DOMLayerBinding {
   disconnect(): void;
 }
 
-const handledDismissals = new WeakSet<object>();
-
 export function createDOMLayerBinding(options: DOMLayerBindingOptions): DOMLayerBinding {
   return new ManagedDOMLayerBinding(options);
 }
@@ -59,25 +57,11 @@ class ManagedDOMLayerBinding implements DOMLayerBinding {
     this.#manager = getDOMLayerManager(options.surface);
     this.#manager.assertWritable();
     this.#keydown = (event): void => {
-      if (
-        event.key !== 'Escape'
-        || options.dismissOnEscape === false
-        || handledDismissals.has(event)
-      ) return;
-      if (this.#dismiss('escape')) {
-        handledDismissals.add(event);
-        event.preventDefault();
-        event.stopImmediatePropagation?.();
-      }
+      if (event.key === 'Escape' && options.dismissOnEscape !== false) this.#dismiss('escape', event);
     };
     this.#pointerdown = (event): void => {
-      if (
-        options.dismissOnInteractOutside !== true
-        || handledDismissals.has(event)
-        || contains(options.surface, event.target)
-        || (options.owner !== undefined && contains(options.owner, event.target))
-      ) return;
-      if (this.#dismiss('interact-outside')) handledDismissals.add(event);
+      if (this.#manager.ownsOutsidePointer(this.#id, event) && !contains(options.surface, event.target)
+        && (options.owner === undefined || !contains(options.owner, event.target))) this.#dismiss('interact-outside', event);
     };
     this.#bind();
   }
@@ -202,18 +186,18 @@ class ManagedDOMLayerBinding implements DOMLayerBinding {
 
   #bind(): void {
     this.#options.surface.ownerDocument?.addEventListener?.('keydown', this.#keydown, true);
-    this.#options.surface.ownerDocument?.addEventListener?.('pointerdown', this.#pointerdown, true);
+    this.#manager.setOutsidePointerObserver(this.#pointerdown, this.#options.dismissOnInteractOutside === true);
   }
 
   #unbind(): void {
     this.#options.surface.ownerDocument?.removeEventListener?.('keydown', this.#keydown, true);
-    this.#options.surface.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerdown, true);
+    this.#manager.setOutsidePointerObserver(this.#pointerdown, false);
   }
 
-  #dismiss(reason: LayerDismissReason): boolean {
-    if (!this.#options.readOpen()) return false;
+  #dismiss(reason: LayerDismissReason, input: Event): void {
+    if (!this.#options.readOpen()) return;
     this.#pendingReason = reason;
-    try { return this.#manager.dismiss(this.#id, reason); }
+    try { this.#manager.dismiss(this.#id, reason, input); }
     finally { this.#pendingReason = null; }
   }
 }

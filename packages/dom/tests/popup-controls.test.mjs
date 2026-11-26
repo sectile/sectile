@@ -320,11 +320,11 @@ test('five popup families update active and future dismissal without replacing p
     popup.handleEvent('close'); const exit = snapshot;
     assert.equal(popup.syncDismissal({ closeOnEscape: true, closeOnInteractOutside: true }).ok, true);
     assert.equal(snapshot, exit); assert.equal(snapshot.generation, initial.generation);
-    assert.equal(document.listeners.get('pointerdown').size, 1);
+    assert.equal(document.listeners.get('pointerdown').size, 2);
     popup.completeLayerExit(initial.generation);
     assert.equal(popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: false }).ok, true);
     const modalGuard = create === createDialog || create === createAlertDialog || create === createDrawer;
-    assert.equal(document.listeners.get('pointerdown').size, modalGuard ? 1 : 0, 'connected modal guards remain ready for the next opening');
+    assert.equal(document.listeners.get('pointerdown').size, modalGuard ? 2 : 0, 'connected modal guards remain ready for the next opening');
     popup.handleEvent('open'); popup.subscribeLayerPresentation(value => { snapshot = value; });
     assert.notEqual(snapshot.generation, initial.generation);
     document.emit('keydown', { key: 'Escape', preventDefault() {} }); assert.equal(snapshot.phase, 'active');
@@ -407,12 +407,12 @@ test('guard-only modal pointer subscriptions track behavior, suspension and reen
   try {
     assert.equal(listeners(), 0);
     for (let turn = 0; turn < 3; turn++) {
-      popup.syncBehavior(behavior(true, true)); assert.equal(listeners(), 1);
-      popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: false }); assert.equal(listeners(), 1);
+      popup.syncBehavior(behavior(true, true)); assert.equal(listeners(), 2);
+      popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: false }); assert.equal(listeners(), 2);
       popup.syncBehavior(behavior(true, false)); assert.equal(listeners(), 0);
-      popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: true }); assert.equal(listeners(), 1);
+      popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: true }); assert.equal(listeners(), 2);
       popup.syncDismissal({ closeOnEscape: false, closeOnInteractOutside: false }); assert.equal(listeners(), 0);
-      popup.syncBehavior(behavior(true, true)); const stale = [...document.listeners.get('pointerdown')][0];
+      popup.syncBehavior(behavior(true, true)); const stale = [...document.listeners.get('pointerdown')].at(-1);
       popup.suspend(); assert.equal(listeners(), 0);
       let prevented = 0; stale({ target: new Fake(document), button: 0, preventDefault() { prevented++; } }); assert.equal(prevented, 0);
       popup.syncBehavior(behavior(false, false)); assert.equal(listeners(), 0);
@@ -437,9 +437,9 @@ test('dom:modal-pointer:interactive-work derives one Core view per changed stack
       return { copies, prevented };
     };
     try {
-      assert.equal(document.listeners.get('pointerdown').size, size);
+      assert.equal(document.listeners.get('pointerdown').size, size + 1, 'connections share one capture listener');
       assert.deepEqual(dispatch(), { copies: 1, prevented: 1 });
-      assert.deepEqual(dispatch(), { copies: 0, prevented: 1 }, 'stable input reuses Core view across all parent listeners');
+      assert.deepEqual(dispatch(), { copies: 0, prevented: 1 }, 'stable input reuses the canonical interactive view');
       popups.at(-1).syncDismissal({ closeOnEscape: false, closeOnInteractOutside: false });
       assert.deepEqual(dispatch(), { copies: 1, prevented: 1 }, 'policy-only configuration invalidates the cached view');
       popups.at(-1).syncBehavior({ modal: false, trapFocus: false, autoFocus: false, restoreFocus: true });
@@ -1542,6 +1542,113 @@ test('DOM layer manager routes Escape only to the topmost popup', () => {
   assert.equal(lower.getSnapshot().state.open, false);
 });
 
+test('one outside pointer dismisses only the top layer across connection types and listener orders', () => {
+  for (const kinds of [['dialog', 'dialog', 'dialog'], ['dialog', 'select'], ['select', 'dialog']]) {
+    for (const reverse of [false, true]) {
+      const { document, popups } = outsidePointerStack(kinds, reverse);
+      try {
+        for (let remaining = kinds.length - 1; remaining >= 0; remaining--) {
+          assert.deepEqual(pressOutside(document), []);
+          assert.deepEqual(popups.map(popup => popup.getSnapshot().state.open), kinds.map((_, index) => index < remaining));
+        }
+      } finally { for (const popup of popups.reverse()) popup.disconnect(); }
+      assert.equal(document.listeners.get('pointerdown').size, 0);
+    }
+  }
+});
+
+test('outside dismissal retains ownership through veto, controlled refusal and reopening', () => {
+  for (const action of ['veto', 'controlled', 'reopen']) {
+    let observed = 0;
+    const requests = [];
+    const { document, popups } = outsidePointerStack(['dialog', 'dialog'], true, {
+      onInteractOutside: () => { observed++; },
+    }, {
+      ...(action === 'controlled' ? { open: false } : {}),
+      onInteractOutside(event) {
+        if (action === 'veto') event.preventDefault();
+        if (action === 'reopen') {
+          popups[1].handleEvent('close');
+          popups[1].handleEvent('open');
+        }
+      },
+      onOpenChange(open, _method, reason) { if (!open) requests.push(reason); },
+    });
+    try {
+      assert.deepEqual(pressOutside(document), []);
+      assert.deepEqual(popups.map(popup => popup.getSnapshot().state.open), [true, true]);
+      assert.equal(observed, 1, 'lower observers still receive the outside notification');
+      assert.deepEqual(requests, action === 'veto' ? [] : [action === 'controlled' ? 'interact-outside' : 'programmatic']);
+    } finally { for (const popup of popups.reverse()) popup.disconnect(); }
+  }
+});
+
+test('a throwing close callback never hands the same pointer to another Select', () => {
+  const failure = new Error('failed close callback');
+  const { document, popups } = outsidePointerStack(['select', 'select'], true, {}, {
+    onOpenChange(open) { if (!open) throw failure; },
+  });
+  try {
+    assert.deepEqual(pressOutside(document), [failure]);
+    assert.deepEqual(popups.map(popup => popup.getSnapshot().state.open), [true, false]);
+    assert.deepEqual(pressOutside(document), []);
+    assert.deepEqual(popups.map(popup => popup.getSnapshot().state.open), [false, false]);
+  } finally { for (const popup of popups.reverse()) popup.disconnect(); }
+});
+
+test('outside pointer skips observers added by an in-flight callback', () => {
+  let replacement, observations = 0;
+  const { document, popups } = outsidePointerStack(['dialog', 'dialog'], true, {}, {
+    onInteractOutside() {
+      popups[1].disconnect();
+      replacement = createDialog({ root: new Fake(document), defaultOpen: true, autoFocus: false,
+        onInteractOutside: () => { observations++; } });
+    },
+  });
+  try {
+    assert.deepEqual(pressOutside(document), []);
+    assert.equal(popups[0].getSnapshot().state.open, true);
+    assert.equal(replacement.getSnapshot().state.open, true);
+    assert.equal(observations, 0);
+    assert.deepEqual(pressOutside(document), []);
+    assert.equal(replacement.getSnapshot().state.open, false);
+    assert.equal(observations, 1);
+  } finally { replacement?.disconnect(); for (const popup of popups.reverse()) popup.disconnect(); }
+  assert.equal(document.listeners.get('pointerdown').size, 0);
+});
+
+function outsidePointerStack(kinds, reverse, lower = {}, upper = {}) {
+  const document = new Fake();
+  const roots = kinds.map(() => new Fake(document));
+  const popups = [];
+  const attachmentOrder = roots.map((_, index) => index);
+  if (reverse) attachmentOrder.reverse();
+  for (const index of attachmentOrder) {
+    const options = index === 0 ? lower : index === roots.length - 1 ? upper : {};
+    const root = roots[index];
+    popups[index] = kinds[index] === 'select'
+      ? createSelect({ root, popup: root, trigger: new Fake(document), items: ['a'], position: false, ...options })
+      : createDialog({ root, autoFocus: false, ...options });
+  }
+  for (const [index, popup] of popups.entries()) {
+    if (index === roots.length - 1 && upper.open === false) assert.equal(popup.syncControlledValue(true).ok, true);
+    else assert.equal(popup.handleEvent('open'), true);
+    if (index > 0) assert.equal(popup.syncLayerParent(roots[index - 1]).ok, true);
+  }
+  return { document, popups };
+}
+
+function pressOutside(document) {
+  const failures = [];
+  const event = { type: 'pointerdown', button: 0, target: new Fake(document), preventDefault() {} };
+  const listeners = document.listeners.get('pointerdown');
+  for (const listener of [...listeners]) {
+    if (!listeners.has(listener)) continue;
+    try { listener(event); } catch (error) { failures.push(error); }
+  }
+  return failures;
+}
+
 test('DOM layer manager closes nested descendants but preserves independent layers', () => {
   const ownerDocument = {};
   const outerRoot = new Fake(ownerDocument);
@@ -1766,7 +1873,12 @@ class Fake {
     this.listeners.set(type, listeners);
   }
   removeEventListener(type, listener) { this.listeners.get(type)?.delete(listener); }
-  emit(type, event = {}) { for (const listener of this.listeners.get(type) ?? []) listener({ ...event, type }); }
+  emit(type, event = {}) {
+    const listeners = this.listeners.get(type);
+    if (listeners === undefined) return;
+    const input = { ...event, type };
+    for (const listener of [...listeners]) if (listeners.has(listener)) listener(input);
+  }
   contains(target) { return target === this || this.children.has(target); }
   querySelectorAll() { return []; }
   focus() { this.focused = true; }

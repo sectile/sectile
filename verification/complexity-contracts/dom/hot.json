@@ -1053,7 +1053,7 @@
         "resources": { "allocations": "O(1)", "cacheEntries": "0", "listeners": "O(1)", "observers": "0", "timers": "0", "subscriptions": "0" },
         "assumptions": ["Core configure-layer owns policy normalization and its immutable active-vector copy. Closed/exiting future updates validate a fixed one-layer Core state.", "Facade method binding is existing fixed lazy work;the counter acquires that binding before measuring native configuration."],
         "deterministicWork": ["32/256 active popups update dismissal with zero Map writes;paint/rank indexes are not rebuilt and presentation subscribers are not notified.", "Accepted changes invalidate source-bound prepared ownership;equal popup configuration preserves its existing source."],
-        "resourceRationale": "Existing Popup owns at most one outside-pointer listener with stable identity. Need changes attach/remove exactly that listener;callback-only observation remains subscribed when dismissal is disabled. Disconnect releases it. No new registry,index,timer,observer or presentation subscription.",
+        "resourceRationale": "Each Popup updates at most one outside-pointer subscription. The document manager attaches and removes its shared capture listener with the first and last subscription. Callback-only observation remains subscribed when dismissal is disabled. Disconnect releases the subscription. No timer, native observer, or presentation subscription is added.",
         "proof": "Manager delegates semantic policy to Core,then installs its returned state without projecting unchanged paint. Popup stores accepted future flags and reconciles listener need. Vue maps the two live props through this operation without recreating its native connection.",
         "adversarialWitness": "All five popup families update active,exiting,closed and reopened owners without changing accepted generations. Invalid policy preserves accepted state;controlled dismissal remains a request;outside callbacks and teardown survive subscription changes.",
         "evidence": ["packages/dom/tests/popup-controls.test.mjs", "packages/vue/tests/presence.dom.test.mjs"],
@@ -1142,6 +1142,26 @@
         "adversarialWitness": "A full or foreign/disconnected target preserves source. Active and exiting generations keep identity and semantic parent dismissal. An observer throw does not undo the accepted future-open host or skip later rank deliveries. Stale prepared candidates reject after transfer.",
         "evidence": ["packages/dom/tests/popup-controls.test.mjs"],
         "fullScan": { "allowed": true, "rationale": "Entering or leaving hosted paint order can change all following hosted ranks; moving an already-hosted generation between hosts does not scan." }
+      }
+    },
+    {
+      "id": "overlay.outside-pointer-dispatch",
+      "inherits": "linear-v1",
+      "source": "packages/dom/src/overlay/layer/manager.ts",
+      "benchmarkIDs": ["dom:modal-pointer:interactive-work"],
+      "specificationCeiling": "O(s + n + aDom)",
+      "contract": {
+        "variables": [{ "name": "s", "meaning": "connected outside-pointer subscribers at dispatch entry", "ceiling": "one per observing connection in the document" }, { "name": "n", "meaning": "active canonical layer count before one stack change", "ceiling": "100000" }, { "name": "aDom", "meaning": "aggregate native containment and composed-path work", "ceiling": "observing surfaces, exclusions, and document ancestry" }, { "name": "e", "meaning": "observed native pointer events still reachable outside the manager", "ceiling": "externally owned event lifetime" }],
+        "time": { "bound": "O(s + n + aDom)", "kind": "expected", "runtimeState": "connected" },
+        "space": { "auxiliary": "O(n + aDom)", "output": "O(1)", "retained": "O(s + n + e)" },
+        "resources": { "allocations": "O(s + n + aDom)", "cacheEntries": "O(s + n + e)", "listeners": "s + 1 per observing document", "observers": "0", "timers": "0", "subscriptions": "O(s)" },
+        "assumptions": ["Map and WeakMap access are expected O(1). Application callbacks and any stack changes they initiate are separate operations.", "Existing modal interactive IDs are reused until the stack changes. Public outside notifications may allocate an event wrapper for each observing popup."],
+        "deterministicWork": ["At 32 and 256 connected modal popups one shared native capture listener derives the Core interactive view once per changed stack. One observing connection protects focus per press. Disposal leaves no native pointer listener."],
+        "resourceRationale": "The document manager attaches one native listener per subscription plus a shared capture listener. A WeakMap ties two scalar generation values to the lifetime of each observed event without retaining the event, popup, or surface.",
+        "proof": "Capture selects the initial dismissal and modal guard generations. The browser delivers outside callbacks with native propagation semantics. Dismissal compares captured ownership with the live top before proposing a canonical transition. Redispatch overwrites the event snapshot.",
+        "adversarialWitness": "Listener attachment order, mixed Popup and Select stacks, native propagation stops, callback exceptions, controlled refusal, synchronous reopening, and subscription churn preserve input ownership and drain native resources.",
+        "evidence": ["packages/dom/tests/popup-controls.test.mjs", "packages/dom/tests/dialog-browser.test.mjs"],
+        "fullScan": { "allowed": true, "rationale": "Existing outside observers retain notification delivery even when only the initial top generation may dismiss." }
       }
     },
     {

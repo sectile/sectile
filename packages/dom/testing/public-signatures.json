@@ -371,7 +371,7 @@
       "types": "dist/window-splitter.d.ts"
     }
   ],
-  "fingerprint": "2f6097b6f39523a40d00bc0d071097ac7fdd56982818191a5791c57ece3a6a87",
+  "fingerprint": "fd6557337b6c562e1f2a77a9e1209be1801e6f726eee14c81f4101293deb62a0",
   "files": [
     {
       "path": "dist/accordion.d.ts",
@@ -591,7 +591,7 @@
     },
     {
       "path": "dist/overlay/layer/manager.d.ts",
-      "sha256": "4d4a5691bfbd30622f4c1f19ae495e26d6a9af011b150f795c1d370614147f9d"
+      "sha256": "d807438fdecad28caa0b12d1003a588f8c25765aa2b5aebd635f13ca37020282"
     },
     {
       "path": "dist/overlay/menu/control.d.ts",

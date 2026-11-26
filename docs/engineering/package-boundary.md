@@ -1,5 +1,33 @@
 # Package boundary
 
+## November 2026 layer dismissal
+
+The document layer manager captures the dismissal and modal focus guard
+generations once per outside pointer dispatch. Popup and selection controls
+share one native capture listener. Each connection keeps its native observer
+so the browser handles callback order, propagation, and exceptions. Dismissal
+requires the same generation to remain at the top of the canonical stack.
+An Escape that closes the top layer remains consumed when a close callback
+throws after the stack changes.
+
+The dismissal changes add up to 743 raw bytes and 280 gzip bytes to the
+Popover and Tooltip fixtures compared with published DOM 0.24.1. The size
+check exceeded eight existing threshold entries across direct and root named
+imports. Only compressed metrics above their previous ceilings take the
+measured candidate baseline. The existing five-percent-plus-16-byte formula
+and raw ceilings apply throughout. There are no new external dependencies.
+
+| Fixture | Published gzip / Brotli bytes | Candidate gzip / Brotli bytes | Previous → current gzip / Brotli ceilings |
+| --- | ---: | ---: | ---: |
+| Popover direct, esbuild | 22,835 / 20,261 | 23,060 / 20,485 | 22,866 / 20,358 → 24,229 / 21,526 |
+| Popover direct, vite | 22,921 / 20,355 | 23,152 / 20,589 | 22,934 / 20,452 → 24,326 / 21,635 |
+| Popover root, esbuild | 22,750 / 20,276 | 23,009 / 20,499 | 22,827 / 20,357 → 24,176 / 21,540 |
+| Popover root, vite | 22,840 / 20,336 | 23,097 / 20,593 | 22,892 / 20,407 → 24,268 / 21,639 |
+| Tooltip direct, esbuild | 23,809 / 21,129 | 24,046 / 21,343 | 23,863 / 21,260 → 25,265 / 22,427 |
+| Tooltip direct, vite | 23,913 / 21,221 | 24,154 / 21,480 | 23,965 / 21,369 → 25,378 / 22,570 |
+| Tooltip root, esbuild | 23,729 / 21,082 | 24,001 / 21,346 | 23,825 / 21,220 → 25,218 / 22,430 |
+| Tooltip root, vite | 23,824 / 21,239 | 24,104 / 21,468 | 23,908 / 21,343 → 25,326 / 22,558 |
+
 ## November 2026 atomic reorder
 
 Atomic reorder adds cohort admission, destination preview, and a single batch

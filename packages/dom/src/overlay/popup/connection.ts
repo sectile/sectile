@@ -295,10 +295,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
         return;
       }
       if (event.isComposing || event.key !== 'Escape') return;
-      if (this.#dismiss('escape', 'keyboard')) {
-        event.preventDefault();
-        event.stopImmediatePropagation?.();
-      }
+      this.#dismiss('escape', 'keyboard', event);
     };
     this.#focusGuard = (): void => {
       if (!this.#isOpen() || !this.#behavior.trapFocus) return;
@@ -311,13 +308,14 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
       if (!this.#isOpen()) return;
       if (isEventInside(event, options.root) || (options.trigger !== undefined && isEventInside(event, options.trigger))) return;
       if (this.#behavior.interactOutsideExclusions?.some((element) => isEventInside(event, element)) === true) return;
-      if (event.button === 0 && this.#behavior.modal && this.#behavior.trapFocus
-        && this.#layers.isOutsideInteractiveLayer(this.#layerID, event)) event.preventDefault();
-      if (options.onInteractOutside === undefined && !this.#closeOnInteractOutside) return;
-      const outsideEvent = createInteractOutsideEvent(event, options.root);
-      options.onInteractOutside?.(outsideEvent);
-      if (outsideEvent.defaultPrevented || !this.#closeOnInteractOutside) return;
-      this.#dismiss('interact-outside', 'pointer');
+      if (this.#behavior.modal && this.#behavior.trapFocus
+        && this.#layers.guardsOutsidePointerFocus(this.#layerID, event)) event.preventDefault();
+      if (options.onInteractOutside !== undefined) {
+        const outsideEvent = createInteractOutsideEvent(event, options.root);
+        options.onInteractOutside(outsideEvent);
+        if (outsideEvent.defaultPrevented) return;
+      }
+      if (this.#closeOnInteractOutside) this.#dismiss('interact-outside', 'pointer', event);
     };
   }
 
@@ -351,7 +349,7 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     } else {
       options.trigger?.addEventListener('click', this.#click);
     }
-    if (this.#observesOutside()) options.root.ownerDocument?.addEventListener?.('pointerdown', this.#pointerDown, true);
+    this.#syncOutsideSubscription();
   }
 
   #unbindNative(): void {
@@ -361,20 +359,13 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     options.root.ownerDocument?.removeEventListener?.('keydown', this.#documentKeydown, true);
     options.trigger?.removeEventListener('click', this.#click);
     const binding = this.#focusHover; this.#focusHover = undefined; binding?.disconnect();
-    if (this.#observesOutside()) options.root.ownerDocument?.removeEventListener?.('pointerdown', this.#pointerDown, true);
+    this.#layers.setOutsidePointerObserver(this.#pointerDown, false);
   }
 
-  #observesOutside(): boolean {
-    return this.#closeOnInteractOutside || this.#options.onInteractOutside !== undefined
+  #syncOutsideSubscription(): void {
+    const observes = this.#closeOnInteractOutside || this.#options.onInteractOutside !== undefined
       || (this.#behavior.modal && this.#behavior.trapFocus);
-  }
-
-  #syncOutsideSubscription(subscribed: boolean): void {
-    const next = this.#observesOutside();
-    if (this.#suspended || this.#disconnected || subscribed === next) return;
-    const document = this.#options.root.ownerDocument;
-    if (next) document?.addEventListener?.('pointerdown', this.#pointerDown, true);
-    else document?.removeEventListener?.('pointerdown', this.#pointerDown, true);
+    this.#layers.setOutsidePointerObserver(this.#pointerDown, !this.#suspended && !this.#disconnected && observes);
   }
 
   public suspend(): void {
@@ -475,9 +466,8 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     const nextOptions = { closeOnEscape: options.closeOnEscape, closeOnInteractOutside: options.closeOnInteractOutside };
     const result = this.#syncDismissal(nextOptions);
     if (!result.ok) return result;
-    const subscribed = this.#observesOutside();
     this.#closeOnInteractOutside = nextOptions.closeOnInteractOutside;
-    this.#syncOutsideSubscription(subscribed);
+    this.#syncOutsideSubscription();
     return result;
   }
   public syncBehavior(options: PopupBehaviorOptions): Result<void, PopupBehaviorErrorCode> {
@@ -500,9 +490,8 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
     const result = this.#syncModality(next.modal);
     if (!result.ok) return result;
     const previous = this.#behavior;
-    const subscribed = this.#observesOutside();
     this.#behavior = next;
-    this.#syncOutsideSubscription(subscribed);
+    this.#syncOutsideSubscription();
     // Configuration is not a new opening and must not steal the current focus.
     if (this.#isOpen() && (previous.autoFocus !== next.autoFocus || previous.initialFocus !== next.initialFocus)) {
       this.#initialFocusApplied = true;
@@ -540,10 +529,10 @@ class DOMPopup<State, Event, Command extends object> implements DOMPopupConnecti
   }
   public get inputMethod(): PopupInputMethod { return this.#inputMethod; }
   public get closeReason(): PopupCloseReason { return this.#closeReason; }
-  #dismiss(reason: 'escape' | 'interact-outside', inputMethod: PopupInputMethod): boolean {
+  #dismiss(reason: 'escape' | 'interact-outside', inputMethod: PopupInputMethod, input?: globalThis.Event): boolean {
     const previous = this.#inputMethod;
     this.#inputMethod = inputMethod;
-    try { return this.#layers.dismiss(this.#layerID, reason); }
+    try { return this.#layers.dismiss(this.#layerID, reason, input); }
     finally { this.#inputMethod = previous; }
   }
   public handleEvent(event: Event, inputMethod: PopupInputMethod = 'programmatic', reason: PopupCloseReason = 'programmatic'): boolean {

@@ -73,6 +73,11 @@ function presentationFailure(code: DOMLayerPresentationErrorCode): Result<never,
 
 type CloseLayer = () => void;
 interface LayerEffects { readonly close: CloseLayer; readonly suspend?: () => void }
+type OutsidePointerObserver = (event: PointerEvent) => void;
+interface OutsidePointerInput {
+  readonly top: number;
+  readonly focusGuard: number | undefined;
+}
 export type DOMLayerSuspensionErrorCode = CoreErrorCode | 'dom.layer-suspension-unavailable';
 
 export interface DOMLayerRegistration {
@@ -95,10 +100,11 @@ export interface DOMLayerManager {
   register(registration: DOMLayerRegistration): boolean;
   close(id: string): boolean;
   suspend(id: string): Result<void, DOMLayerSuspensionErrorCode>;
-  dismiss(id: string, reason: LayerDismissReason): boolean;
+  dismiss(id: string, reason: LayerDismissReason, input?: Event): boolean;
   isTop(id: string): boolean;
-  /** The highest modal guards default focus outside all admitted input surfaces. */
-  isOutsideInteractiveLayer(id: string, event: Event): boolean;
+  setOutsidePointerObserver(observer: OutsidePointerObserver, enabled: boolean): void;
+  ownsOutsidePointer(id: string, event: Event): boolean;
+  guardsOutsidePointerFocus(id: string, event: PointerEvent): boolean;
   getOrder(id: string): number | null;
   assertWritable(): void;
   subscribePresentation(id: string, listener: DOMLayerPresentationListener): DOMLayerPresentationSubscription;
@@ -124,17 +130,20 @@ export function getDOMLayerManager(root: HTMLElement): DOMLayerManager {
   const key = root.ownerDocument ?? root;
   const existing = managers.get(key);
   if (existing !== undefined) return existing;
-  const manager = new ManagedDOMLayers();
+  const manager = new ManagedDOMLayers(root.ownerDocument);
   managers.set(key, manager);
   return manager;
 }
 
 class ManagedDOMLayers implements DOMLayerManager {
+  readonly #document: Document | undefined;
   #state: LayerPresentationState<string> = createLayerPresentationState<string>();
   #interactiveLayers: readonly string[] | undefined;
   readonly #close = new Map<string, LayerEffects>();
   readonly #surfaces = new Map<string, HTMLElement>();
   readonly #dismissRequests = new Map<string, (reason: LayerDismissReason) => boolean>();
+  readonly #outsidePointerObservers = new Set<OutsidePointerObserver>();
+  readonly #outsidePointerInputs = new WeakMap<Event, OutsidePointerInput>();
   readonly #closing = new Set<string>();
   #orders = new Map<string, number>();
   #generations = new Map<string, number>();
@@ -148,6 +157,20 @@ class ManagedDOMLayers implements DOMLayerManager {
   #hostRevision = 0;
   #projectionRevision = 0;
   #notifying = false;
+
+  public constructor(document: Document | undefined) {
+    this.#document = document;
+  }
+
+  readonly #capturePointer = (event: PointerEvent): void => {
+    const top = getTopLayer(this.#state.stack);
+    const generation = top === null ? undefined : this.#generations.get(top.id);
+    if (generation === undefined) {
+      this.#outsidePointerInputs.delete(event);
+      return;
+    }
+    this.#outsidePointerInputs.set(event, { top: generation, focusGuard: this.#outsideFocusGuard(event) });
+  };
 
   public connectHost(policy: LayerHostPolicy): Result<LayerHostConnection, LayerHostErrorCode> {
     this.assertWritable();
@@ -406,17 +429,31 @@ class ManagedDOMLayers implements DOMLayerManager {
     return true;
   }
 
-  public dismiss(id: string, reason: LayerDismissReason): boolean {
+  public dismiss(id: string, reason: LayerDismissReason, input?: Event): boolean {
     this.assertWritable();
-    if (!this.isTop(id)) return false;
+    if (!this.isTop(id) || (reason === 'interact-outside' && input !== undefined && !this.ownsOutsidePointer(id, input))) return false;
     const result = applyLayerPresentationEvent(this.#state, { type: 'dismiss-top', reason });
     if (!result.ok || result.value.commands.length === 0) return false;
     // Admission is canonical, but a controlled close request is not acceptance.
     // The host's ordinary controller refresh commits only its actual open value.
     const request = this.#dismissRequests.get(id);
-    if (request !== undefined) return request(reason);
-    this.#commit(result.value.state, result.value.commands.map((command) => command.id));
-    return true;
+    const escape = reason === 'escape' ? input : undefined;
+    const generation = escape === undefined ? undefined : this.#generations.get(id);
+    let accepted = false;
+    try {
+      if (request !== undefined) accepted = request(reason);
+      else {
+        this.#commit(result.value.state, result.value.commands.map((command) => command.id));
+        accepted = true;
+      }
+      return accepted;
+    } finally {
+      // A close effect can throw after the stack has already changed.
+      if (escape !== undefined && (accepted || generation !== this.#generations.get(id) || !this.isTop(id))) {
+        escape.preventDefault();
+        escape.stopImmediatePropagation?.();
+      }
+    }
   }
 
   public suspend(id: string): Result<void, DOMLayerSuspensionErrorCode> {
@@ -441,14 +478,40 @@ class ManagedDOMLayers implements DOMLayerManager {
     return getTopLayer(this.#state.stack)?.id === id;
   }
 
-  public isOutsideInteractiveLayer(id: string, event: Event): boolean {
-    const ids = this.#interactiveLayers ??= getInteractiveLayerIDs(this.#state.stack);
-    if (ids[0] !== id) return false;
+  public setOutsidePointerObserver(observer: OutsidePointerObserver, enabled: boolean): void {
+    if (enabled) {
+      if (this.#outsidePointerObservers.has(observer)) return;
+      // Capture authority before native observers run. Native dispatch owns their ordering and propagation.
+      if (this.#outsidePointerObservers.size === 0) this.#document?.addEventListener?.('pointerdown', this.#capturePointer, true);
+      this.#outsidePointerObservers.add(observer);
+      this.#document?.addEventListener?.('pointerdown', observer, true);
+    } else if (this.#outsidePointerObservers.delete(observer)) {
+      this.#document?.removeEventListener?.('pointerdown', observer, true);
+      if (this.#outsidePointerObservers.size === 0) this.#document?.removeEventListener?.('pointerdown', this.#capturePointer, true);
+    }
+  }
+
+  public ownsOutsidePointer(id: string, event: Event): boolean {
+    const input = this.#outsidePointerInputs.get(event);
+    return input !== undefined && input.top === this.#generations.get(id);
+  }
+
+  public guardsOutsidePointerFocus(id: string, event: PointerEvent): boolean {
+    const guard = this.#outsidePointerInputs.get(event)?.focusGuard;
+    return guard !== undefined && guard === this.#generations.get(id);
+  }
+
+  #outsideFocusGuard(event: PointerEvent): number | undefined {
+    if (event.button !== 0) return undefined;
+    const stack = this.#state.stack;
+    const ids = this.#interactiveLayers ??= getInteractiveLayerIDs(stack);
+    const modal = stack.layers[stack.layers.length - ids.length];
+    if (modal?.mode !== 'modal') return undefined;
     for (const candidate of ids) {
       const surface = this.#surfaces.get(candidate);
-      if (surface !== undefined && isEventInside(event, surface)) return false;
+      if (surface !== undefined && isEventInside(event, surface)) return undefined;
     }
-    return true;
+    return this.#generations.get(modal.id);
   }
 
   public getOrder(id: string): number | null {

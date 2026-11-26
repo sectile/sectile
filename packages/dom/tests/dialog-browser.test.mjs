@@ -5,6 +5,7 @@ import { createDialog } from '../.verification-dist/dialog.js';
 import { createAlertDialog } from '../.verification-dist/alert-dialog.js';
 import { createDrawer } from '../.verification-dist/drawer.js';
 import { createPopover } from '../.verification-dist/popover.js';
+import { createSelect } from '../.verification-dist/select.js';
 import { acquireModalEffects } from '../.verification-dist/overlay/modal/effects.js';
 
 test('retained popup moves preserve only existing focus and retire cancelled or stale captures', () => {
@@ -625,5 +626,82 @@ test('modal outside guard precedes reentrant close or disposal in the outside ca
       outside.dispatchEvent(event); assert.equal(observed, true); assert.equal(event.defaultPrevented, true);
       assert.equal(popup.getLayerOrder(), null);
     } finally { popup.destroy(); window.close(); }
+  }
+});
+
+test('closing a higher modal does not hand pointer focus protection to the lower modal mid-dispatch', () => {
+  for (const reverse of [false, true]) {
+    const window = new Window(), document = window.document;
+    const lowerRoot = document.createElement('section'), upperRoot = document.createElement('section');
+    const outside = document.createElement('button'); document.body.append(lowerRoot, upperRoot, outside);
+    const lowerOptions = { root: lowerRoot, autoFocus: false, closeOnInteractOutside: false };
+    const upperOptions = { root: upperRoot, autoFocus: false, trapFocus: false };
+    const first = createDialog(reverse ? upperOptions : lowerOptions);
+    const second = createDialog(reverse ? lowerOptions : upperOptions);
+    const [lower, upper] = reverse ? [second, first] : [first, second];
+    try {
+      lower.handleEvent('open'); upper.handleEvent('open');
+      assert.equal(upper.syncLayerParent(lowerRoot).ok, true);
+      const pointer = new window.PointerEvent('pointerdown', { button: 0, bubbles: true, composed: true, cancelable: true });
+      outside.dispatchEvent(pointer);
+      assert.equal(upper.getSnapshot().state.open, false);
+      assert.equal(lower.getSnapshot().state.open, true);
+      assert.equal(pointer.defaultPrevented, false);
+      outside.dispatchEvent(pointer);
+      assert.equal(pointer.defaultPrevented, true, 'redispatch selects the newly exposed guard');
+    } finally { upper.destroy(); lower.destroy(); window.close(); }
+  }
+});
+
+test('outside callbacks preserve native propagation on the original pointer event', () => {
+  for (const method of ['stopPropagation', 'stopImmediatePropagation']) {
+    const window = new Window(), document = window.document;
+    const upperRoot = document.createElement('section'), lowerRoot = document.createElement('section');
+    const outside = document.createElement('button'); document.body.append(lowerRoot, upperRoot, outside);
+    const calls = [];
+    const upper = createDialog({ root: upperRoot, autoFocus: false, onInteractOutside(event) {
+      calls.push('upper');
+      event.preventDefault();
+      event.originalEvent[method]();
+    } });
+    const lower = createDialog({ root: lowerRoot, autoFocus: false, onInteractOutside() { calls.push('lower'); } });
+    try {
+      lower.handleEvent('open'); upper.handleEvent('open');
+      assert.equal(upper.syncLayerParent(lowerRoot).ok, true);
+      outside.dispatchEvent(new window.PointerEvent('pointerdown', { button: 0, bubbles: true, composed: true, cancelable: true }));
+      assert.deepEqual(calls, method === 'stopPropagation' ? ['upper', 'lower'] : ['upper']);
+      assert.equal(lower.getSnapshot().state.open, true);
+      assert.equal(upper.getSnapshot().state.open, true);
+    } finally { upper.destroy(); lower.destroy(); window.close(); }
+  }
+});
+
+test('a committed Escape remains consumed when the close callback throws', () => {
+  for (const upperKind of ['dialog', 'select']) {
+    const window = new Window(), document = window.document;
+    const upperRoot = document.createElement('section'), lowerRoot = document.createElement('section');
+    const outside = document.createElement('button'), trigger = document.createElement('button');
+    document.body.append(lowerRoot, upperRoot, outside, trigger);
+    const failure = new Error('failed close callback');
+    const errors = [];
+    window.addEventListener('error', (event) => { errors.push(event.error); event.preventDefault(); });
+    const onOpenChange = (open) => { if (!open) throw failure; };
+    const upper = upperKind === 'dialog'
+      ? createDialog({ root: upperRoot, autoFocus: false, onOpenChange })
+      : createSelect({ root: upperRoot, popup: upperRoot, trigger, items: ['a'], position: false, onOpenChange });
+    const lower = createDialog({ root: lowerRoot, autoFocus: false });
+    const escape = () => new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    try {
+      lower.handleEvent('open'); upper.handleEvent('open');
+      assert.equal(upper.syncLayerParent(lowerRoot).ok, true);
+      const first = escape(); outside.dispatchEvent(first);
+      assert.equal(first.defaultPrevented, true);
+      assert.deepEqual(errors, [failure]);
+      assert.equal(upper.getSnapshot().state.open, false);
+      assert.equal(lower.getSnapshot().state.open, true);
+      outside.dispatchEvent(escape());
+      assert.equal(lower.getSnapshot().state.open, false);
+      assert.deepEqual(errors, [failure]);
+    } finally { upper.destroy(); lower.destroy(); window.close(); }
   }
 });

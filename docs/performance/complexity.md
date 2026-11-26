@@ -10,7 +10,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 |---|---:|---:|---:|
 | core | 420 | 26 | 92 |
 | chart | 80 | 0 | 15 |
-| dom | 490 | 177 | 62 |
+| dom | 490 | 177 | 63 |
 | form | 26 | 0 | 9 |
 | tabular | 37 | 0 | 12 |
 | temporal | 137 | 14 | 4 |
@@ -167,6 +167,7 @@ Every runtime ESM export inherits an explicit package public contract. Hot inter
 | dom:overlay.dismissal-policy | connected | `O(n)` worst-case | `O(1)` | `O(n)` | `O(n)` | allowed | packages/dom/tests/popup-controls.test.mjs, packages/vue/tests/presence.dom.test.mjs |
 | dom:overlay.host-policy | connected | `O(n + h + k)` expected | `O(h)` | `O(1)` | `O(n + h + k)` | allowed | packages/dom/tests/popup-controls.test.mjs |
 | dom:overlay.host-transfer | connected | `O(n + s)` expected | `O(n)` | `O(n)` | `O(n + s)` | allowed | packages/dom/tests/popup-controls.test.mjs |
+| dom:overlay.outside-pointer-dispatch | connected | `O(s + n + aDom)` expected | `O(n + aDom)` | `O(1)` | `O(s + n + e)` | allowed | packages/dom/tests/popup-controls.test.mjs, packages/dom/tests/dialog-browser.test.mjs |
 | dom:overlay.presentation-commit | connected | `O(n + u + c)` worst-case | `O(n)` | `O(n)` | `O(n + u)` | allowed | packages/dom/tests/popup-controls.test.mjs |
 | dom:overlay.reparent | connected | `O(n + u)` expected | `O(n)` | `O(n)` | `O(n + u)` | allowed | packages/dom/tests/popup-controls.test.mjs |
 | dom:position.connect | connected | `O(aDom)` worst-case | `O(aDom)` | `O(1)` | `O(aDom)` | forbidden | scripts/complexity-contracts.test.mjs, scripts/complexity-witnesses.test.mjs |
